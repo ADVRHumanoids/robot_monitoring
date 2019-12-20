@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>BarPlotWidget</class>
+ <widget class="QWidget" name="BarPlotWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_2">
+   <item>
+    <widget class="QComboBox" name="SelectFieldComboBox"/>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout" stretch="10,4,10">
+     <item>
+      <layout class="QVBoxLayout" name="BarsLayoutLeft">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+      </layout>
+     </item>
+     <item>
+      <widget class="Line" name="line">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="BarsLayoutRight">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+      </layout>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

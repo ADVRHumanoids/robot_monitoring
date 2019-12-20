@@ -1,0 +1,7 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+    <file>bar_plot_widget.ui</file>
+    <file>joint_bar_widget.ui</file>
+    <file>joint_state_widget.ui</file>
+</qresource>
+</RCC>

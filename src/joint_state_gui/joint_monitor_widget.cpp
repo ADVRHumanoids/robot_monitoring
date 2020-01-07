@@ -253,6 +253,14 @@ void JointMonitorWidget::on_jstate_recv(xbot_msgs::JointStateConstPtr msg)
             wid->setRange(0, taumax);
 
         }
+        else if(barplot_wid->getFieldType() == "Link position")
+        {
+            auto wid = barplot_wid->wid_map.at(msg->name[i]);
+            wid->setValue(msg->link_position[i]);
+            double qmin = _urdf->getJoint(msg->name[i])->limits->lower;
+            double qmax = _urdf->getJoint(msg->name[i])->limits->upper;
+            wid->setRange(qmin, qmax);
+        }
         else if(barplot_wid->getFieldType() == "Motor position")
         {
             auto wid = barplot_wid->wid_map.at(msg->name[i]);
@@ -260,6 +268,20 @@ void JointMonitorWidget::on_jstate_recv(xbot_msgs::JointStateConstPtr msg)
             double qmin = _urdf->getJoint(msg->name[i])->limits->lower;
             double qmax = _urdf->getJoint(msg->name[i])->limits->upper;
             wid->setRange(qmin, qmax);
+        }
+        else if(barplot_wid->getFieldType() == "Link velocity")
+        {
+            auto wid = barplot_wid->wid_map.at(msg->name[i]);
+            wid->setValue(msg->link_velocity[i]);
+            double qdmax = _urdf->getJoint(msg->name[i])->limits->velocity;
+            wid->setRange(0, qdmax);
+        }
+        else if(barplot_wid->getFieldType() == "Motor velocity")
+        {
+            auto wid = barplot_wid->wid_map.at(msg->name[i]);
+            wid->setValue(msg->motor_velocity[i]);
+            double qdmax = _urdf->getJoint(msg->name[i])->limits->velocity;
+            wid->setRange(0, qdmax);
         }
         else if(barplot_wid->getFieldType() == "Stiffness")
         {

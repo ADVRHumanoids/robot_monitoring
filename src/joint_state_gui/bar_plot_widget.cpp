@@ -68,7 +68,10 @@ BarPlotWidget::BarPlotWidget(std::vector<std::string> jnames, QWidget *parent) :
     _fieldtype_combobox->addItem("Torque");
     _fieldtype_combobox->addItem("Temperature");
     _fieldtype_combobox->addItem("Current");
+    _fieldtype_combobox->addItem("Link position");
     _fieldtype_combobox->addItem("Motor position");
+    _fieldtype_combobox->addItem("Link velocity");
+    _fieldtype_combobox->addItem("Motor velocity");
     _fieldtype_combobox->addItem("Stiffness");
     _fieldtype_combobox->addItem("Damping");
 }

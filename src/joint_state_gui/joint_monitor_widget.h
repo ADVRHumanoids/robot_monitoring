@@ -10,7 +10,7 @@
 
 #include "bar_plot_widget.h"
 #include "joint_state_widget.h"
-#include "robot_monitoring_tools/joint_sliders/sliders_widget_mainview.h"
+#include "robot_monitoring/joint_sliders/sliders_widget_mainview.h"
 
 
 class JointMonitorWidget : public QWidget

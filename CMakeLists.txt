@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(robot_monitoring_tools)
+project(robot_monitoring)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++14)

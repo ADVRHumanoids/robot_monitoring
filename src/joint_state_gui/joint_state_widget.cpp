@@ -83,7 +83,7 @@ JointStateWidget::JointStateWidget(QWidget * parent):
 
 void JointStateWidget::setJointName(QString jname, int jid)
 {
-    group->setTitle(QString("%1  (ID: %2)").arg(jname, jid));
+    group->setTitle(QString("%1  (ID: %2)").arg(jname).arg(jid));
     _jname = jname;
 }
 

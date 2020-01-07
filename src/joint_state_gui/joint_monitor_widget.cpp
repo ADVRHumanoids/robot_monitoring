@@ -1,6 +1,5 @@
 #include "joint_monitor_widget.h"
 #include "bar_plot_widget.h"
-
 #include <QHBoxLayout>
 
 #include <urdf_parser/urdf_parser.h>
@@ -97,7 +96,7 @@ JointMonitorWidget::JointMonitorWidget(QWidget *parent) :
 {
 
     ros::NodeHandle nh("xbotcore");
-    _jstate_sub = nh.subscribe("joint_states", 1, &JointMonitorWidget::on_jstate_recv, this);
+    _jstate_sub = nh.subscribe("joint_states", 10, &JointMonitorWidget::on_jstate_recv, this);
 
     std::string urdf_str;
     nh.getParam("robot_description", urdf_str);
@@ -115,6 +114,29 @@ JointMonitorWidget::JointMonitorWidget(QWidget *parent) :
         usleep(1000);
     }
 
+    std::string jidmap_str = nh.param<std::string>("robot_description_joint_id_map", "");
+    if(!jidmap_str.empty())
+    {
+        try
+        {
+            auto jidmap_yaml = YAML::Load(jidmap_str);
+            for(auto p: jidmap_yaml["joint_map"])
+            {
+                _jidmap[p.second.as<std::string>()] = p.first.as<int>();
+            }
+        }
+        catch(std::exception& e)
+        {
+            fprintf(stderr, "Unable to get joint IDs: %s \n", e.what());
+        }
+    }
+
+    cartesio_gui::SlidersWidgetMainView::Options opt;
+    opt.message_type = "xbot_msgs";
+    opt.ns = "xbotcore";
+    _sliders = new cartesio_gui::SlidersWidgetMainView(opt);
+    _sliders->setFixedWidth(400);
+
     jstate_wid = new JointStateWidget(this);
     jstate_wid->setJointName(QString::fromStdString(_jnames[0]), 0);
 
@@ -124,9 +146,11 @@ JointMonitorWidget::JointMonitorWidget(QWidget *parent) :
     {
         auto wid = barplot_wid->wid_map.at(jstate_wid->getJointName().toStdString());
         wid->setInactive();
-        jstate_wid->setJointName(QString::fromStdString(jname), 0);
+        int jid = _jidmap.count(jname) > 0 ? _jidmap.at(jname) : 0;
+        jstate_wid->setJointName(QString::fromStdString(jname), jid);
         wid = barplot_wid->wid_map.at(jname);
         wid->setActive();
+        _sliders->makeJointVisible(QString::fromStdString(jname));
     };
 
     on_joint_clicked(_jnames[0]);
@@ -138,9 +162,12 @@ JointMonitorWidget::JointMonitorWidget(QWidget *parent) :
     connect(_timer, &QTimer::timeout,
             this, &JointMonitorWidget::on_timer_event);
 
+
+
     auto layout = new QHBoxLayout(this);
     layout->addWidget(barplot_wid);
     layout->addWidget(jstate_wid);
+    layout->addWidget(_sliders);
     setLayout(layout);
 
     _timer->start();
@@ -188,8 +215,9 @@ void JointMonitorWidget::on_jstate_recv(xbot_msgs::JointStateConstPtr msg)
                 fault.bit.dump(ss, "\n");
                 fault_str = ss.str();
                 fault_str.resize(fault_str.size()-1);
-                jstate_wid->setStatus(fault_str);
             }
+
+            jstate_wid->setStatus(fault_str);
         }
 
         if(msg->fault[i] == 0)

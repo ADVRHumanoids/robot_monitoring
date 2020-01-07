@@ -10,6 +10,8 @@
 
 #include "bar_plot_widget.h"
 #include "joint_state_widget.h"
+#include "robot_monitoring_tools/joint_sliders/sliders_widget_mainview.h"
+
 
 class JointMonitorWidget : public QWidget
 {
@@ -30,8 +32,12 @@ private:
     std::vector<std::string> _jnames;
     urdf::ModelInterfaceSharedPtr _urdf;
 
+    cartesio_gui::SlidersWidgetMainView * _sliders;
+
     void on_timer_event();
     void on_jstate_recv(xbot_msgs::JointStateConstPtr msg);
+
+    std::map<std::string, int> _jidmap;
 
 
 

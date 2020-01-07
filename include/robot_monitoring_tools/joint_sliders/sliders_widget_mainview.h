@@ -31,6 +31,8 @@ public:
                                    QWidget * parent = nullptr);
 
     void contextMenuEvent(QContextMenuEvent * event) override;
+
+    void makeJointVisible(QString jointname);
     
     ~SlidersWidgetMainView();
 

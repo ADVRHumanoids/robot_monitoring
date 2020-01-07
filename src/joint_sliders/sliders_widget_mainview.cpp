@@ -77,7 +77,7 @@ cartesio_gui::SlidersWidgetMainView::SlidersWidgetMainView (Options opt,
     try_construct();
     
     /* Connect chain selector to stacked layout */
-    void (QComboBox::* activated_int)(int) = &QComboBox::activated;
+    void (QComboBox::* activated_int)(int) = &QComboBox::currentIndexChanged;
     connect(_chain_select, activated_int,
             _wid_stack, &QStackedWidget::setCurrentIndex
            );
@@ -90,6 +90,22 @@ cartesio_gui::SlidersWidgetMainView::SlidersWidgetMainView (Options opt,
     connect(findChild<QPushButton *>("disableButton"), &QPushButton::released,
             this, &SlidersWidgetMainView::on_disable_enable);
 
+}
+
+void cartesio_gui::SlidersWidgetMainView::makeJointVisible(QString jointname)
+{
+    for(auto& cpair : _robot->getChainMap())
+    {
+        if(cpair.second->hasJoint(jointname.toStdString()))
+        {
+            int id = _chain_select->findText(QString::fromStdString(cpair.first));
+
+            if(id != -1)
+            {
+                _chain_select->setCurrentIndex(id);
+            }
+        }
+    }
 }
 
 void cartesio_gui::SlidersWidgetMainView::contextMenuEvent(QContextMenuEvent * event)

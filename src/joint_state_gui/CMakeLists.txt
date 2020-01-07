@@ -8,6 +8,8 @@ find_package(Qt5Quick ${MINIMUM_QT_VERSION} REQUIRED)
 find_package(XBotInterface REQUIRED)
 find_package(catkin REQUIRED COMPONENTS roscpp urdf)
 
+include_directories(../../include)
+
 add_library(joint_bar_ui STATIC
     bar_plot_widget.cpp
     joint_bar_widget.cpp
@@ -16,7 +18,8 @@ add_library(joint_bar_ui STATIC
     circle_widget.cpp
     ui_resources.qrc)
 
-target_link_libraries(joint_bar_ui Qt5::Widgets Qt5::UiTools  XBotInterface::XBotInterface ${catkin_LIBRARIES})
+target_link_libraries(joint_bar_ui  sliders_widget
+    Qt5::Widgets Qt5::UiTools XBotInterface::XBotInterface ${catkin_LIBRARIES} yaml-cpp)
 
 
 add_executable(joint_state_gui ui_main.cpp)

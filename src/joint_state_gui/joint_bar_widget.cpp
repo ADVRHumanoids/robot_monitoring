@@ -40,7 +40,10 @@ QWidget * LoadUiFile(QWidget * parent)
 
 }
 
-JointBarWidget::JointBarWidget(const QString& jname, QWidget *parent) : QWidget(parent)
+JointBarWidget::JointBarWidget(const QString& jname, QWidget *parent) :
+    QWidget(parent),
+    _blinker(this),
+    _state(0)
 {
     /* Create GUI layout */
     auto * ui = ::LoadUiFile(this);
@@ -85,21 +88,31 @@ void JointBarWidget::setStatus(QString status)
 //    _status->setText(status);
 }
 
-void JointBarWidget::setSafe()
-{   auto frame = findChild<QFrame *>("StatusFrame");
-    QPalette pal;
-    pal.setColor(QPalette::Background, Qt::green);
-    frame->setAutoFillBackground(true);
-    frame->setPalette(pal);
+void JointBarWidget::setSafe(bool force)
+{
+    if(_blinker.blinking()) return;
+
+    if(_state != 0)
+    {
+        printf("Started blinker..\n");
+        _blinker.blink(10);
+    }
+
+    _state = 0;
+
+    setColor(Qt::green);
 }
 
-void JointBarWidget::setDanger()
+void JointBarWidget::setDanger(bool force)
 {
-    auto frame = findChild<QFrame *>("StatusFrame");
-    QPalette pal;
-    pal.setColor(QPalette::Background, Qt::red);
-    frame->setAutoFillBackground(true);
-    frame->setPalette(pal);
+    if(_state == 0)
+    {
+        _blinker.stop();
+    }
+
+    setColor(Qt::red);
+
+    _state = 1;
 
 }
 
@@ -116,6 +129,15 @@ void JointBarWidget::setInactive()
 void JointBarWidget::handleMouseDoubleClickEvent(QMouseEvent * ev)
 {
     _on_double_click();
+}
+
+void JointBarWidget::setColor(Qt::GlobalColor color)
+{
+    auto frame = findChild<QFrame *>("StatusFrame");
+    QPalette pal;
+    pal.setColor(QPalette::Background, color);
+    frame->setAutoFillBackground(true);
+    frame->setPalette(pal);
 }
 
 bool JointBarWidget::eventFilter(QObject * obj, QEvent * event)
@@ -135,4 +157,61 @@ bool JointBarWidget::eventFilter(QObject * obj, QEvent * event)
         // standard event processing
         return QObject::eventFilter(obj, event);
     }
+}
+
+JointBarWidget::Blinker::Blinker(JointBarWidget * parent):
+    _blinks(0),
+    _state(0),
+    _parent(parent)
+{
+    _timer.setInterval(500);
+    _timer.setSingleShot(false);
+
+    connect(&_timer, &QTimer::timeout,
+            this, &Blinker::on_timeout);
+
+}
+
+void JointBarWidget::Blinker::stop()
+{
+    _blinks = 0;
+    _timer.stop();
+}
+
+void JointBarWidget::Blinker::on_timeout()
+{
+    if(_blinks == 0)
+    {
+        _parent->setColor(Qt::green);
+        _timer.stop();
+    }
+
+    printf("Blinking..\n");
+
+    if(_state == 0)
+    {
+        _parent->setColor(Qt::green);
+        _state = 1;
+    }
+    else {
+        _parent->setColor(Qt::red);
+        _state = 0;
+    }
+
+    _blinks--;
+
+}
+
+void JointBarWidget::Blinker::blink(int nblinks)
+{
+    if(_blinks > 0) return;
+
+    _blinks = nblinks;
+    _state = 1;
+    _timer.start();
+}
+
+bool JointBarWidget::Blinker::blinking() const
+{
+    return _blinks > 0;
 }

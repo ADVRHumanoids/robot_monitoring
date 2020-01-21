@@ -195,7 +195,7 @@
         <item>
          <widget class="QLabel" name="label_10">
           <property name="text">
-           <string>Torque reference (imp.)</string>
+           <string>Torque ref. (imp.)</string>
           </property>
          </widget>
         </item>

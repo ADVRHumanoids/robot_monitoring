@@ -39,8 +39,6 @@ private:
 
     std::map<std::string, int> _jidmap;
 
-
-
 };
 
 #endif // JOINT_MONITOR_WIDGET_H

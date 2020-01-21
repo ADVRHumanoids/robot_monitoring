@@ -51,6 +51,7 @@ JointStateWidget::JointStateWidget(QWidget * parent):
     linkvel = findChild<QDoubleSpinBox *>("linkvel");
 
     torref = findChild<QDoubleSpinBox *>("torref");
+    torref_imp = findChild<QDoubleSpinBox *>("torref_imp");
     tor = findChild<QDoubleSpinBox *>("tor");
 
     current = findChild<QDoubleSpinBox *>("current");
@@ -73,6 +74,7 @@ JointStateWidget::JointStateWidget(QWidget * parent):
     linkvel     ->setRange(-1e9, 1e9);
     torref      ->setRange(-1e9, 1e9);
     tor         ->setRange(-1e9, 1e9);
+    torref_imp  ->setRange(-1e9, 1e9);
     current     ->setRange(-1e9, 1e9);
     mototemp    ->setRange(-1e9, 1e9);
     drivertemp  ->setRange(-1e9, 1e9);

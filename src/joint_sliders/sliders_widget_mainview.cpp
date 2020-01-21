@@ -90,6 +90,10 @@ cartesio_gui::SlidersWidgetMainView::SlidersWidgetMainView (Options opt,
     connect(findChild<QPushButton *>("disableButton"), &QPushButton::released,
             this, &SlidersWidgetMainView::on_disable_enable);
 
+    /* Start disabled */
+    on_disable_enable();
+
+
 }
 
 void cartesio_gui::SlidersWidgetMainView::makeJointVisible(QString jointname)

@@ -204,6 +204,13 @@ void JointMonitorWidget::on_jstate_recv(xbot_msgs::JointStateConstPtr msg)
             jstate_wid->mototemp->setValue(msg->temperature_motor[i]);
             jstate_wid->drivertemp->setValue(msg->temperature_driver[i]);
 
+            double k = msg->stiffness[i];
+            double d = msg->damping[i];
+            double qerr = msg->position_reference[i] - msg->link_position[i];
+            double dqerr = msg->velocity_reference[i] - msg->link_velocity[i];
+            double tauref_imp = k*qerr + d*dqerr + msg->effort_reference[i];
+            jstate_wid->torref_imp->setValue(tauref_imp);
+
             std::string fault_str = "Ok";
 
             if(msg->fault[i] != 0)
@@ -251,6 +258,20 @@ void JointMonitorWidget::on_jstate_recv(xbot_msgs::JointStateConstPtr msg)
             wid->setValue(std::fabs(msg->effort[i]), msg->effort[i]);
             double taumax = _urdf->getJoint(msg->name[i])->limits->effort;
             wid->setRange(0, taumax);
+
+        }
+        else if(barplot_wid->getFieldType() == "Torque tracking error")
+        {
+            double k = msg->stiffness[i];
+            double d = msg->damping[i];
+            double qerr = msg->position_reference[i] - msg->link_position[i];
+            double dqerr = msg->velocity_reference[i] - msg->link_velocity[i];
+            double tauref_imp = k*qerr + d*dqerr + msg->effort_reference[i];
+            double tau_err = tauref_imp - msg->effort[i];
+
+            auto wid = barplot_wid->wid_map.at(msg->name[i]);
+            wid->setValue(std::fabs(tau_err), tau_err);
+            wid->setRange(0, 15.0);
 
         }
         else if(barplot_wid->getFieldType() == "Link position")

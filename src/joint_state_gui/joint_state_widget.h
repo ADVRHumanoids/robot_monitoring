@@ -17,7 +17,7 @@ public:
 
     QDoubleSpinBox * posref, * motopos, * linkpos;
     QDoubleSpinBox * velref, * motovel, * linkvel;
-    QDoubleSpinBox * torref, * tor;
+    QDoubleSpinBox * torref, * torref_imp, * tor;
     QDoubleSpinBox * current;
     QDoubleSpinBox * mototemp, * drivertemp;
     QDoubleSpinBox * stiffness, * damping;

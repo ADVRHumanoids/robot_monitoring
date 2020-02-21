@@ -155,22 +155,53 @@ JointMonitorWidget::JointMonitorWidget(QWidget *parent) :
 
     on_joint_clicked(_jnames[0]);
 
-    barplot_wid->setOnJointClicked(on_joint_clicked);
+    for(auto p: barplot_wid->wid_map)
+    {
+        connect(p.second, &JointBarWidget::doubleLeftClicked,
+                [p, on_joint_clicked](){ on_joint_clicked(p.first); });
+
+        connect(p.second, &JointBarWidget::doubleRightClicked,
+                [p, this]()
+        {
+
+            _chart->addSeries(p.second->getJointName() +
+                              "/" +
+                              QString::fromStdString(barplot_wid->getFieldShortType()));
+        });
+    }
+
 
     _timer = new QTimer(this);
     _timer->setInterval(40);
     connect(_timer, &QTimer::timeout,
             this, &JointMonitorWidget::on_timer_event);
 
-
+    _chart = new ChartWidget;
+    _chart->setMinimumSize(640, 400);
 
     auto layout = new QHBoxLayout(this);
     layout->addWidget(barplot_wid);
-    layout->addWidget(jstate_wid);
-    layout->addWidget(_sliders);
+
+    auto vlayout = new QVBoxLayout(this);
+    auto hlayout = new QHBoxLayout(this);
+    hlayout->addWidget(jstate_wid);
+    hlayout->addWidget(_sliders);
+
+    vlayout->addLayout(hlayout);
+    vlayout->addWidget(_chart);
+
+    layout->addLayout(vlayout);
     setLayout(layout);
 
+    connect(jstate_wid, &JointStateWidget::plotAdded,
+            [this](QString plot)
+            {
+                _chart->addSeries(jstate_wid->getJointName() + "/" + plot);
+            });
+
     _timer->start();
+
+
 }
 
 void JointMonitorWidget::on_timer_event()
@@ -180,6 +211,10 @@ void JointMonitorWidget::on_timer_event()
 
 void JointMonitorWidget::on_jstate_recv(xbot_msgs::JointStateConstPtr msg)
 {
+    static auto t0 = msg->header.stamp;
+    auto now = msg->header.stamp;
+
+
     if(!_valid_msg_recv)
     {
         _jnames = msg->name;
@@ -189,6 +224,64 @@ void JointMonitorWidget::on_jstate_recv(xbot_msgs::JointStateConstPtr msg)
 
     for(int i = 0; i < msg->name.size(); i++)
     {
+
+        double k = msg->stiffness[i];
+        double d = msg->damping[i];
+        double qerr = msg->position_reference[i] - msg->link_position[i];
+        double dqerr = msg->velocity_reference[i] - msg->link_velocity[i];
+        double tauref_imp = k*qerr + d*dqerr + msg->effort_reference[i];
+
+        _chart->addPoint(QString::fromStdString(msg->name[i]) + "/link_pos",
+                         (now - t0).toSec(),
+                         msg->link_position[i]);
+
+        _chart->addPoint(QString::fromStdString(msg->name[i]) + "/motor_pos",
+                         (now - t0).toSec(),
+                         msg->motor_position[i]);
+
+        _chart->addPoint(QString::fromStdString(msg->name[i]) + "/pos_ref",
+                         (now - t0).toSec(),
+                         msg->position_reference[i]);
+
+        _chart->addPoint(QString::fromStdString(msg->name[i]) + "/link_vel",
+                         (now - t0).toSec(),
+                         msg->link_velocity[i]);
+
+        _chart->addPoint(QString::fromStdString(msg->name[i]) + "/motor_vel",
+                         (now - t0).toSec(),
+                         msg->motor_velocity[i]);
+
+        _chart->addPoint(QString::fromStdString(msg->name[i]) + "/vel_ref",
+                         (now - t0).toSec(),
+                         msg->velocity_reference[i]);
+
+        _chart->addPoint(QString::fromStdString(msg->name[i]) + "/torque",
+                         (now - t0).toSec(),
+                         msg->effort[i]);
+
+        _chart->addPoint(QString::fromStdString(msg->name[i]) + "/torque_ffwd",
+                         (now - t0).toSec(),
+                         msg->effort_reference[i]);
+
+        _chart->addPoint(QString::fromStdString(msg->name[i]) + "/torque_imp",
+                         (now - t0).toSec(),
+                         tauref_imp);
+
+        _chart->addPoint(QString::fromStdString(msg->name[i]) + "/current",
+                         (now - t0).toSec(),
+                         msg->aux[i]);
+
+        _chart->addPoint(QString::fromStdString(msg->name[i]) + "/driver_temp",
+                         (now - t0).toSec(),
+                         msg->temperature_driver[i]);
+
+        _chart->addPoint(QString::fromStdString(msg->name[i]) + "/motor_temp",
+                         (now - t0).toSec(),
+                         msg->temperature_motor[i]);
+
+
+
+
         if(msg->name[i] == jstate_wid->getJointName().toStdString())
         {
             jstate_wid->tor->setValue(msg->effort[i]);
@@ -204,11 +297,7 @@ void JointMonitorWidget::on_jstate_recv(xbot_msgs::JointStateConstPtr msg)
             jstate_wid->mototemp->setValue(msg->temperature_motor[i]);
             jstate_wid->drivertemp->setValue(msg->temperature_driver[i]);
 
-            double k = msg->stiffness[i];
-            double d = msg->damping[i];
-            double qerr = msg->position_reference[i] - msg->link_position[i];
-            double dqerr = msg->velocity_reference[i] - msg->link_velocity[i];
-            double tauref_imp = k*qerr + d*dqerr + msg->effort_reference[i];
+
             jstate_wid->torref_imp->setValue(tauref_imp);
 
             std::string fault_str = "Ok";
@@ -225,6 +314,9 @@ void JointMonitorWidget::on_jstate_recv(xbot_msgs::JointStateConstPtr msg)
             }
 
             jstate_wid->setStatus(fault_str);
+
+
+
         }
 
         if(msg->fault[i] == 0)

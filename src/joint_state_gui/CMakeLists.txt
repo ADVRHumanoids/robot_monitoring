@@ -18,12 +18,13 @@ add_library(joint_bar_ui STATIC
     circle_widget.cpp
     ui_resources.qrc)
 
-target_link_libraries(joint_bar_ui  sliders_widget
+target_link_libraries(joint_bar_ui sliders_widget chart_widget
     Qt5::Widgets Qt5::UiTools XBotInterface::XBotInterface ${catkin_LIBRARIES} yaml-cpp)
 
 
 add_executable(joint_state_gui ui_main.cpp)
 target_link_libraries(joint_state_gui joint_bar_ui)
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # Mark executables and/or libraries for installation
 install(TARGETS joint_state_gui

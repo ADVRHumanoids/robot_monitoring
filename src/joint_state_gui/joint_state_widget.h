@@ -9,6 +9,8 @@
 class JointStateWidget : public QWidget
 {
 
+    Q_OBJECT
+
 public:
 
     explicit JointStateWidget(QWidget * parent = nullptr);
@@ -24,6 +26,10 @@ public:
 
     QString getJointName() const { return _jname; }
     void setStatus(std::string status);
+
+signals:
+
+    void plotAdded(QString field);
 
 private:
 

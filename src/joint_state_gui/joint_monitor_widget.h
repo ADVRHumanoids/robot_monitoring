@@ -11,6 +11,7 @@
 #include "bar_plot_widget.h"
 #include "joint_state_widget.h"
 #include "robot_monitoring/joint_sliders/sliders_widget_mainview.h"
+#include "../chart/chart.h"
 
 
 class JointMonitorWidget : public QWidget
@@ -26,6 +27,7 @@ public:
 
 private:
 
+    ChartWidget * _chart;
     QTimer * _timer;
     ros::Subscriber _jstate_sub;
     bool _valid_msg_recv;

@@ -17,6 +17,7 @@ public:
     void setOnJointClicked(std::function<void(std::string)> f);
 
     std::string getFieldType() const;
+    std::string getFieldShortType() const;
 
     std::unordered_map<std::string, JointBarWidget *> wid_map;
 

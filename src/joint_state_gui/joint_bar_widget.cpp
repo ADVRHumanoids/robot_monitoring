@@ -61,11 +61,6 @@ JointBarWidget::JointBarWidget(const QString& jname, QWidget *parent) :
     _on_double_click = [](){};
 }
 
-void JointBarWidget::setOnBarDoubleClick(std::function<void ()> func)
-{
-    _on_double_click = func;
-}
-
 void JointBarWidget::setRange(double min, double max)
 {
     _bar->setRange(min, max);
@@ -126,9 +121,9 @@ void JointBarWidget::setInactive()
     _jname->setStyleSheet("font-weight: normal");
 }
 
-void JointBarWidget::handleMouseDoubleClickEvent(QMouseEvent * ev)
+QString JointBarWidget::getJointName() const
 {
-    _on_double_click();
+    return _jname->text();
 }
 
 void JointBarWidget::setColor(Qt::GlobalColor color)
@@ -147,7 +142,11 @@ bool JointBarWidget::eventFilter(QObject * obj, QEvent * event)
         QMouseEvent * mouse_event = static_cast<QMouseEvent *>(event);
         if(mouse_event->button() == Qt::MouseButton::LeftButton)
         {
-            handleMouseDoubleClickEvent(mouse_event);
+            emit doubleLeftClicked();
+        }
+        if(mouse_event->button() == Qt::MouseButton::RightButton)
+        {
+            emit doubleRightClicked();
         }
 
         return true;
@@ -159,7 +158,7 @@ bool JointBarWidget::eventFilter(QObject * obj, QEvent * event)
     }
 }
 
-JointBarWidget::Blinker::Blinker(JointBarWidget * parent):
+Blinker::Blinker(JointBarWidget * parent):
     _blinks(0),
     _state(0),
     _parent(parent)
@@ -172,13 +171,13 @@ JointBarWidget::Blinker::Blinker(JointBarWidget * parent):
 
 }
 
-void JointBarWidget::Blinker::stop()
+void Blinker::stop()
 {
     _blinks = 0;
     _timer.stop();
 }
 
-void JointBarWidget::Blinker::on_timeout()
+void Blinker::on_timeout()
 {
     if(_blinks == 0)
     {
@@ -202,7 +201,7 @@ void JointBarWidget::Blinker::on_timeout()
 
 }
 
-void JointBarWidget::Blinker::blink(int nblinks)
+void Blinker::blink(int nblinks)
 {
     if(_blinks > 0) return;
 
@@ -211,7 +210,7 @@ void JointBarWidget::Blinker::blink(int nblinks)
     _timer.start();
 }
 
-bool JointBarWidget::Blinker::blinking() const
+bool Blinker::blinking() const
 {
     return _blinks > 0;
 }

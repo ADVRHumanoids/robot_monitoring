@@ -4,6 +4,7 @@
 #include <QFile>
 #include <QVBoxLayout>
 #include <QComboBox>
+#include <QPushButton>
 
 void joint_state_widget_qrc_init()
 {
@@ -41,6 +42,7 @@ JointStateWidget::JointStateWidget(QWidget * parent):
     auto * layout = new QVBoxLayout;
     layout->addWidget(ui);
     setLayout(layout);
+    setMinimumWidth(400);
 
     posref = findChild<QDoubleSpinBox *>("posref");
     motopos = findChild<QDoubleSpinBox *>("motopos");
@@ -80,6 +82,53 @@ JointStateWidget::JointStateWidget(QWidget * parent):
     drivertemp  ->setRange(-1e9, 1e9);
     stiffness   ->setRange(-1e9, 1e9);
     damping     ->setRange(-1e9, 1e9);
+
+    auto plot_link_pos = findChild<QPushButton *>("plotLinkPos");
+    connect(plot_link_pos, &QPushButton::released,
+            [this](){ emit plotAdded("link_pos");});
+
+    auto plot_ref_pos = findChild<QPushButton *>("plotPosRef");
+    connect(plot_ref_pos, &QPushButton::released,
+            [this](){ emit plotAdded("pos_ref");});
+
+    auto plot_moto_pos = findChild<QPushButton *>("plotMotorPos");
+    connect(plot_moto_pos, &QPushButton::released,
+            [this](){ emit plotAdded("motor_pos");});
+
+    auto plot_link_vel = findChild<QPushButton *>("plotLinkVel");
+    connect(plot_link_vel, &QPushButton::released,
+            [this](){ emit plotAdded("link_vel");});
+
+    auto plot_ref_vel = findChild<QPushButton *>("plotVelRef");
+    connect(plot_ref_vel, &QPushButton::released,
+            [this](){ emit plotAdded("vel_ref");});
+
+    auto plot_moto_vel = findChild<QPushButton *>("plotMotorVel");
+    connect(plot_moto_vel, &QPushButton::released,
+            [this](){ emit plotAdded("motor_vel");});
+
+    auto plot_tau_imp = findChild<QPushButton *>("plotTauImp");
+    connect(plot_tau_imp, &QPushButton::released,
+            [this](){ emit plotAdded("torque_imp");});
+
+    auto plot_tau_ffwd = findChild<QPushButton *>("plotTauFfwd");
+    connect(plot_tau_ffwd, &QPushButton::released,
+            [this](){ emit plotAdded("torque_ffwd");});
+
+    auto plot_tau = findChild<QPushButton *>("plotTau");
+    connect(plot_tau, &QPushButton::released,
+            [this](){ emit plotAdded("torque");});
+
+    auto plot_temp_motor = findChild<QPushButton *>("plotMotorTemp");
+    connect(plot_temp_motor, &QPushButton::released,
+            [this](){ emit plotAdded("motor_temp");});
+
+    auto plot_driver_motor = findChild<QPushButton *>("plotDriverTemp");
+    connect(plot_driver_motor, &QPushButton::released,
+            [this](){ emit plotAdded("driver_temp");});
+
+
+
 
 }
 

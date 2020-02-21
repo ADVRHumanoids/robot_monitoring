@@ -75,17 +75,41 @@ BarPlotWidget::BarPlotWidget(std::vector<std::string> jnames, QWidget *parent) :
     _fieldtype_combobox->addItem("Temperature");
     _fieldtype_combobox->addItem("Current");
     _fieldtype_combobox->addItem("Torque tracking error");
+
+
 }
 
 void BarPlotWidget::setOnJointClicked(std::function<void (std::string)> f)
 {
     for(auto pair : wid_map)
     {
-        pair.second->setOnBarDoubleClick(std::bind(f, pair.first));
+//        pair.second->setOnBarDoubleClick(std::bind(f, pair.first));
     }
 }
 
 std::string BarPlotWidget::getFieldType() const
 {
     return _fieldtype_combobox->currentText().toStdString();
+}
+
+std::string BarPlotWidget::getFieldShortType() const
+{
+    auto type = getFieldType();
+
+    std::map<std::string, std::string> type_to_short_type;
+    type_to_short_type["Link position" ] = "link_pos";
+    type_to_short_type["Motor position"] = "motor_pos";
+    type_to_short_type["Link velocity" ] = "link_vel";
+    type_to_short_type["Motor velocity"] = "motor_vel";
+    type_to_short_type["Torque"        ] = "torque";
+    type_to_short_type["Stiffness"     ] = "k";
+    type_to_short_type["Damping"       ] = "d";
+    type_to_short_type["Current"       ] = "current";
+
+    if(type_to_short_type.count(type) > 0)
+    {
+        return type_to_short_type.at(type);
+    }
+
+    return "";
 }

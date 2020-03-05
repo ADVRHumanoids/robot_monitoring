@@ -31,6 +31,7 @@ private:
     QTimer * _timer;
     ros::Subscriber _jstate_sub;
     bool _valid_msg_recv;
+    bool _widget_started;
     std::vector<std::string> _jnames;
     urdf::ModelInterfaceSharedPtr _urdf;
 

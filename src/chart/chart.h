@@ -5,6 +5,7 @@
 #include <QChartView>
 #include <QLineSeries>
 #include <QValueAxis>
+#include <QLabel>
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -67,6 +68,7 @@ private:
 
     QTimer * _scroll_timer;
     double _timer_period_ms;
+    QLabel * _fps_label;
 };
 
 #endif // CHART_H

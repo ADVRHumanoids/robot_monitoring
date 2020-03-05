@@ -12,6 +12,7 @@ int main(int argc, char *argv[])
     }
 
     ros::init(argc, argv, "monitor_gui_node");
+    QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
     QApplication a(argc, argv);
     JointMonitorWidget w;
     w.show();

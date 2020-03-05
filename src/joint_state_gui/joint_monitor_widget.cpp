@@ -92,7 +92,8 @@ union centAC_fault_t{
 
 JointMonitorWidget::JointMonitorWidget(QWidget *parent) :
     QWidget(parent),
-    _valid_msg_recv(false)
+    _valid_msg_recv(false),
+    _widget_started(false)
 {
 
     ros::NodeHandle nh("xbotcore");
@@ -171,10 +172,6 @@ JointMonitorWidget::JointMonitorWidget(QWidget *parent) :
     }
 
 
-    _timer = new QTimer(this);
-    _timer->setInterval(40);
-    connect(_timer, &QTimer::timeout,
-            this, &JointMonitorWidget::on_timer_event);
 
     _chart = new ChartWidget;
     _chart->setMinimumSize(640, 400);
@@ -199,7 +196,14 @@ JointMonitorWidget::JointMonitorWidget(QWidget *parent) :
                 _chart->addSeries(jstate_wid->getJointName() + "/" + plot);
             });
 
+
+    _timer = new QTimer(this);
+    _timer->setInterval(40);
+    connect(_timer, &QTimer::timeout,
+            this, &JointMonitorWidget::on_timer_event);
     _timer->start();
+
+    _widget_started = true;
 
 
 }
@@ -211,16 +215,22 @@ void JointMonitorWidget::on_timer_event()
 
 void JointMonitorWidget::on_jstate_recv(xbot_msgs::JointStateConstPtr msg)
 {
-    static auto t0 = msg->header.stamp;
-    auto now = msg->header.stamp;
-
-
     if(!_valid_msg_recv)
     {
         _jnames = msg->name;
         _valid_msg_recv = true;
         return;
     }
+
+    if(!_widget_started)
+    {
+        return;
+    }
+
+    static auto t0 = msg->header.stamp;
+    auto now = msg->header.stamp;
+
+
 
     for(int i = 0; i < msg->name.size(); i++)
     {

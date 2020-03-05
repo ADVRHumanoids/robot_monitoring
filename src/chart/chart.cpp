@@ -95,11 +95,6 @@ ChartWidget::ChartWidget(QWidget * parent):
     connect(autoscroll, &QCheckBox::toggled,
             [this](bool toggled)
     {
-        if(!_autoscroll && toggled)
-        {
-            reset_view();
-        }
-
         _autoscroll = toggled;
     });
 
@@ -116,6 +111,8 @@ ChartWidget::ChartWidget(QWidget * parent):
     auto resetview = right_panel->findChild<QPushButton*>("resetView");
     connect(resetview, &QPushButton::released,
             this, &ChartWidget::reset_view);
+
+    _fps_label = right_panel->findChild<QLabel*>("fpsLabel");
 
     _scroll_timer->start();
 }
@@ -229,6 +226,8 @@ void ChartWidget::addPoint(QString name,
 
 void ChartWidget::on_timer_event()
 {
+    auto tic = std::chrono::high_resolution_clock::now();
+
     for(const auto& p : _point_to_add)
     {
         _series.at(p.first)->append(p.second);
@@ -236,11 +235,21 @@ void ChartWidget::on_timer_event()
 
     _point_to_add.clear();
 
-    if(!_autoscroll) return;
+    if(_autoscroll)
+    {
+        auto range = _axis_x->max() - _axis_x->min();
+        auto dx = _chart->plotArea().width() / range * _timer_period_ms * 0.001;
+        _chart->scroll(dx, 0);
+    }
 
-    auto range = _axis_x->max() - _axis_x->min();
-    auto dx = _chart->plotArea().width() / range * _timer_period_ms * 0.001;
-    _chart->scroll(dx, 0);
+    auto toc = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double> dt = toc - tic;
+    int fps = 1/dt.count();
+
+    _fps_label->setText(QString("%1 FPS").arg(fps));
+
+
 }
 
 void ChartWidget::legend_marker_hovered(bool hover)
@@ -304,6 +313,7 @@ void ChartWidget::reset_view()
     }
 
     auto range = y_max - y_min;
+    range = std::max(range, 1.0);
     y_min = y_min - 0.1*(range);
     y_max = y_max + 0.1*(range);
 

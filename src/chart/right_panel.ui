@@ -35,6 +35,13 @@
      </property>
     </widget>
    </item>
+   <item>
+    <widget class="QLabel" name="fpsLabel">
+     <property name="text">
+      <string>24 FPS</string>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <resources/>

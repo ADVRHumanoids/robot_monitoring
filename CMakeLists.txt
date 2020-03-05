@@ -109,6 +109,8 @@ catkin_package(
     #  DEPENDS system_lib
     )
 
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
 add_subdirectory(src/chart/)
 add_subdirectory(src/joint_state_gui/)
 add_subdirectory(src/joint_sliders/)

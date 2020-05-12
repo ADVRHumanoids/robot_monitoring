@@ -50,7 +50,7 @@ BarPlotWidget::BarPlotWidget(std::vector<std::string> jnames, QWidget *parent) :
         auto wid = new JointBarWidget(QString::fromStdString(jnames[i]),
                                       this);
 
-        if(i < jnames.size() / 2)
+        if(i < jnames.size() / 2 || jnames.size() < 8)
         {
             bars_layout_left->addWidget(wid);
         }

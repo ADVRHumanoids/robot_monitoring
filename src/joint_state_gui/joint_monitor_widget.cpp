@@ -1,5 +1,6 @@
 #include "joint_monitor_widget.h"
 #include "bar_plot_widget.h"
+#include "xbot2_wid.h"
 #include <QHBoxLayout>
 
 #include <urdf_parser/urdf_parser.h>
@@ -177,7 +178,12 @@ JointMonitorWidget::JointMonitorWidget(QWidget *parent) :
     _chart->setMinimumSize(640, 400);
 
     auto layout = new QHBoxLayout(this);
-    layout->addWidget(barplot_wid);
+
+    auto vlayout_left = new QVBoxLayout(this);
+    vlayout_left->addWidget(new XBot2Widget(this));
+    vlayout_left->addWidget(barplot_wid);
+    layout->addLayout(vlayout_left);
+
 
     auto vlayout = new QVBoxLayout(this);
     auto hlayout = new QHBoxLayout(this);

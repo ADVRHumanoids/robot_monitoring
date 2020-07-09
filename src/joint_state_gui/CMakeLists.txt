@@ -16,6 +16,8 @@ add_library(joint_bar_ui STATIC
     joint_state_widget.cpp
     joint_monitor_widget.cpp
     circle_widget.cpp
+    xbot2_wid.cpp
+    xbot2_plugin_wid.cpp
     ui_resources.qrc)
 
 target_link_libraries(joint_bar_ui sliders_widget chart_widget

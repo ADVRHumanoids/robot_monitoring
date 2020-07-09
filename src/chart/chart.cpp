@@ -10,6 +10,8 @@
 
 #include <QApplication>
 
+#include <cmath>
+
 void qrc_init()
 {
     Q_INIT_RESOURCE(chart_resources);

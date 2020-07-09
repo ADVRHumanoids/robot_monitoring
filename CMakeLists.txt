@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.0)
 project(robot_monitoring)
 
-## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++14)
+# std c++14 flags
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)

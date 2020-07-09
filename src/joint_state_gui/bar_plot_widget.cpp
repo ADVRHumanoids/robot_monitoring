@@ -42,6 +42,7 @@ BarPlotWidget::BarPlotWidget(std::vector<std::string> jnames, QWidget *parent) :
     setLayout(layout);
 
     auto bars_layout_left = findChild<QVBoxLayout *>("BarsLayoutLeft");
+    auto bars_layout_center = findChild<QVBoxLayout *>("BarsLayoutCenter");
     auto bars_layout_right = findChild<QVBoxLayout *>("BarsLayoutRight");
 
     for(int i = 0; i < jnames.size(); i++)
@@ -50,9 +51,13 @@ BarPlotWidget::BarPlotWidget(std::vector<std::string> jnames, QWidget *parent) :
         auto wid = new JointBarWidget(QString::fromStdString(jnames[i]),
                                       this);
 
-        if(i < jnames.size() / 2 || jnames.size() < 8)
+        if(i < jnames.size() / 3 || jnames.size() < 8)
         {
             bars_layout_left->addWidget(wid);
+        }
+        else if(i < jnames.size() / 3 * 2)
+        {
+            bars_layout_center->addWidget(wid);
         }
         else
         {

@@ -36,13 +36,23 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout" stretch="10,4,10">
+    <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0,0,0,0">
      <item>
       <layout class="QVBoxLayout" name="BarsLayoutLeft">
        <property name="spacing">
         <number>0</number>
        </property>
       </layout>
+     </item>
+     <item>
+      <widget class="Line" name="line_2">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="BarsLayoutCenter"/>
      </item>
      <item>
       <widget class="Line" name="line">

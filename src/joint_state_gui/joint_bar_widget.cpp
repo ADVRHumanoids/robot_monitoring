@@ -63,18 +63,18 @@ JointBarWidget::JointBarWidget(const QString& jname, QWidget *parent) :
 
 void JointBarWidget::setRange(double min, double max)
 {
-    _bar->setRange(min, max);
+    _bar->setRange(min*1000, max*1000);
 }
 
 void JointBarWidget::setValue(double x)
 {
-    _bar->setValue(x);
+    _bar->setValue(x*1000);
     _bar->setFormat(QString("%1").arg(x, 5,'f',1));
 }
 
 void JointBarWidget::setValue(double xbar, double xtext)
 {
-    _bar->setValue(xbar);
+    _bar->setValue(xbar*1000);
     _bar->setFormat(QString("%1").arg(xtext, 5,'f',1));
 }
 

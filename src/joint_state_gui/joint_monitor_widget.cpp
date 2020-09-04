@@ -164,12 +164,12 @@ JointMonitorWidget::JointMonitorWidget(QWidget *parent) :
 
         connect(p.second, &JointBarWidget::doubleRightClicked,
                 [p, this]()
-        {
+                {
 
-            _chart->addSeries(p.second->getJointName() +
-                              "/" +
-                              QString::fromStdString(barplot_wid->getFieldShortType()));
-        });
+                    _chart->addSeries(p.second->getJointName() +
+                                      "/" +
+                                      QString::fromStdString(barplot_wid->getFieldShortType()));
+                });
     }
 
 
@@ -302,6 +302,7 @@ void JointMonitorWidget::on_jstate_recv(xbot_msgs::JointStateConstPtr msg)
         {
             jstate_wid->tor->setValue(msg->effort[i]);
             jstate_wid->torref->setValue(msg->effort_reference[i]);
+            jstate_wid->velref->setValue(msg->velocity_reference[i]);
             jstate_wid->posref->setValue(msg->position_reference[i]);
             jstate_wid->motopos->setValue(msg->motor_position[i]);
             jstate_wid->motovel->setValue(msg->motor_velocity[i]);
@@ -401,14 +402,16 @@ void JointMonitorWidget::on_jstate_recv(xbot_msgs::JointStateConstPtr msg)
         else if(barplot_wid->getFieldType() == "Link velocity")
         {
             auto wid = barplot_wid->wid_map.at(msg->name[i]);
-            wid->setValue(msg->link_velocity[i]);
+            double vel = msg->link_velocity[i];
+            wid->setValue(std::fabs(vel), vel);
             double qdmax = _urdf->getJoint(msg->name[i])->limits->velocity;
             wid->setRange(0, qdmax);
         }
         else if(barplot_wid->getFieldType() == "Motor velocity")
         {
             auto wid = barplot_wid->wid_map.at(msg->name[i]);
-            wid->setValue(msg->motor_velocity[i]);
+            double vel = msg->motor_velocity[i];
+            wid->setValue(std::fabs(vel), vel);
             double qdmax = _urdf->getJoint(msg->name[i])->limits->velocity;
             wid->setRange(0, qdmax);
         }

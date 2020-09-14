@@ -237,11 +237,12 @@ void ChartWidget::on_timer_event()
 
     _point_to_add.clear();
 
-    if(_autoscroll)
+    if(_series.size() > 0 && _autoscroll)
     {
-        auto range = _axis_x->max() - _axis_x->min();
-        auto dx = _chart->plotArea().width() / range * _timer_period_ms * 0.001;
-        _chart->scroll(dx, 0);
+        auto curr_time = _series.begin()->second->points().back().x();
+//        auto range = _axis_x->max() - _axis_x->min();
+//        auto dx = _chart->plotArea().width() / range * _timer_period_ms * 0.001;
+        _chart->scroll(curr_time - _axis_x->max(), 0);
     }
 
     auto toc = std::chrono::high_resolution_clock::now();
@@ -249,7 +250,12 @@ void ChartWidget::on_timer_event()
     std::chrono::duration<double> dt = toc - tic;
     int fps = 1/dt.count();
 
-    _fps_label->setText(QString("%1 FPS").arg(fps));
+    static auto last_print = std::chrono::high_resolution_clock::now();
+    if(toc - last_print > std::chrono::seconds(1))
+    {
+        _fps_label->setText(QString("%1 FPS").arg(fps));
+        last_print = toc;
+    }
 
 
 }

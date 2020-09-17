@@ -55,6 +55,7 @@ public:
     void setStatus(QString status);
     void setSafe(bool force = false);
     void setDanger(bool force = false);
+    void updateStatus();
     void setActive();
     void setInactive();
     QString getJointName() const;
@@ -78,6 +79,8 @@ private:
 
     Blinker _blinker;
     int _state;
+
+    std::chrono::high_resolution_clock::time_point _last_fault_time;
 
 
 

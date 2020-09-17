@@ -26,6 +26,7 @@ public:
 
     QString getJointName() const { return _jname; }
     void setStatus(std::string status);
+    void updateStatus();
 
 signals:
 
@@ -36,6 +37,8 @@ private:
     QGroupBox * group;
     QString _jname;
     QLabel * _fault;
+
+    std::chrono::high_resolution_clock::time_point _last_fault_time;
 
 
 };

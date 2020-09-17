@@ -141,4 +141,26 @@ void JointStateWidget::setJointName(QString jname, int jid)
 void JointStateWidget::setStatus(std::string status)
 {
     _fault->setText(QString::fromStdString(status));
+
+    if(status != "Ok")
+    {
+        _fault->setStyleSheet("color: black");
+        _last_fault_time = std::chrono::high_resolution_clock::now();
+    }
+
+}
+
+void JointStateWidget::updateStatus()
+{
+    using namespace std::chrono;
+
+    const auto fault_timeout = seconds(1);
+
+    if(_last_fault_time.time_since_epoch().count() > 0 &&
+        high_resolution_clock::now() > _last_fault_time + fault_timeout)
+    {
+        _fault->setStyleSheet("color: grey");
+
+        _last_fault_time = high_resolution_clock::time_point(nanoseconds(0));
+    }
 }

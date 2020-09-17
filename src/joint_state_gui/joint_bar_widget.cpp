@@ -59,6 +59,8 @@ JointBarWidget::JointBarWidget(const QString& jname, QWidget *parent) :
     _jname->setText(jname);
 
     _on_double_click = [](){};
+
+    setColor(Qt::green);
 }
 
 void JointBarWidget::setRange(double min, double max)
@@ -100,15 +102,29 @@ void JointBarWidget::setSafe(bool force)
 
 void JointBarWidget::setDanger(bool force)
 {
-    if(_state == 0)
-    {
-        _blinker.stop();
-    }
+    _blinker.stop();
 
     setColor(Qt::red);
 
     _state = 1;
 
+    _last_fault_time = std::chrono::high_resolution_clock::now();
+
+}
+
+void JointBarWidget::updateStatus()
+{
+    using namespace std::chrono;
+
+    const auto fault_timeout = seconds(1);
+
+    if(_last_fault_time.time_since_epoch().count() > 0 &&
+        high_resolution_clock::now() > _last_fault_time + fault_timeout)
+    {
+        setSafe();
+
+        _last_fault_time = high_resolution_clock::time_point(nanoseconds(0));
+    }
 }
 
 void JointBarWidget::setActive()
@@ -174,15 +190,17 @@ Blinker::Blinker(JointBarWidget * parent):
 void Blinker::stop()
 {
     _blinks = 0;
+    _parent->setColor(Qt::green);
     _timer.stop();
+    printf("Stopped \n");
 }
 
 void Blinker::on_timeout()
 {
     if(_blinks == 0)
     {
-        _parent->setColor(Qt::green);
-        _timer.stop();
+        stop();
+        return;
     }
 
     printf("Blinking..\n");

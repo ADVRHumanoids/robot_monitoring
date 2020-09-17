@@ -6,6 +6,8 @@
 
 #include <ros/ros.h>
 #include <xbot_msgs/JointState.h>
+#include <xbot_msgs/AuxState.h>
+#include <xbot_msgs/Fault.h>
 #include <urdf_parser/urdf_parser.h>
 
 #include "bar_plot_widget.h"
@@ -29,7 +31,7 @@ private:
 
     ChartWidget * _chart;
     QTimer * _timer;
-    ros::Subscriber _jstate_sub;
+    ros::Subscriber _jstate_sub, _aux_sub, _fault_sub;
     bool _valid_msg_recv;
     bool _widget_started;
     std::vector<std::string> _jnames;
@@ -39,6 +41,10 @@ private:
 
     void on_timer_event();
     void on_jstate_recv(xbot_msgs::JointStateConstPtr msg);
+    void on_fault_recv(xbot_msgs::FaultConstPtr msg);
+    void on_aux_recv(xbot_msgs::AuxStateConstPtr msg);
+
+
 
     std::map<std::string, int> _jidmap;
 

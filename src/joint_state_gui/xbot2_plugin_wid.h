@@ -19,7 +19,7 @@ public:
     explicit XBot2PluginWidget(QString name,
                                QWidget * parent = nullptr);
 
-    void setLoad(double load);
+    void setLoad(double load, double time_ms);
     void setStatus(QString status);
 
 signals:

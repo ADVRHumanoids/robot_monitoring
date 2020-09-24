@@ -259,9 +259,9 @@ XBot2Widget::XBot2Widget(QWidget * parent) :
             if(th_it != msg->thread_stats.end())
             {
                 double load = task_stats.run_time /
-                              th_it->period;
+                              th_it->expected_period;
 
-                it->second->setLoad(load);
+                it->second->setLoad(load, task_stats.run_time*1000);
             }
 
             load_upd_done = true;

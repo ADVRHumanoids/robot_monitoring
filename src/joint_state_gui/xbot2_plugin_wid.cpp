@@ -70,9 +70,10 @@ XBot2PluginWidget::XBot2PluginWidget(QString name,
             });
 }
 
-void XBot2PluginWidget::setLoad(double load)
+void XBot2PluginWidget::setLoad(double load, double time_ms)
 {
-    _loadBar->setValue(load*100);
+    _loadBar->setValue(std::min(load, 1.0)*100);
+    _loadBar->setFormat(QString("%1 ms").arg(time_ms, 5,'f',1));
 }
 
 void XBot2PluginWidget::setStatus(QString status)
@@ -83,6 +84,8 @@ void XBot2PluginWidget::setStatus(QString status)
     {
         _btnStarts = true;
     }
+
+    _startStopBtn->setEnabled(true);
 
     if(status == "Running")
     {

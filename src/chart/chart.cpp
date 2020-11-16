@@ -230,23 +230,34 @@ void ChartWidget::on_timer_event()
 {
     auto tic = std::chrono::high_resolution_clock::now();
 
+    // add pending points to their series
     for(const auto& p : _point_to_add)
     {
         _series.at(p.first)->append(p.second);
     }
 
+    // cleare pending points
     _point_to_add.clear();
 
-    if(_series.size() > 0 && _autoscroll)
+    // find a series with at least one point
+    auto series_has_points = [](const auto& pair)
     {
-        auto curr_time = _series.begin()->second->points().back().x();
-//        auto range = _axis_x->max() - _axis_x->min();
-//        auto dx = _chart->plotArea().width() / range * _timer_period_ms * 0.001;
+        return pair.second->points().size() > 0;
+    };
+
+    auto it = std::find_if(_series.begin(), _series.end(),
+                           series_has_points);
+
+    // if found, use it to autoscroll x-axis
+    if(it != _series.end() && _autoscroll)
+    {
+        auto curr_time = it->second->points().back().x();
         _chart->scroll(curr_time - _axis_x->max(), 0);
     }
 
     auto toc = std::chrono::high_resolution_clock::now();
 
+    // print FPS every 1 sec
     std::chrono::duration<double> dt = toc - tic;
     int fps = 1/dt.count();
 

@@ -17,6 +17,7 @@
 #include <QFrame>
 #include <QCheckBox>
 #include <QRadioButton>
+#include <QGroupBox>
 
 void xbot2_widget_qrc_init()
 {
@@ -57,6 +58,14 @@ XBot2Widget::XBot2Widget(QWidget * parent) :
     lay->addWidget(ui);
     setLayout(lay);
 
+    /* Add status widget */
+    _status_wid = new XBot2StatusWidget;
+    auto status_box = findChild<QGroupBox*>("statusBox");
+    auto status_layout = new QVBoxLayout;
+    status_layout->setMargin(0);
+    status_layout->addWidget(_status_wid);
+    status_box->setLayout(status_layout);
+
 
     /* Connect filter buttons */
     auto enableFilterCheck = findChild<QCheckBox*>("enableFilter");
@@ -83,6 +92,10 @@ XBot2Widget::XBot2Widget(QWidget * parent) :
     auto fastBtn = findChild<QRadioButton*>("fastBtn");
     auto filt_fast_srv = _nh.serviceClient<std_srvs::Trigger>(
         "set_filter_profile_fast");
+
+    safeBtn->setEnabled(false);
+    mediumBtn->setEnabled(false);
+    fastBtn->setEnabled(false);
 
     connect(safeBtn, &QRadioButton::clicked,
             [filt_safe_srv](bool checked) mutable
@@ -290,6 +303,16 @@ XBot2Widget::XBot2Widget(QWidget * parent) :
             enableFilterCheck->setChecked(true);
         }
 
+        if(!msg->filter_active &&
+            enableFilterCheck->isChecked())
+        {
+            enableFilterCheck->setChecked(false);
+        }
+
+        safeBtn->setEnabled(msg->filter_active);
+        mediumBtn->setEnabled(msg->filter_active);
+        fastBtn->setEnabled(msg->filter_active);
+
         if(msg->mask == 0 &&
             disableEnableBtn->text() == "Disable device")
         {
@@ -326,4 +349,9 @@ XBot2Widget::XBot2Widget(QWidget * parent) :
         1,
         on_jdinfo_recv);
 
+}
+
+void XBot2Widget::update()
+{
+    _status_wid->update();
 }

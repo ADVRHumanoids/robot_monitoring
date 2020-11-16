@@ -5,5 +5,7 @@
         <file>joint_state_widget.ui</file>
         <file>xbot2_plugin.ui</file>
         <file>xbot2.ui</file>
+        <file>xbot2_status.ui</file>
+        <file>load_plugin.ui</file>
     </qresource>
 </RCC>

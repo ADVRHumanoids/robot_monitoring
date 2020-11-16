@@ -6,13 +6,13 @@
 #include <QComboBox>
 #include <QPushButton>
 
+/* Code to initialize the .ui resource and load it */
 void joint_state_widget_qrc_init()
 {
     Q_INIT_RESOURCE(ui_resources);
 }
 
 namespace  {
-
 
 QWidget * LoadUiFile(QWidget * parent)
 {
@@ -44,6 +44,7 @@ JointStateWidget::JointStateWidget(QWidget * parent):
     setLayout(layout);
     setMinimumWidth(400);
 
+    // find all spinboxes, etc (by name)
     posref = findChild<QDoubleSpinBox *>("posref");
     motopos = findChild<QDoubleSpinBox *>("motopos");
     linkpos = findChild<QDoubleSpinBox *>("linkpos");
@@ -68,6 +69,7 @@ JointStateWidget::JointStateWidget(QWidget * parent):
 
     _fault = findChild<QLabel *>("faulttext");
 
+    // initialize range
     posref      ->setRange(-1e9, 1e9);
     motopos     ->setRange(-1e9, 1e9);
     linkpos     ->setRange(-1e9, 1e9);
@@ -83,6 +85,7 @@ JointStateWidget::JointStateWidget(QWidget * parent):
     stiffness   ->setRange(-1e9, 1e9);
     damping     ->setRange(-1e9, 1e9);
 
+    // set all 'plot' buttons to emit the plotAdded signal (used by chart)
     auto plot_link_pos = findChild<QPushButton *>("plotLinkPos");
     connect(plot_link_pos, &QPushButton::released,
             [this](){ emit plotAdded("link_pos");});
@@ -127,9 +130,6 @@ JointStateWidget::JointStateWidget(QWidget * parent):
     connect(plot_driver_motor, &QPushButton::released,
             [this](){ emit plotAdded("driver_temp");});
 
-
-
-
 }
 
 void JointStateWidget::setJointName(QString jname, int jid)
@@ -140,11 +140,15 @@ void JointStateWidget::setJointName(QString jname, int jid)
 
 void JointStateWidget::setStatus(std::string status)
 {
+    // set fault text
     _fault->setText(QString::fromStdString(status));
 
+    // if not Ok, set text color to black
     if(status != "Ok")
     {
         _fault->setStyleSheet("color: black");
+
+        // save fault time
         _last_fault_time = std::chrono::high_resolution_clock::now();
     }
 
@@ -154,6 +158,7 @@ void JointStateWidget::updateStatus()
 {
     using namespace std::chrono;
 
+    // time after which an old fault becomes grayed out
     const auto fault_timeout = seconds(1);
 
     if(_last_fault_time.time_since_epoch().count() > 0 &&

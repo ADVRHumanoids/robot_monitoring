@@ -6,6 +6,10 @@
 #include <QDoubleSpinBox>
 #include <QLabel>
 
+/**
+ * @brief The JointStateWidget class shows the full
+ * information for one robot joint
+ */
 class JointStateWidget : public QWidget
 {
 
@@ -15,6 +19,9 @@ public:
 
     explicit JointStateWidget(QWidget * parent = nullptr);
 
+    /**
+     * @brief setJointName sets the widget joint name and id
+     */
     void setJointName(QString jname, int jid);
 
     QDoubleSpinBox * posref, * motopos, * linkpos;

@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
         std::cout << k.toStdString() << std::endl;
     }
 
-    ros::init(argc, argv, "monitor_gui_node");
+    ros::init(argc, argv, "xbot_gui");
     QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
     QApplication a(argc, argv);
     JointMonitorWidget w;

@@ -9,6 +9,10 @@
 
 class JointBarWidget;
 
+/**
+ * @brief The Blinker class implements the red-green
+ * blinking of the fault square box
+ */
 class Blinker : public QObject
 {
     Q_OBJECT
@@ -38,6 +42,10 @@ private:
     JointBarWidget * _parent;
 };
 
+/**
+ * @brief The JointBarWidget class implements the single bar for a
+ * single joint
+ */
 class JointBarWidget : public QWidget
 {
 

@@ -10,26 +10,65 @@
 #include <xbot_msgs/Fault.h>
 #include <urdf_parser/urdf_parser.h>
 
+#include "xbot2_wid.h"
 #include "bar_plot_widget.h"
 #include "joint_state_widget.h"
 #include "robot_monitoring/joint_sliders/sliders_widget_mainview.h"
+#include "top_right_tab.h"
 #include "../chart/chart.h"
 
-
+/**
+ * @brief The JointMonitorWidget class is the main widget for the
+ * xbot2-gui.
+ */
 class JointMonitorWidget : public QWidget
 {
 
 public:
 
-    explicit JointMonitorWidget(QWidget *parent = nullptr);
+    explicit JointMonitorWidget(int argc = 0,
+                                char ** argv = nullptr,
+                                QWidget *parent = nullptr);
 
-
+    /**
+     * @brief barplot_wid is the bar plot for the joint state
+     */
     BarPlotWidget * barplot_wid;
+
+    /**
+     * @brief jstate_wid is a widget showing the full state for
+     * a single joint
+     */
     JointStateWidget * jstate_wid;
+
+    /**
+     * @brief _chart is a live plot widget
+     */
+    ChartWidget * _chart;
+
+    /**
+     * @brief _sliders is a slider-based commander for the robot
+     * joints, organized in a chain-wise fashion
+     */
+    cartesio_gui::SlidersWidgetMainView * _sliders;
+
+    /**
+     * @brief _xbot2
+     */
+    XBot2Widget * _xbot2;
+
+    /**
+     * @brief _xbot2_status
+     */
+    XBot2StatusWidget * _xbot2_status;
+
+    /**
+     * @brief _tr_tab
+     */
+    TopRightTab * _tr_tab;
 
 private:
 
-    ChartWidget * _chart;
     QTimer * _timer;
     ros::Subscriber _jstate_sub, _aux_sub, _fault_sub;
     bool _valid_msg_recv;
@@ -37,7 +76,6 @@ private:
     std::vector<std::string> _jnames;
     urdf::ModelInterfaceSharedPtr _urdf;
 
-    cartesio_gui::SlidersWidgetMainView * _sliders;
 
     void on_timer_event();
     void on_jstate_recv(xbot_msgs::JointStateConstPtr msg);

@@ -61,6 +61,9 @@ JointBarWidget::JointBarWidget(const QString& jname, QWidget *parent) :
     _on_double_click = [](){};
 
     setColor(Qt::green);
+
+    setToolTip("Double left-click to show this joint inside the single joint view \n"
+               "Double right-click to plot this signal inside the chart");
 }
 
 void JointBarWidget::setRange(double min, double max)
@@ -82,7 +85,8 @@ void JointBarWidget::setValue(double xbar, double xtext)
 
 void JointBarWidget::setStatus(QString status)
 {
-//    _status->setText(status);
+    auto frame = findChild<QFrame *>("StatusFrame");
+    frame->setToolTip(status);
 }
 
 void JointBarWidget::setSafe(bool force)
@@ -91,7 +95,6 @@ void JointBarWidget::setSafe(bool force)
 
     if(_state != 0)
     {
-        printf("Started blinker..\n");
         _blinker.blink(10);
     }
 
@@ -192,7 +195,6 @@ void Blinker::stop()
     _blinks = 0;
     _parent->setColor(Qt::green);
     _timer.stop();
-    printf("Stopped \n");
 }
 
 void Blinker::on_timeout()
@@ -202,8 +204,6 @@ void Blinker::on_timeout()
         stop();
         return;
     }
-
-    printf("Blinking..\n");
 
     if(_state == 0)
     {

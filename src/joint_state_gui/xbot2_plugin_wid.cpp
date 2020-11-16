@@ -80,12 +80,20 @@ void XBot2PluginWidget::setStatus(QString status)
 {
     _statusLine->setText(status);
 
-    if(status == "Initialized")
+    if(status == "Initialized" || status == "Stopped")
     {
         _btnStarts = true;
     }
 
     _startStopBtn->setEnabled(true);
+
+    if(status == "InitFailed" || status == "Aborted")
+    {
+        setEnabled(false);
+    }
+    else {
+        setEnabled(true);
+    }
 
     if(status == "Running")
     {
@@ -96,18 +104,6 @@ void XBot2PluginWidget::setStatus(QString status)
             "border-radius: 4px;"
             "padding-left: 2px;"
             "background-color: #99ff99;");
-    }
-    else if(status == "Aborted")
-    {
-        _pluginLabel->setStyleSheet(
-            "font-size: 12pt;"
-            "border-radius: 4px;"
-            "font-weight: bold; "
-            "border-radius: 4px;"
-            "padding-left: 2px;"
-            "background-color: #ff9999;");
-
-        _startStopBtn->setEnabled(false);
     }
     else
     {

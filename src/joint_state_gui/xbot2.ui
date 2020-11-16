@@ -15,19 +15,37 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_3">
+    <layout class="QHBoxLayout" name="topLayout">
+     <item>
+      <widget class="QGroupBox" name="statusBox">
+       <property name="title">
+        <string>Status</string>
+       </property>
+      </widget>
+     </item>
      <item>
       <widget class="QGroupBox" name="groupBox_2">
        <property name="title">
-        <string>Joint safety</string>
+        <string>Joint device</string>
        </property>
        <layout class="QHBoxLayout" name="horizontalLayout_4">
         <item>
-         <widget class="QCheckBox" name="enableFilter">
-          <property name="text">
-           <string>Enable filter</string>
-          </property>
-         </widget>
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <item>
+           <widget class="QCheckBox" name="enableFilter">
+            <property name="text">
+             <string>Enable filter</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="disableEnableBtn">
+            <property name="text">
+             <string>Disable device</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
         <item>
          <widget class="Line" name="line_2">
@@ -38,45 +56,41 @@
         </item>
         <item>
          <widget class="QLabel" name="label">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="text">
-           <string>Select cutoff</string>
+           <string>Select cutoff  </string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QRadioButton" name="safeBtn">
-          <property name="text">
-           <string>Safe</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QRadioButton" name="mediumBtn">
-          <property name="text">
-           <string>Medium</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QRadioButton" name="fastBtn">
-          <property name="text">
-           <string>Fast</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="Line" name="line">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="disableEnableBtn">
-          <property name="text">
-           <string>Disable device</string>
-          </property>
-         </widget>
+         <layout class="QVBoxLayout" name="verticalLayout_4">
+          <item>
+           <widget class="QRadioButton" name="safeBtn">
+            <property name="text">
+             <string>Safe</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="mediumBtn">
+            <property name="text">
+             <string>Medium</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="fastBtn">
+            <property name="text">
+             <string>Fast</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </widget>

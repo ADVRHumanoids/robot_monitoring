@@ -6,35 +6,50 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# avoid installing catkin-related files
 set(CATKIN_BUILD_BINARY_PACKAGE TRUE)
 
-## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
+# fmt header only mode to avoid linking
+add_definitions(-DFMT_HEADER_ONLY)
+
+# find required packages
 find_package(catkin REQUIRED COMPONENTS
     roscpp
     rviz
     roslib
     )
 
-###################################
-## The catkin_package macro generates cmake config files for your package
-## Declare things to be passed to dependent projects
-## INCLUDE_DIRS: uncomment this if your package contains header files
-## LIBRARIES: libraries you create in this project that dependent projects also need
-## CATKIN_DEPENDS: catkin_packages dependent projects also need
-## DEPENDS: system dependencies of this project that dependent projects also need
+# set qt to automatically run MOC and RCC pre-compilers
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+
+# give option to user to give custom qt path
+set(QT5_PATH "" CACHE PATH "Path to QT > 5.9")
+set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};${QT5_PATH}")
+
+# find qt
+find_package(Qt5UiTools 5.9 REQUIRED)
+find_package(Qt5Widgets 5.9 REQUIRED)
+find_package(Qt5Charts  5.9 REQUIRED)
+
+# robotinterfaceros is needed just to construct
+# xbotinterface from ros parameters (could be avoided)
+find_package(RobotInterfaceROS REQUIRED)
+include_directories(include/
+    ${RobotInterfaceROS_INCLUDE_DIRS})
+
+# generate catkin package, but don't let it export
+# any target
 catkin_package(
-    #  INCLUDE_DIRS include
-    #  LIBRARIES robot_monitoring_tools
-    #  CATKIN_DEPENDS roscpp rviz
-    #  DEPENDS system_lib
     SKIP_CMAKE_CONFIG_GENERATION
     SKIP_PKG_CONFIG_GENERATION
     )
 
+add_subdirectory(src/plugin/)
 add_subdirectory(src/chart/)
 add_subdirectory(src/joint_state_gui/)
 add_subdirectory(src/joint_sliders/)
+add_subdirectory(src/imu)
+add_subdirectory(src/rviz/)
 
 include(cmake/GenerateDeb.cmake)

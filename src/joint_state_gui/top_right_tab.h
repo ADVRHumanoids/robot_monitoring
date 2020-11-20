@@ -3,7 +3,7 @@
 
 #include <QTabWidget>
 #include "load_plugin_wid.h"
-#include "../chart/chart.h"
+#include "../qcustomplot/qcustom_chart.h"
 
 class TopRightTab : public QTabWidget
 {
@@ -12,7 +12,7 @@ public:
 
     TopRightTab(QWidget * parent = nullptr);
 
-    ChartWidget * chart;
+    QCustomChart * chart;
 
 protected:
 

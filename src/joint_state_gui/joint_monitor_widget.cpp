@@ -154,7 +154,7 @@ JointMonitorWidget::JointMonitorWidget(int argc,
     }
 
     // create chart widget
-    _chart = new ChartWidget;
+    _chart = new QCustomChart;
 
     // place all widget into a proper layout
 
@@ -269,51 +269,51 @@ void JointMonitorWidget::on_jstate_recv(xbot_msgs::JointStateConstPtr msg)
 
         // add a point to all chars lines
         _chart->addPoint(QString::fromStdString(msg->name[i]) + "/link_pos",
-                         (now - t0).toSec(),
+                         now.toSec(),
                          msg->link_position[i]);
 
         _chart->addPoint(QString::fromStdString(msg->name[i]) + "/motor_pos",
-                         (now - t0).toSec(),
+                         now.toSec(),
                          msg->motor_position[i]);
 
         _chart->addPoint(QString::fromStdString(msg->name[i]) + "/pos_ref",
-                         (now - t0).toSec(),
+                         now.toSec(),
                          msg->position_reference[i]);
 
         _chart->addPoint(QString::fromStdString(msg->name[i]) + "/link_vel",
-                         (now - t0).toSec(),
+                         now.toSec(),
                          msg->link_velocity[i]);
 
         _chart->addPoint(QString::fromStdString(msg->name[i]) + "/motor_vel",
-                         (now - t0).toSec(),
+                         now.toSec(),
                          msg->motor_velocity[i]);
 
         _chart->addPoint(QString::fromStdString(msg->name[i]) + "/vel_ref",
-                         (now - t0).toSec(),
+                         now.toSec(),
                          msg->velocity_reference[i]);
 
         _chart->addPoint(QString::fromStdString(msg->name[i]) + "/torque",
-                         (now - t0).toSec(),
+                         now.toSec(),
                          msg->effort[i]);
 
         _chart->addPoint(QString::fromStdString(msg->name[i]) + "/torque_ffwd",
-                         (now - t0).toSec(),
+                         now.toSec(),
                          msg->effort_reference[i]);
 
         _chart->addPoint(QString::fromStdString(msg->name[i]) + "/torque_imp",
-                         (now - t0).toSec(),
+                         now.toSec(),
                          tauref_imp);
 
         _chart->addPoint(QString::fromStdString(msg->name[i]) + "/current",
-                         (now - t0).toSec(),
+                         now.toSec(),
                          msg->aux[i]);
 
         _chart->addPoint(QString::fromStdString(msg->name[i]) + "/driver_temp",
-                         (now - t0).toSec(),
+                         now.toSec(),
                          msg->temperature_driver[i]);
 
         _chart->addPoint(QString::fromStdString(msg->name[i]) + "/motor_temp",
-                         (now - t0).toSec(),
+                         now.toSec(),
                          msg->temperature_motor[i]);
 
 

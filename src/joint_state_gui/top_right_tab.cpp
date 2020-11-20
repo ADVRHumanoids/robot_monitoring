@@ -83,7 +83,7 @@ void TopRightTab::load(QString plugin_name)
         addTab(wid, wid->name());
 
         connect(wid, &XBot::Ui::CustomQtWidget::seriesAdded,
-                chart, &ChartWidget::addSeries);
+                chart, &QCustomChart::addSeries);
 
         connect(wid, &XBot::Ui::CustomQtWidget::pointAdded,
                 [this](QString name, QPointF point)

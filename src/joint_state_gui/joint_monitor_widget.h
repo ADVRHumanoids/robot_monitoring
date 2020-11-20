@@ -15,7 +15,7 @@
 #include "joint_state_widget.h"
 #include "robot_monitoring/joint_sliders/sliders_widget_mainview.h"
 #include "top_right_tab.h"
-#include "../chart/chart.h"
+#include "../qcustomplot/qcustom_chart.h"
 
 /**
  * @brief The JointMonitorWidget class is the main widget for the
@@ -44,7 +44,7 @@ public:
     /**
      * @brief _chart is a live plot widget
      */
-    ChartWidget * _chart;
+    QCustomChart * _chart;
 
     /**
      * @brief _sliders is a slider-based commander for the robot

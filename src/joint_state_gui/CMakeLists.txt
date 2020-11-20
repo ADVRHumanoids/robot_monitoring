@@ -27,6 +27,7 @@ target_link_libraries(joint_bar_ui
     sliders_widget
     chart_widget
     robot_monitoring
+    qcustom_chart
     Qt5::Widgets
     Qt5::UiTools XBotInterface::XBotInterface ${catkin_LIBRARIES} yaml-cpp)
 

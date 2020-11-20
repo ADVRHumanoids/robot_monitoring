@@ -1,6 +1,6 @@
 #include "xbot2_wid.h"
 
-#include <xbot_msgs/Statistics.h>
+#include <xbot_msgs/Statistics2.h>
 #include <xbot_msgs/GetPluginList.h>
 #include <xbot_msgs/LifecycleEvent.h>
 #include <xbot_msgs/SetControlMask.h>
@@ -241,7 +241,7 @@ XBot2Widget::XBot2Widget(QWidget * parent) :
     using clock = std::chrono::high_resolution_clock;
     using namespace std::chrono_literals;
     static auto last_load_upd = clock::now();
-    auto on_stats_recv = [this](xbot_msgs::StatisticsConstPtr msg)
+    auto on_stats_recv = [this](xbot_msgs::Statistics2ConstPtr msg)
     {
         auto now = clock::now();
         bool load_upd_done = false;
@@ -284,7 +284,7 @@ XBot2Widget::XBot2Widget(QWidget * parent) :
         if(load_upd_done) last_load_upd = now;
     };
 
-    _stats_sub = _nh.subscribe<xbot_msgs::Statistics>("statistics",
+    _stats_sub = _nh.subscribe<xbot_msgs::Statistics2>("statistics",
                                                       1,
                                                       on_stats_recv);
 

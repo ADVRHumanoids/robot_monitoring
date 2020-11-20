@@ -31,6 +31,8 @@ set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};${QT5_PATH}")
 find_package(Qt5UiTools 5.9 REQUIRED)
 find_package(Qt5Widgets 5.9 REQUIRED)
 find_package(Qt5Charts  5.9 REQUIRED)
+find_package(Qt5PrintSupport  5.9 REQUIRED)
+
 
 # robotinterfaceros is needed just to construct
 # xbotinterface from ros parameters (could be avoided)
@@ -51,5 +53,6 @@ add_subdirectory(src/joint_state_gui/)
 add_subdirectory(src/joint_sliders/)
 add_subdirectory(src/imu)
 add_subdirectory(src/rviz/)
+add_subdirectory(src/qcustomplot)
 
 include(cmake/GenerateDeb.cmake)

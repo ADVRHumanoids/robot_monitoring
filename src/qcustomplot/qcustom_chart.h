@@ -34,6 +34,7 @@ private:
     double _y_min, _y_max;
 
     bool _autoscroll;
+    bool _autorange;
 
     void mousePress(QMouseEvent *event);
 
@@ -43,6 +44,9 @@ private:
                            QCPAbstractLegendItem *item,
                            QMouseEvent *event);
 
+    void legendSingleClick(QCPLegend* legend,
+                           QCPAbstractLegendItem* item,
+                           QMouseEvent* event);
 };
 
 #endif // QCUSTOM_CHART_H

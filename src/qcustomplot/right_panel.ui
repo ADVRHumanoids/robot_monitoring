@@ -15,9 +15,19 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
+    <widget class="QCheckBox" name="autorangeChkBox">
+     <property name="text">
+      <string>Auto Range</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QCheckBox" name="autoscrollChkBox">
      <property name="text">
-      <string>Autoscroll</string>
+      <string>Auto Scroll</string>
      </property>
      <property name="checked">
       <bool>true</bool>

@@ -133,7 +133,7 @@ void ChartWidget::addSeries(QString name)
 
     auto series = new QLineSeries;
     series->setName(name);
-    series->setUseOpenGL();
+//    series->setUseOpenGL(); // not possible to have more than one gl widget!!
     _chart->addSeries(series);
     series->attachAxis(_axis_x);
     series->attachAxis(_axis_y);

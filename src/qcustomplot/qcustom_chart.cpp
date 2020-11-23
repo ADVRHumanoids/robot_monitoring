@@ -34,6 +34,7 @@ QCustomChart::QCustomChart(QWidget* parent):
     QWidget(parent),
     _last_point_t(0.0),
     _autoscroll(true),
+    _autorange(true),
     _y_min(1e3),
     _y_max(-1e3)
 {
@@ -65,7 +66,7 @@ QCustomChart::QCustomChart(QWidget* parent):
     _plt->legend->setBrush(QBrush(QColor(255,255,255,230)));
     _plt->axisRect()->insetLayout()->setInsetAlignment(0,
                                                        Qt::AlignBottom|Qt::AlignLeft);
-    _plt->axisRect()->setRangeDrag(Qt::Vertical);
+    _plt->axisRect()->setRangeDrag(static_cast<Qt::Orientation>(0));
 
     // set axes ranges, so we see all data:
     _plt->xAxis->setRange(0, 15);
@@ -73,6 +74,9 @@ QCustomChart::QCustomChart(QWidget* parent):
     _plt->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
 
     connect(_plt, &QCustomPlot::legendClick,
+            this, &QCustomChart::legendSingleClick);
+
+    connect(_plt, &QCustomPlot::legendDoubleClick,
             this, &QCustomChart::legendDoubleClick);
 
     connect(_plt, &QCustomPlot::mousePress,
@@ -90,11 +94,37 @@ QCustomChart::QCustomChart(QWidget* parent):
 
                 if(_autoscroll)
                 {
-                    _plt->axisRect()->setRangeDrag(Qt::Vertical);
+                    auto orient = _plt->axisRect()->rangeDrag();
+                    orient &= ~Qt::Horizontal;
+                    _plt->axisRect()->setRangeDrag(orient);
                 }
                 else
                 {
-                    _plt->axisRect()->setRangeDrag(Qt::Vertical | Qt::Horizontal);
+                    auto orient = _plt->axisRect()->rangeDrag();
+                    orient |= Qt::Horizontal;
+                    _plt->axisRect()->setRangeDrag(orient);
+                }
+
+            });
+
+    auto autorangeChkBox = findChild<QCheckBox*>("autorangeChkBox");
+    connect(autorangeChkBox,
+            &QCheckBox::stateChanged,
+            [this](int state)
+            {
+                _autorange = state;
+
+                if(_autorange)
+                {
+                    auto orient = _plt->axisRect()->rangeDrag();
+                    orient &= ~Qt::Vertical;
+                    _plt->axisRect()->setRangeDrag(orient);
+                }
+                else
+                {
+                    auto orient = _plt->axisRect()->rangeDrag();
+                    orient |= Qt::Vertical;
+                    _plt->axisRect()->setRangeDrag(orient);
                 }
 
             });
@@ -108,10 +138,11 @@ QCustomChart::QCustomChart(QWidget* parent):
 
     connect(findChild<QPushButton*>("resetViewBtn"),
             &QPushButton::released,
-            [this, autoscrollChkBox]()
+            [this, autoscrollChkBox, autorangeChkBox]()
             {
                 resetView();
                 autoscrollChkBox->setCheckState(Qt::CheckState::Checked);
+                autorangeChkBox->setCheckState(Qt::CheckState::Checked);
 
             });
 
@@ -121,7 +152,12 @@ QCustomChart::QCustomChart(QWidget* parent):
             {
                 const QDateTime now = QDateTime::currentDateTime();
                 auto now_str = now.toString("yyyyMMdd_hhmmss_zzz");
-                _plt->savePng("/tmp/xbot2_gui_chart__" + now_str + ".png");
+
+                auto aaelems = _plt->antialiasedElements();
+                _plt->setAntialiasedElements(QCP::aeAll);
+                _plt->savePng("/tmp/xbot2_gui_chart__" + now_str + ".png",
+                              0, 0, 3.0);
+                _plt->setAntialiasedElements(aaelems);
 
             });
 
@@ -135,6 +171,11 @@ void QCustomChart::setDefaultRange(double range)
 
 void QCustomChart::addSeries(QString name)
 {
+    if(_graphs.count(name))
+    {
+        return;
+    }
+
     auto g = _graphs[name] = _plt->addGraph();
     g->setName(name);
 
@@ -149,7 +190,7 @@ void QCustomChart::addSeries(QString name)
 
 void QCustomChart::removeSeries(QString name)
 {
-
+    _plt->removeGraph(_graphs.at(name));
 }
 
 void QCustomChart::addPoint(QString name, double t, double x)
@@ -194,8 +235,6 @@ void QCustomChart::resetView()
     _plt->yAxis->setRange(_y_min - 0.1*range,
                           _y_max + 0.1*range);
 
-    printf("min %f -- max %f -- range %f \n",
-           _y_min, _y_max, range);
 }
 
 void QCustomChart::on_timer_event()
@@ -206,6 +245,11 @@ void QCustomChart::on_timer_event()
                               _plt->xAxis->range().size(),
                               Qt::AlignRight);
 
+    }
+
+    if(_autorange)
+    {
+        resetView();
     }
 
     _plt->replot();
@@ -274,7 +318,7 @@ void QCustomChart::mouseMove(QMouseEvent* event)
     }
 }
 
-void QCustomChart::legendDoubleClick(QCPLegend* legend,
+void QCustomChart::legendSingleClick(QCPLegend* legend,
                                      QCPAbstractLegendItem* item,
                                      QMouseEvent* event)
 {
@@ -291,5 +335,21 @@ void QCustomChart::legendDoubleClick(QCPLegend* legend,
         font.setStrikeOut(!plottable->visible());
         item->setFont(font);
 
+    }
+}
+
+void QCustomChart::legendDoubleClick(QCPLegend* legend,
+                                     QCPAbstractLegendItem* item,
+                                     QMouseEvent* event)
+{
+    // only react if item was clicked
+    // (user could have clicked on border padding)
+    if(item)
+    {
+        auto pl_item = qobject_cast<QCPPlottableLegendItem*>(item);
+        auto plottable = pl_item->plottable();
+        auto gname = plottable->name();
+        _plt->removePlottable(plottable);
+        _graphs.erase(_graphs.find(gname));
     }
 }

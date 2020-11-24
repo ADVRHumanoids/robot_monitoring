@@ -10,7 +10,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CATKIN_BUILD_BINARY_PACKAGE TRUE)
 
 # fmt header only mode to avoid linking
-add_definitions(-DFMT_HEADER_ONLY)
+find_package(fmt REQUIRED)
+#add_definitions(-DFMT_HEADER_ONLY)
 
 # find required packages
 find_package(catkin REQUIRED COMPONENTS
@@ -38,7 +39,8 @@ find_package(Qt5PrintSupport  5.9 REQUIRED)
 # xbotinterface from ros parameters (could be avoided)
 find_package(RobotInterfaceROS REQUIRED)
 include_directories(include/
-    ${RobotInterfaceROS_INCLUDE_DIRS})
+	${catkin_INCLUDE_DIRS}
+    	${RobotInterfaceROS_INCLUDE_DIRS})
 
 # generate catkin package, but don't let it export
 # any target

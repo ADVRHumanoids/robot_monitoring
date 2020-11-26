@@ -75,7 +75,11 @@ LoadPluginWidget::LoadPluginWidget(QWidget* parent)
             auto plname = f.mid(prefix.length(),
                                 f.length() - prefix.length() - suffix.length());
 
-            list->addItem(plname);
+            if(list->findItems(plname, Qt::MatchExactly).empty())
+            {
+                list->addItem(plname);
+            }
+
         }
     }
 

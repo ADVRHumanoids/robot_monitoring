@@ -52,7 +52,15 @@ Context::Impl::Impl():
     QString home = std::getenv("HOME");
     QDir().mkpath(home + "/.xbot2/ui");
     file.setFileName(home + "/.xbot2/ui/perspective.yaml");
-    node = YAML::LoadFile(file.fileName().toStdString());
+
+    try
+    {
+        node = YAML::LoadFile(file.fileName().toStdString());
+    }
+    catch(YAML::BadFile& e)
+    {
+
+    }
 
     fmt::print("loaded config is: \n"
                "{} \n", node);

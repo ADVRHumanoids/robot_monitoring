@@ -105,7 +105,7 @@ void TopRightTab::load(QString plugin_name)
                     chart->addPoint(name, point.x(), point.y());
                 });
 
-        wid->loadConfig(_cfg[wid->name().toStdString()]);
+        wid->loadConfig(_cfg[plugin_name.toStdString()]);
     }
 }
 
@@ -138,7 +138,7 @@ bool TopRightTab::saveConfig(YAML::Node& cfg)
         {
             auto wid_cfg = cfg[plname.toStdString()];
             w->saveConfig(wid_cfg);
-            cfg[tabText(i).toStdString()] = wid_cfg;
+            cfg[plname.toStdString()] = wid_cfg;
         }
     }
 

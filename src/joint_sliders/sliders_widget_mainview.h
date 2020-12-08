@@ -1,7 +1,7 @@
 #ifndef IMPEDANCEWIDGETMAINVIEW_H
 #define IMPEDANCEWIDGETMAINVIEW_H
 
-#include <robot_monitoring/joint_sliders/sliders_widget.h>
+#include "sliders_widget.h"
 #include <XBotInterface/XBotInterface.h>
 #include <ros/ros.h>
 

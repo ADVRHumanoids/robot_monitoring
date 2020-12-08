@@ -11,7 +11,7 @@ set(CATKIN_BUILD_BINARY_PACKAGE TRUE)
 
 # fmt header only mode to avoid linking
 find_package(fmt REQUIRED)
-#add_definitions(-DFMT_HEADER_ONLY)
+add_definitions(-DFMT_HEADER_ONLY)
 
 # find required packages
 find_package(catkin REQUIRED COMPONENTS
@@ -25,7 +25,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 # give option to user to give custom qt path
-set(QT5_PATH "" CACHE PATH "Path to QT > 5.9")
+set(QT5_PATH "" CACHE PATH "Path to QT")
 set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};${QT5_PATH}")
 
 # find qt
@@ -39,8 +39,9 @@ find_package(Qt5PrintSupport  5.9 REQUIRED)
 # xbotinterface from ros parameters (could be avoided)
 find_package(RobotInterfaceROS REQUIRED)
 include_directories(include/
+    src/
 	${catkin_INCLUDE_DIRS}
-    	${RobotInterfaceROS_INCLUDE_DIRS})
+        ${RobotInterfaceROS_INCLUDE_DIRS})
 
 # generate catkin package, but don't let it export
 # any target
@@ -49,7 +50,7 @@ catkin_package(
     SKIP_PKG_CONFIG_GENERATION
     )
 
-add_subdirectory(src/plugin/)
+add_subdirectory(src/robot_monitoring/)
 add_subdirectory(src/chart/)
 add_subdirectory(src/joint_state_gui/)
 add_subdirectory(src/joint_sliders/)

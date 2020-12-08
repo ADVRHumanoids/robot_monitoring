@@ -5,7 +5,7 @@
 #include <rviz/render_panel.h>
 #include <rviz/display.h>
 
-#include "../plugin/custom_qt_widget.h"
+#include "robot_monitoring/custom_qt_widget.h"
 
 class RvizWidget : public XBot::Ui::CustomQtWidget
 {

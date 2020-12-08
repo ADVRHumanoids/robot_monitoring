@@ -1,9 +1,11 @@
-#ifndef PLUGIN_H
-#define PLUGIN_H
+#ifndef __ROBOT_MONITORING_PLUGIN_H__
+#define __ROBOT_MONITORING_PLUGIN_H__
 
 #include <QWidget>
 #include <QPluginLoader>
 #include <memory>
+
+#include <robot_monitoring/context.h>
 
 namespace XBot { namespace Ui {
 
@@ -19,7 +21,13 @@ public:
 
     class Args;
 
-    virtual bool init(Args&);
+    virtual bool init(Args& args);
+
+    virtual bool loadConfig(const YAML::Node& cfg);
+
+    virtual bool saveConfig(YAML::Node& cfg);
+
+    virtual bool usesOpenGl() const;
 
     virtual void update();
 
@@ -33,6 +41,10 @@ signals:
 
     bool pointAdded(QString series,
                     QPointF point);
+
+protected:
+
+    Context& context();
 
 private:
 

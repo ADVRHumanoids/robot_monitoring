@@ -26,10 +26,13 @@ add_library(joint_bar_ui STATIC
 target_link_libraries(joint_bar_ui
     sliders_widget
     chart_widget
-    robot_monitoring
+    robot_monitoring::robot_monitoring
     qcustom_chart
     Qt5::Widgets
-    Qt5::UiTools XBotInterface::XBotInterface ${catkin_LIBRARIES} yaml-cpp)
+    Qt5::UiTools
+    XBotInterface::XBotInterface
+    ${catkin_LIBRARIES}
+    yaml-cpp)
 
 add_executable(xbot2-gui ui_main.cpp)
 target_link_libraries(xbot2-gui joint_bar_ui)

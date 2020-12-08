@@ -4,8 +4,10 @@
 #include <QSplitter>
 
 #include <urdf_parser/urdf_parser.h>
+#include <memory>
+#include "robot_monitoring/context.h"
 
-
+#include <fmt/format.h>
 
 JointMonitorWidget::JointMonitorWidget(int argc,
                                        char ** argv,
@@ -14,6 +16,9 @@ JointMonitorWidget::JointMonitorWidget(int argc,
     _valid_msg_recv(false),
     _widget_started(false)
 {
+    /* Create context */
+    _ctx = std::make_shared<XBot::Ui::Context>();
+
     // subscribe to joint states, fault, aux
     ros::NodeHandle nh("xbotcore");
 
@@ -215,6 +220,14 @@ JointMonitorWidget::JointMonitorWidget(int argc,
 
     _widget_started = true;
 
+    /* Load config */
+    _tr_tab->loadConfig(_ctx->config()[_tr_tab->name().toStdString()]);
+
+
+}
+
+JointMonitorWidget::~JointMonitorWidget()
+{
 
 }
 
@@ -444,4 +457,16 @@ void JointMonitorWidget::on_fault_recv(xbot_msgs::FaultConstPtr msg)
             jstate_wid->setStatus(msg->fault[i]);
         }
     }
+}
+
+
+void JointMonitorWidget::closeEvent(QCloseEvent* event)
+{
+    fmt::print("{} \n", __func__);
+
+    auto main_cfg = _ctx->config();
+    auto cfg = main_cfg[_tr_tab->name().toStdString()];
+    _tr_tab->saveConfig(cfg);
+    main_cfg[_tr_tab->name().toStdString()] = cfg;
+    _ctx->saveConfig(main_cfg);
 }

@@ -13,7 +13,7 @@
 #include "xbot2_wid.h"
 #include "bar_plot_widget.h"
 #include "joint_state_widget.h"
-#include "robot_monitoring/joint_sliders/sliders_widget_mainview.h"
+#include "../joint_sliders/sliders_widget_mainview.h"
 #include "top_right_tab.h"
 #include "../qcustomplot/qcustom_chart.h"
 
@@ -67,7 +67,11 @@ public:
      */
     TopRightTab * _tr_tab;
 
+    ~JointMonitorWidget();
+
 private:
+
+    XBot::Ui::Context::Ptr _ctx;
 
     QTimer * _timer;
     ros::Subscriber _jstate_sub, _aux_sub, _fault_sub;
@@ -86,6 +90,10 @@ private:
 
     std::map<std::string, int> _jidmap;
 
+
+    // QWidget interface
+protected:
+    void closeEvent(QCloseEvent* event) override;
 };
 
 #endif // JOINT_MONITOR_WIDGET_H

@@ -1,4 +1,4 @@
-#include "custom_qt_widget.h"
+#include "robot_monitoring/custom_qt_widget.h"
 #include "custom_qt_widget_impl.h"
 #include <fmt/format.h>
 
@@ -76,12 +76,38 @@ CustomQtWidget* CustomQtWidget::MakeInstance(QString libname,
 class CustomQtWidget::Impl
 {
 
+public:
+
+    Impl(Args& args);
+
+    Context::Ptr ctx;
 };
+
+CustomQtWidget::Impl::Impl(Args& args):
+    ctx(args.ctx)
+{
+
+}
 
 bool CustomQtWidget::init(Args& args)
 {
-    impl = new Impl;
+    impl = new Impl(args);
     return true;
+}
+
+bool CustomQtWidget::loadConfig(const YAML::Node& cfg)
+{
+    return true;
+}
+
+bool CustomQtWidget::saveConfig(YAML::Node& cfg)
+{
+    return true;
+}
+
+bool CustomQtWidget::usesOpenGl() const
+{
+    return false;
 }
 
 void CustomQtWidget::update()
@@ -99,4 +125,9 @@ CustomQtWidget::~CustomQtWidget()
     delete impl;
 }
 
-//#include "moc_custom_qt_widget.cpp"
+Context& CustomQtWidget::context()
+{
+    return *impl->ctx;
+}
+
+

@@ -1,7 +1,7 @@
 #ifndef IMU_WIDGET_H
 #define IMU_WIDGET_H
 
-#include "../plugin/custom_qt_widget.h"
+#include "robot_monitoring/custom_qt_widget.h"
 
 #include <QProgressBar>
 #include <QPushButton>

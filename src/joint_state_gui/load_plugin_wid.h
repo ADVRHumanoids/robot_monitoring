@@ -12,7 +12,9 @@ class LoadPluginWidget : public QDialog
 
 public:
 
-    LoadPluginWidget(QWidget * parent = nullptr);
+    LoadPluginWidget(QWidget * parent,
+                     QString prefix,
+                     QString suffix);
 
     QString prefix, suffix;
     QStringList selected_plugins;

@@ -38,15 +38,14 @@ QWidget * LoadUiFile(QWidget * parent)
 }
 
 
-LoadPluginWidget::LoadPluginWidget(QWidget* parent)
+LoadPluginWidget::LoadPluginWidget(QWidget* parent,
+                                   QString prefix,
+                                   QString suffix)
 {
     auto wid = LoadUiFile(this);
     auto l = new QHBoxLayout;
     l->addWidget(wid);
     setLayout(l);
-
-    prefix = "libxbot_rob_mon_plugin_";
-    suffix = ".so";
 
     auto list = findChild<QListWidget*>("pluginList");
 

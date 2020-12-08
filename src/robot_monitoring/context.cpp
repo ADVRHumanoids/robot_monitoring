@@ -52,8 +52,6 @@ Context::Impl::Impl():
     QString home = std::getenv("HOME");
     QDir().mkpath(home + "/.xbot2/ui");
     file.setFileName(home + "/.xbot2/ui/perspective.yaml");
-    file.open(QFile::ReadWrite);
-
     node = YAML::LoadFile(file.fileName().toStdString());
 
     fmt::print("loaded config is: \n"
@@ -69,17 +67,26 @@ void Context::Impl::saveConfig(YAML::Node _node)
                                   "Save perspective file?",
                                   QMessageBox::Yes|QMessageBox::No);
 
+    fmt::print("{}\n", __LINE__);
+
     if(reply == QMessageBox::No)
     {
+        fmt::print("{}\n", __LINE__);
         return;
     }
+
+    fmt::print("{}\n", __LINE__);
 
     std::stringstream ss;
     ss << _node << "\n";
     auto str = ss.str();
 
-    file.write(str.data(), str.length());
-    file.flush();
+    fmt::print("{}\n", str);
+
+    file.open(QFile::WriteOnly);
+    fmt::print("{}, {} \n",
+               file.write(str.data(), str.length()),
+               file.flush());
 }
 
 Context::Impl::~Impl()

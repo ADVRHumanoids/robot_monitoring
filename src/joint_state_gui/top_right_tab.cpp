@@ -28,6 +28,12 @@ TopRightTab::TopRightTab(QWidget* parent):
                 adjustSize();
             });
 
+    connect(this, &QTabWidget::tabCloseRequested,
+            [this](int index)
+            {
+                removeTab(index);
+            });
+
     setTabsClosable(true);
 
 }
@@ -125,8 +131,6 @@ bool TopRightTab::saveConfig(YAML::Node& cfg)
         printf("%s \n", plname.toStdString().c_str());
         cfg["loaded_widgets"].push_back(plname.toStdString());
     }
-
-    std::cout << cfg << std::endl;
 
     return true;
 }

@@ -34,6 +34,8 @@ private:
 
     void load(QString plugin_name);
 
+    YAML::Node _cfg;
+
 };
 
 #endif // TOP_RIGHT_TAB_H

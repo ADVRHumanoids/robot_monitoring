@@ -462,8 +462,6 @@ void JointMonitorWidget::on_fault_recv(xbot_msgs::FaultConstPtr msg)
 
 void JointMonitorWidget::closeEvent(QCloseEvent* event)
 {
-    fmt::print("{} \n", __func__);
-
     auto main_cfg = _ctx->config();
     auto cfg = main_cfg[_tr_tab->name().toStdString()];
     _tr_tab->saveConfig(cfg);

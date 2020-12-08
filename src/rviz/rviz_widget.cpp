@@ -137,3 +137,25 @@ void RvizWidget::contextMenuEvent(QContextMenuEvent* event)
 
     menu.exec(event->globalPos());
 }
+
+
+bool RvizWidget::loadConfig(const YAML::Node& cfg)
+{
+    if(auto ff = cfg["fixed_frame"])
+    {
+        _manager->setFixedFrame(QString::fromStdString(ff.as<std::string>()));
+    }
+
+    return true;
+}
+
+bool RvizWidget::saveConfig(YAML::Node& cfg)
+{
+    cfg["fixed_frame"] = _manager->getFixedFrame().toStdString();
+    return true;
+}
+
+bool RvizWidget::usesOpenGl() const
+{
+    return true;
+}

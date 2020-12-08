@@ -32,6 +32,12 @@ private:
     // QWidget interface
 protected:
     void contextMenuEvent(QContextMenuEvent* event) override;
+
+    // CustomQtWidget interface
+public:
+    bool loadConfig(const YAML::Node& cfg) override;
+    bool saveConfig(YAML::Node& cfg) override;
+    bool usesOpenGl() const override;
 };
 
 #endif // RVIZ_WIDGET_H

@@ -104,12 +104,16 @@ void TopRightTab::load(QString plugin_name)
                 {
                     chart->addPoint(name, point.x(), point.y());
                 });
+
+        wid->loadConfig(_cfg[wid->name().toStdString()]);
     }
 }
 
 
 bool TopRightTab::loadConfig(const YAML::Node& cfg)
 {
+    _cfg = cfg;
+
     if(auto c = cfg["loaded_widgets"])
     {
         for(auto w : c)
@@ -128,8 +132,14 @@ bool TopRightTab::saveConfig(YAML::Node& cfg)
     for(int i = 1; i < count(); i++)  // skip first (joint)
     {
         auto plname = _wid_to_plugin_name.at(tabText(i));
-        printf("%s \n", plname.toStdString().c_str());
         cfg["loaded_widgets"].push_back(plname.toStdString());
+
+        if(auto w = dynamic_cast<XBot::Ui::CustomQtWidget*>(widget(i)))
+        {
+            auto wid_cfg = cfg[plname.toStdString()];
+            w->saveConfig(wid_cfg);
+            cfg[tabText(i).toStdString()] = wid_cfg;
+        }
     }
 
     return true;

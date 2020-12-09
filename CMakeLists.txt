@@ -41,7 +41,7 @@ find_package(RobotInterfaceROS REQUIRED)
 include_directories(include/
     src/
 	${catkin_INCLUDE_DIRS}
-        ${RobotInterfaceROS_INCLUDE_DIRS})
+    ${RobotInterfaceROS_INCLUDE_DIRS})
 
 # generate catkin package, but don't let it export
 # any target
@@ -55,6 +55,7 @@ add_subdirectory(src/chart/)
 add_subdirectory(src/joint_state_gui/)
 add_subdirectory(src/joint_sliders/)
 add_subdirectory(src/imu)
+add_subdirectory(src/ft)
 add_subdirectory(src/rviz/)
 add_subdirectory(src/qcustomplot)
 

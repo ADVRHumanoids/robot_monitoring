@@ -59,12 +59,8 @@ Context::Impl::Impl():
     }
     catch(YAML::BadFile& e)
     {
-
+        fmt::print("no config available \n");
     }
-
-    fmt::print("loaded config is: \n"
-               "{} \n", node);
-
 }
 
 void Context::Impl::saveConfig(YAML::Node _node)
@@ -75,26 +71,18 @@ void Context::Impl::saveConfig(YAML::Node _node)
                                   "Save perspective file?",
                                   QMessageBox::Yes|QMessageBox::No);
 
-    fmt::print("{}\n", __LINE__);
-
     if(reply == QMessageBox::No)
     {
-        fmt::print("{}\n", __LINE__);
         return;
     }
-
-    fmt::print("{}\n", __LINE__);
 
     std::stringstream ss;
     ss << _node << "\n";
     auto str = ss.str();
 
-    fmt::print("{}\n", str);
-
     file.open(QFile::WriteOnly);
-    fmt::print("{}, {} \n",
-               file.write(str.data(), str.length()),
-               file.flush());
+    file.write(str.data(), str.length());
+    file.flush();
 }
 
 Context::Impl::~Impl()

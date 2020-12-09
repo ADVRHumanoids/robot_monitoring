@@ -6,6 +6,8 @@
 #include <QInputDialog>
 #include <QLabel>
 
+#include <tf/transform_listener.h>
+
 RvizWidget::RvizWidget(QWidget* parent)
 {
     _render_panel = new rviz::RenderPanel;
@@ -65,16 +67,33 @@ void RvizWidget::contextMenuEvent(QContextMenuEvent* event)
     // set fixed frame
     auto * set_fixed_frame = new QAction("Set fixed frame", this);
 
+    // get list of frames
+    std::vector<std::string> frames_std;
+    _manager->getTFClient()->getFrameStrings(frames_std);
+
+    // convert to qt
+    QStringList frames;
+    std::transform(frames_std.begin(), frames_std.end(),
+                   std::back_inserter(frames),
+                   [](auto stdstr)
+                   {
+                       return QString::fromStdString(stdstr);
+                   });
+
+    // find current index
+    int current_idx = frames.indexOf(_manager->getFixedFrame());
+
     connect(set_fixed_frame, &QAction::triggered,
-            [this, event]()
+            [this, frames, current_idx]()
             {
                 bool ok;
-                QString text = QInputDialog::getText(
+                QString text = QInputDialog::getItem(
                     this,
                     "RViz fixed frame selection",
                     "Fixed frame:",
-                    QLineEdit::Normal,
-                    _manager->getFixedFrame(),
+                    frames,
+                    current_idx,
+                    false,
                     &ok);
 
                 if(ok && !text.isEmpty())
@@ -117,7 +136,7 @@ void RvizWidget::contextMenuEvent(QContextMenuEvent* event)
             {
                 bool ok;
                 auto rd = _robot_model->subProp("Robot Description")->
-                           getValue().toString();
+                          getValue().toString();
                 QString text = QInputDialog::getText(
                     this,
                     "Robot model description selection",
@@ -146,12 +165,29 @@ bool RvizWidget::loadConfig(const YAML::Node& cfg)
         _manager->setFixedFrame(QString::fromStdString(ff.as<std::string>()));
     }
 
+    if(auto tp = cfg["tf_prefix"])
+    {
+        auto text = QString::fromStdString(tp.as<std::string>());
+        _robot_model->subProp("TF Prefix")->
+            setValue(text);
+    }
+
+    if(auto rd = cfg["robot_description"])
+    {
+        auto text = QString::fromStdString(rd.as<std::string>());
+        _robot_model->subProp("Robot Description")->
+            setValue(text);
+    }
+
     return true;
 }
 
 bool RvizWidget::saveConfig(YAML::Node& cfg)
 {
     cfg["fixed_frame"] = _manager->getFixedFrame().toStdString();
+    cfg["tf_prefix"] = _robot_model->subProp("TF Prefix")->getValue().toString().toStdString();
+    cfg["robot_description"] =  _robot_model->subProp("Robot Description")->
+                               getValue().toString().toStdString();
     return true;
 }
 

@@ -48,22 +48,22 @@ JointMonitorWidget::JointMonitorWidget(int argc,
         // the other widgets as well
         connect(_xbot2_status, &XBot2StatusWidget::xbot2Started,
                 [argc, argv]()
-                {
-                    // copy provided argv, and append a final null entry
-                    // this is needed by execv
-                    std::vector<char *> args_vec;
+        {
+            // copy provided argv, and append a final null entry
+            // this is needed by execv
+            std::vector<char *> args_vec;
 
-                    for(int i = 0; i < argc; i++)
-                    {
-                        args_vec.push_back(argv[i]);
-                    }
+            for(int i = 0; i < argc; i++)
+            {
+                args_vec.push_back(argv[i]);
+            }
 
-                    args_vec.push_back(static_cast<char *>(nullptr));
+            args_vec.push_back(static_cast<char *>(nullptr));
 
-                    // restart self
-                    execv("/proc/self/exe", args_vec.data());
+            // restart self
+            execv("/proc/self/exe", args_vec.data());
 
-                });
+        });
 
         return;
     }
@@ -150,12 +150,12 @@ JointMonitorWidget::JointMonitorWidget(int argc,
         // on double right click, add series to chart
         connect(p.second, &JointBarWidget::doubleRightClicked,
                 [p, this]()
-                {
+        {
 
-                    _chart->addSeries(p.second->getJointName() +
-                                      "/" +
-                                      QString::fromStdString(barplot_wid->getFieldShortType()));
-                });
+            _chart->addSeries(p.second->getJointName() +
+                              "/" +
+                              QString::fromStdString(barplot_wid->getFieldShortType()));
+        });
     }
 
     // create chart widget
@@ -207,9 +207,9 @@ JointMonitorWidget::JointMonitorWidget(int argc,
     // connect 'plot' buttons to chart
     connect(jstate_wid, &JointStateWidget::plotAdded,
             [this](QString plot)
-            {
-                _chart->addSeries(jstate_wid->getJointName() + "/" + plot);
-            });
+    {
+        _chart->addSeries(jstate_wid->getJointName() + "/" + plot);
+    });
 
     // main timer
     _timer = new QTimer(this);
@@ -222,6 +222,7 @@ JointMonitorWidget::JointMonitorWidget(int argc,
 
     /* Load config */
     _tr_tab->loadConfig(_ctx->config()[_tr_tab->name().toStdString()]);
+    _chart->loadConfig(_ctx->config()[_chart->name().toStdString()]);
 
 
 }
@@ -462,9 +463,31 @@ void JointMonitorWidget::on_fault_recv(xbot_msgs::FaultConstPtr msg)
 
 void JointMonitorWidget::closeEvent(QCloseEvent* event)
 {
+    // main configuration node
     auto main_cfg = _ctx->config();
-    auto cfg = main_cfg[_tr_tab->name().toStdString()];
-    _tr_tab->saveConfig(cfg);
-    main_cfg[_tr_tab->name().toStdString()] = cfg;
+
+    {
+        // sub-node for the top-right tab manager
+        auto cfg = main_cfg[_tr_tab->name().toStdString()];
+
+        // save tr tab configs
+        _tr_tab->saveConfig(cfg);
+
+        // put result back to main config
+        main_cfg[_tr_tab->name().toStdString()] = cfg;
+    }
+
+    {
+        // sub-node for the chart tab manager
+        auto cfg = main_cfg[_chart->name().toStdString()];
+
+        // save chart configs
+        _chart->saveConfig(cfg);
+
+        // put result back to main config
+        main_cfg[_chart->name().toStdString()] = cfg;
+    }
+
+    // dump to file
     _ctx->saveConfig(main_cfg);
 }

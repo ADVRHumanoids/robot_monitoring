@@ -1,9 +1,11 @@
 #ifndef QCUSTOM_CHART_H
 #define QCUSTOM_CHART_H
 
+#include <robot_monitoring/custom_qt_widget.h>
+
 #include "qcustomplot.h"
 
-class QCustomChart : public QWidget
+class QCustomChart : public XBot::Ui::CustomQtWidget
 {
 
 public:
@@ -16,6 +18,10 @@ public:
     void addPoint(QString name, double t, double x);
     void removeAll();
     void resetView();
+
+    bool loadConfig(const YAML::Node &cfg);
+    bool saveConfig(YAML::Node &cfg);
+    QString name();
 
 private:
 
@@ -47,6 +53,8 @@ private:
     void legendSingleClick(QCPLegend* legend,
                            QCPAbstractLegendItem* item,
                            QMouseEvent* event);
+
+
 };
 
 #endif // QCUSTOM_CHART_H

@@ -31,7 +31,7 @@ QWidget * LoadUiFile(QWidget * parent, QString name)
 
 
 QCustomChart::QCustomChart(QWidget* parent):
-    QWidget(parent),
+    XBot::Ui::CustomQtWidget(),
     _last_point_t(0.0),
     _autoscroll(true),
     _autorange(true),
@@ -39,6 +39,8 @@ QCustomChart::QCustomChart(QWidget* parent):
     _y_max(-1e3)
 {
     _plt = new QCustomPlot;
+
+    _plt->setOpenGl(true);
 
     auto l = new QHBoxLayout;
     l->addWidget(_plt);
@@ -49,6 +51,15 @@ QCustomChart::QCustomChart(QWidget* parent):
     l->setStretch(1, 0);
 
     setLayout(l);
+
+    // opengl
+    auto openglChkBox = findChild<QCheckBox*>("openglChkBox");
+    connect(openglChkBox,
+            &QCheckBox::stateChanged,
+            [this](int state)
+            {
+                _plt->setOpenGl(static_cast<bool>(state));
+            });
 
     _scroll_timer = new QTimer(this);
     _timer_period_ms = 40.;
@@ -89,77 +100,77 @@ QCustomChart::QCustomChart(QWidget* parent):
     connect(autoscrollChkBox,
             &QCheckBox::stateChanged,
             [this](int state)
-            {
-                _autoscroll = state;
+    {
+        _autoscroll = state;
 
-                if(_autoscroll)
-                {
-                    auto orient = _plt->axisRect()->rangeDrag();
-                    orient &= ~Qt::Horizontal;
-                    _plt->axisRect()->setRangeDrag(orient);
-                }
-                else
-                {
-                    auto orient = _plt->axisRect()->rangeDrag();
-                    orient |= Qt::Horizontal;
-                    _plt->axisRect()->setRangeDrag(orient);
-                }
+        if(_autoscroll)
+        {
+            auto orient = _plt->axisRect()->rangeDrag();
+            orient &= ~Qt::Horizontal;
+            _plt->axisRect()->setRangeDrag(orient);
+        }
+        else
+        {
+            auto orient = _plt->axisRect()->rangeDrag();
+            orient |= Qt::Horizontal;
+            _plt->axisRect()->setRangeDrag(orient);
+        }
 
-            });
+    });
 
     auto autorangeChkBox = findChild<QCheckBox*>("autorangeChkBox");
     connect(autorangeChkBox,
             &QCheckBox::stateChanged,
             [this](int state)
-            {
-                _autorange = state;
+    {
+        _autorange = state;
 
-                if(_autorange)
-                {
-                    auto orient = _plt->axisRect()->rangeDrag();
-                    orient &= ~Qt::Vertical;
-                    _plt->axisRect()->setRangeDrag(orient);
-                }
-                else
-                {
-                    auto orient = _plt->axisRect()->rangeDrag();
-                    orient |= Qt::Vertical;
-                    _plt->axisRect()->setRangeDrag(orient);
-                }
+        if(_autorange)
+        {
+            auto orient = _plt->axisRect()->rangeDrag();
+            orient &= ~Qt::Vertical;
+            _plt->axisRect()->setRangeDrag(orient);
+        }
+        else
+        {
+            auto orient = _plt->axisRect()->rangeDrag();
+            orient |= Qt::Vertical;
+            _plt->axisRect()->setRangeDrag(orient);
+        }
 
-            });
+    });
 
     connect(findChild<QPushButton*>("removeAllBtn"),
             &QPushButton::released,
             [this]()
-            {
-                removeAll();
-            });
+    {
+        removeAll();
+    });
 
     connect(findChild<QPushButton*>("resetViewBtn"),
             &QPushButton::released,
             [this, autoscrollChkBox, autorangeChkBox]()
-            {
-                resetView();
-                autoscrollChkBox->setCheckState(Qt::CheckState::Checked);
-                autorangeChkBox->setCheckState(Qt::CheckState::Checked);
+    {
+        resetView();
+        autoscrollChkBox->setCheckState(Qt::CheckState::Checked);
+        autorangeChkBox->setCheckState(Qt::CheckState::Checked);
 
-            });
+    });
 
     connect(findChild<QPushButton*>("savePngBtn"),
             &QPushButton::released,
             [this]()
-            {
-                const QDateTime now = QDateTime::currentDateTime();
-                auto now_str = now.toString("yyyyMMdd_hhmmss_zzz");
+    {
+        const QDateTime now = QDateTime::currentDateTime();
+        auto now_str = now.toString("yyyyMMdd_hhmmss_zzz");
 
-                auto aaelems = _plt->antialiasedElements();
-                _plt->setAntialiasedElements(QCP::aeAll);
-                _plt->savePng("/tmp/xbot2_gui_chart__" + now_str + ".png",
-                              0, 0, 3.0);
-                _plt->setAntialiasedElements(aaelems);
+        auto aaelems = _plt->antialiasedElements();
+        _plt->setAntialiasedElements(QCP::aeAll);
+        _plt->savePng("/tmp/xbot2_gui_chart__" + now_str + ".png",
+                      0, 0, 3.0);
+        _plt->setAntialiasedElements(aaelems);
 
-            });
+    });
 
     _scroll_timer->start();
 }
@@ -237,6 +248,36 @@ void QCustomChart::resetView()
 
 }
 
+bool QCustomChart::loadConfig(const YAML::Node &cfg)
+{
+    if(auto series = cfg["series"])
+    {
+        for(auto s : series)
+        {
+            addSeries(QString::fromStdString(s.as<std::string>()));
+        }
+    }
+
+    return true;
+}
+
+bool QCustomChart::saveConfig(YAML::Node &cfg)
+{
+    cfg["series"] = std::vector<std::string>();
+
+    for(auto item : _graphs)
+    {
+        cfg["series"].push_back(item.first.toStdString());
+    }
+
+    return true;
+}
+
+QString QCustomChart::name()
+{
+    return "chart";
+}
+
 void QCustomChart::on_timer_event()
 {
     if(_autoscroll)
@@ -259,12 +300,12 @@ QColor QCustomChart::pick_color()
 {
     static std::vector<QColor> colormap {
         QColor(0.0000*256,    0.4470*256,    0.7410*256),
-        QColor(0.8500*256,    0.3250*256,    0.0980*256),
-        QColor(0.9290*256,    0.6940*256,    0.1250*256),
-        QColor(0.4940*256,    0.1840*256,    0.5560*256),
-        QColor(0.4660*256,    0.6740*256,    0.1880*256),
-        QColor(0.3010*256,    0.7450*256,    0.9330*256),
-        QColor(0.6350*256,    0.0780*256,    0.1840*256)
+                QColor(0.8500*256,    0.3250*256,    0.0980*256),
+                QColor(0.9290*256,    0.6940*256,    0.1250*256),
+                QColor(0.4940*256,    0.1840*256,    0.5560*256),
+                QColor(0.4660*256,    0.6740*256,    0.1880*256),
+                QColor(0.3010*256,    0.7450*256,    0.9330*256),
+                QColor(0.6350*256,    0.0780*256,    0.1840*256)
     };
 
     static int idx = 0;
@@ -306,7 +347,7 @@ void QCustomChart::mouseMove(QMouseEvent* event)
         auto g = pl_item->plottable();
 
         bool item_selected = over_legend &&
-                             item->selectTest(event->pos(), false) >= 0;
+                item->selectTest(event->pos(), false) >= 0;
 
         auto pen = g->pen();
         pen.setWidth(item_selected ? 4 : 2);

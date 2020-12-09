@@ -31,7 +31,9 @@ TopRightTab::TopRightTab(QWidget* parent):
     connect(this, &QTabWidget::tabCloseRequested,
             [this](int index)
             {
+                auto w = widget(index);
                 removeTab(index);
+                w->deleteLater();
             });
 
     setTabsClosable(true);

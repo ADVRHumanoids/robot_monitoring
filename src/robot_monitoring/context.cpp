@@ -31,7 +31,7 @@ Context::Context()
     impl = std::make_unique<Impl>();
 }
 
-YAML::Node Context::config()
+YAML::Node& Context::config()
 {
     return impl->node;
 }
@@ -56,11 +56,15 @@ Context::Impl::Impl():
     try
     {
         node = YAML::LoadFile(file.fileName().toStdString());
+        fmt::print("loaded config is: \n"
+                   "{} \n", node);
     }
     catch(YAML::BadFile& e)
     {
         fmt::print("no config available \n");
     }
+
+
 }
 
 void Context::Impl::saveConfig(YAML::Node _node)

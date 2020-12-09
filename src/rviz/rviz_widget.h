@@ -22,6 +22,8 @@ public:
     void update() override;
     QString name() override;
 
+    ~RvizWidget() override;
+
 private:
 
     rviz::VisualizationManager* _manager;

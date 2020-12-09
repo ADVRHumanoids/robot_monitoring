@@ -6,11 +6,11 @@
 #include <QInputDialog>
 #include <QLabel>
 
-#include <tf/transform_listener.h>
+#include <fmt/format.h>
 
 RvizWidget::RvizWidget(QWidget* parent)
 {
-    _render_panel = new rviz::RenderPanel;
+    _render_panel = new rviz::RenderPanel(this);
 
     auto label = new QLabel;
     label->setSizePolicy(QSizePolicy(QSizePolicy::Fixed,
@@ -57,6 +57,11 @@ void RvizWidget::update()
 QString RvizWidget::name()
 {
     return "RViz";
+}
+
+RvizWidget::~RvizWidget()
+{
+    fmt::print("{}\n", __func__);
 }
 
 
@@ -136,7 +141,7 @@ void RvizWidget::contextMenuEvent(QContextMenuEvent* event)
             {
                 bool ok;
                 auto rd = _robot_model->subProp("Robot Description")->
-                          getValue().toString();
+                           getValue().toString();
                 QString text = QInputDialog::getText(
                     this,
                     "Robot model description selection",

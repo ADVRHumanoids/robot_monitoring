@@ -14,7 +14,16 @@ public:
 
     Context();
 
-    YAML::Node config();
+    /**
+     * @brief config returns an handle to the global
+     * gui config
+     */
+    YAML::Node& config();
+
+    /**
+     * @brief saveConfig dumps the provided config node to
+     * file, so that is is persistently saved
+     */
     void saveConfig(YAML::Node);
 
     ~Context();

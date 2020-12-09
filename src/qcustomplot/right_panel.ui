@@ -35,6 +35,16 @@
     </widget>
    </item>
    <item>
+    <widget class="QCheckBox" name="openglChkBox">
+     <property name="text">
+      <string>OpenGL</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QPushButton" name="resetViewBtn">
      <property name="text">
       <string>Reset view</string>

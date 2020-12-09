@@ -29,10 +29,10 @@ set(QT5_PATH "" CACHE PATH "Path to QT")
 set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};${QT5_PATH}")
 
 # find qt
-find_package(Qt5UiTools 5.9 REQUIRED)
-find_package(Qt5Widgets 5.9 REQUIRED)
-find_package(Qt5Charts  5.9 REQUIRED)
-find_package(Qt5PrintSupport  5.9 REQUIRED)
+find_package(Qt5UiTools REQUIRED)
+find_package(Qt5Widgets REQUIRED)
+find_package(Qt5Charts  QUIET)
+find_package(Qt5PrintSupport REQUIRED)
 
 
 # robotinterfaceros is needed just to construct

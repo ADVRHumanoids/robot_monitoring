@@ -27,6 +27,7 @@ RvizWidget::RvizWidget(QWidget* parent)
                               _manager);
     _manager->initialize();
     _manager->startUpdate();
+    _manager->setFixedFrame("base_link");
 
     _robot_model = _manager->createDisplay("rviz/RobotModel",
                                            "XBot Robot",

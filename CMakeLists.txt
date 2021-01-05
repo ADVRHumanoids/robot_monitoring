@@ -11,7 +11,6 @@ set(CATKIN_BUILD_BINARY_PACKAGE TRUE)
 
 # fmt header only mode to avoid linking
 find_package(fmt REQUIRED)
-add_definitions(-DFMT_HEADER_ONLY)
 
 # find required packages
 find_package(catkin REQUIRED COMPONENTS

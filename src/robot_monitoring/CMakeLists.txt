@@ -17,6 +17,10 @@ if(TARGET fmt::fmt-header-only)
     target_link_libraries(robot_monitoring
         PUBLIC fmt::fmt-header-only
         )
+else()
+    target_link_libraries(robot_monitoring
+        PUBLIC fmt::fmt
+        )
 endif()
 
 install(TARGETS robot_monitoring

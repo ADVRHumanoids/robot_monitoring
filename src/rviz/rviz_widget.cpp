@@ -75,7 +75,7 @@ void RvizWidget::contextMenuEvent(QContextMenuEvent* event)
 
     // get list of frames
     std::vector<std::string> frames_std;
-    _manager->getTFClient()->getFrameStrings(frames_std);
+    _manager->getTF2BufferPtr()->_getFrameStrings(frames_std);
 
     // convert to qt
     QStringList frames;

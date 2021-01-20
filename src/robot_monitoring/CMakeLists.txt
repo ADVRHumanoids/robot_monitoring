@@ -25,3 +25,6 @@ endif()
 
 install(TARGETS robot_monitoring
     DESTINATION lib)
+
+install(FILES custom_qt_widget.h custom_qt_widget_impl.h 
+DESTINATION include/robot_monitoring)

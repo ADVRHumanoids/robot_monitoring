@@ -39,14 +39,13 @@ find_package(Qt5PrintSupport REQUIRED)
 find_package(RobotInterfaceROS REQUIRED)
 include_directories(include/
     src/
-	${catkin_INCLUDE_DIRS}
     ${RobotInterfaceROS_INCLUDE_DIRS})
 
 # generate catkin package, but don't let it export
 # any target
 catkin_package(
-    SKIP_CMAKE_CONFIG_GENERATION
-    SKIP_PKG_CONFIG_GENERATION
+    INCLUDE_DIRS include
+    LIBRARIES robot_monitoring
     )
 
 add_subdirectory(src/robot_monitoring/)
@@ -59,3 +58,6 @@ add_subdirectory(src/rviz/)
 add_subdirectory(src/qcustomplot)
 
 include(cmake/GenerateDeb.cmake)
+
+install(DIRECTORY include/robot_monitoring
+DESTINATION include)

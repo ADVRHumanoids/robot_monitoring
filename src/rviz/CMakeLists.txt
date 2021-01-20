@@ -12,6 +12,7 @@ target_link_libraries(xbot_rob_mon_plugin_rviz
 
 target_include_directories(xbot_rob_mon_plugin_rviz
     PRIVATE
+    ${catkin_INCLUDE_DIRS}
     ${rviz_INCLUDE_DIRS})
 
 install(TARGETS xbot_rob_mon_plugin_rviz

@@ -28,7 +28,8 @@ target_link_libraries(sliders_widget PUBLIC
 add_executable(joint_state_sliders sliders_widget_main.cpp)
                                 
 target_link_libraries(joint_state_sliders PRIVATE 
-                        sliders_widget)
+                        sliders_widget
+                        uuid)
 
 set_target_properties(joint_state_sliders PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
 

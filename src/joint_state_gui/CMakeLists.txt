@@ -35,7 +35,7 @@ target_link_libraries(joint_bar_ui
     yaml-cpp)
 
 add_executable(xbot2-gui ui_main.cpp)
-target_link_libraries(xbot2-gui joint_bar_ui)
+target_link_libraries(xbot2-gui joint_bar_ui uuid)
 
 # Mark executables and/or libraries for installation
 install(TARGETS xbot2-gui

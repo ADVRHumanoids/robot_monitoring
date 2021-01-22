@@ -2,6 +2,7 @@
 #define BRINGUP_WIDGET_H
 
 #include <QDialog>
+#include <QPushButton>
 #include <QTextEdit>
 #include <ros/ros.h>
 
@@ -27,6 +28,8 @@ private:
     bool start_ecat();
     bool wait_slaves(int& nslaves);
     bool start_xbot();
+
+    QPushButton * _startBtn;
 
     ros::NodeHandle _nh;
     ros::ServiceClient _ecat_status, _ecat_start, _ecat_get_slaves;

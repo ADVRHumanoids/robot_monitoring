@@ -52,6 +52,7 @@ bringup_widget::bringup_widget(QWidget * parent):
     auto l = new QHBoxLayout;
     l->addWidget(wid);
     setLayout(l);
+    wid->setMinimumWidth(400);
 
     setWindowTitle("Robot bringup procedure");
 
@@ -59,13 +60,19 @@ bringup_widget::bringup_widget(QWidget * parent):
     auto okBtn = findChild<QPushButton*>("okBtn");
     auto okBtnClicked = [this]()
     {
-        done(0);
+        reject();
     };
     connect(okBtn, &QPushButton::released, okBtnClicked);
 
     // start button
-    auto startBtn = findChild<QPushButton*>("startBtn");
-    connect(startBtn, &QPushButton::released, this, &bringup_widget::bringup);
+    _startBtn = findChild<QPushButton*>("startBtn");
+    connect(_startBtn, &QPushButton::released, this, 
+            [this]()
+            {
+                _startBtn->setEnabled(false);
+                bringup();
+                _startBtn->setEnabled(true);
+            });
 
     // text area
     _text = findChild<QTextEdit*>("textEdit");
@@ -104,21 +111,92 @@ void bringup_widget::writeText(QString text)
 {
     _text->moveCursor(QTextCursor::End);
     _text->insertPlainText(text);
+    repaint();
 }
 
 void bringup_widget::bringup()
 {
     _text->clear();
 
-    if(!check_services())
+    // services existance
+    if(!wait_service(_ecat_start) ||
+            !wait_service(_ecat_status) ||
+            !wait_service(_xbot_start) ||
+            !wait_service(_xbot_status) ||
+            !wait_service(_ecat_get_slaves)
+            )
     {
+        labelText("servicesOk", "Failed");
+        labelNok("servicesLabel");
+        labelNok("servicesOk");
         return;
     }
+
+    labelText("servicesOk", "Ok");
+    labelOk("servicesLabel");
+    labelOk("servicesOk");
+
+    // check currently running
+    if(!check_status())
+    {
+        labelText("checkOk", "Failed");
+        labelNok("checkLabel");
+        labelNok("checkOk");
+        return;
+    }
+
+    labelText("checkOk", "Ok");
+    labelOk("checkLabel");
+    labelOk("checkOk");
+
+    // start ecat
+    if(!start_ecat())
+    {
+        labelText("ecatOk", "Failed");
+        labelNok("ecatLabel");
+        labelNok("ecatOk");
+        return;
+    }
+
+    labelText("ecatOk", "Ok");
+    labelOk("ecatLabel");
+    labelOk("ecatOk");
+
+    // slaves descr
+    int nslaves = -1;
+    if(!wait_slaves(nslaves))
+    {
+        labelText("slaveOk", "Failed");
+        labelNok("slaveLabel");
+        labelNok("slaveOk");
+        return;
+    }
+
+    labelText("slaveOk", QString("Ok (%1 slaves)").arg(nslaves));
+    labelOk("slaveLabel");
+    labelOk("slaveOk");
+
+    // xbot2
+    if(!start_xbot())
+    {
+        labelText("xbot2Ok", "Failed");
+        labelNok("xbot2Label");
+        labelNok("xbot2Ok");
+        return;
+    }
+
+    labelText("xbot2Ok", "Ok");
+    labelOk("xbot2Label");
+    labelOk("xbot2Ok");
+
+    accept();
+
+    return;
 }
 
 bool bringup_widget::wait_service(ros::ServiceClient& s)
 {
-    writeText(QString("waiting for service '%1'..").arg(s.getService().c_str()));
+    writeText(QString(">> waiting for service '%1'..").arg(s.getService().c_str()));
     if(s.waitForExistence(ros::Duration(1.0)))
     {
         writeText("..ok \n");
@@ -135,86 +213,14 @@ bool bringup_widget::wait_service(ros::ServiceClient& s)
 
 bool bringup_widget::check_services()
 {
-    // services existance
-    if(!wait_service(_ecat_start) ||
-            !wait_service(_ecat_status) ||
-            !wait_service(_xbot_start) ||
-            !wait_service(_xbot_status) ||
-            !wait_service(_ecat_get_slaves)
-            )
-    {
-        labelText("servicesOk", "Failed");
-        labelNok("servicesLabel");
-        labelNok("servicesOk");
-        return false;
-    }
-
-    labelText("servicesOk", "Ok");
-    labelOk("servicesLabel");
-    labelOk("servicesOk");
-
-    // check currently running
-    if(!check_status())
-    {
-        labelText("checkOk", "Failed");
-        labelNok("checkLabel");
-        labelNok("checkOk");
-        return false;
-    }
-
-    labelText("checkOk", "Ok");
-    labelOk("checkLabel");
-    labelOk("checkOk");
-
-    // start ecat
-    if(!start_ecat())
-    {
-        labelText("ecatOk", "Failed");
-        labelNok("ecatLabel");
-        labelNok("ecatOk");
-        return false;
-    }
-
-    labelText("ecatOk", "Ok");
-    labelOk("ecatLabel");
-    labelOk("ecatOk");
-
-    // slaves descr
-    int nslaves = -1;
-    if(!wait_slaves(nslaves))
-    {
-        labelText("slaveOk", "Failed");
-        labelNok("slaveLabel");
-        labelNok("slaveOk");
-        return false;
-    }
-
-    labelText("slaveOk", QString("Ok (% slaves)").arg(nslaves));
-    labelOk("slaveLabel");
-    labelOk("slaveOk");
-
-    // xbot2
-    if(!start_xbot())
-    {
-        labelText("xbot2Ok", "Failed");
-        labelNok("xbot2Label");
-        labelNok("xbot2Ok");
-        return false;
-    }
-
-    labelText("xbot2Ok", "Ok");
-    labelOk("xbot2Label");
-    labelOk("xbot2Ok");
-
-
-    return true;
+    
 }
 
 bool bringup_widget::check_status()
 {
     std_srvs::Trigger srv;
 
-    writeText("checking ecat master is not running..");
+    writeText(">> checking ecat master is not running..");
 
     if(!_ecat_status.call(srv))
     {
@@ -230,7 +236,7 @@ bool bringup_widget::check_status()
 
     writeText("..ok \n");
 
-    writeText("checking xbot2 is not running..");
+    writeText(">> checking xbot2 is not running..");
 
     if(!_xbot_status.call(srv))
     {
@@ -253,7 +259,7 @@ bool bringup_widget::start_ecat()
 {
     std_srvs::Trigger srv;
 
-    writeText("starting ecat master..");
+    writeText(">> starting ecat master..");
 
     if(!_ecat_start.call(srv))
     {
@@ -277,15 +283,30 @@ bool bringup_widget::wait_slaves(int& nslaves)
 {
     ec_srvs::GetSlaveInfo srv;
 
-    writeText("querying slave description..");
+    writeText(">> querying slave description..");
 
-    if(!_ecat_get_slaves.call(srv))
+    bool descr_ok = false;
+
+    while(!descr_ok)
     {
-        writeText("..service failed \n");
-        return false;
+        if(!_ecat_get_slaves.call(srv))
+        {
+            writeText("..service failed \n");
+            return false;
+        }
+
+        if(srv.response.cmd_info.status != "FAULT")
+        {
+            descr_ok = true;
+        }
+        else
+        {
+            sleep(1);
+        }
+        
     }
 
-    if(srv.response.cmd_info.status == "FAULT")
+    if(!descr_ok)
     {
         writeText("..failed \n");
         return false;
@@ -311,7 +332,7 @@ bool bringup_widget::start_xbot()
 {
     std_srvs::Trigger srv;
 
-    writeText("starting xbot2..");
+    writeText(">> starting xbot2..");
 
     if(!_xbot_start.call(srv))
     {

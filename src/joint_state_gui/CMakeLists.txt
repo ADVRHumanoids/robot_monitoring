@@ -6,6 +6,7 @@ find_package(Qt5UiTools REQUIRED)
 find_package(Qt5Widgets REQUIRED)
 find_package(Qt5Quick   REQUIRED)
 find_package(XBotInterface REQUIRED)
+find_package(ec_srvs REQUIRED)
 find_package(catkin REQUIRED COMPONENTS roscpp urdf)
 
 include_directories(../../include)
@@ -34,6 +35,10 @@ target_link_libraries(joint_bar_ui
     XBotInterface::XBotInterface
     ${catkin_LIBRARIES}
     yaml-cpp)
+
+target_include_directories(joint_bar_ui
+    PRIVATE ${ec_srvs_INCLUDE_DIRS}
+    )
 
 add_executable(xbot2-gui ui_main.cpp)
 target_link_libraries(xbot2-gui joint_bar_ui uuid)

@@ -226,9 +226,23 @@ XBot2StatusWidget::XBot2StatusWidget(QWidget* parent):
 //        geom.setTopLeft(event->globalPos());
 //        _load_plugin_wid->setGeometry(geom);
 
-        bringupWid->exec();
+        if(bringupWid->exec() == QDialog::Accepted)
+        {
+            emit xbot2Started();
+        }
+
     };
     connect(bringupBtn, &QPushButton::released, bringupBtnClicked);
+
+    // shutdown
+    auto shutdownBtn = findChild<QPushButton*>("shutdownBtn");
+    auto shutdownBtnClicked = [this]()
+    {
+        std_srvs::Trigger srv;
+        ros::service::call("/xbotcore/d/stop", srv);
+        ros::service::call("/ecat/d/kill", srv);
+    };
+    connect(shutdownBtn, &QPushButton::released, shutdownBtnClicked);
 
     handleStatusLabel();
 }

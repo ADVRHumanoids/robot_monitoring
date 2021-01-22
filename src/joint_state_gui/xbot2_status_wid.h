@@ -24,6 +24,8 @@ signals:
 
 private:
 
+    void contextMenuEvent(QContextMenuEvent*) override;
+
     void handleStatusLabel();
 
     ros::Time _last_status_recv;
@@ -35,6 +37,8 @@ private:
     ros::NodeHandle _nh;
     ros::Subscriber _status_sub, _vbatt_sub;
     ros::ServiceClient _srv_start, _srv_stop;
+
+    std::string _hw_type;
 };
 
 #endif // XBOT2_STATUS_WID_H

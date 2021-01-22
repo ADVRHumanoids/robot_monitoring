@@ -12,6 +12,7 @@ include_directories(../../include)
 
 add_library(joint_bar_ui STATIC
     bar_plot_widget.cpp
+    bringup_widget.cpp
     load_plugin_wid.cpp
     top_right_tab.cpp
     joint_bar_widget.cpp

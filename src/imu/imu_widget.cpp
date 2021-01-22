@@ -5,7 +5,6 @@
 #include <QtUiTools>
 
 #include <sensor_msgs/Imu.h>
-#include <fmt/format.h>
 
 #include <eigen3/Eigen/Dense>
 #include <tf2/buffer_core.h>

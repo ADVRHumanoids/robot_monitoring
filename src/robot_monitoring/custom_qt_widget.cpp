@@ -1,6 +1,5 @@
 #include "robot_monitoring/custom_qt_widget.h"
 #include "custom_qt_widget_impl.h"
-#include <fmt/format.h>
 
 #include <cstdio>
 #include <memory>
@@ -16,17 +15,17 @@ inline std::string GetLibPath(std::string lib_name)
     /* Try to open the provided library */
     std::shared_ptr<void> lib_handle(dlopen(lib_name.c_str(), RTLD_NOW),
                                      [](void * ptr)
-                                     {
-                                         if(!ptr) return;
-                                         dlclose(ptr);
-                                     });
+    {
+        if(!ptr) return;
+        dlclose(ptr);
+    });
 
     /* Not able to open so, report error */
     if(!lib_handle)
     {
-        fmt::print(stderr,
-                    "could not open lib '{}', error '{}' \n",
-                   lib_name, dlerror());
+        fprintf(stderr,
+                "could not open lib '%s', error '%s' \n",
+                lib_name.c_str(), dlerror());
         return "";
     }
     else
@@ -42,10 +41,10 @@ inline std::string GetLibPath(std::string lib_name)
 
         std::shared_ptr<char> real(realpath(map->l_name, nullptr),
                                    [](char * ptr)
-                                   {
-                                       if(!ptr) return;
-                                       std::free(ptr);
-                                   });
+        {
+            if(!ptr) return;
+            std::free(ptr);
+        });
 
         if(!real)
         {

@@ -13,18 +13,9 @@ target_link_libraries(robot_monitoring
     Qt5::Widgets
     Qt5::UiTools)
 
-if(TARGET fmt::fmt-header-only)
-    target_link_libraries(robot_monitoring
-        PUBLIC fmt::fmt-header-only
-        )
-else()
-    target_link_libraries(robot_monitoring
-        PUBLIC fmt::fmt
-        )
-endif()
 
 install(TARGETS robot_monitoring
     DESTINATION lib)
 
 install(FILES custom_qt_widget.h custom_qt_widget_impl.h 
-DESTINATION include/robot_monitoring)
+    DESTINATION include/robot_monitoring)

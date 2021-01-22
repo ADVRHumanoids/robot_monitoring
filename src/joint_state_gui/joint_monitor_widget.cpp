@@ -7,8 +7,6 @@
 #include <memory>
 #include "robot_monitoring/context.h"
 
-#include <fmt/format.h>
-
 JointMonitorWidget::JointMonitorWidget(int argc,
                                        char ** argv,
                                        QWidget *parent) :

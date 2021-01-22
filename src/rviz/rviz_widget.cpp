@@ -6,7 +6,6 @@
 #include <QInputDialog>
 #include <QLabel>
 #include <tf/transform_listener.h>
-#include <fmt/format.h>
 
 RvizWidget::RvizWidget(QWidget* parent)
 {
@@ -62,7 +61,6 @@ QString RvizWidget::name()
 
 RvizWidget::~RvizWidget()
 {
-    fmt::print("{}\n", __func__);
 }
 
 

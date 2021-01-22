@@ -4,9 +4,6 @@
 #include <QDir>
 #include <QMessageBox>
 
-#include <fmt/format.h>
-#include <fmt/ostream.h>
-
 using namespace XBot::Ui;
 
 class Context::Impl
@@ -56,12 +53,12 @@ Context::Impl::Impl():
     try
     {
         node = YAML::LoadFile(file.fileName().toStdString());
-        fmt::print("loaded config is: \n"
-                   "{} \n", node);
+        printf("loaded config is: \n"
+               "%s \n", file.fileName().toStdString().c_str());
     }
     catch(YAML::BadFile& e)
     {
-        fmt::print("no config available \n");
+        printf("no config available \n");
     }
 
 

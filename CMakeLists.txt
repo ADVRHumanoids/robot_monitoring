@@ -9,9 +9,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # avoid installing catkin-related files
 set(CATKIN_BUILD_BINARY_PACKAGE TRUE)
 
-# fmt header only mode to avoid linking
-find_package(fmt REQUIRED)
-
 # find required packages
 find_package(catkin REQUIRED COMPONENTS
     roscpp

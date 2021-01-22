@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>668</width>
-    <height>181</height>
+    <width>300</width>
+    <height>123</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,74 +17,32 @@
    <item>
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
+      <widget class="QLabel" name="statusLabel">
+       <property name="text">
+        <string>Running</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item>
       <layout class="QHBoxLayout" name="horizontalLayout_2">
        <item>
-        <widget class="QGroupBox" name="groupBox">
-         <property name="title">
-          <string>xbot2</string>
+        <widget class="QPushButton" name="cmdBtn">
+         <property name="text">
+          <string>Stop</string>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_2">
-          <item>
-           <widget class="QLabel" name="statusLabelXbot">
-            <property name="text">
-             <string>Running</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="cmdBtn">
-            <property name="text">
-             <string>Stop</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="killBtn">
-            <property name="toolTip">
-             <string>Send SIGKILL to xbot2-core process</string>
-            </property>
-            <property name="text">
-             <string>Kill</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="ecatBox">
-         <property name="title">
-          <string>ecat</string>
+        <widget class="QPushButton" name="killBtn">
+         <property name="toolTip">
+          <string>Send SIGKILL to xbot2-core process</string>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_5">
-          <item>
-           <widget class="QLabel" name="statusLabelEcat">
-            <property name="text">
-             <string>Running</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="bringupBtn">
-            <property name="text">
-             <string>Bring up</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="shutdownBtn">
-            <property name="text">
-             <string>Shut down</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
+         <property name="text">
+          <string>Kill</string>
+         </property>
         </widget>
        </item>
       </layout>

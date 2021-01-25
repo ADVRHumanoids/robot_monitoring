@@ -352,7 +352,8 @@ bool BringupThread::wait_slaves(int& nslaves)
         else
         {
             sleep(1);
-            writeText(QString::fromStdString(srv.response.cmd_info.fault_info) + "\n");
+            writeText(" answered: '");
+            writeText(QString::fromStdString(srv.response.cmd_info.fault_info) + "' \n");
         }
         
     }

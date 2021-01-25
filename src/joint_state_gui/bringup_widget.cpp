@@ -46,8 +46,8 @@ QWidget * LoadUiFile(QWidget * parent)
 }
 
 
-bringup_widget::bringup_widget(QWidget * parent):
-    QDialog(parent), _nh(""), _finished(false)
+BringupWidget::BringupWidget(QWidget * parent):
+    QDialog(parent), _worker(nullptr)
 {
     auto wid = LoadUiFile(this);
     auto l = new QHBoxLayout;
@@ -61,48 +61,92 @@ bringup_widget::bringup_widget(QWidget * parent):
     auto okBtn = findChild<QPushButton*>("okBtn");
     auto okBtnClicked = [this]()
     {
-        _finished = true;
+        stop_worker();
         reject();
     };
     connect(okBtn, &QPushButton::released, okBtnClicked);
 
     // start button
     _startBtn = findChild<QPushButton*>("startBtn");
-    connect(_startBtn, &QPushButton::released, this, 
+    connect(_startBtn, &QPushButton::released, this,
             [this]()
-            {
-                if(_startBtn->text() == "Start")
-                {
-                    _startBtn->setText("Abort");
-                    bringup();
-                    _startBtn->setText("Start");
-                }
-                else
-                {
-                    _finished = true;
-                }
-            });
+    {
+        if(_startBtn->text() == "Start")
+        {
+            start_worker();
+            _startBtn->setText("Abort");
+        }
+        else
+        {
+            stop_worker();
+            _startBtn->setText("Start");
+        }
+    });
 
-    // text area
+    // text
     _text = findChild<QTextEdit*>("textEdit");
-
-    // ros services
-    _ecat_start = _nh.serviceClient<std_srvs::Trigger>("ecat/d/start");
-    _ecat_status = _nh.serviceClient<std_srvs::Trigger>("ecat/d/status");
-    _ecat_get_slaves = _nh.serviceClient<ec_srvs::GetSlaveInfo>("ec_client/get_slaves_description");
-    _xbot_start = _nh.serviceClient<std_srvs::Trigger>("xbotcore/d/start");
-    _xbot_status = _nh.serviceClient<std_srvs::Trigger>("xbotcore/d/status");
-
 }
 
-void bringup_widget::labelOk(QString name)
+void BringupWidget::writeText(QString text)
+{
+    _text->moveCursor(QTextCursor::End);
+    _text->insertPlainText(text);
+    std::cout << text.toStdString();
+    QCoreApplication::processEvents();
+}
+
+
+void BringupWidget::start_worker()
+{
+    // worker thread
+    _worker = new BringupThread;
+
+    connect(_worker, &BringupThread::finished,
+            [this]()
+    {
+        _startBtn->setText("Start");
+        _startBtn->setEnabled(false);
+    });
+
+    connect(_worker, &BringupThread::writeText,
+            this, &BringupWidget::writeText);
+
+    connect(_worker, &BringupThread::labelOk,
+            this, &BringupWidget::labelOk);
+
+    connect(_worker, &BringupThread::labelNok,
+            this, &BringupWidget::labelNok);
+
+    connect(_worker, &BringupThread::labelText,
+            this, &BringupWidget::labelText);
+
+    connect(_worker, &QThread::finished,
+            _worker, &QThread::deleteLater);
+
+    _text->clear();
+
+    _worker->start();
+}
+
+void BringupWidget::stop_worker()
+{
+    if(!_worker)
+    {
+        return;
+    }
+
+    _worker->requestInterruption();
+    _worker = nullptr;
+}
+
+void BringupWidget::labelOk(QString name)
 {
     auto label = findChild<QLabel*>(name);
     label->setStyleSheet(
                 "color: green;");
 }
 
-void bringup_widget::labelNok(QString name)
+void BringupWidget::labelNok(QString name)
 {
     auto label = findChild<QLabel*>(name);
     label->setStyleSheet(
@@ -110,25 +154,15 @@ void bringup_widget::labelNok(QString name)
                 "font-weight: bold");
 }
 
-void bringup_widget::labelText(QString name, QString text)
+void BringupWidget::labelText(QString name, QString text)
 {
     auto label = findChild<QLabel*>(name);
     label->setText(text);
 }
 
-void bringup_widget::writeText(QString text)
-{
-    _text->moveCursor(QTextCursor::End);
-    _text->insertPlainText(text);
-    std::cout << text.toStdString();
-    repaint();
-    QCoreApplication::processEvents();
-}
 
-void bringup_widget::bringup()
+void BringupThread::bringup()
 {
-    _text->clear();
-
     // services existance
     if(!wait_service(_ecat_start) ||
             !wait_service(_ecat_status) ||
@@ -200,12 +234,10 @@ void bringup_widget::bringup()
     labelOk("xbot2Label");
     labelOk("xbot2Ok");
 
-    accept();
-
     return;
 }
 
-bool bringup_widget::wait_service(ros::ServiceClient& s)
+bool BringupThread::wait_service(ros::ServiceClient& s)
 {
     writeText(QString(">> waiting for service '%1'..").arg(s.getService().c_str()));
     if(s.waitForExistence(ros::Duration(1.0)))
@@ -222,12 +254,12 @@ bool bringup_widget::wait_service(ros::ServiceClient& s)
 }
 
 
-bool bringup_widget::check_services()
+bool BringupThread::check_services()
 {
     
 }
 
-bool bringup_widget::check_status()
+bool BringupThread::check_status()
 {
     std_srvs::Trigger srv;
 
@@ -266,7 +298,7 @@ bool bringup_widget::check_status()
     return true;
 }
 
-bool bringup_widget::start_ecat()
+bool BringupThread::start_ecat()
 {
     std_srvs::Trigger srv;
 
@@ -290,7 +322,7 @@ bool bringup_widget::start_ecat()
 
 }
 
-bool bringup_widget::wait_slaves(int& nslaves)
+bool BringupThread::wait_slaves(int& nslaves)
 {
     ec_srvs::GetSlaveInfo srv;
 
@@ -307,7 +339,7 @@ bool bringup_widget::wait_slaves(int& nslaves)
             return false;
         }
 
-        if(_finished)
+        if(isInterruptionRequested())
         {
             writeText("..canceled by user \n");
             return false;
@@ -347,7 +379,7 @@ bool bringup_widget::wait_slaves(int& nslaves)
     return true;
 }
 
-bool bringup_widget::start_xbot()
+bool BringupThread::start_xbot()
 {
     std_srvs::Trigger srv;
 
@@ -368,4 +400,19 @@ bool bringup_widget::start_xbot()
     writeText("..ok \n");
 
     return true;
+}
+
+BringupThread::BringupThread()
+{
+    // ros services
+    _ecat_start = _nh.serviceClient<std_srvs::Trigger>("ecat/d/start");
+    _ecat_status = _nh.serviceClient<std_srvs::Trigger>("ecat/d/status");
+    _ecat_get_slaves = _nh.serviceClient<ec_srvs::GetSlaveInfo>("ec_client/get_slaves_description");
+    _xbot_start = _nh.serviceClient<std_srvs::Trigger>("xbotcore/d/start");
+    _xbot_status = _nh.serviceClient<std_srvs::Trigger>("xbotcore/d/status");
+}
+
+void BringupThread::run()
+{
+    bringup();
 }

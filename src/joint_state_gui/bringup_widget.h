@@ -5,20 +5,27 @@
 #include <QPushButton>
 #include <QTextEdit>
 #include <ros/ros.h>
+#include <QThread>
 
-class bringup_widget : public QDialog
+class BringupThread : public QThread
 {
+
+    Q_OBJECT
 
 public:
 
-    bringup_widget(QWidget * parent = nullptr);
+    BringupThread();
 
-private:
+signals:
 
+    void writeText(const QString&);
     void labelOk(QString name);
     void labelNok(QString name);
     void labelText(QString name, QString text);
-    void writeText(QString text);
+
+private:
+
+    void run() override;
 
     void bringup();
     bool wait_service(ros::ServiceClient& s);
@@ -29,15 +36,37 @@ private:
     bool wait_slaves(int& nslaves);
     bool start_xbot();
 
-    bool _finished;
-
-    QPushButton * _startBtn;
-
     ros::NodeHandle _nh;
     ros::ServiceClient _ecat_status, _ecat_start, _ecat_get_slaves;
     ros::ServiceClient _xbot_status, _xbot_start;
 
+
+
+};
+
+class BringupWidget : public QDialog
+{
+
+public:
+
+    BringupWidget(QWidget * parent = nullptr);
+
+private:
+
+    void start_worker();
+    void stop_worker();
+
+    void writeText(QString text);
+    void labelOk(QString name);
+    void labelNok(QString name);
+    void labelText(QString name, QString text);
+
+    BringupThread * _worker;
+    QPushButton * _startBtn;
     QTextEdit * _text;
+
+
+
 
 };
 

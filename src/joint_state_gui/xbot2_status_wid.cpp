@@ -220,7 +220,7 @@ XBot2StatusWidget::XBot2StatusWidget(QWidget* parent):
     auto bringupBtn = findChild<QPushButton*>("bringupBtn");
     auto bringupBtnClicked = [this]()
     {
-        auto bringupWid = new bringup_widget(this);
+        auto bringupWid = new BringupWidget(this);
 
 //        auto geom = bringupWid->geometry();
 //        geom.setTopLeft(event->globalPos());

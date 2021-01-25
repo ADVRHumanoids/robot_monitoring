@@ -29,6 +29,8 @@ private:
     bool wait_slaves(int& nslaves);
     bool start_xbot();
 
+    bool _finished;
+
     QPushButton * _startBtn;
 
     ros::NodeHandle _nh;

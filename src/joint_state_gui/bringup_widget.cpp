@@ -10,6 +10,7 @@
 #include <QDir>
 #include <QPushButton>
 #include <QLabel>
+#include <QCoreApplication>
 
 #include <iostream>
 
@@ -46,7 +47,7 @@ QWidget * LoadUiFile(QWidget * parent)
 
 
 bringup_widget::bringup_widget(QWidget * parent):
-    QDialog(parent), _nh("")
+    QDialog(parent), _nh(""), _finished(false)
 {
     auto wid = LoadUiFile(this);
     auto l = new QHBoxLayout;
@@ -60,6 +61,7 @@ bringup_widget::bringup_widget(QWidget * parent):
     auto okBtn = findChild<QPushButton*>("okBtn");
     auto okBtnClicked = [this]()
     {
+        _finished = true;
         reject();
     };
     connect(okBtn, &QPushButton::released, okBtnClicked);
@@ -69,9 +71,16 @@ bringup_widget::bringup_widget(QWidget * parent):
     connect(_startBtn, &QPushButton::released, this, 
             [this]()
             {
-                _startBtn->setEnabled(false);
-                bringup();
-                _startBtn->setEnabled(true);
+                if(_startBtn->text() == "Start")
+                {
+                    _startBtn->setText("Abort");
+                    bringup();
+                    _startBtn->setText("Start");
+                }
+                else
+                {
+                    _finished = true;
+                }
             });
 
     // text area
@@ -111,7 +120,9 @@ void bringup_widget::writeText(QString text)
 {
     _text->moveCursor(QTextCursor::End);
     _text->insertPlainText(text);
+    std::cout << text.toStdString();
     repaint();
+    QCoreApplication::processEvents();
 }
 
 void bringup_widget::bringup()
@@ -283,15 +294,22 @@ bool bringup_widget::wait_slaves(int& nslaves)
 {
     ec_srvs::GetSlaveInfo srv;
 
-    writeText(">> querying slave description..");
-
+    int attempts = 30;
     bool descr_ok = false;
 
-    while(!descr_ok)
+    while(!descr_ok && attempts--)
     {
+        writeText(">> querying slave description..");
+
         if(!_ecat_get_slaves.call(srv))
         {
             writeText("..service failed \n");
+            return false;
+        }
+
+        if(_finished)
+        {
+            writeText("..canceled by user \n");
             return false;
         }
 
@@ -302,13 +320,14 @@ bool bringup_widget::wait_slaves(int& nslaves)
         else
         {
             sleep(1);
+            writeText(QString::fromStdString(srv.response.cmd_info.fault_info) + "\n");
         }
         
     }
 
     if(!descr_ok)
     {
-        writeText("..failed \n");
+        writeText("..failed after n = 30 attempts \n");
         return false;
     }
 

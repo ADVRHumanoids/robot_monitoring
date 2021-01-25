@@ -25,6 +25,9 @@
      <layout class="QFormLayout" name="formLayout">
       <item row="0" column="0">
        <widget class="QLabel" name="servicesLabel">
+        <property name="styleSheet">
+         <string notr="true">color: #444444;</string>
+        </property>
         <property name="text">
          <string>Checking services</string>
         </property>
@@ -42,6 +45,9 @@
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="checkLabel">
+        <property name="styleSheet">
+         <string notr="true">color: #444444;</string>
+        </property>
         <property name="text">
          <string>Checking current status</string>
         </property>
@@ -59,6 +65,10 @@
       </item>
       <item row="2" column="0">
        <widget class="QLabel" name="ecatLabel">
+        <property name="styleSheet">
+         <string notr="true">color: #444444;
+</string>
+        </property>
         <property name="text">
          <string>Starting ecat master</string>
         </property>
@@ -76,6 +86,9 @@
       </item>
       <item row="3" column="0">
        <widget class="QLabel" name="slaveLabel">
+        <property name="styleSheet">
+         <string notr="true">color: #444444;</string>
+        </property>
         <property name="text">
          <string>Waiting for slave description</string>
         </property>
@@ -93,6 +106,9 @@
       </item>
       <item row="4" column="0">
        <widget class="QLabel" name="xbot2Label">
+        <property name="styleSheet">
+         <string notr="true">color: #444444;</string>
+        </property>
         <property name="text">
          <string>Starting xbot2 (hw = dummy)</string>
         </property>
@@ -113,6 +129,19 @@
    </item>
    <item>
     <widget class="QTextEdit" name="textEdit">
+     <property name="styleSheet">
+      <string notr="true">background-color: #222222;
+color: white;
+font: 10pt &quot;Ubuntu Mono&quot;;</string>
+     </property>
+     <property name="html">
+      <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Ubuntu Mono'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&amp;gt;&amp;gt; Log message&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&amp;gt;&amp;gt; Another log message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="textInteractionFlags">
       <set>Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
      </property>

@@ -8,6 +8,7 @@ int main(int argc, char *argv[])
 {
     ros::init(argc, argv, "xbot_gui");
     QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
+//    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar); //fix for menubar notshowing in ubuntu
     QApplication a(argc, argv);
     JointMonitorWidget w;
     w.show();

@@ -3,6 +3,9 @@
 
 #include <QWidget>
 #include <QTimer>
+#include <QMainWindow>
+#include <QStatusBar>
+#include <QMenuBar>
 
 #include <ros/ros.h>
 #include <xbot_msgs/JointState.h>
@@ -21,7 +24,7 @@
  * @brief The JointMonitorWidget class is the main widget for the
  * xbot2-gui.
  */
-class JointMonitorWidget : public QWidget
+class JointMonitorWidget : public QMainWindow
 {
 
 public:
@@ -58,6 +61,16 @@ public:
     XBot2Widget * _xbot2;
 
     /**
+     * @brief _status_bar
+     */
+    QStatusBar * _status_bar;
+
+    /**
+     * @brief _menu_bar
+     */
+    QMenuBar * _menu_bar;
+
+    /**
      * @brief _xbot2_status
      */
     XBot2StatusWidget * _xbot2_status;
@@ -80,6 +93,8 @@ private:
     std::vector<std::string> _jnames;
     urdf::ModelInterfaceSharedPtr _urdf;
 
+    void create_menu();
+    void save_default_cfg();
 
     void on_timer_event();
     void on_jstate_recv(xbot_msgs::JointStateConstPtr msg);
@@ -90,10 +105,6 @@ private:
 
     std::map<std::string, int> _jidmap;
 
-
-    // QWidget interface
-protected:
-    void closeEvent(QCloseEvent* event) override;
 };
 
 #endif // JOINT_MONITOR_WIDGET_H

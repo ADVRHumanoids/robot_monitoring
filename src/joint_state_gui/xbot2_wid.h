@@ -19,7 +19,7 @@ class XBot2Widget : public QWidget
 
 public:
 
-    explicit XBot2Widget(QWidget * parent = nullptr);
+    explicit XBot2Widget(QMainWindow * mw, QWidget * parent = nullptr);
 
     void update();
 

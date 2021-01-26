@@ -11,11 +11,14 @@
 #include <QMessageBox>
 #include <QMenu>
 #include <QInputDialog>
+#include <QMenuBar>
 
 #include <std_msgs/String.h>
 #include <std_msgs/Float32.h>
 #include <std_srvs/Trigger.h>
 #include <xbot_msgs/GetPluginList.h>
+#include <xbot_msgs/StartProcess.h>
+#include <xbot_msgs/StopProcess.h>
 
 void xbot2_status_widget_qrc_init()
 {
@@ -55,9 +58,11 @@ QWidget * LoadUiFileBringup(QWidget * parent)
 
 }
 
-XBot2StatusWidget::XBot2StatusWidget(QWidget* parent):
+XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
+                                     QWidget* parent):
     QWidget (parent),
-    _nh("xbotcore")
+    _nh("xbotcore"),
+    _mw(mw)
 {
     auto layout = new QVBoxLayout;
     layout->addWidget(LoadUiFile(this));
@@ -84,15 +89,27 @@ XBot2StatusWidget::XBot2StatusWidget(QWidget* parent):
     _cmd_button->setToolTip("Start/stop xbot2 process "
                             "(needs xbot2-launcher daemon running)");
 
-    _srv_start = _nh.serviceClient<std_srvs::Trigger>("d/start");
-    _srv_stop = _nh.serviceClient<std_srvs::Trigger>("d/stop");
+    _srv_start = _nh.serviceClient<xbot_msgs::StartProcess>("d/start");
+    _srv_stop = _nh.serviceClient<xbot_msgs::StopProcess>("d/stop");
 
     connect(_cmd_button, &QPushButton::released,
             [this]()
     {
         if(_cmd_button->text() == "Start")
         {
-            std_srvs::Trigger srv;
+            xbot_msgs::StartProcess srv;
+
+            if(!_hw_type.empty())
+            {
+                srv.request.args.push_back("--hw");
+                srv.request.args.push_back(_hw_type);
+            }
+
+            if(_hw_type == "sim" || _hw_type == "gz")
+            {
+                srv.request.args.push_back("--simtime");
+            }
+
             if(!_srv_start.waitForExistence(ros::Duration(1.0)))
             {
                 QMessageBox msgBox;
@@ -125,7 +142,8 @@ XBot2StatusWidget::XBot2StatusWidget(QWidget* parent):
         }
         else if(_cmd_button->text() == "Stop")
         {
-            std_srvs::Trigger srv;
+            xbot_msgs::StopProcess srv;
+
             if(!_srv_stop.waitForExistence(ros::Duration(1.0)))
             {
                 QMessageBox msgBox;
@@ -220,11 +238,8 @@ XBot2StatusWidget::XBot2StatusWidget(QWidget* parent):
     auto bringupBtn = findChild<QPushButton*>("bringupBtn");
     auto bringupBtnClicked = [this]()
     {
-        auto bringupWid = new BringupWidget(this);
-
-//        auto geom = bringupWid->geometry();
-//        geom.setTopLeft(event->globalPos());
-//        _load_plugin_wid->setGeometry(geom);
+        auto bringupWid = new BringupWidget(QString::fromStdString(_hw_type),
+                                            this);
 
         if(bringupWid->exec() == QDialog::Accepted)
         {
@@ -244,17 +259,21 @@ XBot2StatusWidget::XBot2StatusWidget(QWidget* parent):
     };
     connect(shutdownBtn, &QPushButton::released, shutdownBtnClicked);
 
+    // select hw type with menu entry
+    setupHwtypeMenu();
+
     handleStatusLabel();
 }
 
-void XBot2StatusWidget::contextMenuEvent(QContextMenuEvent* event)
+void XBot2StatusWidget::setupHwtypeMenu()
 {
-    QMenu menu(this);
+    auto fileMenu = _mw->menuBar()->findChild<QMenu*>("File");
 
-    auto * load_action = new QAction("Select profile", this);
+    auto * load_action = new QAction("Select hw profile", this);
+    load_action->setStatusTip("Selects the hal hardware type for xbot2 (e.g. dummy, sim, ec, ...)");
 
     connect(load_action, &QAction::triggered,
-            [this, event]()
+            [this]()
     {
         QList<QString> items;
 
@@ -279,7 +298,7 @@ void XBot2StatusWidget::contextMenuEvent(QContextMenuEvent* event)
             return;
         }
 
-        items.append("Auto");
+        items.append("auto");
         std::transform(srv.response.plugins.begin(),
                        srv.response.plugins.end(),
                        std::back_inserter(items),
@@ -291,6 +310,11 @@ void XBot2StatusWidget::contextMenuEvent(QContextMenuEvent* event)
                                        "Profiles",
                                        items);
 
+        if(i == "auto")
+        {
+            _hw_type.clear();
+        }
+
         if(!i.isEmpty())
         {
             _hw_type = i.toStdString();
@@ -298,9 +322,8 @@ void XBot2StatusWidget::contextMenuEvent(QContextMenuEvent* event)
 
     });
 
-    menu.addAction(load_action);
+    fileMenu->addAction(load_action);
 
-    menu.exec(event->globalPos());
 }
 
 void XBot2StatusWidget::update()

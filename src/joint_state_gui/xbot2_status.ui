@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>668</width>
+    <width>409</width>
     <height>175</height>
    </rect>
   </property>
@@ -90,6 +90,12 @@
    </item>
    <item>
     <widget class="QLCDNumber" name="voltLcd">
+     <property name="minimumSize">
+      <size>
+       <width>150</width>
+       <height>0</height>
+      </size>
+     </property>
      <property name="smallDecimalPoint">
       <bool>true</bool>
      </property>

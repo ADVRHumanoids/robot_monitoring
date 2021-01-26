@@ -5,6 +5,8 @@
 #include <QLCDNumber>
 #include <QPushButton>
 #include <QLabel>
+#include <QMainWindow>
+
 #include <ros/ros.h>
 
 class XBot2StatusWidget : public QWidget
@@ -14,7 +16,8 @@ class XBot2StatusWidget : public QWidget
 
 public:
 
-    XBot2StatusWidget(QWidget * parent = nullptr);
+    XBot2StatusWidget(QMainWindow * mw,
+                      QWidget * parent = nullptr);
 
     void update();
 
@@ -24,12 +27,13 @@ signals:
 
 private:
 
-    void contextMenuEvent(QContextMenuEvent*) override;
+    void setupHwtypeMenu();
 
     void handleStatusLabel();
 
     ros::Time _last_status_recv;
 
+    QMainWindow * _mw;
     QLCDNumber * _lcd;
     QLabel * _status_label;
     QPushButton * _cmd_button;

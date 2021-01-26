@@ -110,7 +110,7 @@
          <string notr="true">color: #444444;</string>
         </property>
         <property name="text">
-         <string>Starting xbot2 (hw = dummy)</string>
+         <string>Starting xbot2 (hw %1)</string>
         </property>
        </widget>
       </item>

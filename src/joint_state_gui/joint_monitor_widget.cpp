@@ -7,15 +7,24 @@
 #include <memory>
 #include "robot_monitoring/context.h"
 
-JointMonitorWidget::JointMonitorWidget(int argc,
+ JointMonitorWidget::JointMonitorWidget(int argc,
                                        char ** argv,
                                        QWidget *parent) :
-    QWidget(parent),
+    QMainWindow(parent),
     _valid_msg_recv(false),
     _widget_started(false)
 {
     /* Create context */
     _ctx = std::make_shared<XBot::Ui::Context>();
+
+    // status bar
+    _status_bar = new QStatusBar;
+    setStatusBar(_status_bar);
+
+    // menu bar
+    _menu_bar = new QMenuBar;
+    setMenuBar(_menu_bar);
+    create_menu();
 
     // subscribe to joint states, fault, aux
     ros::NodeHandle nh("xbotcore");
@@ -37,10 +46,10 @@ JointMonitorWidget::JointMonitorWidget(int argc,
     if(!_valid_msg_recv)
     {
         // main layout
-        auto layout = new QHBoxLayout(this);
         _xbot2_status = new XBot2StatusWidget(this);
         _xbot2_status->setMinimumSize(600, 200);
-        layout->addWidget(_xbot2_status);
+        _xbot2_status->layout()->setContentsMargins(6, 6, 6, 6);
+        setCentralWidget(_xbot2_status);
 
         // upon successful xbot2 start, we self-restart to get
         // the other widgets as well
@@ -200,7 +209,13 @@ JointMonitorWidget::JointMonitorWidget(int argc,
 
     // set layout
     layout->addWidget(main_splitter);
-    setLayout(layout);
+
+    // central widget
+    auto wid = new QWidget;
+    wid->setLayout(layout);
+    setCentralWidget(wid);
+
+
 
     // connect 'plot' buttons to chart
     connect(jstate_wid, &JointStateWidget::plotAdded,
@@ -222,12 +237,26 @@ JointMonitorWidget::JointMonitorWidget(int argc,
     _tr_tab->loadConfig(_ctx->config()[_tr_tab->name().toStdString()]);
     _chart->loadConfig(_ctx->config()[_chart->name().toStdString()]);
 
+    _status_bar->showMessage("Ready");
 
 }
 
 JointMonitorWidget::~JointMonitorWidget()
 {
 
+}
+
+void JointMonitorWidget::create_menu()
+{
+    auto fileMenu = menuBar()->addMenu("File");
+    fileMenu->setObjectName("File");  // note: to be found by name from other widgets!
+
+    // save config action
+    auto saveCfg = new QAction("Save layout");
+    saveCfg->setStatusTip("Save current layout to default config");
+    connect(saveCfg, &QAction::triggered,
+            this, &JointMonitorWidget::save_default_cfg);
+    fileMenu->addAction(saveCfg);
 }
 
 void JointMonitorWidget::on_timer_event()
@@ -459,8 +488,13 @@ void JointMonitorWidget::on_fault_recv(xbot_msgs::FaultConstPtr msg)
 }
 
 
-void JointMonitorWidget::closeEvent(QCloseEvent* event)
+void JointMonitorWidget::save_default_cfg()
 {
+    if(!_valid_msg_recv)
+    {
+        return;
+    }
+
     // main configuration node
     auto main_cfg = _ctx->config();
 

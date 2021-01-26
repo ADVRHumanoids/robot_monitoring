@@ -48,7 +48,7 @@ QWidget * LoadUiFile(QWidget * parent)
 
 }
 
-XBot2Widget::XBot2Widget(QWidget * parent) :
+XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent) :
     QWidget(parent),
     _nh("xbotcore")
 {
@@ -59,7 +59,7 @@ XBot2Widget::XBot2Widget(QWidget * parent) :
     setLayout(lay);
 
     /* Add status widget */
-    _status_wid = new XBot2StatusWidget;
+    _status_wid = new XBot2StatusWidget(mw);
     auto status_box = findChild<QGroupBox*>("statusBox");
     auto status_layout = new QVBoxLayout;
     status_layout->setMargin(0);

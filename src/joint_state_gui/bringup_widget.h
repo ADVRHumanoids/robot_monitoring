@@ -15,6 +15,7 @@ class BringupThread : public QThread
 public:
 
     BringupThread();
+    QString hw;
 
 signals:
 
@@ -48,7 +49,8 @@ class BringupWidget : public QDialog
 
 public:
 
-    BringupWidget(QWidget * parent = nullptr);
+    BringupWidget(QString hwtype,
+                  QWidget * parent = nullptr);
 
 private:
 
@@ -60,6 +62,7 @@ private:
     void labelNok(QString name);
     void labelText(QString name, QString text);
 
+    QString _hw;
     BringupThread * _worker;
     QPushButton * _startBtn;
     QTextEdit * _text;

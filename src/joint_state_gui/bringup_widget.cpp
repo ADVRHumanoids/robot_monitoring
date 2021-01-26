@@ -16,6 +16,8 @@
 
 #include <std_srvs/Trigger.h>
 #include <ec_srvs/GetSlaveInfo.h>
+#include <xbot_msgs/StartProcess.h>
+#include <xbot_msgs/StopProcess.h>
 
 #include <yaml-cpp/yaml.h>
 
@@ -46,8 +48,11 @@ QWidget * LoadUiFile(QWidget * parent)
 }
 
 
-BringupWidget::BringupWidget(QWidget * parent):
-    QDialog(parent), _worker(nullptr),_worker_success(false)
+BringupWidget::BringupWidget(QString hw, QWidget * parent):
+    QDialog(parent),
+    _worker(nullptr),
+    _worker_success(false),
+    _hw(hw)
 {
     auto wid = LoadUiFile(this);
     auto l = new QHBoxLayout;
@@ -93,6 +98,17 @@ BringupWidget::BringupWidget(QWidget * parent):
 
     // text
     _text = findChild<QTextEdit*>("textEdit");
+
+    // hw type
+    auto xbot2Label = findChild<QLabel*>("xbot2Label");
+    if(_hw.isEmpty())
+    {
+        xbot2Label->setText(xbot2Label->text().arg("unspecified"));
+    }
+    else
+    {
+        xbot2Label->setText(xbot2Label->text().arg("'" + _hw + "'"));
+    }
 }
 
 void BringupWidget::writeText(QString text)
@@ -108,6 +124,7 @@ void BringupWidget::start_worker()
 {
     // worker thread
     _worker = new BringupThread;
+    _worker->hw = _hw;
     _worker_success = false;
 
     connect(_worker, &BringupThread::finished,
@@ -136,6 +153,7 @@ void BringupWidget::start_worker()
             [this](bool success)
     {
         _worker_success = success;
+        writeText(">> bringup finished successfully, press close to load the gui..");
     });
 
     _text->clear();
@@ -398,9 +416,26 @@ bool BringupThread::wait_slaves(int& nslaves)
 
 bool BringupThread::start_xbot()
 {
-    std_srvs::Trigger srv;
+    xbot_msgs::StartProcess srv;
 
-    writeText(">> starting xbot2..");
+    if(!hw.isEmpty())
+    {
+        srv.request.args.push_back("--hw");
+        srv.request.args.push_back(hw.toStdString());
+    }
+
+    if(hw == "sim" || hw == "gz")
+    {
+        srv.request.args.push_back("--simtime");
+    }
+
+
+    writeText(">> starting xbot2-core ");
+    for(auto a : srv.request.args)
+    {
+        writeText(a.c_str());
+        writeText(" ");
+    }
 
     if(!_xbot_start.call(srv))
     {

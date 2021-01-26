@@ -153,7 +153,6 @@ void BringupWidget::start_worker()
             [this](bool success)
     {
         _worker_success = success;
-        writeText(">> bringup finished successfully, press close to load the gui..");
     });
 
     _text->clear();
@@ -168,7 +167,11 @@ void BringupWidget::stop_worker()
         return;
     }
 
-    _worker->requestInterruption();
+    if(!_worker->isFinished())
+    {
+        _worker->requestInterruption();
+    }
+
     _worker = nullptr;
 }
 
@@ -268,6 +271,8 @@ void BringupThread::bringup()
     labelOk("xbot2Ok");
 
     resultReady(true);
+
+    writeText(">> bringup finished successfully, press close to load the gui..");
     return;
 }
 
@@ -460,7 +465,7 @@ BringupThread::BringupThread()
     _ecat_start = _nh.serviceClient<std_srvs::Trigger>("ecat/d/start");
     _ecat_status = _nh.serviceClient<std_srvs::Trigger>("ecat/d/status");
     _ecat_get_slaves = _nh.serviceClient<ec_srvs::GetSlaveInfo>("ec_client/get_slaves_description");
-    _xbot_start = _nh.serviceClient<std_srvs::Trigger>("xbotcore/d/start");
+    _xbot_start = _nh.serviceClient<xbot_msgs::StartProcess>("xbotcore/d/start");
     _xbot_status = _nh.serviceClient<std_srvs::Trigger>("xbotcore/d/status");
 }
 

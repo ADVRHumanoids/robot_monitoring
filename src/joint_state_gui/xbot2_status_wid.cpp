@@ -253,9 +253,10 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
     auto shutdownBtn = findChild<QPushButton*>("shutdownBtn");
     auto shutdownBtnClicked = [this]()
     {
-        std_srvs::Trigger srv;
-        ros::service::call("/xbotcore/d/stop", srv);
-        ros::service::call("/ecat/d/kill", srv);
+        xbot_msgs::StopProcess srv_xbot;
+        ros::service::call("/xbotcore/d/stop", srv_xbot);
+        std_srvs::Trigger srv_ec;
+        ros::service::call("/ecat/d/kill", srv_ec);
     };
     connect(shutdownBtn, &QPushButton::released, shutdownBtnClicked);
 

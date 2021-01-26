@@ -47,7 +47,7 @@ QWidget * LoadUiFile(QWidget * parent)
 
 
 BringupWidget::BringupWidget(QWidget * parent):
-    QDialog(parent), _worker(nullptr)
+    QDialog(parent), _worker(nullptr),_worker_success(false)
 {
     auto wid = LoadUiFile(this);
     auto l = new QHBoxLayout;
@@ -62,7 +62,15 @@ BringupWidget::BringupWidget(QWidget * parent):
     auto okBtnClicked = [this]()
     {
         stop_worker();
-        reject();
+        if(_worker_success)
+        {
+            accept();
+        }
+        else
+        {
+            reject();
+        }
+
     };
     connect(okBtn, &QPushButton::released, okBtnClicked);
 
@@ -100,6 +108,7 @@ void BringupWidget::start_worker()
 {
     // worker thread
     _worker = new BringupThread;
+    _worker_success = false;
 
     connect(_worker, &BringupThread::finished,
             [this]()
@@ -122,6 +131,12 @@ void BringupWidget::start_worker()
 
     connect(_worker, &QThread::finished,
             _worker, &QThread::deleteLater);
+
+    connect(_worker, &BringupThread::resultReady,
+            [this](bool success)
+    {
+        _worker_success = success;
+    });
 
     _text->clear();
 
@@ -234,6 +249,7 @@ void BringupThread::bringup()
     labelOk("xbot2Label");
     labelOk("xbot2Ok");
 
+    resultReady(true);
     return;
 }
 

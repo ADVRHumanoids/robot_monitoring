@@ -22,6 +22,7 @@ signals:
     void labelOk(QString name);
     void labelNok(QString name);
     void labelText(QString name, QString text);
+    void resultReady(bool);
 
 private:
 
@@ -39,8 +40,6 @@ private:
     ros::NodeHandle _nh;
     ros::ServiceClient _ecat_status, _ecat_start, _ecat_get_slaves;
     ros::ServiceClient _xbot_status, _xbot_start;
-
-
 
 };
 
@@ -64,7 +63,7 @@ private:
     BringupThread * _worker;
     QPushButton * _startBtn;
     QTextEdit * _text;
-
+    bool _worker_success;
 
 
 

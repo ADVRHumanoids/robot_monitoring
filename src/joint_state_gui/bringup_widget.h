@@ -6,6 +6,7 @@
 #include <QTextEdit>
 #include <ros/ros.h>
 #include <QThread>
+#include <atomic>
 
 class BringupThread : public QThread
 {
@@ -16,6 +17,7 @@ public:
 
     BringupThread();
     QString hw;
+    std::atomic_bool ok;
 
 signals:
 

@@ -162,17 +162,7 @@ void BringupWidget::start_worker()
 
 void BringupWidget::stop_worker()
 {
-    if(!_worker)
-    {
-        return;
-    }
-
-    if(!_worker->isFinished())
-    {
-        _worker->requestInterruption();
-    }
-
-    _worker = nullptr;
+    _worker->ok = false;
 }
 
 void BringupWidget::labelOk(QString name)
@@ -278,6 +268,12 @@ void BringupThread::bringup()
 
 bool BringupThread::wait_service(ros::ServiceClient& s)
 {
+    if(!ok)
+    {
+        writeText(">> canceled by user");
+        return false;
+    }
+
     writeText(QString(">> waiting for service '%1'..").arg(s.getService().c_str()));
     if(s.waitForExistence(ros::Duration(1.0)))
     {
@@ -301,6 +297,12 @@ bool BringupThread::check_services()
 bool BringupThread::check_status()
 {
     std_srvs::Trigger srv;
+
+    if(!ok)
+    {
+        writeText(">> canceled by user");
+        return false;
+    }
 
     writeText(">> checking ecat master is not running..");
 
@@ -339,6 +341,12 @@ bool BringupThread::check_status()
 
 bool BringupThread::start_ecat()
 {
+    if(!ok)
+    {
+        writeText(">> canceled by user");
+        return false;
+    }
+
     std_srvs::Trigger srv;
 
     writeText(">> starting ecat master..");
@@ -378,7 +386,7 @@ bool BringupThread::wait_slaves(int& nslaves)
             return false;
         }
 
-        if(isInterruptionRequested())
+        if(!ok)
         {
             writeText("..canceled by user \n");
             return false;
@@ -421,6 +429,12 @@ bool BringupThread::wait_slaves(int& nslaves)
 
 bool BringupThread::start_xbot()
 {
+    if(!ok)
+    {
+        writeText(">> canceled by user");
+        return false;
+    }
+
     xbot_msgs::StartProcess srv;
 
     if(!hw.isEmpty())
@@ -471,5 +485,6 @@ BringupThread::BringupThread()
 
 void BringupThread::run()
 {
+    ok = true;
     bringup();
 }

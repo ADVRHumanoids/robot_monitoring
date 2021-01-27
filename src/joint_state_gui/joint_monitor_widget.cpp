@@ -75,6 +75,18 @@
         return;
     }
 
+    // check empty joint vector
+    if(_jnames.empty())
+    {
+        QMessageBox::critical(this,
+                              "Unsupported robot",
+                              "Robots with zero joints are not supported, closing",
+                              QMessageBox::Ok,
+                              QMessageBox::Ok);
+
+        exit(0);
+    }
+
     // if joint state received, go on constructing the whole gui
     _fault_sub = nh.subscribe("fault",
                               10, &

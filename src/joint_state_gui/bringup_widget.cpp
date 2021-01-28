@@ -140,6 +140,9 @@ void BringupWidget::start_worker()
     connect(_worker, &BringupThread::labelOk,
             this, &BringupWidget::labelOk);
 
+    connect(_worker, &BringupThread::labelWarn,
+            this, &BringupWidget::labelWarn);
+
     connect(_worker, &BringupThread::labelNok,
             this, &BringupWidget::labelNok);
 
@@ -171,6 +174,14 @@ void BringupWidget::labelOk(QString name)
     label->setStyleSheet(
                 "color: green;");
 }
+
+void BringupWidget::labelWarn(QString name)
+{
+    auto label = findChild<QLabel*>(name);
+    label->setStyleSheet(
+                "color: orange;");
+}
+
 
 void BringupWidget::labelNok(QString name)
 {
@@ -244,8 +255,17 @@ void BringupThread::bringup()
     }
 
     labelText("slaveOk", QString("Ok (%1 slaves)").arg(nslaves));
-    labelOk("slaveLabel");
-    labelOk("slaveOk");
+
+    if(nslaves < 3)
+    {
+        labelWarn("slaveLabel");
+        labelWarn("slaveOk");
+    }
+    else
+    {
+        labelOk("slaveLabel");
+        labelOk("slaveOk");
+    }
 
     // xbot2
     if(!start_xbot())
@@ -465,6 +485,8 @@ bool BringupThread::start_xbot()
     if(!srv.response.success)
     {
         writeText("..failed \n");
+        writeText(">> xbot2-core startup failed; see log file"
+                  " at /tmp/xbot2-output \n");
         return false;
     }
 

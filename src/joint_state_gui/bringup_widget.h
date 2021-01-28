@@ -23,6 +23,7 @@ signals:
 
     void writeText(const QString&);
     void labelOk(QString name);
+    void labelWarn(QString name);
     void labelNok(QString name);
     void labelText(QString name, QString text);
     void resultReady(bool);
@@ -61,6 +62,7 @@ private:
 
     void writeText(QString text);
     void labelOk(QString name);
+    void labelWarn(QString name);
     void labelNok(QString name);
     void labelText(QString name, QString text);
 

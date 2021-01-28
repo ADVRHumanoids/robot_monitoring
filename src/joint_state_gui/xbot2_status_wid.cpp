@@ -254,6 +254,7 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
     auto shutdownBtnClicked = [this]()
     {
         xbot_msgs::StopProcess srv_xbot;
+        srv_xbot.request.signum = 0;
         ros::service::call("/xbotcore/d/stop", srv_xbot);
         std_srvs::Trigger srv_ec;
         ros::service::call("/ecat/d/kill", srv_ec);

@@ -8,5 +8,6 @@
         <file>xbot2_status.ui</file>
         <file>load_plugin.ui</file>
         <file>bringup.ui</file>
+        <file>console.ui</file>
     </qresource>
 </RCC>

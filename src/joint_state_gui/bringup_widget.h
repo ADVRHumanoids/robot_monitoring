@@ -7,6 +7,7 @@
 #include <ros/ros.h>
 #include <QThread>
 #include <atomic>
+#include <ros/callback_queue.h>
 
 class BringupThread : public QThread
 {
@@ -35,7 +36,6 @@ private:
     void bringup();
     bool wait_service(ros::ServiceClient& s);
     bool get_status(ros::ServiceClient& s);
-    bool check_services();
     bool check_status();
     bool start_ecat();
     bool wait_slaves(int& nslaves);
@@ -71,6 +71,11 @@ private:
     QPushButton * _startBtn;
     QTextEdit * _text;
     bool _worker_success;
+
+    ros::CallbackQueue _cbq;
+    ros::NodeHandle _nh;
+    ros::Subscriber _stderr_sub;
+    QTimer * _timer;
 
 
 

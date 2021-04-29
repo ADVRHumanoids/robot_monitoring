@@ -7,6 +7,7 @@
 #include <xbot_msgs/JointDeviceInfo.h>
 #include <std_srvs/SetBool.h>
 #include <std_srvs/Trigger.h>
+#include <rosgraph_msgs/Log.h>
 
 #include <QUiLoader>
 #include <QFile>
@@ -18,19 +19,19 @@
 #include <QCheckBox>
 #include <QRadioButton>
 #include <QGroupBox>
+#include <QTextEdit>
+#include <QDateTime>
 
 void xbot2_widget_qrc_init()
 {
     Q_INIT_RESOURCE(ui_resources);
 }
 
-namespace  {
-
-
+namespace
+{
 
 QWidget * LoadUiFile(QWidget * parent)
 {
-
     xbot2_widget_qrc_init();
 
     QUiLoader loader;
@@ -42,11 +43,77 @@ QWidget * LoadUiFile(QWidget * parent)
     file.close();
 
     return formWidget;
+}
 
+QWidget * LoadConsoleUiFile(QWidget * parent)
+{
+    QUiLoader loader;
 
+    QFile file(":/console.ui");
+    file.open(QFile::ReadOnly);
+
+    QWidget *formWidget = loader.load(&file, parent);
+    file.close();
+
+    return formWidget;
 }
 
 }
+
+class ClickableConsoleWidget : public QWidget
+{
+
+public:
+
+    ClickableConsoleWidget(QWidget * parent)
+    {
+        _console = LoadConsoleUiFile(this);
+        auto l = new QVBoxLayout;
+        l->setMargin(0);
+        l->addWidget(_console);
+        setLayout(l);
+
+        installEventFilter(this);
+        _console->installEventFilter(this);
+    }
+
+    // QWidget interface
+protected:
+
+    QWidget * _console;
+
+    void mouseReleaseEvent(QMouseEvent *event) override
+    {
+        if(event->button() == Qt::LeftButton)
+        {
+            setStyleSheet("");
+        }
+    }
+
+    // QObject interface
+public:
+    bool eventFilter(QObject *watched, QEvent *event) override
+    {
+        std::cout << event->type() << "\n";
+
+        if(event->type() == QEvent::MouseButtonRelease)
+        {
+
+
+            QMouseEvent * mouse_event = static_cast<QMouseEvent *>(event);
+            if(mouse_event->button() == Qt::MouseButton::LeftButton)
+            {
+                setStyleSheet("");
+            }
+            return true;
+        }
+        else
+        {
+            // standard event processing
+            return QObject::eventFilter(watched, event);
+        }
+    }
+};
 
 XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent) :
     QWidget(parent),
@@ -348,6 +415,33 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent) :
         "joint_device_info",
         1,
         on_jdinfo_recv);
+
+    /* Error messages */
+    auto btmRowLayout = findChild<QHBoxLayout*>("btmRowLayout");
+    auto console_wid = new ClickableConsoleWidget(this);
+    btmRowLayout->addWidget(console_wid);
+    btmRowLayout->setStretch(0, 0);
+    btmRowLayout->setStretch(1, 1);
+
+    auto console = findChild<QTextEdit*>("textEdit");
+
+    auto stderr_cb = [console, console_wid](rosgraph_msgs::LogConstPtr msg)
+    {
+        QDateTime stamp;
+        stamp.setMSecsSinceEpoch(msg->header.stamp.toSec()*1000);
+
+        console->moveCursor(QTextCursor::End);
+        console->insertPlainText(QString("[%1]").arg(stamp.toString("hh:mm:ss")));
+        console->insertPlainText("[xbot2]");
+        console->insertPlainText(QString::fromStdString(msg->msg));
+        console->insertPlainText("\n");
+
+        console_wid->setStyleSheet("background-color: #ff4500");
+
+    };
+
+
+    _stderr_sub = _nh.subscribe<rosgraph_msgs::Log>("d/stderr", 100, stderr_cb);
 
 }
 

@@ -11,6 +11,7 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QCoreApplication>
+#include <QTimer>
 
 #include <iostream>
 
@@ -18,6 +19,7 @@
 #include <ec_srvs/GetSlaveInfo.h>
 #include <xbot_msgs/StartProcess.h>
 #include <xbot_msgs/StopProcess.h>
+#include <rosgraph_msgs/Log.h>
 
 #include <yaml-cpp/yaml.h>
 
@@ -109,6 +111,29 @@ BringupWidget::BringupWidget(QString hw, QWidget * parent):
     {
         xbot2Label->setText(xbot2Label->text().arg("'" + _hw + "'"));
     }
+
+    // ros sub
+    auto stderr_cb = [this](rosgraph_msgs::LogConstPtr msg)
+    {
+        writeText(">! ");
+        writeText(QString::fromStdString(msg->msg));
+        writeText("\n");
+    };
+
+    _nh.setCallbackQueue(&_cbq);
+    _stderr_sub = _nh.subscribe<rosgraph_msgs::Log>("xbotcore/d/stderr", 100,
+                                                    stderr_cb);
+
+    // ros sub timer
+    _timer = new QTimer(this);
+
+    connect(_timer, &QTimer::timeout,
+            [this]()
+    {
+        _cbq.callAvailable();
+    });
+
+    _timer->start(10);
 }
 
 void BringupWidget::writeText(QString text)
@@ -211,7 +236,7 @@ void BringupThread::bringup()
         labelText("servicesOk", "Failed");
         labelNok("servicesLabel");
         labelNok("servicesOk");
-        return;
+//        return;
     }
 
     labelText("servicesOk", "Ok");
@@ -224,7 +249,7 @@ void BringupThread::bringup()
         labelText("checkOk", "Failed");
         labelNok("checkLabel");
         labelNok("checkOk");
-        return;
+//        return;
     }
 
     labelText("checkOk", "Ok");
@@ -237,7 +262,7 @@ void BringupThread::bringup()
         labelText("ecatOk", "Failed");
         labelNok("ecatLabel");
         labelNok("ecatOk");
-        return;
+//        return;
     }
 
     labelText("ecatOk", "Ok");
@@ -251,7 +276,7 @@ void BringupThread::bringup()
         labelText("slaveOk", "Failed");
         labelNok("slaveLabel");
         labelNok("slaveOk");
-        return;
+//        return;
     }
 
     labelText("slaveOk", QString("Ok (%1 slaves)").arg(nslaves));
@@ -306,12 +331,6 @@ bool BringupThread::wait_service(ros::ServiceClient& s)
     }
 
     return true;
-}
-
-
-bool BringupThread::check_services()
-{
-    
 }
 
 bool BringupThread::check_status()
@@ -497,12 +516,14 @@ bool BringupThread::start_xbot()
 
 BringupThread::BringupThread()
 {
+
     // ros services
     _ecat_start = _nh.serviceClient<std_srvs::Trigger>("ecat/d/start");
     _ecat_status = _nh.serviceClient<std_srvs::Trigger>("ecat/d/status");
     _ecat_get_slaves = _nh.serviceClient<ec_srvs::GetSlaveInfo>("ec_client/get_slaves_description");
     _xbot_start = _nh.serviceClient<xbot_msgs::StartProcess>("xbotcore/d/start");
     _xbot_status = _nh.serviceClient<std_srvs::Trigger>("xbotcore/d/status");
+
 }
 
 void BringupThread::run()

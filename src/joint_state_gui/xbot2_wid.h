@@ -30,7 +30,7 @@ private:
     ros::NodeHandle _nh;
     XBot2StatusWidget * _status_wid;
     std::map<std::string, XBot2PluginWidget*> _pl_map;
-    ros::Subscriber _stats_sub, _jdinfo_sub;
+    ros::Subscriber _stats_sub, _jdinfo_sub, _stderr_sub;
 
 };
 

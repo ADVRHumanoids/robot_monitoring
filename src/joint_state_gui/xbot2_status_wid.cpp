@@ -255,77 +255,43 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
     {
         xbot_msgs::StopProcess srv_xbot;
         srv_xbot.request.signum = 0;
-        ros::service::call("/xbotcore/d/stop", srv_xbot);
+        bool xb_stop_ok = ros::service::call("/xbotcore/d/stop", srv_xbot);
+        QString xb_str;
+        if(xb_stop_ok && srv_xbot.response.success)
+        {
+            xb_str = "<span style=\"color: green;\">xbot2 was stopped succesfully: </span>";
+        }
+        else
+        {
+            xb_str = "<span style=\"color: red;\">xbot2 could not be stopped: </span>";
+        }
+        xb_str += QString::fromStdString(srv_xbot.response.message);
+
         std_srvs::Trigger srv_ec;
-        ros::service::call("/ecat/d/kill", srv_ec);
+        bool ec_stop_ok = ros::service::call("/ecat/d/kill", srv_ec);
+        QString ec_str;
+        if(ec_stop_ok && srv_ec.response.success)
+        {
+            ec_str = "<span style=\"color: green;\">ecat master was stopped succesfully: </span>";
+        }
+        else
+        {
+            ec_str = "<span style=\"color: red;\">ecat master could not be stopped: </span>";
+        }
+        ec_str += QString::fromStdString(srv_ec.response.message);
+
+        QMessageBox msgBox;
+        msgBox.setIcon(QMessageBox::Information);
+        msgBox.setText("Shutdown request completed");
+        msgBox.setInformativeText(xb_str + "<br><br>" + ec_str);
+        msgBox.exec();
+
+
     };
     connect(shutdownBtn, &QPushButton::released, shutdownBtnClicked);
 
     // select hw type with menu entry
-    setupHwtypeMenu();
-
     handleStatusLabel();
-}
-
-void XBot2StatusWidget::setupHwtypeMenu()
-{
-    auto fileMenu = _mw->menuBar()->findChild<QMenu*>("File");
-
-    auto * load_action = new QAction("Select hw profile", this);
-    load_action->setStatusTip("Selects the hal hardware type for xbot2 (e.g. dummy, sim, ec, ...)");
-
-    connect(load_action, &QAction::triggered,
-            [this]()
-    {
-        QList<QString> items;
-
-        auto cli = _nh.serviceClient<xbot_msgs::GetPluginList>("d/get_hw_types");
-
-        xbot_msgs::GetPluginList srv;
-        if(!cli.waitForExistence(ros::Duration(1.0)))
-        {
-            QMessageBox msgBox;
-            msgBox.setText("get_hw_types service is offline, make sure "
-                           "xbot2-launcher daemon is up and running");
-            msgBox.exec();
-            return;
-        }
-
-        if(!cli.call(srv))
-        {
-            QMessageBox msgBox;
-            msgBox.setText("get_hw_types service failed, make sure "
-                           "xbot2-launcher daemon is up and running");
-            msgBox.exec();
-            return;
-        }
-
-        items.append("auto");
-        std::transform(srv.response.plugins.begin(),
-                       srv.response.plugins.end(),
-                       std::back_inserter(items),
-                       QString::fromStdString);
-
-
-        auto i = QInputDialog::getItem(this,
-                                       "Select profile",
-                                       "Profiles",
-                                       items);
-
-        if(i == "auto")
-        {
-            _hw_type.clear();
-        }
-
-        if(!i.isEmpty())
-        {
-            _hw_type = i.toStdString();
-        }
-
-    });
-
-    fileMenu->addAction(load_action);
-
 }
 
 void XBot2StatusWidget::update()

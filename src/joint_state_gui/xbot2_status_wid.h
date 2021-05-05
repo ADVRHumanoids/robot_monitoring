@@ -27,8 +27,6 @@ signals:
 
 private:
 
-    void setupHwtypeMenu();
-
     void handleStatusLabel();
 
     ros::Time _last_status_recv;

@@ -41,6 +41,8 @@ private:
     bool wait_slaves(int& nslaves);
     bool start_xbot();
 
+    bool is_ecat() const;
+
     ros::NodeHandle _nh;
     ros::ServiceClient _ecat_status, _ecat_start, _ecat_get_slaves;
     ros::ServiceClient _xbot_status, _xbot_start;

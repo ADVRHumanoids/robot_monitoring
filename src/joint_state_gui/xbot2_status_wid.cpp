@@ -348,6 +348,7 @@ void XBot2StatusWidget::handleStatusLabel()
                     "color: green");
 
         _cmd_button->setText("Stop");
+        _cmd_button->setEnabled(true);
     }
     else if(_status_label->text() == "Initializing")
     {
@@ -358,6 +359,7 @@ void XBot2StatusWidget::handleStatusLabel()
                     "color: black");
 
         _cmd_button->setText("Stop");
+        _cmd_button->setEnabled(true);
     }
     else {
         _status_label->setStyleSheet(
@@ -366,6 +368,6 @@ void XBot2StatusWidget::handleStatusLabel()
                     "border-radius: 4px;"
                     "color: gray");
 
-        _cmd_button->setText("Start");
+        _cmd_button->setEnabled(false);
     }
 }

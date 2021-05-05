@@ -72,9 +72,6 @@ public:
         l->setMargin(0);
         l->addWidget(_console);
         setLayout(l);
-
-        installEventFilter(this);
-        _console->installEventFilter(this);
     }
 
     // QWidget interface
@@ -87,30 +84,6 @@ protected:
         if(event->button() == Qt::LeftButton)
         {
             setStyleSheet("");
-        }
-    }
-
-    // QObject interface
-public:
-    bool eventFilter(QObject *watched, QEvent *event) override
-    {
-        std::cout << event->type() << "\n";
-
-        if(event->type() == QEvent::MouseButtonRelease)
-        {
-
-
-            QMouseEvent * mouse_event = static_cast<QMouseEvent *>(event);
-            if(mouse_event->button() == Qt::MouseButton::LeftButton)
-            {
-                setStyleSheet("");
-            }
-            return true;
-        }
-        else
-        {
-            // standard event processing
-            return QObject::eventFilter(watched, event);
         }
     }
 };
@@ -419,6 +392,8 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent) :
     /* Error messages */
     auto btmRowLayout = findChild<QHBoxLayout*>("btmRowLayout");
     auto console_wid = new ClickableConsoleWidget(this);
+    console_wid->setStatusTip("Click on the error message console "
+"title to acknowledge the error");
     btmRowLayout->addWidget(console_wid);
     btmRowLayout->setStretch(0, 0);
     btmRowLayout->setStretch(1, 1);
@@ -436,7 +411,7 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent) :
         console->insertPlainText(QString::fromStdString(msg->msg));
         console->insertPlainText("\n");
 
-        console_wid->setStyleSheet("background-color: #ff4500");
+        console_wid->setStyleSheet("background-color: #ff4500;");
 
     };
 

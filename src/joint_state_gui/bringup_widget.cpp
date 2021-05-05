@@ -12,6 +12,7 @@
 #include <QLabel>
 #include <QCoreApplication>
 #include <QTimer>
+#include <QComboBox>
 
 #include <iostream>
 
@@ -19,6 +20,7 @@
 #include <ec_srvs/GetSlaveInfo.h>
 #include <xbot_msgs/StartProcess.h>
 #include <xbot_msgs/StopProcess.h>
+#include <xbot_msgs/GetPluginList.h>
 #include <rosgraph_msgs/Log.h>
 
 #include <yaml-cpp/yaml.h>
@@ -47,6 +49,8 @@ QWidget * LoadUiFile(QWidget * parent)
 
 }
 
+QString hw_type_cache;
+
 }
 
 
@@ -54,7 +58,7 @@ BringupWidget::BringupWidget(QString hw, QWidget * parent):
     QDialog(parent),
     _worker(nullptr),
     _worker_success(false),
-    _hw(hw)
+    _hw(hw_type_cache.isEmpty() ? hw : hw_type_cache)
 {
     auto wid = LoadUiFile(this);
     auto l = new QHBoxLayout;
@@ -63,6 +67,46 @@ BringupWidget::BringupWidget(QString hw, QWidget * parent):
     wid->setMinimumWidth(400);
 
     setWindowTitle("Robot bringup procedure");
+
+    // text
+    _text = findChild<QTextEdit*>("textEdit");
+
+    // hw selection
+    QList<QString> items;
+
+    auto cli = _nh.serviceClient<xbot_msgs::GetPluginList>("xbotcore/d/get_hw_types");
+
+    xbot_msgs::GetPluginList srv;
+    writeText(">> waiting for get_hw_types service..");
+    if(!cli.waitForExistence(ros::Duration(1.0)))
+    {
+        writeText("failed! \nget_hw_types service is offline, make sure "
+                  "xbot2-launcher daemon is up and running \n");
+    }
+    else if(!cli.call(srv))
+    {
+        writeText("failed! \nget_hw_types service failed, make sure "
+                  "xbot2-launcher daemon is up and running \n");
+    }
+    else
+    {
+        writeText(".ok \n");
+    }
+
+    items.append("auto");
+    std::transform(srv.response.plugins.begin(),
+                   srv.response.plugins.end(),
+                   std::back_inserter(items),
+                   QString::fromStdString);
+
+    // add hw types to combobox
+    auto hwCombo = findChild<QComboBox*>("hwCombo");
+    hwCombo->insertItems(0, items);
+
+    if(!hw_type_cache.isEmpty())
+    {
+        hwCombo->setCurrentText(hw_type_cache);
+    }
 
     // close button
     auto okBtn = findChild<QPushButton*>("okBtn");
@@ -98,11 +142,9 @@ BringupWidget::BringupWidget(QString hw, QWidget * parent):
         }
     });
 
-    // text
-    _text = findChild<QTextEdit*>("textEdit");
-
     // hw type
     auto xbot2Label = findChild<QLabel*>("xbot2Label");
+    auto xbot2LabelText = xbot2Label->text();
     if(_hw.isEmpty())
     {
         xbot2Label->setText(xbot2Label->text().arg("unspecified"));
@@ -111,6 +153,14 @@ BringupWidget::BringupWidget(QString hw, QWidget * parent):
     {
         xbot2Label->setText(xbot2Label->text().arg("'" + _hw + "'"));
     }
+
+    connect(hwCombo, &QComboBox::currentTextChanged,
+            [this, xbot2Label, xbot2LabelText](const QString& hwtype)
+    {
+        _hw = hwtype;
+        xbot2Label->setText(xbot2LabelText.arg("'" + _hw + "'"));
+        hw_type_cache = hwtype;
+    });
 
     // ros sub
     auto stderr_cb = [this](rosgraph_msgs::LogConstPtr msg)
@@ -190,7 +240,10 @@ void BringupWidget::start_worker()
 
 void BringupWidget::stop_worker()
 {
-    _worker->ok = false;
+    if(_worker)
+    {
+        _worker->ok = false;
+    }
 }
 
 void BringupWidget::labelOk(QString name)
@@ -225,18 +278,30 @@ void BringupWidget::labelText(QString name, QString text)
 
 void BringupThread::bringup()
 {
-    // services existance
-    if(!wait_service(_ecat_start) ||
-            !wait_service(_ecat_status) ||
-            !wait_service(_xbot_start) ||
-            !wait_service(_xbot_status) ||
-            !wait_service(_ecat_get_slaves)
-            )
+    bool ec = is_ecat();
+
+    // services existance (ecat related)
+    if(ec)
+    {
+        if(!wait_service(_ecat_start) ||
+                !wait_service(_ecat_status) ||
+                !wait_service(_ecat_get_slaves))
+        {
+            labelText("servicesOk", "Failed");
+            labelNok("servicesLabel");
+            labelNok("servicesOk");
+            return;
+        }
+    }
+
+    // xbot2 related
+    if(!wait_service(_xbot_start) ||
+            !wait_service(_xbot_status))
     {
         labelText("servicesOk", "Failed");
         labelNok("servicesLabel");
         labelNok("servicesOk");
-//        return;
+        return;
     }
 
     labelText("servicesOk", "Ok");
@@ -249,7 +314,7 @@ void BringupThread::bringup()
         labelText("checkOk", "Failed");
         labelNok("checkLabel");
         labelNok("checkOk");
-//        return;
+        return;
     }
 
     labelText("checkOk", "Ok");
@@ -257,39 +322,45 @@ void BringupThread::bringup()
     labelOk("checkOk");
 
     // start ecat
-    if(!start_ecat())
+    if(ec && !start_ecat())
     {
         labelText("ecatOk", "Failed");
         labelNok("ecatLabel");
         labelNok("ecatOk");
-//        return;
+        return;
     }
 
-    labelText("ecatOk", "Ok");
-    labelOk("ecatLabel");
-    labelOk("ecatOk");
+    if(ec)
+    {
+        labelText("ecatOk", "Ok");
+        labelOk("ecatLabel");
+        labelOk("ecatOk");
+    }
 
     // slaves descr
     int nslaves = -1;
-    if(!wait_slaves(nslaves))
+    if(ec && !wait_slaves(nslaves))
     {
         labelText("slaveOk", "Failed");
         labelNok("slaveLabel");
         labelNok("slaveOk");
-//        return;
+        return;
     }
 
-    labelText("slaveOk", QString("Ok (%1 slaves)").arg(nslaves));
+    if(ec)
+    {
+        labelText("slaveOk", QString("Ok (%1 slaves)").arg(nslaves));
 
-    if(nslaves < 3)
-    {
-        labelWarn("slaveLabel");
-        labelWarn("slaveOk");
-    }
-    else
-    {
-        labelOk("slaveLabel");
-        labelOk("slaveOk");
+        if(nslaves < 3)
+        {
+            labelWarn("slaveLabel");
+            labelWarn("slaveOk");
+        }
+        else
+        {
+            labelOk("slaveLabel");
+            labelOk("slaveOk");
+        }
     }
 
     // xbot2
@@ -343,21 +414,24 @@ bool BringupThread::check_status()
         return false;
     }
 
-    writeText(">> checking ecat master is not running..");
-
-    if(!_ecat_status.call(srv))
+    if(is_ecat())
     {
-        writeText("..service failed \n");
-        return false;
-    }
+        writeText(">> checking ecat master is not running..");
 
-    if(srv.response.success)
-    {
-        writeText("..ecat master is running, shutdown first \n");
-        return false;
-    }
+        if(!_ecat_status.call(srv))
+        {
+            writeText("..service failed \n");
+            return false;
+        }
 
-    writeText("..ok \n");
+        if(srv.response.success)
+        {
+            writeText("..ecat master is running, shutdown first \n");
+            return false;
+        }
+
+        writeText("..ok \n");
+    }
 
     writeText(">> checking xbot2 is not running..");
 
@@ -369,7 +443,7 @@ bool BringupThread::check_status()
 
     if(srv.response.success)
     {
-        writeText("..xbot2 is running, shutdown first \n");
+        writeText("..xbot2 is running, stop it first \n");
         return false;
     }
 
@@ -441,7 +515,7 @@ bool BringupThread::wait_slaves(int& nslaves)
             writeText(" answered: '");
             writeText(QString::fromStdString(srv.response.cmd_info.fault_info) + "' \n");
         }
-        
+
     }
 
     if(!descr_ok)
@@ -512,6 +586,11 @@ bool BringupThread::start_xbot()
     writeText("..ok \n");
 
     return true;
+}
+
+bool BringupThread::is_ecat() const
+{
+    return hw.length() >= 2 && hw.startsWith("ec");
 }
 
 BringupThread::BringupThread()

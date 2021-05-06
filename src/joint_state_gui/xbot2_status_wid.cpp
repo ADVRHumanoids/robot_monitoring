@@ -184,6 +184,7 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
         if(!cli.waitForExistence(ros::Duration(1.0)))
         {
             QMessageBox msgBox;
+            msgBox.setIcon(QMessageBox::Warning);
             msgBox.setText("Kill service is offline, make sure "
                            "xbot2-launcher daemon is up and running");
             msgBox.exec();
@@ -193,6 +194,7 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
         if(!cli.call(srv))
         {
             QMessageBox msgBox;
+            msgBox.setIcon(QMessageBox::Warning);
             msgBox.setText("Kill service failed, make sure "
                            "xbot2-launcher daemon is up and running");
             msgBox.exec();
@@ -202,6 +204,7 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
         if(!srv.response.success)
         {
             QMessageBox msgBox;
+            msgBox.setIcon(QMessageBox::Warning);
             msgBox.setText("Kill service returned false: \n" +
                            QString::fromStdString(srv.response.message));
             msgBox.exec();

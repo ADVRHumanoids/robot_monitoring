@@ -190,6 +190,7 @@ void BringupWidget::writeText(QString text)
 {
     _text->moveCursor(QTextCursor::End);
     _text->insertPlainText(text);
+    _text->moveCursor(QTextCursor::End);
     std::cout << text.toStdString();
     QCoreApplication::processEvents();
 }
@@ -232,8 +233,6 @@ void BringupWidget::start_worker()
     {
         _worker_success = success;
     });
-
-    _text->clear();
 
     _worker->start();
 }

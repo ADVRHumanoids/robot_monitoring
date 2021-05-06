@@ -39,6 +39,9 @@
         <layout class="QHBoxLayout" name="horizontalLayout_3">
          <item>
           <widget class="QPushButton" name="cmdBtn">
+           <property name="statusTip">
+            <string>Gracefully stop the xbot2 process, does not affect the server side (i.e. ecat master or simulator)</string>
+           </property>
            <property name="text">
             <string>Stop</string>
            </property>
@@ -48,6 +51,9 @@
           <widget class="QPushButton" name="killBtn">
            <property name="toolTip">
             <string>Send SIGKILL to xbot2-core process</string>
+           </property>
+           <property name="statusTip">
+            <string>Abruptly kill the xbot2 process, does not affect the server side (i.e. ecat master or simulator)</string>
            </property>
            <property name="text">
             <string>Kill</string>
@@ -70,6 +76,9 @@
            <property name="toolTip">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Bring up ecat master and xbot2&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
+           <property name="statusTip">
+            <string>Start the robot bringup procedure (ecat master plus xbot2)</string>
+           </property>
            <property name="text">
             <string>Bring up</string>
            </property>
@@ -77,6 +86,9 @@
          </item>
          <item>
           <widget class="QPushButton" name="shutdownBtn">
+           <property name="statusTip">
+            <string>Shut down both server side (ecat master) and xbot2</string>
+           </property>
            <property name="text">
             <string>Shut down</string>
            </property>

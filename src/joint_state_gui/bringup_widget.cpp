@@ -414,25 +414,6 @@ bool BringupThread::check_status()
         return false;
     }
 
-    if(is_ecat())
-    {
-        writeText(">> checking ecat master is not running..");
-
-        if(!_ecat_status.call(srv))
-        {
-            writeText("..service failed \n");
-            return false;
-        }
-
-        if(srv.response.success)
-        {
-            writeText("..ecat master is running, shutdown first \n");
-            return false;
-        }
-
-        writeText("..ok \n");
-    }
-
     writeText(">> checking xbot2 is not running..");
 
     if(!_xbot_status.call(srv))
@@ -461,22 +442,48 @@ bool BringupThread::start_ecat()
     }
 
     std_srvs::Trigger srv;
+    bool ecat_running = false;
 
-    writeText(">> starting ecat master..");
-
-    if(!_ecat_start.call(srv))
+    if(is_ecat())
     {
-        writeText("..service failed \n");
-        return false;
+        writeText(">> checking ecat master status..");
+
+        if(!_ecat_status.call(srv))
+        {
+            writeText("..service failed \n");
+            return false;
+        }
+
+        if(srv.response.success)
+        {
+            writeText("..got 'running' \n");
+            ecat_running = true;
+        }
+        else
+        {
+            writeText("..got 'not running' \n");
+        }
+
     }
 
-    if(!srv.response.success)
+    if(!ecat_running)
     {
-        writeText("..failed \n");
-        return false;
-    }
+        writeText(">> starting ecat master..");
 
-    writeText("..ok \n");
+        if(!_ecat_start.call(srv))
+        {
+            writeText("..service failed \n");
+            return false;
+        }
+
+        if(!srv.response.success)
+        {
+            writeText("..failed \n");
+            return false;
+        }
+
+        writeText("..ok \n");
+    }
 
     return true;
 
@@ -486,7 +493,7 @@ bool BringupThread::wait_slaves(int& nslaves)
 {
     ec_srvs::GetSlaveInfo srv;
 
-    int attempts = 30;
+    int attempts = 10;
     bool descr_ok = false;
 
     while(!descr_ok && attempts--)
@@ -511,7 +518,7 @@ bool BringupThread::wait_slaves(int& nslaves)
         }
         else
         {
-            sleep(1);
+            sleep(3);
             writeText(" answered: '");
             writeText(QString::fromStdString(srv.response.cmd_info.fault_info) + "' \n");
         }
@@ -590,7 +597,9 @@ bool BringupThread::start_xbot()
 
 bool BringupThread::is_ecat() const
 {
-    return hw.length() >= 2 && hw.startsWith("ec");
+    // is 'ec' or starts with 'ec_'
+    return hw == "ec" ||
+            (hw.length() >= 3 && hw.startsWith("ec_"));
 }
 
 BringupThread::BringupThread()

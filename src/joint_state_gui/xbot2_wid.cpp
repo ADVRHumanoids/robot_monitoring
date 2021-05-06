@@ -21,6 +21,7 @@
 #include <QGroupBox>
 #include <QTextEdit>
 #include <QDateTime>
+#include <QCoreApplication>
 
 void xbot2_widget_qrc_init()
 {
@@ -412,6 +413,8 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent) :
         console->insertPlainText("\n");
 
         console_wid->setStyleSheet("background-color: #ff4500;");
+
+        QCoreApplication::processEvents();
 
     };
 

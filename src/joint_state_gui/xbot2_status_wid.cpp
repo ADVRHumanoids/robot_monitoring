@@ -265,6 +265,12 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
         {
             xb_str = "<span style=\"color: red;\">xbot2 could not be stopped: </span>";
         }
+
+        if(!xb_stop_ok)
+        {
+            srv_xbot.response.message = "service failed";
+        }
+
         xb_str += QString::fromStdString(srv_xbot.response.message);
 
         std_srvs::Trigger srv_ec;
@@ -278,6 +284,12 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
         {
             ec_str = "<span style=\"color: red;\">ecat master could not be stopped: </span>";
         }
+
+        if(!ec_stop_ok)
+        {
+            srv_ec.response.message = "service failed";
+        }
+
         ec_str += QString::fromStdString(srv_ec.response.message);
 
         QMessageBox msgBox;

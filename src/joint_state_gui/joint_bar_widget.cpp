@@ -11,6 +11,8 @@
 #include <QMouseEvent>
 #include <QFrame>
 
+using namespace std::chrono_literals;
+
 void joint_bar_widget_qrc_init()
 {
     Q_INIT_RESOURCE(ui_resources);
@@ -75,12 +77,14 @@ void JointBarWidget::setValue(double x)
 {
     _bar->setValue(x*1000);
     _bar->setFormat(QString("%1").arg(x, 5,'f',1));
+    _value_timeout = time_point::clock::now() + 100ms;
 }
 
 void JointBarWidget::setValue(double xbar, double xtext)
 {
     _bar->setValue(xbar*1000);
     _bar->setFormat(QString("%1").arg(xtext, 5,'f',1));
+    _value_timeout = time_point::clock::now() + 100ms;
 }
 
 void JointBarWidget::setStatus(QString status)
@@ -127,6 +131,15 @@ void JointBarWidget::updateStatus()
         setSafe();
 
         _last_fault_time = high_resolution_clock::time_point(nanoseconds(0));
+    }
+
+    if(_value_timeout < time_point::clock::now())
+    {
+        _bar->setEnabled(false);
+    }
+    else
+    {
+        _bar->setEnabled(true);
     }
 }
 

@@ -5,6 +5,7 @@
 #include <QGroupBox>
 #include <QDoubleSpinBox>
 #include <QLabel>
+#include <QComboBox>
 
 /**
  * @brief The JointStateWidget class shows the full
@@ -24,12 +25,16 @@ public:
      */
     void setJointName(QString jname, int jid);
 
+    void setAux(QString aux_type, double value);
+
     QDoubleSpinBox * posref, * motopos, * linkpos;
     QDoubleSpinBox * velref, * motovel, * linkvel;
     QDoubleSpinBox * torref, * torref_imp, * tor;
-    QDoubleSpinBox * current;
+    QDoubleSpinBox * aux;
     QDoubleSpinBox * mototemp, * drivertemp;
     QDoubleSpinBox * stiffness, * damping;
+
+    QComboBox * aux_type_combo;
 
     QString getJointName() const { return _jname; }
     void setStatus(std::string status);
@@ -41,11 +46,14 @@ signals:
 
 private:
 
+    typedef std::chrono::high_resolution_clock::time_point time_point;
+
     QGroupBox * group;
     QString _jname;
     QLabel * _fault;
 
-    std::chrono::high_resolution_clock::time_point _last_fault_time;
+    time_point _last_fault_time;
+    std::map<QString, time_point> _aux_timeout;
 
 
 };

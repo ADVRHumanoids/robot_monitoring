@@ -75,6 +75,8 @@ signals:
 
 private:
 
+    typedef std::chrono::high_resolution_clock::time_point time_point;
+
     void setColor(Qt::GlobalColor color);
 
     bool eventFilter(QObject * obj, QEvent * ev) override;
@@ -88,7 +90,8 @@ private:
     Blinker _blinker;
     int _state;
 
-    std::chrono::high_resolution_clock::time_point _last_fault_time;
+    time_point _last_fault_time;
+    time_point _value_timeout;
 
 
 

@@ -88,10 +88,17 @@
     }
 
     // if joint state received, go on constructing the whole gui
+
+    // subscribers to fault and aux
     _fault_sub = nh.subscribe("fault",
-                              10, &
-                              JointMonitorWidget::on_fault_recv,
+                              10,
+                              &JointMonitorWidget::on_fault_recv,
                               this);
+
+    _aux_sub = nh.subscribe("aux",
+                            10,
+                            &JointMonitorWidget::on_aux_recv,
+                            this);
 
     // get robot description
     std::string urdf_str;
@@ -306,7 +313,6 @@ void JointMonitorWidget::on_jstate_recv(xbot_msgs::JointStateConstPtr msg)
         return;
     }
 
-    static auto t0 = msg->header.stamp;
     auto now = msg->header.stamp;
 
     // parse message
@@ -357,10 +363,6 @@ void JointMonitorWidget::on_jstate_recv(xbot_msgs::JointStateConstPtr msg)
                          now.toSec(),
                          tauref_imp);
 
-        _chart->addPoint(QString::fromStdString(msg->name[i]) + "/current",
-                         now.toSec(),
-                         msg->aux[i]);
-
         _chart->addPoint(QString::fromStdString(msg->name[i]) + "/driver_temp",
                          now.toSec(),
                          msg->temperature_driver[i]);
@@ -382,7 +384,6 @@ void JointMonitorWidget::on_jstate_recv(xbot_msgs::JointStateConstPtr msg)
             jstate_wid->motovel->setValue(msg->motor_velocity[i]);
             jstate_wid->linkpos->setValue(msg->link_position[i]);
             jstate_wid->linkvel->setValue(msg->link_velocity[i]);
-            jstate_wid->current->setValue(msg->aux[i]);
             jstate_wid->stiffness->setValue(msg->stiffness[i]);
             jstate_wid->damping->setValue(msg->damping[i]);
             jstate_wid->mototemp->setValue(msg->temperature_motor[i]);
@@ -392,7 +393,7 @@ void JointMonitorWidget::on_jstate_recv(xbot_msgs::JointStateConstPtr msg)
         }
 
         // update field of barplot, if active
-        if(barplot_wid->getFieldType() == "Temperature")
+        if(barplot_wid->getFieldType() == "temperature")
         {
             auto wid = barplot_wid->wid_map.at(msg->name[i]);
             wid->setValue(std::max(msg->temperature_motor[i],
@@ -400,13 +401,7 @@ void JointMonitorWidget::on_jstate_recv(xbot_msgs::JointStateConstPtr msg)
             wid->setRange(30, 90);
 
         }
-        else if(barplot_wid->getFieldType() == "Current")
-        {
-            auto wid = barplot_wid->wid_map.at(msg->name[i]);
-            wid->setValue(std::fabs(msg->aux[i]), msg->aux[i]);
-            wid->setRange(0, 60);
-        }
-        else if(barplot_wid->getFieldType() == "Torque")
+        else if(barplot_wid->getFieldType() == "torque")
         {
             auto wid = barplot_wid->wid_map.at(msg->name[i]);
             wid->setValue(std::fabs(msg->effort[i]), msg->effort[i]);
@@ -414,7 +409,7 @@ void JointMonitorWidget::on_jstate_recv(xbot_msgs::JointStateConstPtr msg)
             wid->setRange(0, taumax);
 
         }
-        else if(barplot_wid->getFieldType() == "Torque tracking error")
+        else if(barplot_wid->getFieldType() == "torque tracking error")
         {
             double k = msg->stiffness[i];
             double d = msg->damping[i];
@@ -428,7 +423,16 @@ void JointMonitorWidget::on_jstate_recv(xbot_msgs::JointStateConstPtr msg)
             wid->setRange(0, 15.0);
 
         }
-        else if(barplot_wid->getFieldType() == "Link position")
+        else if(barplot_wid->getFieldType() == "position tracking error")
+        {
+            double qerr = msg->position_reference[i] - msg->link_position[i];
+
+            auto wid = barplot_wid->wid_map.at(msg->name[i]);
+            wid->setValue(std::fabs(qerr), qerr);
+            wid->setRange(0, 3.0);
+
+        }
+        else if(barplot_wid->getFieldType() == "link position")
         {
             auto wid = barplot_wid->wid_map.at(msg->name[i]);
             wid->setValue(msg->link_position[i]);
@@ -436,7 +440,7 @@ void JointMonitorWidget::on_jstate_recv(xbot_msgs::JointStateConstPtr msg)
             double qmax = _urdf->getJoint(msg->name[i])->limits->upper;
             wid->setRange(qmin, qmax);
         }
-        else if(barplot_wid->getFieldType() == "Motor position")
+        else if(barplot_wid->getFieldType() == "motor position")
         {
             auto wid = barplot_wid->wid_map.at(msg->name[i]);
             wid->setValue(msg->motor_position[i]);
@@ -444,7 +448,7 @@ void JointMonitorWidget::on_jstate_recv(xbot_msgs::JointStateConstPtr msg)
             double qmax = _urdf->getJoint(msg->name[i])->limits->upper;
             wid->setRange(qmin, qmax);
         }
-        else if(barplot_wid->getFieldType() == "Link velocity")
+        else if(barplot_wid->getFieldType() == "link velocity")
         {
             auto wid = barplot_wid->wid_map.at(msg->name[i]);
             double vel = msg->link_velocity[i];
@@ -452,7 +456,7 @@ void JointMonitorWidget::on_jstate_recv(xbot_msgs::JointStateConstPtr msg)
             double qdmax = _urdf->getJoint(msg->name[i])->limits->velocity;
             wid->setRange(0, qdmax);
         }
-        else if(barplot_wid->getFieldType() == "Motor velocity")
+        else if(barplot_wid->getFieldType() == "motor velocity")
         {
             auto wid = barplot_wid->wid_map.at(msg->name[i]);
             double vel = msg->motor_velocity[i];
@@ -460,13 +464,13 @@ void JointMonitorWidget::on_jstate_recv(xbot_msgs::JointStateConstPtr msg)
             double qdmax = _urdf->getJoint(msg->name[i])->limits->velocity;
             wid->setRange(0, qdmax);
         }
-        else if(barplot_wid->getFieldType() == "Stiffness")
+        else if(barplot_wid->getFieldType() == "stiffness")
         {
             auto wid = barplot_wid->wid_map.at(msg->name[i]);
             wid->setValue(msg->stiffness[i]);
             wid->setRange(0, 5000);
         }
-        else if(barplot_wid->getFieldType() == "Damping")
+        else if(barplot_wid->getFieldType() == "damping")
         {
             auto wid = barplot_wid->wid_map.at(msg->name[i]);
             wid->setValue(msg->damping[i]);
@@ -497,6 +501,48 @@ void JointMonitorWidget::on_fault_recv(xbot_msgs::FaultConstPtr msg)
             jstate_wid->setStatus(msg->fault[i]);
         }
     }
+}
+
+void JointMonitorWidget::on_aux_recv(xbot_msgs::AuxStateConstPtr msg)
+{
+    // widget not started yet, do nothing
+    if(!_widget_started)
+    {
+        return;
+    }
+
+    QString aux_field_name = QString::fromStdString(msg->aux_field_name);
+
+    // add new field to barplot
+    barplot_wid->addAuxType(msg->aux_field_name);
+
+    // update jointstate ui and charts
+    for(size_t i = 0; i < msg->name.size(); i++)
+    {
+        // if joint state widget is showing this joint, set fault
+        // string
+        if(msg->name[i] == jstate_wid->getJointName().toStdString())
+        {
+            jstate_wid->setAux(aux_field_name,
+                               msg->aux[i]);
+        }
+
+        // update chart
+        _chart->addPoint(QString::fromStdString(msg->name[i]) + "/aux/" + aux_field_name,
+                         msg->header.stamp.toSec(),
+                         msg->aux[i]);
+
+        // update bar
+        if(barplot_wid->getFieldType() ==  "aux/" + msg->aux_field_name)
+        {
+            auto wid = barplot_wid->wid_map.at(msg->name[i]);
+            wid->setValue(msg->aux[i]);
+            wid->setRange(-60, 60);
+
+        }
+    }
+
+
 }
 
 

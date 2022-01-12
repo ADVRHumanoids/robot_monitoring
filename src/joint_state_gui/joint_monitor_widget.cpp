@@ -113,7 +113,7 @@
     _urdf = urdf::parseURDF(urdf_str);
 
     // try to load a joint id map
-    std::string jidmap_str = nh.param<std::string>("robot_description_joint_id_map", "");
+    std::string jidmap_str = nh.param<std::string>("joint_id_map", "");
     if(!jidmap_str.empty())
     {
         try
@@ -503,7 +503,7 @@ void JointMonitorWidget::on_fault_recv(xbot_msgs::FaultConstPtr msg)
     }
 }
 
-void JointMonitorWidget::on_aux_recv(xbot_msgs::AuxStateConstPtr msg)
+void JointMonitorWidget::on_aux_recv(xbot_msgs::CustomStateConstPtr msg)
 {
     // widget not started yet, do nothing
     if(!_widget_started)
@@ -511,33 +511,36 @@ void JointMonitorWidget::on_aux_recv(xbot_msgs::AuxStateConstPtr msg)
         return;
     }
 
-    QString aux_field_name = QString::fromStdString(msg->aux_field_name);
 
-    // add new field to barplot
-    barplot_wid->addAuxType(msg->aux_field_name);
 
     // update jointstate ui and charts
     for(size_t i = 0; i < msg->name.size(); i++)
     {
+        QString aux_field_name = QString::fromStdString(msg->type[i]);
+
         // if joint state widget is showing this joint, set fault
         // string
         if(msg->name[i] == jstate_wid->getJointName().toStdString())
         {
             jstate_wid->setAux(aux_field_name,
-                               msg->aux[i]);
+                               msg->value[i]);
         }
 
         // update chart
         _chart->addPoint(QString::fromStdString(msg->name[i]) + "/aux/" + aux_field_name,
                          msg->header.stamp.toSec(),
-                         msg->aux[i]);
+                         msg->value[i]);
+
+
+        // add new field to barplot
+        barplot_wid->addAuxType(msg->type[i]);
 
         // update bar
-        if(barplot_wid->getFieldType() ==  "aux/" + msg->aux_field_name)
+        if(barplot_wid->getFieldType() ==  "aux/" + msg->type[i])
         {
             auto wid = barplot_wid->wid_map.at(msg->name[i]);
-            wid->setValue(msg->aux[i]);
-            wid->setRange(-60, 60);
+            wid->setValue(std::fabs(msg->value[i]), msg->value[i]);
+            wid->setRange(0, 60);
 
         }
     }

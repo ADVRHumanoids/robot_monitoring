@@ -164,7 +164,7 @@ void JointStateWidget::setAux(QString aux_name, double value)
     if(aux_type_combo->currentText() == aux_name)
     {
         aux->setValue(value);
-        _aux_timeout[aux_name] = time_point::clock::now() + 100ms;
+        _aux_timeout[aux_name] = time_point::clock::now() + 300ms;
         aux->setEnabled(true);
         return;
     }

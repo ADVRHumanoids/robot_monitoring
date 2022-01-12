@@ -9,7 +9,7 @@
 
 #include <ros/ros.h>
 #include <xbot_msgs/JointState.h>
-#include <xbot_msgs/AuxState.h>
+#include <xbot_msgs/CustomState.h>
 #include <xbot_msgs/Fault.h>
 #include <urdf_parser/urdf_parser.h>
 
@@ -99,7 +99,7 @@ private:
     void on_timer_event();
     void on_jstate_recv(xbot_msgs::JointStateConstPtr msg);
     void on_fault_recv(xbot_msgs::FaultConstPtr msg);
-    void on_aux_recv(xbot_msgs::AuxStateConstPtr msg);
+    void on_aux_recv(xbot_msgs::CustomStateConstPtr msg);
 
 
 

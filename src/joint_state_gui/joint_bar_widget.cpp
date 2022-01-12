@@ -77,14 +77,14 @@ void JointBarWidget::setValue(double x)
 {
     _bar->setValue(x*1000);
     _bar->setFormat(QString("%1").arg(x, 5,'f',1));
-    _value_timeout = time_point::clock::now() + 100ms;
+    _value_timeout = time_point::clock::now() + 300ms;
 }
 
 void JointBarWidget::setValue(double xbar, double xtext)
 {
     _bar->setValue(xbar*1000);
     _bar->setFormat(QString("%1").arg(xtext, 5,'f',1));
-    _value_timeout = time_point::clock::now() + 100ms;
+    _value_timeout = time_point::clock::now() + 300ms;
 }
 
 void JointBarWidget::setStatus(QString status)

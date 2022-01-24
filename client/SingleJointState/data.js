@@ -85,9 +85,9 @@ function buildFields (container) {
 
 function setJointStateMessage(msg)
 {
-    if(msg.names[jIndex] !== jName)
+    if(msg.name[jIndex] !== jName)
     {
-        jIndex = msg.names.findIndex(function(elem){ return elem === jName; });
+        jIndex = msg.name.findIndex(function(elem){ return elem === jName; });
     }
 
     var nFields = fieldNames.length
@@ -96,6 +96,9 @@ function setJointStateMessage(msg)
     {
         var fName = fieldNames[i]
         var fValue = fieldValueMap[fName]
-        fValue.value = msg[fName][jIndex]
+        if(fName in msg)
+        {
+            fValue.value = msg[fName][jIndex]
+        }
     }
 }

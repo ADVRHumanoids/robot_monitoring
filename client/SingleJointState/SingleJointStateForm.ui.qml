@@ -6,8 +6,6 @@ GroupBox {
 
     property alias grid: grid
 
-    anchors.fill: parent
-
     title: singleJointState.jName + " (ID: " + singleJointState.jId + ")"
 
     GridLayout {

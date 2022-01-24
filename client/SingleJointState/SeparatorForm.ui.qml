@@ -7,4 +7,5 @@ ToolSeparator {
     Layout.alignment: Qt.AlignHCenter
     Layout.fillWidth: true
     Layout.preferredHeight: 5
+
 }

@@ -1,6 +1,5 @@
 <RCC>
-    <qresource prefix="/">
-        <file>main.qml</file>
+    <qresource prefix="/SingleJointState">
         <file>SingleJointState.qml</file>
         <file>SingleJointStateForm.ui.qml</file>
         <file>FieldValue.qml</file>
@@ -10,8 +9,9 @@
         <file>data.js</file>
         <file>AuxSelector.qml</file>
         <file>AuxSelectorForm.ui.qml</file>
-        <file>ClientEndpoint.qml</file>
         <file>PlotButton.qml</file>
         <file>PlotButtonForm.ui.qml</file>
+        <file>SingleJointStateStack.qml</file>
+        <file>SingleJointStateStackForm.ui.qml</file>
     </qresource>
 </RCC>

@@ -15,6 +15,12 @@ SingleJointStateStackForm {
 
     property var items: []
 
+    signal addJoint(var name, var id)
+
+    signal progressChanged(var msg)
+
+    signal constructionCompleted()
+
     function setJointStateMessage(msg) {
         for(var i = 0; i < items.length; i++)
         {
@@ -22,17 +28,30 @@ SingleJointStateStackForm {
         }
     }
 
-    function addJoint(name: string, id: int) {
+    onAddJoint: function (name, id) {
         var obj = jointStateComponent.createObject(stack, {jName: name, jId: id})
+        print('[joint state] ' + name + ' added')
         items.push(obj)
-        print('adding joint ' + name)
+        progressChanged('[joint state] ' + name + ' added')
+        appData.updateUi()
     }
 
     function construct(names) {
-        print('constructing with ' + names)
+
+        // connect completed signal
+        progressChanged.connect( function (msg) {
+            if(items.length === names.length)
+            {
+                constructionCompleted()
+            }
+        } )
+
+        // trigger all signals
         for(var i = 0; i < names.length; i++)
         {
             addJoint(names[i], i)
         }
+
+
     }
 }

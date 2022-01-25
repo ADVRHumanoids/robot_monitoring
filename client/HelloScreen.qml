@@ -16,6 +16,10 @@ HelloScreenForm {
         msgText.color = "green"
     }
 
+    function setProgress(msg) {
+        statusText.text = msg
+    }
+
     Component.onCompleted: {
 
         // updated server url upon apply btn released

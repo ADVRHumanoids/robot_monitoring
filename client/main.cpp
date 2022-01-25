@@ -3,18 +3,24 @@
 #include <QQmlContext>
 
 #ifdef __EMSCRIPTEN__
-    #include <emscripten/val.h>
+#include <emscripten/val.h>
 #endif
 
-struct AppData : QObject
+class AppData : public QObject
 {
     Q_OBJECT
+
+public:
+
     Q_PROPERTY(QString hostname MEMBER hostname);
     Q_PROPERTY(int port MEMBER port);
+    Q_INVOKABLE void updateUi();
 
 public:
     QString hostname { "localhost" };
     int port { 8080 };
+
+
 };
 
 int main(int argc, char *argv[])
@@ -47,3 +53,8 @@ int main(int argc, char *argv[])
 }
 
 #include "main.moc"
+
+void AppData::updateUi()
+{
+    QCoreApplication::processEvents();
+}

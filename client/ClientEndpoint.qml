@@ -6,7 +6,7 @@ import QtWebSockets
 WebSocket {
 
     id: socket
-    url: "ws://localhost:8082/ws"
+    url: "ws://localhost:8080/ws"
     active: true
 
     signal jointStateReceived(var js)

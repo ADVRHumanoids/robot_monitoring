@@ -1,6 +1,7 @@
 import QtQuick 2.4
 import QtQuick.Controls 2.15
 
+
 import "data.js" as Data
 
 SingleJointStateForm {
@@ -8,27 +9,19 @@ SingleJointStateForm {
     id: singleJointState
 
     property var labelComponent: Component {
-        Label {
-
-        }
+        Label { }
     }
 
     property var auxSelectorComponent: Component {
-        AuxSelector {
-
-        }
+        AuxSelector { }
     }
 
     property var valueComponent: Component {
-        FieldValue {
-
-        }
+        FieldValue { }
     }
 
     property var sepComponent: Component {
-        Separator {
-
-        }
+        Separator { }
     }
 
     property var plotBtnComponent: Component {

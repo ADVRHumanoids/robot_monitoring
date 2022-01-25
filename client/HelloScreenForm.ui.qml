@@ -83,7 +83,7 @@ Rectangle {
 
         Button {
             id: applyBtn
-            text: "Apply"
+            text: "Retry"
             Layout.alignment: Qt.AlignHCenter
             focus: true
         }

@@ -1,3 +1,5 @@
+.import QtQuick.Layouts 1.3 as L // you can't import without "as" in .JS
+
 var fieldNames = [
             'posRef', 'motPos', 'linkPos',
             '__sep__',
@@ -38,8 +40,10 @@ function buildValuePlot (fieldName, container) {
 
     fieldValueMap[fieldName] = valueObj
 
-    if(fieldName in skipPlotBtn)
+    if(skipPlotBtn.includes(fieldName))
     {
+        valueObj.L.Layout.columnSpan = 2
+        valueObj.L.fillWidth = true
         return valueObj
     }
 

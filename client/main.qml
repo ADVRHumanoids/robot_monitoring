@@ -9,16 +9,16 @@ Window {
 
     id: mainWindow
     width: 360
-    height: 640
+    height: 568
     visible: true
     title: "Xbot2 Robot GUI"
 
     onWidthChanged: {
-        scroll.requiredContentWidth = Math.max(320, width)
+        scroll.requiredContentWidth = Math.max(300, width)
     }
 
     onHeightChanged: {
-        scroll.requiredContentHeight = Math.max(568, height)
+        scroll.requiredContentHeight = Math.max(520, height)
     }
 
 

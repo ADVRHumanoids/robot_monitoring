@@ -7,8 +7,9 @@ TextArea {
     id: fieldValueText
 
     readOnly: true
-    Layout.preferredWidth: 100
-    Layout.alignment: Qt.AlignRight
+    Layout.fillWidth: true
+    Layout.leftMargin: 5
+    Layout.rightMargin: 5
     background: Rectangle {
         color: "lightGrey"
         radius: 4

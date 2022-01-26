@@ -14,4 +14,8 @@
         <file>SingleJointStateStack.qml</file>
         <file>SingleJointStateStackForm.ui.qml</file>
     </qresource>
+    <qresource prefix="/">
+        <file>JointState.qml</file>
+        <file>JointStateForm.ui.qml</file>
+    </qresource>
 </RCC>

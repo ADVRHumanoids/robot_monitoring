@@ -7,5 +7,10 @@
         <file>BarPlot/TwoSideBar.qml</file>
         <file>BarPlot/TwoSideBarForm.ui.qml</file>
         <file>BarPlot/logic.js</file>
+        <file>BarPlot/BarPlotItem.qml</file>
+        <file>BarPlot/BarPlotItemForm.ui.qml</file>
+        <file>BarPlot/BarPlot.qml</file>
+        <file>BarPlot/BarPlotForm.ui.qml</file>
+        <file>client.js</file>
     </qresource>
 </RCC>

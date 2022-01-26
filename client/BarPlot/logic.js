@@ -2,11 +2,12 @@ function xZero() {
 
     var minNormalized = -min / (max - min)
 
-    var zero = barMargin + Math.max(minNormalized * (bar.parent.width - 2*barMargin), 0) + barMargin
+    var zero = barMargin + Math.max(minNormalized * (bar.parent.width - 2*barMargin), 0)
 
     return zero
 
 }
+
 
 function xOffset() {
 
@@ -20,6 +21,16 @@ function xOffset() {
     return off
 }
 
+
 function width() {
-    return (parent.width - 2 * barMargin) * Math.abs(valueNormalized)
+    return (bar.parent.width - 2 * barMargin) * Math.abs(valueNormalized)
+}
+
+
+function setJointStateMessage(msg)
+{
+    for(var i = 0; i < jointNames.length; i++)
+    {
+        container.itemAt(i).bar.value = msg[fieldName][i]
+    }
 }

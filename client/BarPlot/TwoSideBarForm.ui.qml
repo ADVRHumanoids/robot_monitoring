@@ -1,5 +1,4 @@
 import QtQuick 2.4
-import "logic.js" as Logic
 
 Rectangle {
 
@@ -9,7 +8,8 @@ Rectangle {
     property real valueNormalized: value / (max - min)
     property int barMargin: 0
     property int barRadius: 0
-    property alias xOffset: bar.x
+    property alias bar: bar
+    property alias centerLine: centerLine
 
     id: root
     width: 400
@@ -19,8 +19,6 @@ Rectangle {
 
     Rectangle {
         id: bar
-        x: Logic.xOffset()
-        width: Logic.width()
         anchors.verticalCenter: parent.verticalCenter
         height: parent.height - 2 * barMargin
         color: "darkBlue"
@@ -29,7 +27,6 @@ Rectangle {
 
     Rectangle {
         id: centerLine
-        x: Logic.xZero()
         anchors.verticalCenter: parent.verticalCenter
         height: bar.height
         width: 2

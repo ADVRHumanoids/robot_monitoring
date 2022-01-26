@@ -2,14 +2,16 @@
 
 import logging
 import asyncio
+from operator import mod
 from queue import Queue
-from unittest import expectedFailure
 import aiohttp
 import argparse
 from aiohttp import web
 import json
 import rospy
+from urdf_parser_py import urdf as urdf_parser
 from xbot_msgs.msg import JointState
+from xbot_msgs.srv import GetPluginList, PluginStatus, PluginCommand
 
 # parse cmd line args
 parser = argparse.ArgumentParser()
@@ -36,14 +38,31 @@ def on_js_recv(msg: JointState):
 
 js_sub = rospy.Subscriber('xbotcore/joint_states', JointState, on_js_recv, queue_size=1)
 
-# recv first message to get joint names
-js_msg : JointState = rospy.wait_for_message(js_sub.name, JointState)
-print('first joint state received')
-init_data = dict()
-init_data['jnames'] = js_msg.name
-
 # get init data handler
-async def init_handler(request):
+async def info_handler(request):
+
+    init_data = dict()
+    
+    js_msg : JointState = rospy.wait_for_message(js_sub.name, JointState)
+    print('first joint state received')
+    init_data['jnames'] = js_msg.name
+
+    urdf = rospy.get_param('xbotcore/robot_description')
+    model = urdf_parser.Robot.from_xml_string(urdf)
+    print('got urdf')
+
+    init_data['qmin'] = list()
+    init_data['qmax'] = list()
+    init_data['vmax'] = list()
+    init_data['taumax'] = list()
+
+    for jn in js_msg.name:
+        joint = model.joint_map[jn]
+        init_data['qmin'].append(joint.limit.lower)
+        init_data['qmax'].append(joint.limit.upper)
+        init_data['vmax'].append(joint.limit.velocity)
+        init_data['taumax'].append(joint.limit.effort)
+
     return web.Response(text=json.dumps(init_data))
 
 # joint state broadcaster coroutine
@@ -70,7 +89,12 @@ async def js_broadcaster():
         ws_to_remove.clear()
 
         i += 1
-        await asyncio.sleep(0.1666)
+        await asyncio.sleep(0.01666)
+
+
+# root
+async def root_handler(request):
+    return aiohttp.web.HTTPFound('/next_ui.html')
 
 
 # websocket handler
@@ -102,16 +126,20 @@ async def websocket_handler(request):
 # run web app
 app = web.Application()
 
+# add routes
 routes = [
+    ('GET', '/', root_handler, 'root'),
     ('GET', '/ws', websocket_handler, 'websocket'),
-    ('GET', '/init', init_handler, 'init'),
+    ('GET', '/info', info_handler, 'init'),
 ]
 
 for route in routes:
     app.router.add_route(route[0], route[1], route[2], name=route[3])
 
+# serve static files
 app.router.add_static('/', args.root)
 
+# run
 loop = asyncio.get_event_loop()
 runner = web.AppRunner(app)
 

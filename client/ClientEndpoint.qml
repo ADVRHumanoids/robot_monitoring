@@ -1,5 +1,5 @@
 import QtQuick 2.0
-import QtWebSockets
+import QtWebSockets 1.1
 
 
 

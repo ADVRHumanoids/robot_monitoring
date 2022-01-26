@@ -4,5 +4,8 @@
         <file>ClientEndpoint.qml</file>
         <file>HelloScreen.qml</file>
         <file>HelloScreenForm.ui.qml</file>
+        <file>BarPlot/TwoSideBar.qml</file>
+        <file>BarPlot/TwoSideBarForm.ui.qml</file>
+        <file>BarPlot/logic.js</file>
     </qresource>
 </RCC>

@@ -9,7 +9,7 @@ BarPlotForm {
     property var jointNames: []
     property var min: []
     property var max: []
-    property string fieldName: "motVel"
+    property string fieldName: "motPos"
 
     function setJointStateMessage(js_msg) {
         Logic.setJointStateMessage(js_msg)

@@ -22,10 +22,10 @@ Window {
     ClientEndpoint {
         id: client
         onError: function (msg) {
-            hello.setError(msg)
+            // hello.setError(msg)
         }
         onConnected: function (msg) {
-            hello.setConnected(msg)
+            // hello.setConnected(msg)
         }
         onJointStateReceived: function (msg) {
             barPlot.setJointStateMessage(msg)

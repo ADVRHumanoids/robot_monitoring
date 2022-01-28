@@ -6,6 +6,7 @@ import QtQuick.Shapes 1.14
 
 import "SingleJointState"
 import "BarPlot"
+import "sharedData.js" as SharedData
 
 Window {
 
@@ -15,8 +16,9 @@ Window {
     visible: true
     title: "Xbot2 Robot GUI"
 
-    BarPlot {
+    BarPlotStack {
         id: barPlot
+        anchors.fill: parent
     }
 
     ClientEndpoint {
@@ -31,13 +33,7 @@ Window {
             barPlot.setJointStateMessage(msg)
         }
         onFinalized: {
-            // hello.setProgress('constructing UI, this could take a while..')
-
-            barPlot.min = qmin
-            barPlot.max = qmax
-            barPlot.jointNames = jointNames
-
-            // singleJointState.construct(jointNames)
+            barPlot.construct()
         }
     }
 }

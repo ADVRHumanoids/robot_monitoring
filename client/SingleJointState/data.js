@@ -30,6 +30,9 @@ var shortToLongName = {
     'fault': 'Fault code'
 };
 
+
+
+
 var skipPlotBtn = [
         'fault'
         ]

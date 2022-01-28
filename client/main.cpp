@@ -40,6 +40,14 @@ int main(int argc, char *argv[])
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("appData", &appdata);
+    engine.addImportPath(engine.importPathList().back() + "/../../../Tools/QtDesignStudio/qt6_design_studio_reduced_version/qml");
+    engine.addImportPath(engine.importPathList().back());
+    for(auto p : engine.importPathList())
+    {
+        printf(p.toStdString().c_str());
+        putc('\n', stdout);
+        fflush(stdout);
+    }
     const QUrl url(QStringLiteral("qrc:/main.qml"));
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
                      &app, [url](QObject *obj, const QUrl &objUrl) {

@@ -30,10 +30,12 @@ def on_js_recv(msg: JointState):
     js_msg_to_send['name'] = msg.name
     js_msg_to_send['posRef'] = msg.position_reference
     js_msg_to_send['motPos'] = msg.motor_position
+    js_msg_to_send['linkPos'] = msg.link_position
     js_msg_to_send['torRef'] = msg.effort_reference
     js_msg_to_send['tor'] = msg.effort
     js_msg_to_send['velRef'] = msg.velocity_reference
     js_msg_to_send['motVel'] = msg.motor_velocity
+    js_msg_to_send['linkVel'] = msg.link_velocity
     js_msg_to_send['stamp'] = msg.header.stamp.to_sec()
 
 js_sub = rospy.Subscriber('xbotcore/joint_states', JointState, on_js_recv, queue_size=1)

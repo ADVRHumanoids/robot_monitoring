@@ -5,32 +5,40 @@ Rectangle {
     property real min: -1
     property real max: 1
     property real value: 0.5
-    property real valueNormalized: value / (max - min)
+    property real valueRef: value
     property int barMargin: 0
     property int barRadius: 0
     property alias bar: bar
-    property alias centerLine: centerLine
+    property alias refMarker: refMarker
 
     id: root
     width: 400
     height: textRect.height + 10
-    color: "lightGrey"
+    color: "#dddddd"
     radius: barRadius
+    border.color: "#ffffff"
 
     Rectangle {
         id: bar
         anchors.verticalCenter: parent.verticalCenter
         height: parent.height - 2 * barMargin
-        color: "darkBlue"
+        color: "lightseagreen"
         radius: barRadius
     }
 
-    Rectangle {
-        id: centerLine
-        anchors.verticalCenter: parent.verticalCenter
+//    Rectangle {
+//        id: centerLine
+//        anchors.verticalCenter: parent.verticalCenter
+//        height: bar.height
+//        width: 2
+//        color: "black"
+//    }
+
+    ReferenceMarker {
+        id: refMarker
         height: bar.height
-        width: 2
-        color: "black"
+        width: 8
+        fillColor: "darkblue"
     }
 
     Rectangle {

@@ -1,29 +1,50 @@
-function xZero() {
+.import "../sharedData.js" as SharedData
+.import "../SingleJointState/data.js" as SjsData
 
-    var minNormalized = -min / (max - min)
+// base value
+function valueBase() {
 
-    var zero = barMargin + Math.max(minNormalized * (bar.parent.width - 2*barMargin), 0)
+    if(min > 0)
+    {
+        return min
+    }
 
-    return zero
+    if(max < 0)
+    {
+        return max
+    }
 
+    return 0
+}
+
+// normalized value
+function normalize(value) {
+
+    return (value - min)/(max - min)
+}
+
+
+function widthNormalized() {
+
+    return (value - valueBase())/(max - min)
 }
 
 
 function xOffset() {
 
-    var off = xZero()
+    var baseOffset = (valueBase() - min)/(max - min) * bar.parent.width
 
-    if(valueNormalized < 0)
+    if(widthNormalized() < 0)
     {
-        off = off - bar.width
+        baseOffset += widthNormalized() * bar.parent.width
     }
 
-    return off
+    return baseOffset
 }
 
 
 function width() {
-    return (bar.parent.width - 2 * barMargin) * Math.abs(valueNormalized)
+    return Math.max(2, (bar.parent.width - 2 * barMargin) * Math.abs(widthNormalized()))
 }
 
 
@@ -32,5 +53,33 @@ function setJointStateMessage(msg)
     for(var i = 0; i < jointNames.length; i++)
     {
         container.itemAt(i).bar.value = msg[fieldName][i]
+        container.itemAt(i).bar.valueRef = msg[fieldNameRef][i]
     }
+}
+
+var barPlotFields = ['motPos', 'linkPos', 'motVel', 'linkVel', 'tor']
+
+var shortToLongName = SjsData.shortToLongName
+
+var refName = ['posRef',
+               'posRef',
+               'velRef',
+               'velRef',
+               'torRef',
+        ]
+
+function barPlotMin(){
+    return [SharedData.qmin,
+            SharedData.qmin,
+            SharedData.vmax.map(x => -x),
+            SharedData.vmax.map(x => -x),
+            SharedData.taumax.map(x => -x)]
+}
+
+function barPlotMax(){
+    return [SharedData.qmax,
+            SharedData.qmax,
+            SharedData.vmax,
+            SharedData.vmax,
+            SharedData.taumax]
 }

@@ -12,5 +12,8 @@
         <file>BarPlot/BarPlot.qml</file>
         <file>BarPlot/BarPlotForm.ui.qml</file>
         <file>client.js</file>
+        <file>BarPlot/ReferenceMarker.ui.qml</file>
+        <file>BarPlot/BarPlotStack.qml</file>
+        <file>sharedData.js</file>
     </qresource>
 </RCC>

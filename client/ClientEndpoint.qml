@@ -1,15 +1,10 @@
 import QtQuick 2.0
 import QtWebSockets
 import "client.js" as Client
-
+import "sharedData.js" as SharedData
 Item
 {
 
-    property var qmin: []
-    property var qmax: []
-    property var vmax: []
-    property var taumax: []
-    property var jointNames: []
     property string hostname: "localhost"
     property int port: 8080
 
@@ -56,11 +51,11 @@ Item
 
     function onInfoReceived(msg) {
         print('info received from server')
-        qmin = msg.qmin
-        qmax = msg.qmax
-        vmax = msg.vmax
-        taumax = msg.taumax
-        jointNames = msg.jnames
+        SharedData.qmin = msg.qmin
+        SharedData.qmax = msg.qmax
+        SharedData.vmax = msg.vmax
+        SharedData.taumax = msg.taumax
+        SharedData.jointNames = msg.jnames
         finalized()
     }
 

@@ -5,9 +5,9 @@ import QtQuick.Controls 2.12
 ScrollView {
 
     property alias container: container
+    property int type: TwoSideBar.Type.Bar
 
     id: scroller
-    anchors.fill: parent
     clip : true
     contentWidth: parent.width
 
@@ -34,6 +34,7 @@ ScrollView {
                 bar.max: root.max[index]
                 bar.value: 0
                 jointName: root.jointNames[index]
+                bar.type: type
             }
         }
     }

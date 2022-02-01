@@ -3,14 +3,10 @@
         <file>SingleJointState.qml</file>
         <file>SingleJointStateForm.ui.qml</file>
         <file>FieldValue.qml</file>
-        <file>FieldValueForm.ui.qml</file>
         <file>Separator.qml</file>
-        <file>SeparatorForm.ui.qml</file>
         <file>data.js</file>
         <file>AuxSelector.qml</file>
-        <file>AuxSelectorForm.ui.qml</file>
         <file>PlotButton.qml</file>
-        <file>PlotButtonForm.ui.qml</file>
         <file>SingleJointStateStack.qml</file>
         <file>SingleJointStateStackForm.ui.qml</file>
     </qresource>

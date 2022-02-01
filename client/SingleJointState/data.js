@@ -103,6 +103,7 @@ function setJointStateMessage(msg)
     {
         var fName = fieldNames[i]
         var fValue = fieldValueMap[fName]
+
         if(fName in msg)
         {
             fValue.value = msg[fName][jIndex]

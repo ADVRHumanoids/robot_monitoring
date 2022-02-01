@@ -6,9 +6,18 @@ Item {
 
     property alias stack: stack
 
-    StackLayout {
-        id: stack
-        currentIndex: jointStateStack.currentIndex
+    implicitWidth: 270
+
+    ScrollView
+    {
         anchors.fill: parent
+        contentWidth: parent.width
+
+        StackLayout {
+            id: stack
+            currentIndex: jointStateStack.currentIndex
+            anchors.fill: parent
+        }
+
     }
 }

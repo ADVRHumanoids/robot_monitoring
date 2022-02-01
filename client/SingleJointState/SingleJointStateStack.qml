@@ -1,11 +1,17 @@
 import QtQuick 2.4
 import QtQuick.Controls 2.15
+import "../sharedData.js" as SharedData
 
 SingleJointStateStackForm {
 
     id: jointStateStack
 
     property int currentIndex: 0
+
+    function selectJoint(jointName)
+    {
+        currentIndex = SharedData.jointNames.indexOf(jointName)
+    }
 
     property var jointStateComponent: Component {
         SingleJointState {
@@ -36,7 +42,9 @@ SingleJointStateStackForm {
         appData.updateUi()
     }
 
-    function construct(names) {
+    function construct() {
+
+        var names = SharedData.jointNames
 
         // connect completed signal
         progressChanged.connect( function (msg) {

@@ -1,4 +1,11 @@
 import QtQuick 2.4
+import QtQuick.Controls 2.12
+import QtQuick.Layouts 1.12
 
-PlotButtonForm {
+Button {
+    text: "Plot"
+    checkable: false
+    flat: false
+    implicitWidth: 50
+    Layout.alignment: Qt.AlignRight
 }

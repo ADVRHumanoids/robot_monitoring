@@ -25,9 +25,7 @@ SingleJointStateForm {
     }
 
     property var plotBtnComponent: Component {
-        PlotButton {
-
-        }
+        PlotButton { }
     }
 
     property string jName: "joint_name"
@@ -37,8 +35,7 @@ SingleJointStateForm {
     property var fieldValueMap: Object()
     property var plotBtnMap: Object()
 
-    function setJointStateMessage(msg)
-    {
+    function setJointStateMessage(msg) {
         Data.setJointStateMessage(msg)
     }
 

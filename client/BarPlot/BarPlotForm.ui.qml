@@ -9,7 +9,8 @@ ScrollView {
 
     id: scroller
     clip : true
-    contentWidth: parent.width
+    contentWidth: availableWidth
+    contentHeight: Math.max(grid.implicitHeight, parent.height)
 
     GridLayout
     {
@@ -17,7 +18,6 @@ ScrollView {
         anchors.fill: parent
         rowSpacing: 2
         columnSpacing: 10
-        anchors.margins: 8
         flow: GridLayout.TopToBottom
 
         readonly property int elementWidth: 200
@@ -35,6 +35,10 @@ ScrollView {
                 bar.value: 0
                 jointName: root.jointNames[index]
                 bar.type: type
+
+                onJointClicked: function(jn) {
+                    root.jointClicked(jn)
+                }
             }
         }
     }

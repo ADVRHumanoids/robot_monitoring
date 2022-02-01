@@ -2,6 +2,8 @@ import QtQuick 2.4
 
 BarPlotItemForm {
 
+    signal jointClicked(string jName)
+
     labelMouseArea.onHoveredChanged: {
         if(labelMouseArea.containsMouse)
         {
@@ -12,5 +14,7 @@ BarPlotItemForm {
             labelColorAlpha = 0.3
         }
     }
+
+    labelMouseArea.onClicked:  jointClicked(jointName)
 
 }

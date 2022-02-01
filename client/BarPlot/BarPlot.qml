@@ -1,5 +1,4 @@
 import QtQuick 2.4
-import "/SingleJointState/data.js" as Data
 import "logic.js" as Logic
 
 BarPlotForm {
@@ -15,5 +14,7 @@ BarPlotForm {
     function setJointStateMessage(js_msg) {
         Logic.setJointStateMessage(js_msg)
     }
+
+    signal jointClicked(string jname)
 
 }

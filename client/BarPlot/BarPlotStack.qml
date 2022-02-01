@@ -6,6 +6,7 @@ import "../sharedData.js" as SharedData
 
 Item {
 
+    id: root
     width: 400
     height: 400
 
@@ -17,6 +18,8 @@ Item {
         container.itemAt(stack.currentIndex).setJointStateMessage(js_msg)
     }
 
+    signal jointClicked(string jointName)
+
     ColumnLayout {
 
         anchors.fill: parent
@@ -25,9 +28,11 @@ Item {
             id: combo
             Layout.fillWidth: true
             model: Logic.barPlotFields.map(f => Logic.shortToLongName[f])
+            wheelEnabled: true
         }
 
         StackLayout {
+
             id: stack
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -39,6 +44,7 @@ Item {
                 model: 0
 
                 BarPlot {
+
                     Layout.fillHeight: true
                     Layout.fillWidth: true
 
@@ -48,6 +54,10 @@ Item {
                         max = Logic.barPlotMax()[index]
                         fieldName = Logic.barPlotFields[index]
                         fieldNameRef = Logic.refName[index]
+                    }
+
+                    onJointClicked: function(jn) {
+                        root.jointClicked(jn)
                     }
 
                 }

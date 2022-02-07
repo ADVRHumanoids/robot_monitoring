@@ -29,22 +29,11 @@ ApplicationWindow {
         {
             jointState.selectJoint(jn)
         }
-
-        onParentChanged: {
-            print('BarPlotStack')
-        }
     }
 
     SingleJointStateStack {
         id: jointState
         Layout.fillHeight: true
-
-        onProgressChanged: function(msg) {
-            hello.setProgress(msg)
-        }
-        onParentChanged: {
-            print('SingleJointStateStack')
-        }
     }
 
     SwipeView {
@@ -77,16 +66,7 @@ ApplicationWindow {
         Main.handleResponsiveLayout()
     }
 
-    onLayoutModeChanged: {
-        if(layoutMode === "tablet")
-        {
-            Main.setTabletMode()
-        }
-        else if(layoutMode === "mobile")
-        {
-            Main.setMobileMode()
-        }
-    }
+    onLayoutModeChanged: Main.setLayoutMode(layoutMode)
 
     HelloScreen {
         id: hello

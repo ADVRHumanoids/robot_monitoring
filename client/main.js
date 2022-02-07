@@ -9,6 +9,17 @@ function handleResponsiveLayout() {
     }
 }
 
+function setLayoutMode(mode) {
+    if(mode === "tablet")
+    {
+        setTabletMode()
+    }
+    else if(mode === "mobile")
+    {
+        setMobileMode()
+    }
+}
+
 function setTabletMode() {
     print('setting tablet..')
     swipeView.contentChildren = []

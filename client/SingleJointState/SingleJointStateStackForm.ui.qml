@@ -19,15 +19,18 @@ Item {
 
             id: stack
             anchors.fill: parent
+            currentIndex: root.currentIndex
 
             Repeater {
                 id: loader
-                model: []
+                model: jointNames
                 Loader {
+
+                    active: index === stack.currentIndex
                     sourceComponent: root.jointStateComponent
 
                     onLoaded: {
-                        item.jName = modelData.jName
+                        item.jName = jointNames[index]
                     }
                 }
             }

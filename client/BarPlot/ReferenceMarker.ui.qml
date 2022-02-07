@@ -1,7 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Shapes 6.0
-import QtQuick.Studio.Components 1.0
+
 
 Item {
     width: 100

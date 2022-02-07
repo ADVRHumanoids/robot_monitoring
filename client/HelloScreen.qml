@@ -20,17 +20,8 @@ HelloScreenForm {
         statusText.text = msg
     }
 
-    Component.onCompleted: {
-
-        // updated server url upon apply btn released
-        applyBtn.released.connect(
-                    function() {
-                        updateServerUrl(serverHost, serverPort)
-                    }
-            )
-
-        // dynamic margins
-
+    applyBtn.onReleased: {
+        updateServerUrl(serverHost, serverPort)
     }
 
     onWidthChanged: {

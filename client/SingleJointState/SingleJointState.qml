@@ -1,6 +1,6 @@
 import QtQuick 2.4
 import QtQuick.Controls 2.15
-
+import QtQuick.Layouts
 
 import "data.js" as Data
 
@@ -9,15 +9,20 @@ SingleJointStateForm {
     id: singleJointState
 
     property var labelComponent: Component {
-        Label { }
+        Label {
+
+        }
     }
 
     property var auxSelectorComponent: Component {
-        AuxSelector { }
+        AuxSelector {
+            Layout.fillHeight: true
+        }
     }
 
     property var valueComponent: Component {
-        FieldValue { }
+        FieldValue {
+        }
     }
 
     property var sepComponent: Component {

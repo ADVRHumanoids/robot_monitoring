@@ -15,5 +15,7 @@
         <file>BarPlot/ReferenceMarker.ui.qml</file>
         <file>BarPlot/BarPlotStack.qml</file>
         <file>sharedData.js</file>
+        <file>BarPlot/TriangleItem.qml</file>
+        <file>main.js</file>
     </qresource>
 </RCC>

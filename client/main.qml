@@ -7,41 +7,85 @@ import QtQuick.Shapes 1.14
 import "SingleJointState"
 import "BarPlot"
 import "sharedData.js" as SharedData
+import "main.js" as Main
 
-Window {
+ApplicationWindow {
 
     id: mainWindow
-    width: 640
+    width: 400
     height: 480
     visible: true
     title: "Xbot2 Robot GUI"
 
-    RowLayout
-    {
+    property string layoutMode: ""
 
+    BarPlotStack {
+        id: barPlot
+
+        Layout.fillHeight: true
+        Layout.fillWidth: true
+
+        onJointClicked: function(jn)
+        {
+            jointState.selectJoint(jn)
+        }
+
+        onParentChanged: {
+            print('BarPlotStack')
+        }
+    }
+
+    SingleJointStateStack {
+        id: jointState
+        Layout.fillHeight: true
+
+        onProgressChanged: function(msg) {
+            hello.setProgress(msg)
+        }
+        onParentChanged: {
+            print('SingleJointStateStack')
+        }
+    }
+
+    SwipeView {
+        id: swipeView
         anchors.fill: parent
         anchors.margins: 8
+        clip: true
+    }
 
-        BarPlotStack {
-            id: barPlot
-            Layout.fillHeight: true
-            Layout.fillWidth: true
+    RowLayout
+    {
+        id: rowLayout
+        anchors.fill: parent
+        anchors.margins: 8
+    }
 
-            onJointClicked: function(jn)
-            {
-                jointState.selectJoint(jn)
-            }
+    footer: ToolBar {
+        PageIndicator {
+        anchors.centerIn: parent
+        count: swipeView.count
+        currentIndex: swipeView.currentIndex
+    }
+    }
+
+    onWidthChanged: {
+        Main.handleResponsiveLayout()
+    }
+
+    Component.onCompleted: {
+        Main.handleResponsiveLayout()
+    }
+
+    onLayoutModeChanged: {
+        if(layoutMode === "tablet")
+        {
+            Main.setTabletMode()
         }
-
-        SingleJointStateStack {
-            id: jointState
-            Layout.fillHeight: true
-
-            onProgressChanged: function(msg) {
-                hello.setProgress(msg)
-            }
+        else if(layoutMode === "mobile")
+        {
+            Main.setMobileMode()
         }
-
     }
 
     HelloScreen {
@@ -52,9 +96,15 @@ Window {
             NumberAnimation {
                 duration: 1000
                 onRunningChanged: {
+                    print('run anim')
                     hello.visible = hello.opacity > 0
                 }
             }
+        }
+
+        onUpdateServerUrl: function(hostname, port) {
+            client.hostname = hostname
+            client.port = port
         }
     }
 

@@ -5,8 +5,8 @@ import "sharedData.js" as SharedData
 Item
 {
 
-    property string hostname: "localhost"
-    property int port: 8080
+    property string hostname: appData.hostname
+    property int port: appData.port
 
     signal finalized()
     signal jointStateReceived(var js)

@@ -6,6 +6,8 @@ Button {
     text: "Plot"
     checkable: false
     flat: false
-    implicitWidth: 50
-    Layout.alignment: Qt.AlignRight
+
+    FontMetrics {
+        id: fontMetrics
+    }
 }

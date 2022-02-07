@@ -4,7 +4,7 @@ import "../sharedData.js" as SharedData
 
 SingleJointStateStackForm {
 
-    id: jointStateStack
+    id: root
 
     property int currentIndex: 0
 
@@ -19,7 +19,7 @@ SingleJointStateStackForm {
         }
     }
 
-    property var items: []
+    property var jointNames: []
 
     signal addJoint(var name, var id)
 
@@ -28,9 +28,9 @@ SingleJointStateStackForm {
     signal constructionCompleted()
 
     function setJointStateMessage(msg) {
-        for(var i = 0; i < items.length; i++)
+        for(var i = 0; i < loader.count; i++)
         {
-            items[i].setJointStateMessage(msg)
+            loader.itemAt(i).item.setJointStateMessage(msg)
         }
     }
 
@@ -43,23 +43,28 @@ SingleJointStateStackForm {
     }
 
     function construct() {
+        jointNames = SharedData.jointNames
+        loader.model = [{jName: jointNames[0]}]
+    }
 
-        var names = SharedData.jointNames
+    onCurrentIndexChanged: {
 
-        // connect completed signal
-        progressChanged.connect( function (msg) {
-            if(items.length === names.length)
-            {
-                constructionCompleted()
-            }
-        } )
+        var reqestedName = SharedData.jointNames[currentIndex]
 
-        // trigger all signals
-        for(var i = 0; i < names.length; i++)
-        {
-            addJoint(names[i], i)
+        var mdlIndex = loader.model.findIndex((elem) =>
+            elem.jName === reqestedName
+        )
+
+        if(mdlIndex === -1) {
+            print('not found ' + reqestedName)
+            var mdl = loader.model
+            mdl.push({jName: reqestedName})
+            loader.model = mdl
+            mdlIndex = mdl.length - 1
         }
 
+        print('set index ' + mdlIndex)
+        stack.currentIndex = mdlIndex
 
     }
 }

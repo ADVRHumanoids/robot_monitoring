@@ -51,7 +51,7 @@ function buildValuePlot (fieldName, container) {
     }
 
     var plotBtnObj = plotBtnComponent.createObject(container)
-    plotBtnObj.implicitHeight = valueObj.implicitHeight
+//    plotBtnObj.implicitHeight = valueObj.implicitHeight
 
     plotBtnMap[fieldName] = plotBtnObj
 

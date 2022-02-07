@@ -5,18 +5,32 @@ import QtQuick.Layouts 1.12
 Item {
 
     property alias stack: stack
+    property alias loader: loader
 
-    implicitWidth: 270
+    implicitWidth: stack.implicitWidth
 
     ScrollView
     {
+        id: scroll
         anchors.fill: parent
-        contentWidth: parent.width
+        contentWidth: availableWidth
 
         StackLayout {
+
             id: stack
-            currentIndex: jointStateStack.currentIndex
             anchors.fill: parent
+
+            Repeater {
+                id: loader
+                model: []
+                Loader {
+                    sourceComponent: root.jointStateComponent
+
+                    onLoaded: {
+                        item.jName = modelData.jName
+                    }
+                }
+            }
         }
 
     }

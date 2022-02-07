@@ -1,6 +1,8 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QtQuickControls2/QQuickStyle>
+#include <QFont>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/val.h>
@@ -34,14 +36,15 @@ int main(int argc, char *argv[])
     emscripten::val location = emscripten::val::global("location");
     appdata.hostname = QString::fromStdString(location["hostname"].as<std::string>());
     appdata.port = std::stoi(location["port"].as<std::string>());
+    QQuickStyle::setStyle("Fusion");
 #endif
-
     QGuiApplication app(argc, argv);
+    auto font = app.font();
+    font.setPixelSize(12);
+    app.setFont(font);
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("appData", &appdata);
-    engine.addImportPath(engine.importPathList().back() + "/../../../Tools/QtDesignStudio/qt6_design_studio_reduced_version/qml");
-    engine.addImportPath(engine.importPathList().back());
     for(auto p : engine.importPathList())
     {
         printf(p.toStdString().c_str());

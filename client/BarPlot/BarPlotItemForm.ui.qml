@@ -22,6 +22,8 @@ RowLayout {
             radius: 3
             border.width: statusOk ? 0 : 1
         }
+        font.pixelSize: Qt.application.font.pixelSize * 0.9
+        wrapMode: Text.Wrap
         Layout.preferredWidth: 100
         padding: 5
 
@@ -30,8 +32,6 @@ RowLayout {
             anchors.fill: parent
             hoverEnabled: true
         }
-
-
     }
 
     TwoSideBar {

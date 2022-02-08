@@ -54,6 +54,7 @@ Item {
                         item.max = Logic.barPlotMax()[index]
                         item.fieldName = Logic.barPlotFields[index]
                         item.fieldNameRef = Logic.refName[index]
+                        item.setJointStateMessage(SharedData.latestJointState)
                     }
                 }
 

@@ -15,7 +15,7 @@ Item {
     }
 
     function setJointStateMessage(js_msg) {
-        container.itemAt(stack.currentIndex).setJointStateMessage(js_msg)
+        container.itemAt(stack.currentIndex).item.setJointStateMessage(js_msg)
     }
 
     signal jointClicked(string jointName)
@@ -43,25 +43,35 @@ Item {
                 id: container
                 model: 0
 
-                BarPlot {
+                Loader {
 
-                    Layout.fillHeight: true
-                    Layout.fillWidth: true
+                    active: index === stack.currentIndex
+                    sourceComponent: barPlotComponent
 
-                    Component.onCompleted: {
-                        jointNames = SharedData.jointNames
-                        min = Logic.barPlotMin()[index]
-                        max = Logic.barPlotMax()[index]
-                        fieldName = Logic.barPlotFields[index]
-                        fieldNameRef = Logic.refName[index]
+                    onLoaded: {
+                        item.jointNames = SharedData.jointNames
+                        item.min = Logic.barPlotMin()[index]
+                        item.max = Logic.barPlotMax()[index]
+                        item.fieldName = Logic.barPlotFields[index]
+                        item.fieldNameRef = Logic.refName[index]
                     }
-
-                    onJointClicked: function(jn) {
-                        root.jointClicked(jn)
-                    }
-
                 }
 
+            }
+
+        }
+
+    }
+
+
+    property Component barPlotComponent: Component {
+        BarPlot {
+
+            Layout.fillHeight: true
+            Layout.fillWidth: true
+
+            onJointClicked: function(jn) {
+                root.jointClicked(jn)
             }
 
         }

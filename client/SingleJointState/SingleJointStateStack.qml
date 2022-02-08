@@ -22,20 +22,20 @@ SingleJointStateStackForm {
     property var jointNames: []
 
     function setJointStateMessage(msg) {
-        for(var i = 0; i < loader.count; i++)
+
+        let item = loader.itemAt(currentIndex).item
+
+        if(item === null)
         {
-            let item = loader.itemAt(i).item
-
-            if(item === null)
-            {
-                continue
-            }
-
-            item.setJointStateMessage(msg)
+            return
         }
+
+        item.setJointStateMessage(msg)
+
     }
 
     function construct() {
         jointNames = SharedData.jointNames
     }
+
 }

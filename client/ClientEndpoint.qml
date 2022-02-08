@@ -2,11 +2,13 @@ import QtQuick 2.0
 import QtWebSockets
 import "client.js" as Client
 import "sharedData.js" as SharedData
+
 Item
 {
 
     property string hostname: appData.hostname
     property int port: appData.port
+    property alias active: socket.active
 
     signal finalized()
     signal jointStateReceived(var js)
@@ -25,6 +27,7 @@ Item
 
             if(obj.type === "joint_states")
             {
+                SharedData.latestJointState = obj
                 jointStateReceived(obj)
             }
             else
@@ -33,11 +36,12 @@ Item
             }
         }
 
-        onStatusChanged: function() {
+        onStatusChanged: {
             print("status changed [url = " + url + "]")
             if (socket.status === WebSocket.Error) {
                 console.log("Error: " + socket.errorString)
                 error(socket.errorString)
+                active = false
             } else if (socket.status === WebSocket.Open) {
                 console.log("Server connected")
                 Client.httpRequest("http://" + hostname + ":" + port + "/info",
@@ -45,6 +49,7 @@ Item
                 connected("Connected to " + url)
             } else if (socket.status === WebSocket.Closed) {
                 console.log("Socket closed")
+                active = false
             }
         }
     }

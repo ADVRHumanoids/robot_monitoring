@@ -85,6 +85,7 @@ ApplicationWindow {
         onUpdateServerUrl: function(hostname, port) {
             client.hostname = hostname
             client.port = port
+            client.active = true
         }
     }
 

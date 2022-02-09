@@ -46,7 +46,7 @@ Item
                 console.log("Server connected")
                 Client.httpRequest("http://" + hostname + ":" + port + "/info",
                                    onInfoReceived)
-                connected("Connected to " + url)
+                connected("Connected to " + url + ", requesting parameters..")
             } else if (socket.status === WebSocket.Closed) {
                 console.log("Socket closed")
                 active = false
@@ -55,6 +55,13 @@ Item
     }
 
     function onInfoReceived(msg) {
+
+        if(!msg.success) {
+            error('server replied: ' + msg.message)
+            active = false
+            return
+        }
+
         print('info received from server')
         SharedData.qmin = msg.qmin
         SharedData.qmax = msg.qmax

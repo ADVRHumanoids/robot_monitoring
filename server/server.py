@@ -44,8 +44,16 @@ js_sub = rospy.Subscriber('xbotcore/joint_states', JointState, on_js_recv, queue
 async def info_handler(request):
 
     init_data = dict()
+    init_data['message'] = 'ok'
+    init_data['success'] = True
     
-    js_msg : JointState = rospy.wait_for_message(js_sub.name, JointState)
+    try:
+        js_msg : JointState = rospy.wait_for_message(js_sub.name, JointState, rospy.Duration(1))
+    except rospy.ROSException as e:
+        init_data['message'] = 'unable to receive joint state'
+        init_data['success'] = False
+        return web.Response(text=json.dumps(init_data))
+
     print('first joint state received')
     init_data['jnames'] = js_msg.name
 

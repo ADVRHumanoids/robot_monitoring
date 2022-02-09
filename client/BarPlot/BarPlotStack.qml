@@ -38,6 +38,10 @@ Item {
             Layout.fillHeight: true
             currentIndex: combo.currentIndex
 
+            onCurrentIndexChanged: {
+                root.setJointStateMessage(SharedData.latestJointState)
+            }
+
             Repeater {
 
                 id: container

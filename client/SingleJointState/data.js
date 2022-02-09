@@ -34,7 +34,7 @@ var shortToLongName = {
 
 
 var skipPlotBtn = [
-        'fault'
+            'fault'
         ]
 
 function buildValuePlot (fieldName, container) {
@@ -51,7 +51,10 @@ function buildValuePlot (fieldName, container) {
     }
 
     var plotBtnObj = plotBtnComponent.createObject(container)
-//    plotBtnObj.implicitHeight = valueObj.implicitHeight
+
+    plotBtnObj.released.connect( function() {
+        singleJointState.plotAdded(jName, fieldName)
+    })
 
     plotBtnMap[fieldName] = plotBtnObj
 

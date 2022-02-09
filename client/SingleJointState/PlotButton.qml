@@ -3,6 +3,7 @@ import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.12
 
 Button {
+
     text: "Plot"
     checkable: false
     flat: false

@@ -8,11 +8,12 @@ import "SingleJointState"
 import "BarPlot"
 import "sharedData.js" as SharedData
 import "main.js" as Main
+import "Plotter"
 
 ApplicationWindow {
 
     id: mainWindow
-    width: 400
+    width: 756
     height: 480
     visible: true
     title: "Xbot2 Robot GUI"
@@ -34,6 +35,16 @@ ApplicationWindow {
     SingleJointStateStack {
         id: jointState
         Layout.fillHeight: true
+
+        onPlotAdded: function(jName, fieldName) {
+            plotter.addSeries(jName, fieldName)
+        }
+    }
+
+    Plotter {
+        id: plotter
+        Layout.fillHeight: true
+        Layout.fillWidth: true
     }
 
     SwipeView {
@@ -72,16 +83,6 @@ ApplicationWindow {
         id: hello
         anchors.fill: parent
 
-        Behavior on opacity {
-            NumberAnimation {
-                duration: 1000
-                onRunningChanged: {
-                    print('run anim')
-                    hello.visible = hello.opacity > 0
-                }
-            }
-        }
-
         onUpdateServerUrl: function(hostname, port) {
             client.hostname = hostname
             client.port = port
@@ -100,6 +101,7 @@ ApplicationWindow {
         onJointStateReceived: function (msg) {
             barPlot.setJointStateMessage(msg)
             jointState.setJointStateMessage(msg)
+            plotter.setJointStateMessage(msg)
         }
         onFinalized: {
             barPlot.construct()

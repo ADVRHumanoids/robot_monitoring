@@ -3,6 +3,7 @@
 #include <QQmlContext>
 #include <QtQuickControls2/QQuickStyle>
 #include <QFont>
+#include <QtWidgets/QApplication>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/val.h>
@@ -38,7 +39,7 @@ int main(int argc, char *argv[])
     appdata.port = std::stoi(location["port"].as<std::string>());
     QQuickStyle::setStyle("Fusion");
 #endif
-    QGuiApplication app(argc, argv);
+    QApplication app(argc, argv);
     auto font = app.font();
     font.setPixelSize(12);
     app.setFont(font);

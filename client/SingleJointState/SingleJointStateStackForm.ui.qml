@@ -5,12 +5,12 @@ import "../sharedData.js" as SharedData
 Item {
 
     property alias stack: stack
-    property alias loader: loader
+    property alias repeater: repeater
 
     implicitWidth: stack.implicitWidth
 
-    ScrollView
-    {
+    ScrollView {
+
         id: scroll
         anchors.fill: parent
         contentWidth: availableWidth
@@ -22,12 +22,21 @@ Item {
             currentIndex: root.currentIndex
 
             Repeater {
-                id: loader
-                model: jointNames
-                Loader {
 
+                id: repeater
+                model: jointNames
+
+                Loader {
+                    id: loader
                     active: index === stack.currentIndex
                     sourceComponent: root.jointStateComponent
+
+                    Connections {
+                        target: loader.item
+                        function onPlotAdded(jName, fieldName) {
+                            root.plotAdded(jName, fieldName)
+                        }
+                    }
 
                     onLoaded: {
                         item.jName = jointNames[index]

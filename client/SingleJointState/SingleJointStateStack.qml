@@ -6,6 +6,8 @@ SingleJointStateStackForm {
 
     id: root
 
+    signal plotAdded(string jName, string fieldName)
+
     property int currentIndex: 0
 
     function selectJoint(jointName)
@@ -23,7 +25,7 @@ SingleJointStateStackForm {
 
     function setJointStateMessage(msg) {
 
-        let item = loader.itemAt(currentIndex).item
+        let item = repeater.itemAt(currentIndex).item
 
         if(item === null)
         {
@@ -37,5 +39,6 @@ SingleJointStateStackForm {
     function construct() {
         jointNames = SharedData.jointNames
     }
+
 
 }

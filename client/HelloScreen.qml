@@ -20,6 +20,15 @@ HelloScreenForm {
         statusText.text = msg
     }
 
+    Behavior on opacity {
+        NumberAnimation {
+            duration: 1000
+            onRunningChanged: {
+                hello.visible = hello.opacity > 0
+            }
+        }
+    }
+
     applyBtn.onReleased: {
         updateServerUrl(serverHost, serverPort)
     }

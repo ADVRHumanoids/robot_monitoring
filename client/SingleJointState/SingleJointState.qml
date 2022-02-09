@@ -40,6 +40,8 @@ SingleJointStateForm {
     property var fieldValueMap: Object()
     property var plotBtnMap: Object()
 
+    signal plotAdded(string jName, string fieldName)
+
     function setJointStateMessage(msg) {
         Data.setJointStateMessage(msg)
     }

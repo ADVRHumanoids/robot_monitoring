@@ -96,17 +96,31 @@ Item {
             height: parent.height - plotterLegend.height
             legend.visible: false
             antialiasing: true
+            margins {
+                bottom: 3
+                top: 3
+                left: 3
+                right: 3
+            }
+            backgroundColor: Qt.rgba(1, 1, 1, 0.3)
 
             ValuesAxis {
                 id: axisTime
                 max: currTime
-                min: currTime - timeSpan
+                min: Math.max(currTime - timeSpan, 0)
+                titleText: "time [s]"
             }
 
             ValuesAxis {
                 id: axisValue
                 min: -1
-                max: 1
+                max: 1              
+            }
+
+            LineSeries {
+                id: emptySeries
+                axisX: axisTime
+                axisY: axisValue
             }
 
             onSeriesAdded: function(series) {
@@ -116,6 +130,10 @@ Item {
             onSeriesRemoved: function(series) {
                 currSeries = currSeries.filter( item => item.series.name !== series.name )
                 plotterLegend.removeSeries(series)
+            }
+
+            Component.onCompleted: {
+                removeAllSeries()
             }
 
         }

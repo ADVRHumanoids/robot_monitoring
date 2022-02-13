@@ -7,106 +7,115 @@ import QtQuick.Shapes 1.14
 import "SingleJointState"
 import "BarPlot"
 import "sharedData.js" as SharedData
-import "main.js" as Main
 import "Plotter"
+import "Menu"
 
 ApplicationWindow {
 
     id: mainWindow
-    width: 756
-    height: 480
+    width: 1024
+    height: 768
     visible: true
     title: "Xbot2 Robot GUI"
 
-    property string layoutMode: ""
+    property var items: Object()
 
-    BarPlotStack {
-        id: barPlot
+    ListModel {
 
-        Layout.fillHeight: true
-        Layout.fillWidth: true
+        id: pagesModel
 
-        onJointClicked: function(jn)
-        {
-            jointState.selectJoint(jn)
+        ListElement {
+            name: "Home"
+            page: "HelloScreen.qml"
+        }
+
+        ListElement {
+            name: "Monitoring"
+            page: "Monitoring.qml"
+        }
+
+    }
+
+    SlidingMenu {
+        id: menu
+        z: 1
+        anchors.fill: parent
+        model: pagesModel
+
+        onItemSelected: function(index) {
+            pagesStack.currentIndex = index
+            closeMenu()
         }
     }
 
-    SingleJointStateStack {
-        id: jointState
-        Layout.fillHeight: true
+    StackLayout {
 
-        onPlotAdded: function(jName, fieldName) {
-            plotter.addSeries(jName, fieldName)
+        id: pagesStack
+        anchors.fill: parent
+
+        Repeater {
+
+            model: pagesModel
+
+            Loader {
+
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+
+                active: pagesStack.currentIndex === index
+                source: page
+
+                onLoaded: {
+                    items[name.toLowerCase()] = item
+                    active = true
+                }
+
+                Connections {
+
+                    target: item
+
+                    // connect item to client update function
+                    function onUpdateServerUrl(hostname, port) {
+                        client.hostname = hostname
+                        client.port = port
+                        client.active = true
+                    }
+                }
+            }
+
         }
+
     }
 
-    Plotter {
-        id: plotter
-        Layout.fillHeight: true
-        Layout.fillWidth: true
-    }
-
-    SwipeView {
-        id: swipeView
-        anchors.fill: parent
-        anchors.margins: 8
-        clip: true
-    }
-
-    RowLayout
-    {
-        id: rowLayout
-        anchors.fill: parent
-        anchors.margins: 8
-    }
-
-    footer: ToolBar {
-        PageIndicator {
-        anchors.centerIn: parent
-        count: swipeView.count
-        currentIndex: swipeView.currentIndex
-    }
-    }
-
-    onWidthChanged: {
-        Main.handleResponsiveLayout()
-    }
-
-    Component.onCompleted: {
-        Main.handleResponsiveLayout()
-    }
-
-    onLayoutModeChanged: Main.setLayoutMode(layoutMode)
-
-    HelloScreen {
-        id: hello
-        anchors.fill: parent
-
-        onUpdateServerUrl: function(hostname, port) {
-            client.hostname = hostname
-            client.port = port
-            client.active = true
-        }
-    }
 
     ClientEndpoint {
         id: client
         onError: function (msg) {
-            hello.setError(msg)
+            items.home.setError(msg)
         }
         onConnected: function (msg) {
-            hello.setConnected(msg)
+            items.home.setConnected(msg)
         }
         onJointStateReceived: function (msg) {
-            barPlot.setJointStateMessage(msg)
-            jointState.setJointStateMessage(msg)
-            plotter.setJointStateMessage(msg)
+            if(items.monitoring !== undefined) {
+                items.monitoring.setJointStateMessage(msg)
+            }
         }
         onFinalized: {
-            barPlot.construct()
-            jointState.construct()
-            hello.opacity = 0
+            print('finalized!')
+            pagesStack.currentIndex = 1
         }
+    }
+
+    Timer {
+        id: reconnectTimer
+        interval: 1000
+        running: true
+        repeat: true
+
+        onTriggered: {
+            client.active = true
+        }
+
     }
 }

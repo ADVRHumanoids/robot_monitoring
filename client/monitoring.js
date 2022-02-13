@@ -1,11 +1,11 @@
 function handleResponsiveLayout() {
     if(mainWindow.width > 576)
     {
-        layoutMode = "tablet"
+        root.layoutMode = "tablet"
     }
     else
     {
-        layoutMode = "mobile"
+        root.layoutMode = "mobile"
     }
 }
 
@@ -23,16 +23,14 @@ function setLayoutMode(mode) {
 function setTabletMode() {
     print('setting tablet..')
     swipeView.contentChildren = []
-    rowLayout.children = [barPlot, jointState, plotter]
-    mainWindow.footer.visible = false
+    gridLayout.children = root.items
+    root.footer.visible = false
 }
 
 function setMobileMode() {
     print('setting mobile..')
-    swipeView.contentChildren.push(barPlot)
-    swipeView.contentChildren.push(jointState)
-    swipeView.contentChildren.push(plotter)
-    rowLayout.children = []
-    mainWindow.footer.visible = true
+    gridLayout.children = []
+    swipeView.contentChildren = root.items
+    root.footer.visible = true
 
 }

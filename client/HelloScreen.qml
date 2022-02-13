@@ -7,12 +7,12 @@ HelloScreenForm {
     signal updateServerUrl(var host, var port)
 
     function setError(msg) {
-        msgText.text = msg
+        msgText.text = "Error: " + msg
         msgText.color = "red"
     }
 
     function setConnected(msg) {
-        msgText.text = msg
+        msgText.text = "Status OK: " + msg
         msgText.color = "green"
     }
 
@@ -24,7 +24,7 @@ HelloScreenForm {
         NumberAnimation {
             duration: 1000
             onRunningChanged: {
-                hello.visible = hello.opacity > 0
+                hello.visible = hello.opacity > 0.1
             }
         }
     }
@@ -42,5 +42,9 @@ HelloScreenForm {
         {
             mainLayout.anchors.margins = 50
         }
+    }
+
+    Component.onCompleted: {
+        print('hello built!!')
     }
 }

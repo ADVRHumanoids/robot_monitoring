@@ -9,6 +9,7 @@ Item
     property string hostname: appData.hostname
     property int port: appData.port
     property alias active: socket.active
+    property bool initialized: false
 
     signal finalized()
     signal jointStateReceived(var js)
@@ -68,6 +69,7 @@ Item
         SharedData.vmax = msg.vmax
         SharedData.taumax = msg.taumax
         SharedData.jointNames = msg.jnames
+        SharedData.latestJointState = msg.jstate
         finalized()
     }
 

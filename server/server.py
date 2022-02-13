@@ -49,12 +49,14 @@ async def info_handler(request):
     
     try:
         js_msg : JointState = rospy.wait_for_message(js_sub.name, JointState, rospy.Duration(1))
+        on_js_recv(js_msg)
     except rospy.ROSException as e:
         init_data['message'] = 'unable to receive joint state'
         init_data['success'] = False
         return web.Response(text=json.dumps(init_data))
 
     print('first joint state received')
+    init_data['jstate'] = js_msg_to_send
     init_data['jnames'] = js_msg.name
 
     urdf = rospy.get_param('xbotcore/robot_description')
@@ -88,13 +90,14 @@ async def js_broadcaster():
                 js_str = json.dumps(js_msg_to_send)
                 await ws.send_str(js_str)  
             except ConnectionResetError as e:
-                print(f'unable to send message to clients: {type(e)} {e}')
+                print(f'unable to send message to client: ({e}); will remove client.')
                 ws_to_remove.add(ws)
             except BaseException as e:
                 print(f'error: {e}')
         
         for ws in ws_to_remove:
             CLIENTS.remove(ws)
+            print(f'removing client ({len(CLIENTS)} left)')
 
         ws_to_remove.clear()
 
@@ -110,12 +113,12 @@ async def root_handler(request):
 # websocket handler
 async def websocket_handler(request):
 
-    print('New client connected!')
 
     ws = web.WebSocketResponse()
     await ws.prepare(request)
 
     CLIENTS.add(ws)
+    print(f'new client connected (total is {len(CLIENTS)})')
 
     async for msg in ws:
         if msg.type == aiohttp.WSMsgType.TEXT:

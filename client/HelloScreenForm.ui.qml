@@ -37,7 +37,7 @@ Rectangle {
         TextArea {
             id: statusText
             Layout.fillWidth: true
-            text: "Trying to reach server at " + serverHost + ":" + serverPort
+            text: "Server at " + serverHost + ":" + serverPort
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
         }

@@ -10,10 +10,6 @@ Item {
     width: 400
     height: 400
 
-    function construct() {
-        container.model = Logic.barPlotFields.length
-    }
-
     function setJointStateMessage(js_msg) {
         container.itemAt(stack.currentIndex).item.setJointStateMessage(js_msg)
     }
@@ -45,7 +41,7 @@ Item {
             Repeater {
 
                 id: container
-                model: 0
+                model: Logic.barPlotFields.length
 
                 Loader {
 
@@ -53,6 +49,7 @@ Item {
                     sourceComponent: barPlotComponent
 
                     onLoaded: {
+                        active = true
                         item.jointNames = SharedData.jointNames
                         item.min = Logic.barPlotMin()[index]
                         item.max = Logic.barPlotMax()[index]

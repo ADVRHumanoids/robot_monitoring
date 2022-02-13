@@ -16,8 +16,12 @@
         <file>BarPlot/BarPlotStack.qml</file>
         <file>sharedData.js</file>
         <file>BarPlot/TriangleItem.qml</file>
-        <file>main.js</file>
+        <file>monitoring.js</file>
         <file>Plotter/Plotter.qml</file>
         <file>Plotter/PlotterLegend.qml</file>
+        <file>Menu/SlidingMenu.qml</file>
+        <file>Menu/MenuEntry.qml</file>
+        <file>Menu/MenuHeader.qml</file>
+        <file>Monitoring.qml</file>
     </qresource>
 </RCC>

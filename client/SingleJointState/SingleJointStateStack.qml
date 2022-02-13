@@ -21,7 +21,7 @@ SingleJointStateStackForm {
         }
     }
 
-    property var jointNames: []
+    property var jointNames: SharedData.jointNames
 
     function setJointStateMessage(msg) {
 
@@ -35,10 +35,4 @@ SingleJointStateStackForm {
         item.setJointStateMessage(msg)
 
     }
-
-    function construct() {
-        jointNames = SharedData.jointNames
-    }
-
-
 }

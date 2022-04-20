@@ -169,17 +169,19 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent) :
     /* Connect joint disable button */
     auto disableEnableBtn = findChild<QPushButton*>("disableEnableBtn");
 
-    auto setmask_srv = _nh.serviceClient<xbot_msgs::SetControlMask>(
-        "joint_master/set_control_mask");
 
-    setmask_srv.waitForExistence();
-
+    ros::NodeHandle nh = _nh;
     connect(disableEnableBtn, &QPushButton::released,
-            [disableEnableBtn, setmask_srv]() mutable
+            [disableEnableBtn, nh]() mutable
             {
+                auto setmask_srv = nh.serviceClient<xbot_msgs::SetControlMask>(
+                    "joint_master/set_control_mask");
+
+                setmask_srv.waitForExistence();
+
                 xbot_msgs::SetControlMask srv_data;
 
-                if(disableEnableBtn->text() == "Disable device")
+                if(disableEnableBtn->text().replace('&', "") == "Disable device")
                 {
                     srv_data.request.ctrl_mask = 0;
                     if(setmask_srv.call(srv_data) &&
@@ -188,7 +190,7 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent) :
 //                        disableEnableBtn->setText("Enable device");
                     }
                 }
-                else if(disableEnableBtn->text() == "Enable device")
+                else if(disableEnableBtn->text().replace('&', "") == "Enable device")
                 {
                     srv_data.request.ctrl_mask = 31;
                     if(setmask_srv.call(srv_data) &&
@@ -338,6 +340,7 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent) :
          fastBtn]
         (const xbot_msgs::JointDeviceInfoConstPtr& msg)
     {
+
         if(msg->filter_active &&
             !enableFilterCheck->isChecked())
         {
@@ -354,8 +357,10 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent) :
         mediumBtn->setEnabled(msg->filter_active);
         fastBtn->setEnabled(msg->filter_active);
 
+        std::cout << disableEnableBtn->text().toStdString() << "\n";
+
         if(msg->mask == 0 &&
-            disableEnableBtn->text() == "Disable device")
+            disableEnableBtn->text().replace('&', "") == "Disable device")
         {
             disableEnableBtn->setText("Enable device");
             disableEnableBtn->setStyleSheet(
@@ -363,7 +368,7 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent) :
                 "color: white;");
         }
         else if(msg->mask > 0 &&
-                 disableEnableBtn->text() == "Enable device")
+                 disableEnableBtn->text().replace('&', "") == "Enable device")
         {
             disableEnableBtn->setText("Disable device");
             disableEnableBtn->setStyleSheet("");

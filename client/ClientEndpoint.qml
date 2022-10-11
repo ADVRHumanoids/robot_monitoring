@@ -5,17 +5,43 @@ import "sharedData.js" as SharedData
 
 Item
 {
+    // note: the appData object is exposed by main.cpp
+    // if running from web it contains the server address
 
+    // server hostname
     property string hostname: appData.hostname
-    property int port: appData.port
-    property alias active: socket.active
-    property bool initialized: false
 
+    // server port
+    property int port: appData.port
+
+    // alias for the underlying websocket's active property
+    property alias active: socket.active
+
+    // triggered by this object after the server configuration
+    // has been received and saved to SharedData (see /info)
     signal finalized()
+
+    // triggered upon reception of a new joint state msg
     signal jointStateReceived(var js)
+
+    // triggered on socket error
     signal error(var msg)
+
+    // triggered on socket successful connection
     signal connected(var msg)
 
+    // triggerd upon reception of a proc msg
+    signal procMessageReceived(var msg)
+    
+    // method for performing am http request
+    function doRequest(verb, url, body, callback) {
+        Client.httpRequest(verb,
+                           "http://" + hostname + ":" + port + url,
+                           body,
+                           callback)
+    }
+
+    // websocket for streaming data
     WebSocket {
 
         id: socket
@@ -31,6 +57,10 @@ Item
                 SharedData.latestJointState = obj
                 jointStateReceived(obj)
             }
+            else if(obj.type === "proc")
+            {
+                procMessageReceived(obj)
+            }
             else
             {
                 console.log("unknown msg type " + obj.type + " received")
@@ -45,8 +75,7 @@ Item
                 active = false
             } else if (socket.status === WebSocket.Open) {
                 console.log("Server connected")
-                Client.httpRequest("http://" + hostname + ":" + port + "/info",
-                                   onInfoReceived)
+                doRequest("GET", "/info", "", onInfoReceived)
                 connected("Connected to " + url + ", requesting configuration..")
             } else if (socket.status === WebSocket.Closed) {
                 console.log("Socket closed")
@@ -56,6 +85,8 @@ Item
     }
 
     function onInfoReceived(msg) {
+
+        SharedData.processInfo = msg.proc_data
 
         if(!msg.success) {
             error('server replied: ' + msg.message)

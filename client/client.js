@@ -1,4 +1,4 @@
-function httpRequest(url, callback) {
+function httpRequest(verb, url, body, callback) {
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function()
     {
@@ -8,10 +8,17 @@ function httpRequest(url, callback) {
         }
         else if(xhr.readyState === XMLHttpRequest.DONE)
         {
+            console.log(xhr.responseText.toString())
+
             var object = JSON.parse(xhr.responseText.toString());
-            callback(object)
+
+            if(callback !== undefined)
+            {
+                callback(object)
+            }
+
         }
     }
-    xhr.open("GET", url);
-    xhr.send();
+    xhr.open(verb, url);
+    xhr.send(body);
 }

@@ -9,6 +9,7 @@ import "BarPlot"
 import "sharedData.js" as SharedData
 import "Plotter"
 import "Menu"
+import "Console"
 
 ApplicationWindow {
 
@@ -20,15 +21,26 @@ ApplicationWindow {
 
     property var items: Object()
 
+    // this model contains all main pages
+    // (i) hello page (select server address)
+    // (ii) monitoring page
     ListModel {
 
         id: pagesModel
 
+        // the hello page
         ListElement {
             name: "Home"
             page: "HelloScreen.qml"
         }
 
+        // the console page
+        ListElement {
+            name: "Console"
+            page: "Console/Console.qml"
+        }
+
+        // the monitoring page
         ListElement {
             name: "Monitoring"
             page: "Monitoring.qml"
@@ -36,27 +48,34 @@ ApplicationWindow {
 
     }
 
+    // a sliding menu to select the active page
     SlidingMenu {
         id: menu
         z: 1
         anchors.fill: parent
         model: pagesModel
 
+        // when a page is selected, make it active
+        // on the stack layout
         onItemSelected: function(index) {
             pagesStack.currentIndex = index
             closeMenu()
         }
     }
 
+    // stack with all main pages, as defined
+    // in the pagesModel element
     StackLayout {
 
         id: pagesStack
         anchors.fill: parent
 
+        // load all pages in the model
         Repeater {
 
             model: pagesModel
 
+            // lazy-loading of active page
             Loader {
 
                 Layout.fillHeight: true
@@ -68,13 +87,15 @@ ApplicationWindow {
                 onLoaded: {
                     items[name.toLowerCase()] = item
                     active = true
+                    item.client = client
+                    item.finalize()
                 }
 
                 Connections {
 
-                    target: item
+                    target: item  // item is the loaded object
 
-                    // connect item to client update function
+                    // connect hello page to client update function
                     function onUpdateServerUrl(hostname, port) {
                         client.hostname = hostname
                         client.port = port
@@ -82,12 +103,10 @@ ApplicationWindow {
                     }
                 }
             }
-
         }
-
     }
 
-
+    // the object handling communication with the backend (server)
     ClientEndpoint {
         id: client
         onError: function (msg) {
@@ -103,10 +122,12 @@ ApplicationWindow {
         }
         onFinalized: {
             print('finalized!')
-            pagesStack.currentIndex = 1
+            pagesStack.currentIndex = 1  // show monitoring page
         }
     }
 
+    // a timer to periodically try connection
+    // with server
     Timer {
         id: reconnectTimer
         interval: 1000

@@ -6,8 +6,10 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+set(QT_VERSION_MAJOR 6)
 
 # QtCreator supports the following variables for Android, which are identical to qmake Android variables.
 # Check https://doc.qt.io/qt/deployment-android.html for more information.
@@ -22,8 +24,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #    endif()
 #endif()
 
-find_package(QT 5.15 NAMES Qt6 Qt5 COMPONENTS Core Quick WebSockets Widgets REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Quick WebSockets Widgets REQUIRED)
+find_package(Qt6 COMPONENTS Core Quick WebSockets Widgets REQUIRED)
 
 set(PROJECT_SOURCES
         main.cpp

@@ -10,7 +10,6 @@
         <file>BarPlot/BarPlotItem.qml</file>
         <file>BarPlot/BarPlotItemForm.ui.qml</file>
         <file>BarPlot/BarPlot.qml</file>
-        <file>BarPlot/BarPlotForm.ui.qml</file>
         <file>client.js</file>
         <file>BarPlot/ReferenceMarker.ui.qml</file>
         <file>BarPlot/BarPlotStack.qml</file>
@@ -23,5 +22,9 @@
         <file>Menu/MenuEntry.qml</file>
         <file>Menu/MenuHeader.qml</file>
         <file>Monitoring.qml</file>
+        <file>Console/Process.qml</file>
+        <file>Console/ProcessForm.ui.qml</file>
+        <file>Console/ConsoleClient.qml</file>
+        <file>Console/Console.qml</file>
     </qresource>
 </RCC>

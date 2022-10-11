@@ -28,6 +28,8 @@ public:
 
 int main(int argc, char *argv[])
 {
+    qputenv("QSG_INFO", "1");
+
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif
@@ -48,7 +50,6 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("appData", &appdata);
     for(auto p : engine.importPathList())
     {
-        printf(p.toStdString().c_str());
         putc('\n', stdout);
         fflush(stdout);
     }

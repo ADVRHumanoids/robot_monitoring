@@ -109,8 +109,11 @@ class Xbot2WebServer:
         # for each screen session, status, output broadcasters
         for p in self.procs.values():
             loop.create_task(self.proc_status_broadcaster(p))
-            loop.create_task(self.proc_output_broadcaster(p))
+            loop.create_task(self.proc_output_broadcaster(p, stream_type='stdout'))
+            loop.create_task(self.proc_output_broadcaster(p, stream_type='stderr'))
+
         loop.create_task(self.js_broadcaster())
+        loop.create_task(self.heartbeat())
 
         # first execute server start routine
         loop.run_until_complete(self.start_http_server(runner, host, port))
@@ -141,8 +144,6 @@ class Xbot2WebServer:
     # get init data handler
     async def info_handler(self, request):
 
-        print('info handler')
-
         init_data = dict()
         
         # screen session data
@@ -151,7 +152,7 @@ class Xbot2WebServer:
             proc_data.append ({
                 'name': p.name,
                 'status': await p.status(),
-                'cmdList': []
+                'cmdline': p.cmdline
             })
 
         init_data['proc_data'] = proc_data
@@ -189,14 +190,47 @@ class Xbot2WebServer:
 
         return web.Response(text=json.dumps(init_data))
 
-    
-    # joint state broadcaster coroutine
-    async def js_broadcaster(self):
+    # heartbeat broadcaster
+    async def heartbeat(self):
+        
+        """
+        broadcast periodic heartbeat
+        note: this also cleans up close websockets
+        """
+
+        # serialize msg to json
+        msg_str = json.dumps(
+            {
+                'type': 'heartbeat'
+            }
+        )
 
         while True:
 
             # save disconnected sockets for later removal
             ws_to_remove = set()
+
+            # iterate over sockets (one per client)
+            for ws in self.ws_clients:
+                
+                try:
+                    await ws.send_str(msg_str)  
+                except ConnectionResetError as e:
+                    ws_to_remove.add(ws)
+                except BaseException as e:
+                    print(f'error: {e}')
+            
+            for ws in ws_to_remove:
+                self.ws_clients.remove(ws)
+            
+            # periodic loop at 10 Hz
+            await asyncio.sleep(0.1)
+    
+    
+    # joint state broadcaster coroutine
+    async def js_broadcaster(self):
+
+        while True:
 
             # serialize msg to json
             js_str = json.dumps(self.js_msg_to_send)
@@ -211,14 +245,9 @@ class Xbot2WebServer:
                 try:
                     await ws.send_str(js_str)  
                 except ConnectionResetError as e:
-                    print(f'unable to send message to client: ({e}); will remove client.')
-                    ws_to_remove.add(ws)
+                    pass
                 except BaseException as e:
                     print(f'error: {e}')
-            
-            for ws in ws_to_remove:
-                self.ws_clients.remove(ws)
-                print(f'removing client ({len(self.ws_clients)} left)')
             
             # periodic loop at 60 Hz
             await asyncio.sleep(0.01666)
@@ -252,65 +281,39 @@ class Xbot2WebServer:
                     print(f'error: {e}')
 
 
-
-    async def proc_output_broadcaster(self, p: Process):
+    # broadcast process output
+    async def proc_output_broadcaster(self, p: Process, stream_type: str):
 
         ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
 
-        line_stdout = None
-        line_stderr = None
-
-        async def readline_stdout():
-            nonlocal line_stdout
-            line_stdout = await p.proc.stdout.readline()
-
-        async def readline_stderr():
-            nonlocal line_stderr
-            line_stderr = await p.proc.stderr.readline()
-
-        
-        
         while True:
 
             if p.proc is None:
                 await asyncio.sleep(0.1)
                 continue
-
-            line_stdout = None
-            line_stderr = None
-
-            coro_stdout = readline_stdout()
-            coro_stderr = readline_stderr()
             
-            await asyncio.wait([coro_stdout, coro_stderr], return_when=asyncio.FIRST_COMPLETED)
-
-            
-
+            # await stream to return something
+            line = await getattr(p.proc, stream_type).readline()
 
             # note: important! if line is empty, process is dead!
             # we must set proc to none, otherwise this loop runs
             # too fast and starves all other coroutines!
-            if line_stdout is not None and len(line_stdout) == 0:
+            if len(line) == 0:
                 p.proc = None
                 continue
 
-            if line_stderr is not None and len(line_stderr) == 0:
-                p.proc = None
-                continue
-            
-            if line_stdout is None and line_stderr is None:
-                continue
-
-            if line_stderr is not None:
-                print('stderr: ', line_stderr)
+            # line not empty, decode it and remove ansi colors
+            line = ansi_escape.sub('', line.decode().strip())
 
             msg = {
                 'type': 'proc',
                 'content': 'output',
                 'name': p.name,
-                'stdout': ansi_escape.sub('', line_stdout.decode().strip()) if line_stdout else '',
-                'stderr': ansi_escape.sub('', line_stderr.decode().strip()) if line_stderr else '',
+                'stdout': '',
+                'stderr': '',
             }
+
+            msg[stream_type] = line
 
             msg_str = json.dumps(msg)
 

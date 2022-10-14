@@ -10,39 +10,6 @@ Item {
     property var client: undefined
     property var items: Object()
 
-    Rectangle {
-
-        property bool hidden: true
-
-        id: configureArea
-        height: parent.height
-        width: 300
-        x: hidden ? parent.width : parent.width - width
-        color: Qt.rgba(1, 0, 0, 0.3)
-        z: 1
-
-
-        Behavior on x {
-            NumberAnimation {
-                duration: 500
-                easing.type: Easing.OutQuad
-            }
-        }
-
-        MouseArea {
-            anchors.right: parent.left
-            enabled: !parent.hidden
-            height: parent.height
-            width: 200
-
-            onReleased: {
-                parent.hidden = true
-            }
-        }
-    }
-
-
-
     ColumnLayout {
 
 
@@ -64,7 +31,6 @@ Item {
                     Layout.fillWidth: true
                     name: modelData.name
                     status: modelData.status
-                    cmdList: modelData.cmdList
 
                     onStart: {
 
@@ -83,8 +49,7 @@ Item {
                     }
 
                     configureBtn.onPressed: {
-                        console.log('configure')
-                        configureArea.hidden = false
+                        root.spawnConfigurePanel(index)
                     }
 
 
@@ -142,46 +107,58 @@ Item {
 
             }
 
-
-
         }
 
-        function handleProcMessage(msg) {
-            for(let i = 0; i < procRepeater.count; i++) {
-                var item_i = procRepeater.itemAt(i)
-                if(item_i.name === msg.name) {
+    }
 
-                    if(msg.content === 'status')
-                    {
-                        item_i.status = msg.status
-                    }
+    ConfigurePanel {
+        id: configurePanel
+    }
 
-                    if(msg.content === 'output')
-                    {
-                        if(msg.stdout.length > 0) {
-                            consoleText.addText(msg.stdout)
-                        }
+    function handleProcMessage(msg) {
 
-                        if(msg.stderr.length > 0) {
-                            consoleText.addText('<font color="red">' + msg.stderr + '</>')
-                        }
-                    }
+        // look for process with name msg.name
+        for(let i = 0; i < procRepeater.count; i++) {
 
-                    break
+            var item_i = procRepeater.itemAt(i)
+
+            // found!
+            if(item_i.name === msg.name) {
+
+                if(msg.content === 'status')
+                {
+                    item_i.status = msg.status
                 }
+
+                if(msg.content === 'output')
+                {
+                    if(msg.stdout.length > 0) {
+                        consoleText.addText(msg.stdout)
+                    }
+
+                    if(msg.stderr.length > 0) {
+                        consoleText.addText('<font color="red">' + msg.stderr + '</>')
+                    }
+                }
+
+                break
             }
         }
+    }
 
-        function finalize() {
-            client.procMessageReceived.connect(handleProcMessage)
-        }
+    function spawnConfigurePanel(index) {
+        configurePanel.description = SharedData.processInfo[index].cmdline
+        configurePanel.hidden = false
+    }
 
-        Component.onCompleted: {
-            console.log('constructing Console')
-            console.log(JSON.stringify(SharedData.processInfo))
-            procRepeater.model = SharedData.processInfo
-        }
+    function finalize() {
+        client.procMessageReceived.connect(handleProcMessage)
+    }
 
+    Component.onCompleted: {
+        console.log('constructing Console')
+        console.log(JSON.stringify(SharedData.processInfo))
+        procRepeater.model = SharedData.processInfo
     }
 
 }

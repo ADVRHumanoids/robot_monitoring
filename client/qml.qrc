@@ -26,5 +26,7 @@
         <file>Console/ProcessForm.ui.qml</file>
         <file>Console/ConsoleClient.qml</file>
         <file>Console/Console.qml</file>
+        <file>Console/ConfigurePanel.qml</file>
+        <file>Console/configure_panel.js</file>
     </qresource>
 </RCC>

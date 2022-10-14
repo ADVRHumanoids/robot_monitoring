@@ -17,6 +17,10 @@ Item
     // alias for the underlying websocket's active property
     property alias active: socket.active
 
+    // bool flag to indicate if we managed to receive all the
+    // info about the running system (urdf data, plugin names, etc)
+    property bool isFinalized: false
+
     // triggered by this object after the server configuration
     // has been received and saved to SharedData (see /info)
     signal finalized()
@@ -32,7 +36,7 @@ Item
 
     // triggerd upon reception of a proc msg
     signal procMessageReceived(var msg)
-    
+
     // method for performing am http request
     function doRequest(verb, url, body, callback) {
         Client.httpRequest(verb,
@@ -61,6 +65,10 @@ Item
             {
                 procMessageReceived(obj)
             }
+            else if(obj.type === "heartbeat")
+            {
+                // do nothing
+            }
             else
             {
                 console.log("unknown msg type " + obj.type + " received")
@@ -75,7 +83,6 @@ Item
                 active = false
             } else if (socket.status === WebSocket.Open) {
                 console.log("Server connected")
-                doRequest("GET", "/info", "", onInfoReceived)
                 connected("Connected to " + url + ", requesting configuration..")
             } else if (socket.status === WebSocket.Closed) {
                 console.log("Socket closed")
@@ -84,13 +91,16 @@ Item
         }
     }
 
+    property int _nattempt: 0
+
     function onInfoReceived(msg) {
+
+        _nattempt++
 
         SharedData.processInfo = msg.proc_data
 
         if(!msg.success) {
-            error('server replied: ' + msg.message)
-            active = false
+            error('[' + _nattempt + '] server replied: ' + msg.message)
             return
         }
 
@@ -101,7 +111,22 @@ Item
         SharedData.taumax = msg.taumax
         SharedData.jointNames = msg.jnames
         SharedData.latestJointState = msg.jstate
+        isFinalized = true
         finalized()
+    }
+
+    // if websocket connection is up and running,
+    // and we did not manage to finalize yet,
+    // retry every 1 sec
+    Timer {
+        id: fetchInfoTimer
+        interval: 1000
+        repeat: true
+        running: !parent.isFinalized && socket.active
+
+        onTriggered: {
+            doRequest("GET", "/info", "", onInfoReceived)
+        }
     }
 
 }

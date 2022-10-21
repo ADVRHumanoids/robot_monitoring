@@ -28,5 +28,11 @@
         <file>Console/Console.qml</file>
         <file>Console/ConfigurePanel.qml</file>
         <file>Console/configure_panel.js</file>
+        <file>Console/Xbot2.qml</file>
+        <file>Console/Plugins.qml</file>
+        <file>Console/SinglePlugin.qml</file>
+        <file>Cartesian/Pad.qml</file>
+        <file>Cartesian/Cartesian.qml</file>
+        <file>Cartesian/PadForm.ui.qml</file>
     </qresource>
 </RCC>

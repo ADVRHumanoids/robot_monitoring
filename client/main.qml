@@ -10,12 +10,13 @@ import "sharedData.js" as SharedData
 import "Plotter"
 import "Menu"
 import "Console"
+import "Cartesian"
 
 ApplicationWindow {
 
     id: mainWindow
-    width: 1024
-    height: 768
+    width: 1280
+    height: 720
     visible: true
     title: "Xbot2 Robot GUI"
 
@@ -32,18 +33,28 @@ ApplicationWindow {
         ListElement {
             name: "Home"
             page: "HelloScreen.qml"
+            requirement: "none"
         }
 
         // the console page
         ListElement {
             name: "Console"
-            page: "Console/Console.qml"
+            page: "Console/Xbot2.qml"
+            requirement: "active"  // server connected
         }
 
         // the monitoring page
         ListElement {
             name: "Monitoring"
             page: "Monitoring.qml"
+            requirement: "finalized"  // xbot2 connected
+        }
+
+        // the cartesian control page
+        ListElement {
+            name: "Cartesian control"
+            page: "Cartesian/Cartesian.qml"
+            requirement: "none"  // xbot2 connected
         }
 
     }
@@ -54,6 +65,18 @@ ApplicationWindow {
         z: 1
         anchors.fill: parent
         model: pagesModel
+
+        entryActiveCallback: function(i) {
+            if(pagesModel.get(i).requirement === "none") {
+                return true
+            }
+            if(pagesModel.get(i).requirement === "active") {
+                return client.active
+            }
+            if(pagesModel.get(i).requirement === "finalized") {
+                return client.isFinalized
+            }
+        }
 
         // when a page is selected, make it active
         // on the stack layout
@@ -82,13 +105,17 @@ ApplicationWindow {
                 Layout.fillWidth: true
 
                 active: pagesStack.currentIndex === index
-                source: page
+//                source: page
 
                 onLoaded: {
                     items[name.toLowerCase()] = item
                     active = true
-                    item.client = client
-                    item.finalize()
+//                    item.client = mainWindow.client
+                }
+
+                Component.onCompleted: {
+                    setSource(page, {'client': client})
+                    print('client should be ' + client)
                 }
 
                 Connections {
@@ -101,6 +128,8 @@ ApplicationWindow {
                         client.port = port
                         client.active = true
                     }
+
+                    ignoreUnknownSignals: true
                 }
             }
         }
@@ -114,6 +143,7 @@ ApplicationWindow {
         }
         onConnected: function (msg) {
             items.home.setConnected(msg)
+            menu.evalActiveEntries()
         }
         onJointStateReceived: function (msg) {
             if(items.monitoring !== undefined) {
@@ -123,6 +153,7 @@ ApplicationWindow {
         onFinalized: {
             print('finalized!')
             pagesStack.currentIndex = 1  // show monitoring page
+            menu.evalActiveEntries()
         }
     }
 

@@ -1,6 +1,6 @@
 import QtQuick 2.0
 import QtQuick.Controls
-
+import QtQuick.Controls.Material
 
 Item {
 
@@ -10,9 +10,16 @@ Item {
     property int handleWidth: 50
     property int maxWidth: 400
     property alias model: listView.model
+    property var entryActiveCallback: function (name) { return true; }
 
     signal itemSelected(int index)
 
+    function evalActiveEntries() {
+        for(let i = 0; i < listView.count; i++) {
+            let entry = listView.itemAtIndex(i)
+            entry.updateEntryActive()
+        }
+    }
 
     function closeMenu() {
         menu.x = -menu.width
@@ -36,7 +43,7 @@ Item {
             bottom: parent.bottom
         }
 
-        color: "lightseagreen"
+        color: Material.primary
 
         ScrollView {
 
@@ -62,10 +69,16 @@ Item {
             Component {
                 id: listDelegate
                 MenuEntry {
+
                     width: listView.width
                     color: menu.color
+
                     onReleased: {
                         root.itemSelected(index)
+                    }
+
+                    function updateEntryActive() {
+                        enabled = entryActiveCallback(index)
                     }
                 }
             }

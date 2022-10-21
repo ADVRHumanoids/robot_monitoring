@@ -4,6 +4,8 @@ HelloScreenForm {
 
     id: hello
 
+    property var client: undefined
+
     signal updateServerUrl(var host, var port)
 
     function setError(msg) {

@@ -24,7 +24,7 @@ set(QT_VERSION_MAJOR 6)
 #    endif()
 #endif()
 
-find_package(Qt6 COMPONENTS Core Quick WebSockets Widgets REQUIRED)
+find_package(Qt6 COMPONENTS Core Quick WebSockets Widgets QuickControls2 REQUIRED)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -55,4 +55,5 @@ target_link_libraries(next_ui
   PRIVATE Qt${QT_VERSION_MAJOR}::Core
           Qt${QT_VERSION_MAJOR}::Quick
           Qt${QT_VERSION_MAJOR}::WebSockets
+          Qt${QT_VERSION_MAJOR}::QuickControls2
           Qt${QT_VERSION_MAJOR}::Widgets)

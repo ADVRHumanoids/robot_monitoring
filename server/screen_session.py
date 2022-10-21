@@ -48,7 +48,7 @@ class Process:
 
             return True
 
-    async def start(self):
+    async def start(self, options=None):
 
         """
         Start a new screen session. Attach to an existing one if possible.
@@ -63,8 +63,14 @@ class Process:
         if self.proc is not None:
             return True
 
+        # parse options
+        opt_cmd = ''
+        if options is not None:
+            opt_cmd = self._parse_options(options)
+            print(opt_cmd)
+
         # create new session
-        cmd = f'rm -rf /tmp/{self.name}_log; bash -ic "screen -mS {self.name} -L -Logfile /tmp/{self.name}_log {self.cmd}"'
+        cmd = f'rm -rf /tmp/{self.name}_log; bash -ic "screen -mS {self.name} -L -Logfile /tmp/{self.name}_log {self.cmd} {opt_cmd}"'
         args = ['-tt', self.hostname, cmd]
         print('executing command ssh ' + ' '.join(args))
         self.proc = await asyncio.create_subprocess_exec('/usr/bin/ssh', *args,
@@ -115,3 +121,29 @@ class Process:
         print(f'process {self.name} died with exit code {retcode}')
 
         self.proc = None
+
+    def _parse_options(self, options):
+
+        cmdline = ''
+        
+        for k, v in options.items():
+
+            opt_type = self.cmdline[k]['type']
+
+            if opt_type == 'check':
+                if v:
+                    cmdline += self.cmdline[k]['cmd']
+            elif opt_type == 'combo':
+                options = self.cmdline[k]['options']
+                if v in options:
+                    index = options.index(v)
+                    cmdline += self.cmdline[k]['cmd'][index]
+            elif opt_type == 'text':
+                if v:
+                     cmdline += self.cmdline[k]['cmd'].format(__value__=v)
+            else:
+                raise KeyError(f'invalid option type {opt_type}')
+            
+            cmdline += ' '
+        
+        return cmdline

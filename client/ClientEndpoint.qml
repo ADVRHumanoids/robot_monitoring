@@ -37,6 +37,10 @@ Item
     // triggerd upon reception of a proc msg
     signal procMessageReceived(var msg)
 
+    // triggerd upon reception of a plugin stat msg
+    signal pluginStatMessageReceived(var msg)
+
+
     // method for performing am http request
     function doRequest(verb, url, body, callback) {
         Client.httpRequest(verb,
@@ -65,13 +69,18 @@ Item
             {
                 procMessageReceived(obj)
             }
+            else if(obj.type === "plugin_stats")
+            {
+                pluginStatMessageReceived(obj)
+            }
             else if(obj.type === "heartbeat")
             {
                 // do nothing
             }
             else
             {
-                console.log("unknown msg type " + obj.type + " received")
+                console.log("unknown msg type " + obj.type + " received: ")
+                console.log(message)
             }
         }
 
@@ -111,6 +120,7 @@ Item
         SharedData.taumax = msg.taumax
         SharedData.jointNames = msg.jnames
         SharedData.latestJointState = msg.jstate
+        SharedData.pluginNames = msg.plugins
         isFinalized = true
         finalized()
     }

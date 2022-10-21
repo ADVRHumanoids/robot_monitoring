@@ -8,3 +8,4 @@ var taumax = []
 var jointNames = []
 var latestJointState = undefined
 var processInfo = []
+var pluginNames = []

@@ -11,10 +11,10 @@ from aiohttp import web
 import json
 import rospy
 from urdf_parser_py import urdf as urdf_parser
-from xbot_msgs.msg import JointState
+from xbot_msgs.msg import JointState, Statistics2
 from xbot_msgs.srv import GetPluginList, PluginStatus, PluginCommand
 from screen_session import Process
-
+from std_srvs.srv import SetBool
 
 def main():
     
@@ -31,7 +31,7 @@ def main():
 
     # tbd: processes from config
     p = Process(name='xbot2', 
-                cmd='xbot2-core --hw dummy --verbose',
+                cmd='xbot2-core',
                 machine='arturo@localhost')
 
     p.cmdline = {
@@ -47,6 +47,12 @@ def main():
             'default': 0,
             'cmd': ['', '--hw ec_imp', '--hw ec_pos', '--hw dummy', '--hw sim'],
             'help': 'Select hardware type'
+        },
+        'Config path': {
+            'type': 'text',
+            'default': '',
+            'cmd': '--config {__value__}',
+            'help': 'Select configuration file'
         }
     }
     srv.add_process(p)
@@ -68,8 +74,14 @@ class Xbot2WebServer:
         # joint state subscriber
         self.js_sub = rospy.Subscriber('xbotcore/joint_states', JointState, self.on_js_recv, queue_size=1)
 
+        # joint state subscriber
+        self.pstat_sub = rospy.Subscriber('xbotcore/statistics', Statistics2, self.on_pstat_recv, queue_size=1)
+
         # global joint state message
         self.js_msg_to_send = {} 
+
+        # global process stats message
+        self.proc_stat_msg_to_send = {}
 
         # web app
         self.app = web.Application()
@@ -85,6 +97,7 @@ class Xbot2WebServer:
             ('GET', '/ws', self.websocket_handler, 'websocket'),
             ('GET', '/info', self.info_handler, 'init'),
             ('PUT', '/proc', self.proc_handler, 'proc'),
+            ('PUT', '/plugin/{plugin_name}/{command}', self.plugin_cmd_handler, 'plugin'),
         ]
 
         for route in routes:
@@ -113,6 +126,7 @@ class Xbot2WebServer:
             loop.create_task(self.proc_output_broadcaster(p, stream_type='stderr'))
 
         loop.create_task(self.js_broadcaster())
+        loop.create_task(self.plugin_stat_broadcaster())
         loop.create_task(self.heartbeat())
 
         # first execute server start routine
@@ -127,7 +141,20 @@ class Xbot2WebServer:
         site = web.TCPSite(runner, host, port)
         await site.start()
 
+    
+    def on_pstat_recv(self, msg: Statistics2):
+        self.proc_stat_msg_to_send['type'] = 'plugin_stats'
+        
+        for ts in msg.task_stats:
+            th = next(filter(lambda x: x.name == ts.thread, msg.thread_stats))
+            self.proc_stat_msg_to_send[ts.name] = {
+                'run_time': ts.run_time,
+                'expected_period': th.expected_period,
+                'state': ts.state,
+            }
 
+
+    
     def on_js_recv(self, msg):
         self.js_msg_to_send['type'] = 'joint_states'
         self.js_msg_to_send['name'] = msg.name
@@ -188,8 +215,26 @@ class Xbot2WebServer:
             init_data['vmax'].append(joint.limit.velocity)
             init_data['taumax'].append(joint.limit.effort)
 
+        # plugins
+        get_plugin_list = rospy.ServiceProxy('xbotcore/get_plugin_list', service_class=GetPluginList)
+        plugin_list = get_plugin_list()
+        init_data['plugins'] = plugin_list.plugins
+
         return web.Response(text=json.dumps(init_data))
 
+    
+    async def plugin_cmd_handler(self, request):
+        plugin_name = request.match_info.get('plugin_name', None)
+        print(plugin_name)
+        command = request.match_info.get('command', None)
+        print(command)
+        if command not in ('start', 'stop'):
+            raise ValueError(f'invalid command {command}')
+        switch = rospy.ServiceProxy(f'xbotcore/{plugin_name}/switch', service_class=SetBool)
+        switch(command == 'start')
+        return web.Response(text=json.dumps({'success': True}))
+
+    
     # heartbeat broadcaster
     async def heartbeat(self):
         
@@ -251,6 +296,37 @@ class Xbot2WebServer:
             
             # periodic loop at 60 Hz
             await asyncio.sleep(0.01666)
+
+    
+    # joint state broadcaster coroutine
+    async def plugin_stat_broadcaster(self):
+
+        while True:
+            
+            # periodic loop at 5 Hz
+            await asyncio.sleep(0.20)
+
+            if not self.proc_stat_msg_to_send:
+                continue
+
+            # serialize msg to json
+            msg_str = json.dumps(self.proc_stat_msg_to_send)
+
+            # iterate over sockets (one per client)
+            for ws in self.ws_clients:
+                
+                # nothing to send, break
+                if not self.js_msg_to_send:
+                    break
+
+                try:
+                    await ws.send_str(msg_str)  
+                except ConnectionResetError as e:
+                    pass
+                except BaseException as e:
+                    print(f'error: {e}')
+            
+            
 
 
     # root handler serves html for web app
@@ -332,7 +408,7 @@ class Xbot2WebServer:
         p: Process = self.procs[body['name']]
         cmd = body['cmd']
         if cmd == 'start':
-            await p.start()
+            await p.start(options=body['options'])
         elif cmd == 'stop':
             await p.stop()
         return aiohttp.web.Response(text=json.dumps({'message': f'ok: {cmd} {p.name}', 'success': True}))

@@ -5,6 +5,7 @@ ProcessForm {
     id: root
     property string name: "InvalidName"
     property string status: "InvalidStatus"
+    property bool configPanelOpen: false
 
     signal start
     signal stop

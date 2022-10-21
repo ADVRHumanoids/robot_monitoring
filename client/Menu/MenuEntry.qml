@@ -29,7 +29,7 @@ Item {
             topPadding: 10
             bottomPadding: 10
             text: name
-            color: "white"
+            color: root.enabled ? "white" : "grey"
             font.pixelSize: Qt.application.font.pixelSize * 2
 
             Behavior on leftPadding {
@@ -42,6 +42,7 @@ Item {
     }
 
     MouseArea {
+        enabled: root.enabled
         id: mouseArea
         anchors.fill: parent
         hoverEnabled: true

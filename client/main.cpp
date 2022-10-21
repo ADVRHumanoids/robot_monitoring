@@ -28,7 +28,12 @@ public:
 
 int main(int argc, char *argv[])
 {
-    qputenv("QSG_INFO", "1");
+    // verbose output
+//    qputenv("QSG_INFO", "1");
+    QQuickStyle::setStyle("Material");
+    qputenv("QT_QUICK_CONTROLS_MATERIAL_THEME", "Dark");
+    qputenv("QT_QUICK_CONTROLS_MATERIAL_VARIANT", "Dense");
+
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);

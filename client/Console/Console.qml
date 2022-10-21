@@ -7,15 +7,17 @@ import "../sharedData.js" as SharedData
 Item {
 
     id: root
+    clip: true
+
+    // set this to the main ClientEndpoint object
     property var client: undefined
-    property var items: Object()
 
+    // vertically stack process row button and console
     ColumnLayout {
-
 
         anchors.fill: parent
 
-
+        // process widget row
         RowLayout {
 
             id: rowLayout
@@ -28,6 +30,15 @@ Item {
 
                 Process {
 
+                    id: process
+
+                    ConfigurePanel {
+                        id: configurePanel
+                        z: 10
+                        parent: root
+                        description: SharedData.processInfo[index].cmdline
+                    }
+
                     Layout.fillWidth: true
                     name: modelData.name
                     status: modelData.status
@@ -36,7 +47,9 @@ Item {
 
                         root.client.doRequest('PUT',
                                               '/proc',
-                                              JSON.stringify({name: name, cmd: 'start'}),
+                                              JSON.stringify({name: name,
+                                                              cmd: 'start',
+                                                              options: configurePanel.options}),
                                               function(msg){})
                     }
 
@@ -49,8 +62,17 @@ Item {
                     }
 
                     configureBtn.onPressed: {
-                        root.spawnConfigurePanel(index)
+                        if(configPanelOpen) {
+                             configurePanel.hidden = true
+                        }
+                        else {
+                            configurePanel.hidden = false
+                        }
+
+
                     }
+
+                    configPanelOpen: !configurePanel.hidden
 
 
                 }
@@ -111,9 +133,7 @@ Item {
 
     }
 
-    ConfigurePanel {
-        id: configurePanel
-    }
+
 
     function handleProcMessage(msg) {
 
@@ -151,7 +171,7 @@ Item {
         configurePanel.hidden = false
     }
 
-    function finalize() {
+    onClientChanged:  {
         client.procMessageReceived.connect(handleProcMessage)
     }
 

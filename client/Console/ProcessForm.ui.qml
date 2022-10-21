@@ -34,7 +34,7 @@ Column {
                 anchors.fill: parent
                 id: startBtn
                 text: "Start"
-                z: root.status === "Stopped" ? 1 : -1
+                visible: root.status === "Stopped"
             }
 
             Button {
@@ -42,6 +42,7 @@ Column {
                 id: stopBtn
                 text: "Stop"
                 z: 0
+                visible: root.status !== "Stopped"
             }
 
         }
@@ -57,7 +58,7 @@ Column {
     Button {
         anchors.horizontalCenter: parent.horizontalCenter
         id: configureBtn
-        text: "Configure"
+        text: root.configPanelOpen ? "Cancel" : "Configure"
         enabled: root.status === "Stopped"
     }
 

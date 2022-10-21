@@ -1,13 +1,14 @@
 import QtQuick 2.4
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.11
+import QtQuick.Controls.Material
 
 Rectangle {
 
     id: mainRect
     width: 320
     height: 568
-    color: "#d8edd5"
+    color: Material.frameColor
 
     property string serverHost: hostField.text
     property string serverPort: portField.text
@@ -59,6 +60,7 @@ Rectangle {
             id: formLayout
             Layout.alignment: Qt.AlignHCenter
             columns: 2
+            columnSpacing: 20
 
             Label {
                 text: "Host"

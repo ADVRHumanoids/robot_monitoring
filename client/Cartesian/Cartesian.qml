@@ -5,8 +5,27 @@ import QtQuick.Controls.Material
 
 Page {
 
-    Pad {
+    Row {
+
         anchors.centerIn: parent
+        spacing: 50
+
+        Pad {
+
+            onJoystickMoved: function (x, y) {
+                console.log(x + ', ' + y)
+            }
+        }
+
+        Pad {
+
+            horizontalOnly: true
+
+            onJoystickMoved: function (x, y) {
+                console.log(x + ', ' + y)
+            }
+        }
+
     }
 
 }

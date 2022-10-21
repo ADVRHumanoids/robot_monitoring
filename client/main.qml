@@ -29,26 +29,26 @@ ApplicationWindow {
 
         id: pagesModel
 
-        // the hello page
-        ListElement {
-            name: "Home"
-            page: "HelloScreen.qml"
-            requirement: "none"
-        }
+//        // the hello page
+//        ListElement {
+//            name: "Home"
+//            page: "HelloScreen.qml"
+//            requirement: "none"
+//        }
 
-        // the console page
-        ListElement {
-            name: "Console"
-            page: "Console/Xbot2.qml"
-            requirement: "active"  // server connected
-        }
+//        // the console page
+//        ListElement {
+//            name: "Console"
+//            page: "Console/Xbot2.qml"
+//            requirement: "active"  // server connected
+//        }
 
-        // the monitoring page
-        ListElement {
-            name: "Monitoring"
-            page: "Monitoring.qml"
-            requirement: "finalized"  // xbot2 connected
-        }
+//        // the monitoring page
+//        ListElement {
+//            name: "Monitoring"
+//            page: "Monitoring.qml"
+//            requirement: "finalized"  // xbot2 connected
+//        }
 
         // the cartesian control page
         ListElement {
@@ -152,7 +152,6 @@ ApplicationWindow {
         }
         onFinalized: {
             print('finalized!')
-            pagesStack.currentIndex = 1  // show monitoring page
             menu.evalActiveEntries()
         }
     }

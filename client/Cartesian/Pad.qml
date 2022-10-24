@@ -4,18 +4,15 @@ PadForm {
 
     id: root
 
-    property int side: side
-    property alias verticalOnly : root.verticalOnly
-    property alias horizontalOnly : root.horizontalOnly
     signal joystickMoved(double x, double y);
 
     mouseArea.onReleased: {
         returnAnimation.restart()
+        joystickMoved(0, 0)
     }
 
     mouseArea.onPressed: {
         returnAnimation.stop();
-        joystickMoved(0, 0)
     }
 
     mouseArea.onPositionChanged: {

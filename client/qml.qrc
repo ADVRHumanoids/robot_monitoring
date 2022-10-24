@@ -34,5 +34,7 @@
         <file>Cartesian/Pad.qml</file>
         <file>Cartesian/Cartesian.qml</file>
         <file>Cartesian/PadForm.ui.qml</file>
+        <file>Video/yuv2rgb.frag.qsb</file>
+        <file>Video/yuv2rgb.vert.qsb</file>
     </qresource>
 </RCC>

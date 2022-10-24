@@ -24,7 +24,7 @@ set(QT_VERSION_MAJOR 6)
 #    endif()
 #endif()
 
-find_package(Qt6 COMPONENTS Core Quick WebSockets Widgets QuickControls2 REQUIRED)
+find_package(Qt6 COMPONENTS Core Quick WebSockets Widgets QuickControls2 ShaderTools REQUIRED)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -50,10 +50,34 @@ endif()
 
 target_compile_definitions(next_ui
   PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
-  
+
 target_link_libraries(next_ui
   PRIVATE Qt${QT_VERSION_MAJOR}::Core
           Qt${QT_VERSION_MAJOR}::Quick
           Qt${QT_VERSION_MAJOR}::WebSockets
           Qt${QT_VERSION_MAJOR}::QuickControls2
           Qt${QT_VERSION_MAJOR}::Widgets)
+
+add_subdirectory(Video/theora_cmake)
+
+add_library(VideoStream STATIC
+Video/videostreampainter.cpp)
+
+target_link_libraries(VideoStream PRIVATE
+    PRIVATE theora::theora
+            Qt${QT_VERSION_MAJOR}::Core
+            Qt${QT_VERSION_MAJOR}::Quick
+            Qt${QT_VERSION_MAJOR}::WebSockets
+            Qt${QT_VERSION_MAJOR}::QuickControls2
+            Qt${QT_VERSION_MAJOR}::Widgets)
+
+target_link_libraries(next_ui PRIVATE VideoStream)
+
+qt_add_shaders(next_ui "next_ui-shaders"
+    BATCHABLE # Without this it fails
+    PREFIX
+        "/"
+    FILES
+        "Video/yuv2rgb.vert"
+        "Video/yuv2rgb.frag"
+)

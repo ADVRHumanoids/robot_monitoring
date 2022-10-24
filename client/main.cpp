@@ -5,6 +5,10 @@
 #include <QFont>
 #include <QtWidgets/QApplication>
 
+#include <QtQml/qqmlregistration.h>
+
+#include "Video/videostreampainter.h"
+
 #ifdef __EMSCRIPTEN__
 #include <emscripten/val.h>
 #endif
@@ -29,7 +33,7 @@ public:
 int main(int argc, char *argv[])
 {
     // verbose output
-//    qputenv("QSG_INFO", "1");
+    qputenv("QSG_INFO", "1");
     QQuickStyle::setStyle("Material");
     qputenv("QT_QUICK_CONTROLS_MATERIAL_THEME", "Dark");
     qputenv("QT_QUICK_CONTROLS_MATERIAL_VARIANT", "Dense");
@@ -53,11 +57,9 @@ int main(int argc, char *argv[])
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("appData", &appdata);
-    for(auto p : engine.importPathList())
-    {
-        putc('\n', stdout);
-        fflush(stdout);
-    }
+
+    qmlRegisterType<VideoStreamPainter>("NextUiModules", 1, 0, "VideoStreamPainter");
+
     const QUrl url(QStringLiteral("qrc:/main.qml"));
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
                      &app, [url](QObject *obj, const QUrl &objUrl) {

@@ -13,8 +13,12 @@ import rospy
 from urdf_parser_py import urdf as urdf_parser
 from xbot_msgs.msg import JointState, Statistics2
 from xbot_msgs.srv import GetPluginList, PluginStatus, PluginCommand
+from sensor_msgs.msg import CompressedImage
+from theora_image_transport.msg import Packet as TheoraPacket
 from screen_session import Process
 from std_srvs.srv import SetBool
+import base64
+
 
 def main():
     
@@ -77,14 +81,30 @@ class Xbot2WebServer:
         # joint state subscriber
         self.pstat_sub = rospy.Subscriber('xbotcore/statistics', Statistics2, self.on_pstat_recv, queue_size=1)
 
+        # compressed (i.e. jpeg) img sub
+        self.img_sub = rospy.Subscriber('/usb_cam/image_raw/compressed', CompressedImage, self.on_img_recv, queue_size=1)
+
+        # theora img sub
+        self.img_sub = rospy.Subscriber('/usb_cam/image_raw/theora', TheoraPacket, self.on_th_pkt_recv, queue_size=20)
+
         # global joint state message
         self.js_msg_to_send = {} 
 
         # global process stats message
         self.proc_stat_msg_to_send = {}
 
+        # global image message
+        self.img_msg_to_send = {}
+
+        # queue for th packets
+        self.th_pkt_queue = asyncio.Queue(maxsize=0)
+        self.th_hdr_pkt = []
+
         # web app
         self.app = web.Application()
+
+        # event loop
+        self.loop = asyncio.get_event_loop()
 
         logging.basicConfig(level=logging.DEBUG)
 
@@ -96,6 +116,7 @@ class Xbot2WebServer:
             ('GET', '/', self.root_handler, 'root'),
             ('GET', '/ws', self.websocket_handler, 'websocket'),
             ('GET', '/info', self.info_handler, 'init'),
+            ('GET', '/theora_header', self.theora_header_handler, 'theora_header'),
             ('PUT', '/proc', self.proc_handler, 'proc'),
             ('PUT', '/plugin/{plugin_name}/{command}', self.plugin_cmd_handler, 'plugin'),
         ]
@@ -115,9 +136,9 @@ class Xbot2WebServer:
 
         # run
         runner = web.AppRunner(self.app)
-        
-        # schedule tasks
-        loop = asyncio.get_event_loop()
+
+        # shorthand        
+        loop = self.loop
 
         # for each screen session, status, output broadcasters
         for p in self.procs.values():
@@ -128,6 +149,8 @@ class Xbot2WebServer:
         loop.create_task(self.js_broadcaster())
         loop.create_task(self.plugin_stat_broadcaster())
         loop.create_task(self.heartbeat())
+        loop.create_task(self.video_broadcaster_jpeg())
+        loop.create_task(self.video_broadcaster_theora())
 
         # first execute server start routine
         loop.run_until_complete(self.start_http_server(runner, host, port))
@@ -152,6 +175,33 @@ class Xbot2WebServer:
                 'expected_period': th.expected_period,
                 'state': ts.state,
             }
+
+
+    def on_img_recv(self, msg: CompressedImage):
+        self.img_msg_to_send['type'] = 'jpeg'
+        self.img_msg_to_send['data'] = base64.b64encode(msg.data).decode('ascii')
+
+    
+    def on_th_pkt_recv(self, msg: TheoraPacket):
+
+        th_pkt = dict()
+        th_pkt['type'] = 'theora'
+        th_pkt['data'] = base64.b64encode(msg.data).decode('ascii')
+        th_pkt['b_o_s'] = msg.b_o_s
+        th_pkt['e_o_s'] = msg.e_o_s
+        th_pkt['granulepos'] = msg.granulepos
+        th_pkt['packetno'] = msg.packetno
+
+        if msg.b_o_s == 1:
+            self.th_hdr_pkt = [th_pkt]
+            return 
+
+        if msg.granulepos == 0:
+            self.th_hdr_pkt.append(th_pkt)
+            return
+
+        self.loop.call_soon_threadsafe(self.th_pkt_queue.put(th_pkt))
+        _ = asyncio.run_coroutine_threadsafe(self.th_pkt_queue.put(th_pkt), self.loop)
 
 
     
@@ -235,6 +285,21 @@ class Xbot2WebServer:
         return web.Response(text=json.dumps({'success': True}))
 
     
+    async def theora_header_handler(self, request):
+
+        response = dict()
+
+        if len(self.th_hdr_pkt) != 3:
+            response['success'] = False 
+            response['message'] = f'{len(self.th_hdr_pkt)} != 3 header packets available'
+            return web.Response(text=json.dumps(response))
+
+
+        response['success'] = True 
+        response['hdr'] = self.th_hdr_pkt
+        return web.Response(text=json.dumps(response))
+
+    
     # heartbeat broadcaster
     async def heartbeat(self):
         
@@ -270,6 +335,55 @@ class Xbot2WebServer:
             
             # periodic loop at 10 Hz
             await asyncio.sleep(0.1)
+    
+    
+    # video broadcaster coroutine
+    async def video_broadcaster_jpeg(self):
+
+        while True:
+
+            # periodic loop at 60 Hz
+            await asyncio.sleep(0.0333)
+
+            if not self.img_msg_to_send: 
+                continue
+            
+            # serialize msg to json
+            msg_str = json.dumps(self.img_msg_to_send)
+
+            # iterate over sockets (one per client)
+            for ws in self.ws_clients:
+
+                try:
+                    await ws.send_str(msg_str)  
+                except ConnectionResetError as e:
+                    pass
+                except BaseException as e:
+                    print(f'error: {e}')
+            
+    
+    # video broadcaster coroutine
+    async def video_broadcaster_theora(self):
+
+        while True:
+
+            # periodic loop at 60 Hz
+            th_pkt = await self.th_pkt_queue.get()
+
+            # print(f'b_o_s={th_pkt["b_o_s"]} e_o_s={th_pkt["e_o_s"]} packetno={th_pkt["packetno"]} granulepos={th_pkt["granulepos"]}')
+            
+            # serialize msg to json
+            msg_str = json.dumps(th_pkt)
+
+            # iterate over sockets (one per client)
+            for ws in self.ws_clients:
+
+                try:
+                    await ws.send_str(msg_str)  
+                except ConnectionResetError as e:
+                    pass
+                except BaseException as e:
+                    print(f'error: {e}')
     
     
     # joint state broadcaster coroutine

@@ -40,6 +40,10 @@ Item
     // triggerd upon reception of a plugin stat msg
     signal pluginStatMessageReceived(var msg)
 
+    // image received
+    signal jpegReceived(var msg)
+    signal theoraPacketReceived(var msg)
+
 
     // method for performing am http request
     function doRequest(verb, url, body, callback) {
@@ -68,6 +72,14 @@ Item
             else if(obj.type === "proc")
             {
                 procMessageReceived(obj)
+            }
+            else if(obj.type === "jpeg")
+            {
+                jpegReceived(obj)
+            }
+            else if(obj.type === "theora")
+            {
+                theoraPacketReceived(obj)
             }
             else if(obj.type === "plugin_stats")
             {

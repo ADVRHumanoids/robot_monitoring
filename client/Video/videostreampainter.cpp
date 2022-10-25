@@ -1,6 +1,7 @@
 #include "videostreampainter.h"
 #include <QPainter>
 #include <QQuickWindow>
+#include <QSGTexture>
 
 class YuvShader : public QSGMaterialShader
 {
@@ -35,6 +36,7 @@ public:
     QSGMaterialShader* createShader(QSGRendererInterface::RenderMode) const override;
 
     QSGTexture *yTex = nullptr, *cbTex = nullptr, *crTex = nullptr;
+    bool tex_changed = true;
 
 };
 
@@ -254,23 +256,24 @@ void VideoStreamPainter::setTheoraPacket(const QByteArray &datab64,
     // we have a new decoded frame available
     th_decode_ycbcr_out(decoding_context_, _latest_decoded_frame);
     _new_frame_available = true;
+    update();
 
     qInfo("theora_dec %f",
           std::chrono::duration<float>(hrc::now() - tic).count()*1e3);
 
     return;
 
-//    // to qimage
-//    tic = hrc::now();
-//    theora2qimage(ycbcr_buffer, _img);
-//    qInfo("theora2qimage %f",
-//          std::chrono::duration<float>(hrc::now() - tic).count()*1e3);
+    //    // to qimage
+    //    tic = hrc::now();
+    //    theora2qimage(ycbcr_buffer, _img);
+    //    qInfo("theora2qimage %f",
+    //          std::chrono::duration<float>(hrc::now() - tic).count()*1e3);
 
-//    // paint
-//    tic = hrc::now();
-//    update();
-//    qInfo("update %f",
-//          std::chrono::duration<float>(hrc::now() - tic).count()*1e3);
+    //    // paint
+    //    tic = hrc::now();
+    //    update();
+    //    qInfo("update %f",
+    //          std::chrono::duration<float>(hrc::now() - tic).count()*1e3);
 
 }
 
@@ -297,9 +300,20 @@ QSGNode *VideoStreamPainter::updatePaintNode(QSGNode * old, QQuickItem::UpdatePa
 
     if(_new_frame_available)
     {
-        _yImage.loadFromData(_latest_decoded_frame[0].data);
-        _cbImage.loadFromData(_latest_decoded_frame[1].data);
-        _crImage.loadFromData(_latest_decoded_frame[2].data);
+        auto theora2qimage = [](const th_img_plane& th_channel,
+                                QImage& qimg)
+        {
+            for(int line = 0; line < qimg.height(); line++)
+            {
+                std::memcpy(qimg.scanLine(line),
+                            &th_channel.data[line*th_channel.stride],
+                            th_channel.width);
+            }
+        };
+
+        theora2qimage(_latest_decoded_frame[0], _yImage);
+        theora2qimage(_latest_decoded_frame[1], _cbImage);
+        theora2qimage(_latest_decoded_frame[2], _crImage);
 
         auto yTex = window()->createTextureFromImage(_yImage);
         auto cbTex = window()->createTextureFromImage(_cbImage);
@@ -335,20 +349,41 @@ void YuvShader::updateSampledImage(RenderState &state,
 {
     auto mat = static_cast<YuvMaterial*>(newMaterial);
 
+    bool changed = false;
+
+
     if(binding == 1)  // y channel
     {
-        texture[binding] = mat->yTex;
+        if(texture[0] != mat->yTex)
+        {
+            *texture = mat->yTex;
+            changed = true;
+        }
     }
 
     if(binding == 2)  // u channel
     {
-        texture[binding] = mat->cbTex;
+        if(texture[0] != mat->cbTex)
+        {
+            *texture = mat->cbTex;
+            changed = true;
+        }
     }
 
     if(binding == 3) // v channel
     {
-        texture[binding] = mat->crTex;
+        if(texture[0] != mat->crTex)
+        {
+            *texture = mat->crTex;
+            changed = true;
+        }
     }
+
+    if(changed)
+    {
+        (*texture)->commitTextureOperations(state.rhi(), state.resourceUpdateBatch());
+    }
+
 }
 
 bool YuvShader::updateUniformData(QSGMaterialShader::RenderState &state,
@@ -363,6 +398,12 @@ bool YuvShader::updateUniformData(QSGMaterialShader::RenderState &state,
     if (state.isMatrixDirty()) {
         const QMatrix4x4 m = state.combinedMatrix();
         memcpy(buf->data(), m.constData(), 64);
+        changed = true;
+    }
+
+    if (state.isOpacityDirty()) {
+        const float opacity = state.opacity();
+        memcpy(buf->data() + 64, &opacity, 4);
         changed = true;
     }
 
@@ -414,8 +455,15 @@ void YuvNode::setRect(const QRectF &bounds)
 void YuvNode::setYuvBuffer(QSGTexture *y, QSGTexture *cb, QSGTexture *cr)
 {
     auto yuvMaterial = static_cast<YuvMaterial*>(material());
+
+//    if(yuvMaterial->yTex) yuvMaterial->yTex->deleteLater();
+//    if(yuvMaterial->cbTex) yuvMaterial->cbTex->deleteLater();
+//    if(yuvMaterial->crTex) yuvMaterial->crTex->deleteLater();
+
     yuvMaterial->yTex = y;
     yuvMaterial->cbTex = cb;
     yuvMaterial->crTex = cr;
+
+    yuvMaterial->tex_changed = true;
 }
 

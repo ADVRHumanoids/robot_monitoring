@@ -5,6 +5,15 @@ PadForm {
     id: root
 
     signal joystickMoved(double x, double y);
+    property bool repeat: true
+    property real joyX: 0
+    property real joyY: 0
+    property alias joyPressed: root.mouseArea.containsPress
+
+    onJoystickMoved: function(x, y) {
+        joyX = x;
+        joyY = y;
+    }
 
     mouseArea.onReleased: {
         returnAnimation.restart()
@@ -39,6 +48,15 @@ PadForm {
                         verticalOnly ? 0 : Math.cos(angle) * 1,
                         horizontalOnly ? 0 : Math.sin(angle) * 1
                         );
+        }
+    }
+
+    Timer {
+        repeat: root.repeat
+        running: root.joyPressed
+        interval: 50
+        onTriggered: {
+            joystickMoved(joyX, joyY)
         }
     }
 }

@@ -12,9 +12,15 @@
 #include <theora/theoraenc.h>
 #include <theora/theoradec.h>
 
+//#define VSP_USE_PAINTER
 
+#ifdef VSP_USE_PAINTER
+#define BASE_CLASS QQuickPaintedItem
+#else
+#define BASE_CLASS QQuickItem
+#endif
 
-class VideoStreamPainter : public QQuickItem
+class VideoStreamPainter : public BASE_CLASS
 {
 
     Q_OBJECT
@@ -26,9 +32,10 @@ public:
 
     VideoStreamPainter();
 
-    // QQuickPaintedItem interface
+#ifdef VSP_USE_PAINTER
 public:
-//    void paint(QPainter *painter) override;
+    void paint(QPainter *painter) override;
+#endif
 
 public slots:
     void setImage(const QByteArray& image);
@@ -36,9 +43,11 @@ public slots:
                          int b_o_s, int e_o_s,
                          long granulepos, long packetno);
 
+#ifndef VSP_USE_PAINTER
 protected:
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+#endif
 
 private:
 

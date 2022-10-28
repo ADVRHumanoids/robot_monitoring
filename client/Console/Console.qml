@@ -152,12 +152,13 @@ Item {
 
                 if(msg.content === 'output')
                 {
+                    let prefix = '[' + item_i.name + '] '
                     if(msg.stdout.length > 0) {
-                        consoleText.addText(msg.stdout)
+                        consoleText.addText(prefix+msg.stdout)
                     }
 
                     if(msg.stderr.length > 0) {
-                        consoleText.addText('<font color="red">' + msg.stderr + '</>')
+                        consoleText.addText('<font color="red">' + prefix+msg.stderr + '</>')
                     }
                 }
 
@@ -176,8 +177,6 @@ Item {
     }
 
     Component.onCompleted: {
-        console.log('constructing Console')
-        console.log(JSON.stringify(SharedData.processInfo))
         procRepeater.model = SharedData.processInfo
     }
 

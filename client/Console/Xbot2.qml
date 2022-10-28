@@ -65,6 +65,7 @@ Page {
 
     Component.onCompleted: {
         _handleResponsiveLayout()
+        plugins.model = SharedData.pluginNames
         root.client.finalized.connect(function(){
             plugins.model = SharedData.pluginNames
         })

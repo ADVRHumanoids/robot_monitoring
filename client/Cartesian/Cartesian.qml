@@ -4,93 +4,108 @@ import QtQuick.Layouts
 import QtQuick.Controls.Material
 import NextUiModules
 
+import "../Video"
+import ".."
+import "cartesian.js" as Logic
+
 Page {
 
-    property var client: undefined
+    id: root
+    property ClientEndpoint client: undefined
+    property var vref: [0, 0, 0, 0, 0]
+    property alias taskCombo: taskCombo
 
-    Row {
+    RowLayout {
 
-        anchors.centerIn: parent
+        anchors.fill: parent
+        anchors.margins: 50
         spacing: 50
 
-        Pad {
+        ColumnLayout {
+            id: leftColumn
 
-            onJoystickMoved: function (x, y) {
-                console.log(x + ', ' + y)
+            Pad {
+
+                id: pad
+
+                onJoystickMoved: {
+                    vref[0] = joyY
+                    vref[1] = -joyX
+                    Logic.sendVref()
+                }
+
             }
         }
 
-        Rectangle {
-            width: 640
-            height: 480
-            color: "transparent"
-            VideoStreamPainter {
-                id: video
-                anchors.fill: parent
-                anchors.margins: 5
+        ColumnLayout {
+
+            id: centerColumn
+
+            Layout.fillWidth: true
+
+            Row {
+                id: centerColumnUpperRow
+                Label {
+                    text: 'Tasks'
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+                ComboBox {
+                    anchors.verticalCenter: parent.verticalCenter
+                    id: taskCombo
+                    model: ['arm1_8', 'arm2_8', 'base_link']
+                }
+                Button {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: 'Refresh'
+                }
+                Layout.fillWidth: true
+                spacing: 10
+            }
+
+            VideoStreamFrontend {
+                client: root.client
+
+                Layout.rowSpan: 2
+                Layout.columnSpan: 2
+                width: parent.width
+                height: parent.width / 1.33
+
+                Layout.fillHeight: true
+            }
+
+            Item {
+                width: centerColumnUpperRow.width
+                height: centerColumnUpperRow.height
             }
         }
 
+        ColumnLayout {
+            id: rightColumn
+            spacing: 30
+            Pad {
+                xLabel: 'YAW'
 
-        Pad {
+                horizontalOnly: true
 
-            xLabel: 'YAW'
+                onJoystickMoved: {
+                    vref[5] = joyX
+                    Logic.sendVref()
+                }
 
-            horizontalOnly: true
+            }
 
-            onJoystickMoved: function (x, y) {
-                console.log(x + ', ' + y)
+            Pad {
+
+                yLabel: 'Z'
+
+                verticalOnly: true
+
+                onJoystickMoved: {
+                    vref[2] = joyY
+                    Logic.sendVref()
+                }
+
             }
         }
-
-        Pad {
-
-            yLabel: 'Z'
-
-            verticalOnly: true
-
-            onJoystickMoved: function (x, y) {
-                console.log(x + ', ' + y)
-            }
-        }
-
     }
-
-    Component.onCompleted: {
-
-//        client.jpegReceived.connect(function(msg) {
-//            video.setImage(msg.data)
-//            video.update()
-//        })
-
-        client.theoraPacketReceived.connect(function(msg) {
-            video.setTheoraPacket(msg.data,
-                                  msg.b_o_s,
-                                  msg.e_o_s,
-                                  msg.granulepos,
-                                  msg.packetno)
-        })
-
-        client.doRequest('GET', '/theora_header', {},
-                         function(msg) {
-
-                             if(!msg.success) {
-                                 console.log('could not fetch headers')
-                             }
-
-                             for(let i = 0; i < 3; i++) {
-                                 let hdr = msg.hdr[i]
-                                 video.setTheoraPacket(hdr.data,
-                                                       hdr.b_o_s,
-                                                       hdr.e_o_s,
-                                                       hdr.granulepos,
-                                                       hdr.packetno)
-                             }
-
-                             console.log('set headers!!!')
-
-                         }
-                         )
-    }
-
 }

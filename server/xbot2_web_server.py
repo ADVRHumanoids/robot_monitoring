@@ -9,11 +9,14 @@ import aiohttp
 import argparse
 from aiohttp import web
 import json
+
+from isort import stream
 import rospy
 from urdf_parser_py import urdf as urdf_parser
 from xbot_msgs.msg import JointState, Statistics2
 from xbot_msgs.srv import GetPluginList, PluginStatus, PluginCommand
 from sensor_msgs.msg import CompressedImage
+from geometry_msgs.msg import TwistStamped
 from theora_image_transport.msg import Packet as TheoraPacket
 from screen_session import Process
 from std_srvs.srv import SetBool
@@ -61,6 +64,20 @@ def main():
     }
     srv.add_process(p)
 
+    # tbd: processes from config
+    p = Process(name='cartesio_manipulation', 
+                cmd='roslaunch centauro_cartesio_config centauro_manipulation.launch',
+                machine='arturo@localhost')
+
+    srv.add_process(p)
+
+    # tbd: processes from config
+    p = Process(name='cartesio_move_base', 
+                cmd='roslaunch centauro_cartesio centauro_car_model.launch',
+                machine='arturo@localhost')
+
+    srv.add_process(p)
+
     # run forever
     srv.run_server(static=args.root, host=args.host, port=args.port)
 
@@ -85,7 +102,10 @@ class Xbot2WebServer:
         self.img_sub = rospy.Subscriber('/usb_cam/image_raw/compressed', CompressedImage, self.on_img_recv, queue_size=1)
 
         # theora img sub
-        self.img_sub = rospy.Subscriber('/usb_cam/image_raw/theora', TheoraPacket, self.on_th_pkt_recv, queue_size=20)
+        self.img_sub = None
+
+        # vel ref pub
+        self.vref_pub = None
 
         # global joint state message
         self.js_msg_to_send = {} 
@@ -116,7 +136,8 @@ class Xbot2WebServer:
             ('GET', '/', self.root_handler, 'root'),
             ('GET', '/ws', self.websocket_handler, 'websocket'),
             ('GET', '/info', self.info_handler, 'init'),
-            ('GET', '/theora_header', self.theora_header_handler, 'theora_header'),
+            ('GET', '/get_video_stream', self.get_video_stream_handler, 'get_video_stream'),
+            ('PUT', '/set_video_stream', self.set_video_stream_handler, 'set_video_stream'),
             ('PUT', '/proc', self.proc_handler, 'proc'),
             ('PUT', '/plugin/{plugin_name}/{command}', self.plugin_cmd_handler, 'plugin'),
         ]
@@ -194,10 +215,12 @@ class Xbot2WebServer:
 
         if msg.b_o_s == 1:
             self.th_hdr_pkt = [th_pkt]
+            print(f'got header {len(self.th_hdr_pkt)}/3')
             return 
 
         if msg.granulepos == 0:
             self.th_hdr_pkt.append(th_pkt)
+            print(f'got header {len(self.th_hdr_pkt)}/3')
             return
 
         self.loop.call_soon_threadsafe(self.th_pkt_queue.put(th_pkt))
@@ -273,6 +296,65 @@ class Xbot2WebServer:
         return web.Response(text=json.dumps(init_data))
 
     
+    async def set_video_stream_handler(self, request):
+
+        body = await request.text()
+        body = json.loads(body)
+        stream_name = body['stream_name']
+
+        if self.img_sub is not None:
+            self.img_sub.unregister()
+        
+        self.th_hdr_pkt.clear()
+
+        self.img_msg_to_send = {}
+
+        if stream_name == '':
+            print('disconnected image subscriber')
+            return web.Response(text=json.dumps({
+                'success': True,
+                'message': f'disconnected from image topic"',
+                }))
+        
+        print(f'requested stream {stream_name}, registering subscriber and waiting for headers..')
+
+        self.img_sub = rospy.Subscriber(stream_name, 
+            TheoraPacket, self.on_th_pkt_recv, queue_size=20)
+
+        # wait for headers
+        iter = 0
+        while len(self.th_hdr_pkt) < 3 and iter < 500:
+            await asyncio.sleep(0.01)
+
+        if len(self.th_hdr_pkt) < 3:
+            return web.Response(text=json.dumps({
+                'success': False,
+                'message': f'failed to receive headers for "{stream_name}"',
+                }))
+
+        print('got headers')
+
+        return web.Response(text=json.dumps({
+                'success': True,
+                'message': f'subscribed to "{stream_name}"',
+                'hdr': self.th_hdr_pkt,
+                }))
+
+    
+    async def get_video_stream_handler(self, request):
+
+        topic_name_type_list = rospy.get_published_topics()
+        vs_topics = list()
+        for tname, ttype in topic_name_type_list:
+            if ttype == 'theora_image_transport/Packet':
+                vs_topics.append(tname)
+        
+        return web.Response(text=json.dumps({
+            'success': True,
+            'topics': vs_topics,
+            }))
+
+
     async def plugin_cmd_handler(self, request):
         plugin_name = request.match_info.get('plugin_name', None)
         print(plugin_name)
@@ -283,21 +365,6 @@ class Xbot2WebServer:
         switch = rospy.ServiceProxy(f'xbotcore/{plugin_name}/switch', service_class=SetBool)
         switch(command == 'start')
         return web.Response(text=json.dumps({'success': True}))
-
-    
-    async def theora_header_handler(self, request):
-
-        response = dict()
-
-        if len(self.th_hdr_pkt) != 3:
-            response['success'] = False 
-            response['message'] = f'{len(self.th_hdr_pkt)} != 3 header packets available'
-            return web.Response(text=json.dumps(response))
-
-
-        response['success'] = True 
-        response['hdr'] = self.th_hdr_pkt
-        return web.Response(text=json.dumps(response))
 
     
     # heartbeat broadcaster
@@ -539,16 +606,43 @@ class Xbot2WebServer:
 
         async for msg in ws:
             if msg.type == aiohttp.WSMsgType.TEXT:
-                if msg.data == 'close':
-                    await ws.close()
+                msg = json.loads(msg.data)
+                if msg['type'] == 'velocity_command':
+                    await self.handle_velocity_command(msg)
                 else:
-                    print(f'Received message from client: {msg.data}')
-                    await ws.send_str('Server thanks you for the kindness!')
+                    print(f'Received unknown message from client: {msg}')
             elif msg.type == aiohttp.WSMsgType.ERROR:
                 print('ws connection closed with exception %s' %
                     ws.exception())
 
         return ws
+
+    
+    async def handle_velocity_command(self, msg):
+        task_name = msg['task_name']
+        topic_name = rospy.resolve_name(f'cartesian/{task_name}/velocity_reference')
+
+        print(f'v cmd for task {task_name}: {msg["vref"]}')
+        
+        if self.vref_pub is None or self.vref_pub.resolved_name != topic_name:
+            try:
+                print(f'advertising {topic_name}, unregistering {self.vref_pub.name}')
+            except:
+                pass
+            self.vref_pub = rospy.Publisher(topic_name, TwistStamped, queue_size=1)
+
+        rosmsg = TwistStamped()
+        rosmsg.header.stamp = rospy.Time.now()
+        vref = msg['vref']
+        rosmsg.twist.linear.x = vref[0]
+        rosmsg.twist.linear.y = vref[1]
+        rosmsg.twist.linear.z = vref[2]
+        rosmsg.twist.angular.x = vref[3]
+        rosmsg.twist.angular.y = vref[4]
+        rosmsg.twist.angular.z = vref[5]
+
+        self.vref_pub.publish(rosmsg)
+        
 
 
 if __name__ == '__main__':

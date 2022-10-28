@@ -29,34 +29,33 @@ ApplicationWindow {
 
         id: pagesModel
 
-//        // the hello page
-//        ListElement {
-//            name: "Home"
-//            page: "HelloScreen.qml"
-//            requirement: "none"
-//        }
+        // the hello page
+        ListElement {
+            name: "Home"
+            page: "HelloScreen.qml"
+            requirement: "none"
+        }
 
-//        // the console page
-//        ListElement {
-//            name: "Console"
-//            page: "Console/Xbot2.qml"
-//            requirement: "active"  // server connected
-//        }
+        // the console page
+        ListElement {
+            name: "Console"
+            page: "Console/Xbot2.qml"
+            requirement: "active"  // server connected
+        }
 
-//        // the monitoring page
-//        ListElement {
-//            name: "Monitoring"
-//            page: "Monitoring.qml"
-//            requirement: "finalized"  // xbot2 connected
-//        }
+        // the monitoring page
+        ListElement {
+            name: "Monitoring"
+            page: "Monitoring.qml"
+            requirement: "finalized"  // xbot2 connected
+        }
 
         // the cartesian control page
         ListElement {
             name: "Cartesian control"
             page: "Cartesian/Cartesian.qml"
-            requirement: "none"  // xbot2 connected
+            requirement: "finalized"  // xbot2 connected
         }
-
     }
 
     // a sliding menu to select the active page
@@ -67,6 +66,7 @@ ApplicationWindow {
         model: pagesModel
 
         entryActiveCallback: function(i) {
+            console.log(pagesModel.get(i).name + " " + pagesModel.get(i).requirement)
             if(pagesModel.get(i).requirement === "none") {
                 return true
             }
@@ -105,17 +105,14 @@ ApplicationWindow {
                 Layout.fillWidth: true
 
                 active: pagesStack.currentIndex === index
-//                source: page
 
                 onLoaded: {
                     items[name.toLowerCase()] = item
                     active = true
-//                    item.client = mainWindow.client
                 }
 
                 Component.onCompleted: {
                     setSource(page, {'client': client})
-                    print('client should be ' + client)
                 }
 
                 Connections {

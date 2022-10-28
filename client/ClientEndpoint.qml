@@ -53,6 +53,13 @@ Item
                            callback)
     }
 
+    // method for sending a text message over websocket
+    function sendTextMessage(msg) {
+        if(socket.active) {
+            socket.sendTextMessage(msg)
+        }
+    }
+
     // websocket for streaming data
     WebSocket {
 

@@ -66,9 +66,11 @@ VideoStreamPainter::VideoStreamPainter()
     _yImage = QImage(640, 480, QImage::Format::Format_Grayscale8);
     _cbImage = QImage(320, 240, QImage::Format::Format_Grayscale8);
     _crImage = QImage(320, 240, QImage::Format::Format_Grayscale8);
-    _yImage.fill(64);
-    _cbImage.fill(64);
-    _crImage.fill(64);
+    _yImage.fill(29);
+    _cbImage.fill(255);
+    _crImage.fill(107);
+
+    setImplicitSize(640, 480);
 
     th_info_init(&header_info_);
     th_comment_init(&header_comment_);
@@ -83,12 +85,13 @@ VideoStreamPainter::VideoStreamPainter()
     setFlag(ItemHasContents, true);
 }
 
-
-//void VideoStreamPainter::paint(QPainter *painter)
-//{
-//    QRect rect(x(), y(), width(), height());
-//    painter->drawImage(rect, _img);
-//}
+#ifdef VSP_USE_PAINTER
+void VideoStreamPainter::paint(QPainter *painter)
+{
+    QRect rect(x(), y(), width(), height());
+    painter->drawImage(rect, _img);
+}
+#endif
 
 void VideoStreamPainter::setImage(const QByteArray &image)
 {
@@ -164,8 +167,8 @@ void VideoStreamPainter::setTheoraPacket(const QByteArray &datab64,
     oggpacket.packetno   = packetno;
     oggpacket.packet = reinterpret_cast<unsigned char*>(data.data());
 
-    qInfo("******\nogg_packet %f",
-          std::chrono::duration<float>(hrc::now() - tic).count()*1e3);
+//    qInfo("******\nogg_packet %f",
+//          std::chrono::duration<float>(hrc::now() - tic).count()*1e3);
 
 
 
@@ -258,25 +261,26 @@ void VideoStreamPainter::setTheoraPacket(const QByteArray &datab64,
     _new_frame_available = true;
     update();
 
-    qInfo("theora_dec %f",
+//    qInfo("theora_dec %f",
+//          std::chrono::duration<float>(hrc::now() - tic).count()*1e3);
+
+#ifdef VSP_USE_PAINTER
+    // to qimage
+    tic = hrc::now();
+    theora2qimage(_latest_decoded_frame, _img);
+    qInfo("theora2qimage %f",
           std::chrono::duration<float>(hrc::now() - tic).count()*1e3);
 
-    return;
-
-    //    // to qimage
-    //    tic = hrc::now();
-    //    theora2qimage(ycbcr_buffer, _img);
-    //    qInfo("theora2qimage %f",
-    //          std::chrono::duration<float>(hrc::now() - tic).count()*1e3);
-
-    //    // paint
-    //    tic = hrc::now();
-    //    update();
-    //    qInfo("update %f",
-    //          std::chrono::duration<float>(hrc::now() - tic).count()*1e3);
+    // paint
+    tic = hrc::now();
+    update();
+    qInfo("update %f",
+          std::chrono::duration<float>(hrc::now() - tic).count()*1e3);
+#endif
 
 }
 
+#ifndef VSP_USE_PAINTER
 QSGNode *VideoStreamPainter::updatePaintNode(QSGNode * old, QQuickItem::UpdatePaintNodeData *)
 {
     auto *node = static_cast<YuvNode *>(old);
@@ -300,8 +304,10 @@ QSGNode *VideoStreamPainter::updatePaintNode(QSGNode * old, QQuickItem::UpdatePa
 
     if(_new_frame_available)
     {
-        auto theora2qimage = [](const th_img_plane& th_channel,
-                                QImage& qimg)
+        // theora's image buffer is not continuous
+        // (only line by line)
+        auto copy_to_qimage = [](const th_img_plane& th_channel,
+                              QImage& qimg)
         {
             for(int line = 0; line < qimg.height(); line++)
             {
@@ -311,9 +317,9 @@ QSGNode *VideoStreamPainter::updatePaintNode(QSGNode * old, QQuickItem::UpdatePa
             }
         };
 
-        theora2qimage(_latest_decoded_frame[0], _yImage);
-        theora2qimage(_latest_decoded_frame[1], _cbImage);
-        theora2qimage(_latest_decoded_frame[2], _crImage);
+        copy_to_qimage(_latest_decoded_frame[0], _yImage);
+        copy_to_qimage(_latest_decoded_frame[1], _cbImage);
+        copy_to_qimage(_latest_decoded_frame[2], _crImage);
 
         auto yTex = window()->createTextureFromImage(_yImage);
         auto cbTex = window()->createTextureFromImage(_cbImage);
@@ -333,7 +339,7 @@ void VideoStreamPainter::geometryChange(const QRectF &newGeometry, const QRectF 
     update();
     QQuickItem::geometryChange(newGeometry, oldGeometry);
 }
-
+#endif
 
 YuvShader::YuvShader()
 {
@@ -350,6 +356,8 @@ void YuvShader::updateSampledImage(RenderState &state,
     auto mat = static_cast<YuvMaterial*>(newMaterial);
 
     bool changed = false;
+
+    QSGTexture * oldTexture = *texture;
 
 
     if(binding == 1)  // y channel
@@ -456,9 +464,9 @@ void YuvNode::setYuvBuffer(QSGTexture *y, QSGTexture *cb, QSGTexture *cr)
 {
     auto yuvMaterial = static_cast<YuvMaterial*>(material());
 
-//    if(yuvMaterial->yTex) yuvMaterial->yTex->deleteLater();
-//    if(yuvMaterial->cbTex) yuvMaterial->cbTex->deleteLater();
-//    if(yuvMaterial->crTex) yuvMaterial->crTex->deleteLater();
+    if(yuvMaterial->yTex)  delete yuvMaterial->yTex;
+    if(yuvMaterial->cbTex) delete yuvMaterial->cbTex;
+    if(yuvMaterial->crTex) delete yuvMaterial->crTex;
 
     yuvMaterial->yTex = y;
     yuvMaterial->cbTex = cb;

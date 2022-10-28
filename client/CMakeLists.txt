@@ -64,7 +64,7 @@ add_library(VideoStream STATIC
 Video/videostreampainter.cpp)
 
 target_link_libraries(VideoStream PRIVATE
-    PRIVATE theora::theora
+    PUBLIC theora::theora
             Qt${QT_VERSION_MAJOR}::Core
             Qt${QT_VERSION_MAJOR}::Quick
             Qt${QT_VERSION_MAJOR}::WebSockets

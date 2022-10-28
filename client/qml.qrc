@@ -36,5 +36,9 @@
         <file>Cartesian/PadForm.ui.qml</file>
         <file>Video/yuv2rgb.frag.qsb</file>
         <file>Video/yuv2rgb.vert.qsb</file>
+        <file>Video/VideoStream.qml</file>
+        <file>Video/VideoStreamFrontend.qml</file>
+        <file>Video/video.js</file>
+        <file>Cartesian/cartesian.js</file>
     </qresource>
 </RCC>

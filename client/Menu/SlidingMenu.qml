@@ -27,6 +27,7 @@ Item {
     }
 
     function openMenu() {
+        evalActiveEntries()
         menu.x = 0
         menuOpen = true
     }

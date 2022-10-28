@@ -14,6 +14,7 @@ function httpRequest(verb, url, body, callback) {
             }
             catch(err) {
                 console.log('failed to parse message: ' + xhr.responseText.toString())
+                return;
             }
 
 

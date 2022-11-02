@@ -12,7 +12,7 @@ Page {
 
     id: root
     property ClientEndpoint client: undefined
-    property var vref: [0, 0, 0, 0, 0]
+    property var vref: [0, 0, 0, 0, 0, 0]
     property alias taskCombo: taskCombo
 
     RowLayout {
@@ -27,10 +27,12 @@ Page {
             Pad {
 
                 id: pad
+                xLabel: 'YAW'
+                yLabel: 'X'
 
                 onJoystickMoved: {
                     vref[0] = joyY
-                    vref[1] = -joyX
+                    vref[5] = -joyX
                     Logic.sendVref()
                 }
 
@@ -52,11 +54,14 @@ Page {
                 ComboBox {
                     anchors.verticalCenter: parent.verticalCenter
                     id: taskCombo
-                    model: ['arm1_8', 'arm2_8', 'base_link']
+                    model: []
                 }
                 Button {
                     anchors.verticalCenter: parent.verticalCenter
                     text: 'Refresh'
+                    onReleased: {
+                        Logic.updateTaskNames()
+                    }
                 }
                 Layout.fillWidth: true
                 spacing: 10
@@ -83,12 +88,12 @@ Page {
             id: rightColumn
             spacing: 30
             Pad {
-                xLabel: 'YAW'
+                xLabel: 'Y'
 
                 horizontalOnly: true
 
                 onJoystickMoved: {
-                    vref[5] = joyX
+                    vref[1] = -joyX
                     Logic.sendVref()
                 }
 
@@ -107,5 +112,9 @@ Page {
 
             }
         }
+    }
+
+    Component.onCompleted: {
+        Logic.updateTaskNames()
     }
 }

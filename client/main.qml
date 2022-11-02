@@ -66,7 +66,6 @@ ApplicationWindow {
         model: pagesModel
 
         entryActiveCallback: function(i) {
-            console.log(pagesModel.get(i).name + " " + pagesModel.get(i).requirement)
             if(pagesModel.get(i).requirement === "none") {
                 return true
             }
@@ -158,7 +157,7 @@ ApplicationWindow {
     Timer {
         id: reconnectTimer
         interval: 1000
-        running: true
+        running: !client.active
         repeat: true
 
         onTriggered: {

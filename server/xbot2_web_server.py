@@ -20,6 +20,7 @@ from geometry_msgs.msg import TwistStamped
 from theora_image_transport.msg import Packet as TheoraPacket
 from screen_session import Process
 from std_srvs.srv import SetBool
+from cartesian_interface.srv import SetControlMode, SetControlModeRequest
 import base64
 
 
@@ -137,6 +138,7 @@ class Xbot2WebServer:
             ('GET', '/ws', self.websocket_handler, 'websocket'),
             ('GET', '/info', self.info_handler, 'init'),
             ('GET', '/get_video_stream', self.get_video_stream_handler, 'get_video_stream'),
+            ('GET', '/cartesian/get_task_list', self.cartesian_get_task_list_handler, 'cartesian_get_task_list'),
             ('PUT', '/set_video_stream', self.set_video_stream_handler, 'set_video_stream'),
             ('PUT', '/proc', self.proc_handler, 'proc'),
             ('PUT', '/plugin/{plugin_name}/{command}', self.plugin_cmd_handler, 'plugin'),
@@ -223,7 +225,6 @@ class Xbot2WebServer:
             print(f'got header {len(self.th_hdr_pkt)}/3')
             return
 
-        self.loop.call_soon_threadsafe(self.th_pkt_queue.put(th_pkt))
         _ = asyncio.run_coroutine_threadsafe(self.th_pkt_queue.put(th_pkt), self.loop)
 
 
@@ -294,6 +295,20 @@ class Xbot2WebServer:
         init_data['plugins'] = plugin_list.plugins
 
         return web.Response(text=json.dumps(init_data))
+
+    
+    async def cartesian_get_task_list_handler(self, request):
+        from cartesian_interface.srv import GetTaskList
+        rospy.wait_for_service('cartesian/get_task_list', timeout=0.1)
+        get_task_list = rospy.ServiceProxy('cartesian/get_task_list', GetTaskList)
+        res = get_task_list()
+        return web.Response(text=json.dumps(
+            {
+                'names': res.names,
+                'types': res.types,
+            }
+        ))
+
 
     
     async def set_video_stream_handler(self, request):
@@ -621,18 +636,28 @@ class Xbot2WebServer:
     async def handle_velocity_command(self, msg):
         task_name = msg['task_name']
         topic_name = rospy.resolve_name(f'cartesian/{task_name}/velocity_reference')
+        ctrl_mode_srv_name = rospy.resolve_name(f'cartesian/{task_name}/set_control_mode')
 
-        print(f'v cmd for task {task_name}: {msg["vref"]}')
-        
         if self.vref_pub is None or self.vref_pub.resolved_name != topic_name:
             try:
-                print(f'advertising {topic_name}, unregistering {self.vref_pub.name}')
+                print(f'unregistering {self.vref_pub.name}')
             except:
                 pass
+            print(f'waiting {ctrl_mode_srv_name}')
+            #rospy.wait_for_service(ctrl_mode_srv_name, timeout=1)
+            ctrl_mode_srv = rospy.ServiceProxy(ctrl_mode_srv_name, service_class=SetControlMode)
+            req = SetControlModeRequest()
+            req.ctrl_mode = 'velocity'
+            res = ctrl_mode_srv(req)
+            print(f'returned {res}')
+            print(f'advertising {topic_name}')
             self.vref_pub = rospy.Publisher(topic_name, TwistStamped, queue_size=1)
+
+            
 
         rosmsg = TwistStamped()
         rosmsg.header.stamp = rospy.Time.now()
+        rosmsg.header.frame_id = task_name
         vref = msg['vref']
         rosmsg.twist.linear.x = vref[0]
         rosmsg.twist.linear.y = vref[1]

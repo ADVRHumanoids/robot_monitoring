@@ -1,0 +1,7 @@
+[submodule "client/Video/theora_cmake/external/theora"] 
+  path = client/Video/theora_cmake/external/theora
+  url = https://github.com/xiph/theora.git
+  
+[submodule "client/Video/theora_cmake/external/ogg"] 
+  path = client/Video/theora_cmake/external/ogg
+  url = https://github.com/xiph/ogg.git

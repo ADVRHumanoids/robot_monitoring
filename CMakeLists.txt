@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
     roscpp
     rviz
     roslib
+    xbot_msgs
     )
 
 # set qt to automatically run MOC and RCC pre-compilers
@@ -36,7 +37,9 @@ find_package(Qt5PrintSupport REQUIRED)
 find_package(RobotInterfaceROS REQUIRED)
 include_directories(include/
     src/
-    ${RobotInterfaceROS_INCLUDE_DIRS})
+    ${RobotInterfaceROS_INCLUDE_DIRS}
+    ${catkin_INCLUDE_DIRS})
+
 
 # generate catkin package, but don't let it export
 # any target
@@ -53,6 +56,7 @@ add_subdirectory(src/imu)
 add_subdirectory(src/aux)
 add_subdirectory(src/maintenance)
 add_subdirectory(src/ft)
+add_subdirectory(src/gripper)
 add_subdirectory(src/rviz/)
 add_subdirectory(src/qcustomplot)
 

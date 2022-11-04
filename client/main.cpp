@@ -24,7 +24,7 @@ public:
     Q_INVOKABLE void updateUi();
 
 public:
-    QString hostname { "localhost" };
+    QString hostname { "10.240.23.38" };
     int port { 8080 };
 
 

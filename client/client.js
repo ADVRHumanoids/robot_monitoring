@@ -13,7 +13,7 @@ function httpRequest(verb, url, body, callback) {
                 var object = JSON.parse(xhr.responseText.toString());
             }
             catch(err) {
-                console.log('failed to parse message: ' + xhr.responseText.toString())
+                console.log(verb + ' ' + url + ': failed to parse message: ' + xhr.responseText.toString())
                 return;
             }
 

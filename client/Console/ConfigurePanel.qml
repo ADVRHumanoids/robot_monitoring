@@ -23,7 +23,8 @@ Rectangle {
     height: parent.height
     width: Math.min(300, parent.width)
     x: hidden ? parent.width : parent.width - width
-    color: Material.primary
+    color: Material.dialogColor
+
 
     Behavior on x {
         NumberAnimation {

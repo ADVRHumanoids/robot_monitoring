@@ -1,11 +1,14 @@
-import QtQuick 2.4
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.11
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import QtQuick.Controls.Material
 
-Column {
+Rectangle {
 
-    id: mainColumn
-    spacing: 10
+    width: col.implicitWidth
+    height: col.implicitHeight
+    color: root.status === "Stopped" ? Qt.lighter(Material.backgroundColor) : Material.color(Material.Teal)
+    radius: 4
 
     // aliases to enable usage from the parent component
     property alias startBtn: startBtn
@@ -13,56 +16,64 @@ Column {
     property alias killBtn: killBtn
     property alias configureBtn: configureBtn
 
-    Label {
-        id: statusLabel
-        anchors.horizontalCenter: parent.horizontalCenter
-        text: root.name + ": " + root.status
-    }
+    Column {
+        anchors.centerIn: parent
+        id: col
+        spacing: 10
+        topPadding: 5
+        leftPadding: 5
+        rightPadding: 5
+        bottomPadding: 5
 
-    Row {
+        Label {
+            id: statusLabel
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: root.name
+        }
 
-        id: btnRow
-        anchors.horizontalCenter: parent.horizontalCenter
-        spacing: 5
+        Row {
 
-        Item {
+            id: btnRow
+            anchors.horizontalCenter: parent.horizontalCenter
+            spacing: 5
 
-            width: startBtn.implicitWidth
-            height: startBtn.implicitHeight
+            Item {
 
-            Button {
-                anchors.fill: parent
-                id: startBtn
-                text: "Start"
-                visible: root.status === "Stopped"
+                width: startBtn.implicitWidth
+                height: startBtn.implicitHeight
+
+                Button {
+                    anchors.fill: parent
+                    id: startBtn
+                    text: "Start"
+                    visible: root.status === "Stopped"
+                }
+
+                Button {
+                    anchors.fill: parent
+                    id: stopBtn
+                    text: "Stop"
+                    z: 0
+                    visible: root.status !== "Stopped"
+                }
+
             }
 
             Button {
-                anchors.fill: parent
-                id: stopBtn
-                text: "Stop"
-                z: 0
-                visible: root.status !== "Stopped"
+                id: killBtn
+                text: "Kill"
             }
+
 
         }
 
         Button {
-            id: killBtn
-            text: "Kill"
+            anchors.horizontalCenter: parent.horizontalCenter
+            id: configureBtn
+            text: root.configPanelOpen ? "Cancel" : "Configure"
+            enabled: root.status === "Stopped"
         }
-
-
     }
-
-    Button {
-        anchors.horizontalCenter: parent.horizontalCenter
-        id: configureBtn
-        text: root.configPanelOpen ? "Cancel" : "Configure"
-        enabled: root.status === "Stopped"
-    }
-
-
 }
 
 /*##^##

@@ -1,4 +1,5 @@
 import asyncio
+import parse
 
 class Process:
 
@@ -8,6 +9,8 @@ class Process:
         self.cmd = cmd
         self.hostname = machine
         self.cmdline = dict()
+        self.ssh_session = None
+        asyncio.get_event_loop().create_task(self._keep_ssh_session_running())
         
 
     async def attach(self):
@@ -88,6 +91,8 @@ class Process:
         """
         Send CTRL+C to the remote session
         """
+        if self.proc is None:
+            await self.attach()
         self.proc.stdin.write('\x03\n'.encode())
         await self.proc.stdin.drain()  
 
@@ -97,14 +102,80 @@ class Process:
         to it. Not super cheap.
         """
 
-        await self.attach()
+        is_running = await self._screen_session_running(self.name)
 
-        if self.proc is None:
-            return 'Stopped'
-        else:
+        if is_running:
             return 'Running'
+        else:
+            return 'Stopped'
 
+    async def _create_ssh_session(self):
+        return await asyncio.create_subprocess_exec(
+                '/usr/bin/ssh', '-o ConnectTimeout=3', self.hostname,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                stdin=asyncio.subprocess.PIPE)
+
+    async def _keep_ssh_session_running(self):
+
+        while True:
+            self.ssh_session = await self._create_ssh_session()
+            retcode = await self.ssh_session.wait()
+            print(f'ssh session died with exit code {retcode}, restarting..')
+
+    
+    async def _screen_session_running(self, name):
+
+        def print(string):
+            pass
+
+        # make sure we have our ssh sesssion
+        if self.ssh_session is None:
+            self.ssh_session = self._create_ssh_session()
+
+        # consume stdout
+        read_coro =  self.ssh_session.stdout.read(4096)
+        try:
+            await asyncio.wait_for(read_coro, timeout=0.1)
+        except:
+            pass
         
+        # send command
+        print('issue screen -ls over ssh..')
+        self.ssh_session.stdin.write('screen -ls \n'.encode())
+        await self.ssh_session.stdin.drain()
+        print('..done')
+        
+        res = None
+        while True:
+            print(f'[{name}] reading line..')
+            line = await self.ssh_session.stdout.readline()
+            line = line.decode().strip()
+            print(f'got line "{line}"')
+            
+            if line.startswith('No Sockets found'):
+                print('not running (no sockets found)')
+                res = False
+                break
+            elif len(line) == 0:
+                print('empty')
+                continue
+            else:
+                end_line =  parse.parse('{} Socket{}in {}', line)
+                print(f'end_line? {end_line}')
+                if end_line is not None:
+                    print(f'not running (but {end_line[0]} sockets were found)')
+                    res = False
+                    break
+                
+                session_line = parse.parse('{}.{}\t({})\t({})', line)
+                print(f'[{name}] session_line? {session_line}')
+                if session_line is not None and session_line[1] == name:
+                    print(f'{name} found!')
+                    res = True
+                    break
+        
+        return res
 
     async def _lifetime_handler(self):
         """

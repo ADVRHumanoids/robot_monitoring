@@ -237,12 +237,7 @@ void YuvShader::updateSampledImage(RenderState &state,
 {
     auto mat = static_cast<YuvMaterial*>(newMaterial);
 
-    if(!mat->tex_changed && texture[0])
-    {
-        return;
-    }
-
-    QSGTexture * oldTexture = texture[0];
+    const bool should_commit_tex_op = mat->tex_changed;
 
     if(binding == 1)  // y channel
     {
@@ -260,7 +255,11 @@ void YuvShader::updateSampledImage(RenderState &state,
         mat->tex_changed = false;
     }
 
-    texture[0]->commitTextureOperations(state.rhi(), state.resourceUpdateBatch());
+    if(should_commit_tex_op)
+    {
+        texture[0]->commitTextureOperations(state.rhi(),
+                                            state.resourceUpdateBatch());
+    }
 
 }
 
@@ -273,13 +272,15 @@ bool YuvShader::updateUniformData(QSGMaterialShader::RenderState &state,
     QByteArray * buf = state.uniformData();
     Q_ASSERT(buf->size() >= 64);
 
-    if (state.isMatrixDirty()) {
+    if(state.isMatrixDirty())
+    {
         const QMatrix4x4 m = state.combinedMatrix();
         memcpy(buf->data(), m.constData(), 64);
         changed = true;
     }
 
-    if (state.isOpacityDirty()) {
+    if(state.isOpacityDirty())
+    {
         const float opacity = state.opacity();
         memcpy(buf->data() + 64, &opacity, 4);
         changed = true;
@@ -394,7 +395,7 @@ void Decoder::addPacket(const QByteArray &msg, int b_o_s, int e_o_s, long granul
 
     QMutexLocker lock(&_mtx);
 
-    _q.enqueue(std::move(pkt));
+    _q.enqueue(pkt);
 }
 
 void Decoder::onPacketReady()
@@ -403,8 +404,22 @@ void Decoder::onPacketReady()
 
     {
         QMutexLocker lock(&_mtx);
+
+        if(_q.empty())
+        {
+            return;
+        }
+
         pkt = _q.dequeue();
+
+
+        if(pkt.datab64.size() == 0)
+        {
+            return;
+        }
+
     }
+
 
     auto tic = hrc::now();
 
@@ -418,11 +433,14 @@ void Decoder::onPacketReady()
     oggpacket.packetno   = pkt.packetno;
     oggpacket.packet = reinterpret_cast<unsigned char*>(data.data());
 
+    qInfo("pkt is %d bytes", oggpacket.bytes);
+
     tic = hrc::now();
 
     // beginning of logical stream flag means we're getting new headers
-    if (oggpacket.b_o_s == 1) {
-
+    if (oggpacket.b_o_s == 1)
+    {
+        qInfo("[theora] got b_o_s");
         // clear all state, everything we knew is wrong
         received_header_ = false;
         received_keyframe_ = false;
@@ -437,12 +455,20 @@ void Decoder::onPacketReady()
         th_comment_clear(&header_comment_);
         th_comment_init(&header_comment_);
         // latest_image_.reset(); @al
+        qInfo("[theora] processed b_o_s");
     }
 
     // decode header packets until we get the first video packet
-    if (received_header_ == false) {
-        int rval = th_decode_headerin(&header_info_, &header_comment_, &setup_info_, &oggpacket);
-        switch (rval) {
+    if (received_header_ == false)
+    {
+        int rval = th_decode_headerin(&header_info_,
+                                      &header_comment_,
+                                      &setup_info_,
+                                      &oggpacket);
+
+        switch (rval)
+        {
+
         case 0:
             // we've received the full header; this is the first video packet.
             decoding_context_ = th_decode_alloc(&header_info_, setup_info_);
@@ -451,6 +477,7 @@ void Decoder::onPacketReady()
                 return;
             }
             received_header_ = true;
+            qInfo("theora: got header");
             // @al pplevel_ = updatePostProcessingLevel(pplevel_);
             break; // Continue on the video decoding
         case TH_EFAULT:
@@ -475,9 +502,22 @@ void Decoder::onPacketReady()
 
     // wait for a keyframe if we haven't received one yet
     // delta frames are useless to us in that case
-    received_keyframe_ = received_keyframe_ || (th_packet_iskeyframe(&oggpacket) == 1);
-    if (!received_keyframe_)
+    if(!received_keyframe_)
+    {
+        qInfo("[theora] waiting keyframe");
+    }
+
+    if (!received_keyframe_ &&
+            th_packet_iskeyframe(&oggpacket) == 1)
+    {
+        received_keyframe_ = true;
+        qInfo("[theora] got keyframe");
+    }
+
+    if(!received_keyframe_)
+    {
         return;
+    }
 
     // we have a video packet we can handle, let's decode it
     int rval = th_decode_packetin(decoding_context_, &oggpacket, NULL);
@@ -515,7 +555,9 @@ void Decoder::onPacketReady()
         if(qimg.width() != th_channel.width ||
                 qimg.height() != th_channel.height)
         {
-            qInfo("resizing textures");
+            qInfo("resizing textures to %d x %d",
+                  th_channel.width, th_channel.height);
+
             qimg = QImage(th_channel.width,
                           th_channel.height,
                           QImage::Format::Format_Grayscale8);

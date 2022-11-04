@@ -32,6 +32,8 @@ Page {
 
         anchors.margins: 10
 
+        spacing: 40
+
     }
 
     Plugins {
@@ -39,7 +41,6 @@ Page {
         id: plugins
         client: root.client
 
-        Layout.fillWidth: true
         Layout.fillHeight: true
     }
 
@@ -49,8 +50,8 @@ Page {
 
         client: root.client
 
-        Layout.fillWidth: true
         Layout.fillHeight: true
+        Layout.preferredWidth: parent.width / 2
 
     }
 

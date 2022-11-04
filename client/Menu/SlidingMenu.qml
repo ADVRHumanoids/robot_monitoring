@@ -22,7 +22,7 @@ Item {
     }
 
     function closeMenu() {
-        menu.x = -menu.width
+        menu.x = -menu.width + handleWidth
         menuOpen = false
     }
 
@@ -36,7 +36,7 @@ Item {
 
         id: menu
 
-        x: menuOpen ? 0 : -width
+        x: menuOpen ? 0 : -width + handleWidth
         width: Math.min(root.width - handleWidth, maxWidth)
 
         anchors {
@@ -64,6 +64,11 @@ Item {
                 header: MenuHeader {
                     width: listView.width
                     height: 100
+
+                    onHamburgerClicked: {
+                        if(menuOpen) closeMenu()
+                        else openMenu()
+                    }
                 }
             }
 
@@ -96,19 +101,19 @@ Item {
         MouseArea {
             anchors.left: menu.right
             anchors.top: menu.top
-            width: menuOpen ? (root.width - menu.width) : handleWidth
+            width: menuOpen ? (root.width - menu.width) : 5
             height: menu.height
             drag {
                 target: menu
                 axis: Drag.XAxis
-                minimumX: -menu.width
+                minimumX: -menu.width + handleWidth
                 maximumX: 0
             }
             onClicked: {
                 if(menuOpen) closeMenu()
             }
             onReleased: {
-                if( menu.x > -menu.width + 100 ) {
+                if( menu.x > -menu.width + handleWidth + 100 ) {
                     openMenu()
                 } else {
                    closeMenu()

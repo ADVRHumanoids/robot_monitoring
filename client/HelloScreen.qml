@@ -1,21 +1,22 @@
 import QtQuick 2.4
+import QtQuick.Controls.Material
 
 HelloScreenForm {
 
     id: hello
 
-    property var client: undefined
+    property ClientEndpoint client: undefined
 
     signal updateServerUrl(var host, var port)
 
     function setError(msg) {
         msgText.text = "Error: " + msg
-        msgText.color = "red"
+        msgText.color = Material.color(Material.Red)
     }
 
     function setConnected(msg) {
         msgText.text = "Status OK: " + msg
-        msgText.color = "green"
+        msgText.color = Material.color(Material.Green)
     }
 
     function setProgress(msg) {
@@ -32,7 +33,9 @@ HelloScreenForm {
     }
 
     applyBtn.onReleased: {
-        updateServerUrl(serverHost, serverPort)
+        client.hostname = serverHost
+        client.port = serverPort
+        client.active = true
     }
 
     onWidthChanged: {

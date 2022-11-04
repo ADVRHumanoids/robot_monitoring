@@ -11,6 +11,7 @@ import "Plotter"
 import "Menu"
 import "Console"
 import "Cartesian"
+import "TestThings"
 
 ApplicationWindow {
 
@@ -28,6 +29,12 @@ ApplicationWindow {
     ListModel {
 
         id: pagesModel
+
+        ListElement {
+            name: "TestPage"
+            page: "TestThings/TestPage.qml"
+            requirement: "none"
+        }
 
         // the hello page
         ListElement {
@@ -58,31 +65,46 @@ ApplicationWindow {
         }
     }
 
-    // a sliding menu to select the active page
-    SlidingMenu {
-        id: menu
+
+    Rectangle {
+        id: cose
+        height: parent.height
+        width: 90
+        anchors.left: parent.left
+        color: "red"
         z: 1
-        anchors.fill: parent
-        model: pagesModel
 
-        entryActiveCallback: function(i) {
-            if(pagesModel.get(i).requirement === "none") {
-                return true
+        // a sliding menu to select the active page
+        SlidingMenu {
+
+            id: menu
+
+            width: mainWindow.width
+            height: mainWindow.height
+            model: pagesModel
+
+            handleWidth: parent.width
+
+            entryActiveCallback: function(i) {
+                if(pagesModel.get(i).requirement === "none") {
+                    return true
+                }
+                if(pagesModel.get(i).requirement === "active") {
+                    return client.active
+                }
+                if(pagesModel.get(i).requirement === "finalized") {
+                    return client.isFinalized
+                }
             }
-            if(pagesModel.get(i).requirement === "active") {
-                return client.active
-            }
-            if(pagesModel.get(i).requirement === "finalized") {
-                return client.isFinalized
+
+            // when a page is selected, make it active
+            // on the stack layout
+            onItemSelected: function(index) {
+                pagesStack.currentIndex = index
+                closeMenu()
             }
         }
 
-        // when a page is selected, make it active
-        // on the stack layout
-        onItemSelected: function(index) {
-            pagesStack.currentIndex = index
-            closeMenu()
-        }
     }
 
     // stack with all main pages, as defined
@@ -90,7 +112,13 @@ ApplicationWindow {
     StackLayout {
 
         id: pagesStack
-        anchors.fill: parent
+
+        width: mainWindow.width - cose.width
+        height: mainWindow.height
+
+        anchors {
+            left: cose.right
+        }
 
         // load all pages in the model
         Repeater {
@@ -111,46 +139,39 @@ ApplicationWindow {
                 }
 
                 Component.onCompleted: {
+                    // this is the "constructor"
+                    // each page has a .client elem
                     setSource(page, {'client': client})
-                }
-
-                Connections {
-
-                    target: item  // item is the loaded object
-
-                    // connect hello page to client update function
-                    function onUpdateServerUrl(hostname, port) {
-                        client.hostname = hostname
-                        client.port = port
-                        client.active = true
-                    }
-
-                    ignoreUnknownSignals: true
                 }
             }
         }
     }
 
     // the object handling communication with the backend (server)
-    ClientEndpoint {
+    Item {
         id: client
-        onError: function (msg) {
-            items.home.setError(msg)
-        }
-        onConnected: function (msg) {
-            items.home.setConnected(msg)
-            menu.evalActiveEntries()
-        }
-        onJointStateReceived: function (msg) {
-            if(items.monitoring !== undefined) {
-                items.monitoring.setJointStateMessage(msg)
-            }
-        }
-        onFinalized: {
-            print('finalized!')
-            menu.evalActiveEntries()
-        }
+        property bool active: true
     }
+
+//    ClientEndpoint {
+//        id: client
+//        onError: function (msg) {
+//            items.home.setError(msg)
+//        }
+//        onConnected: function (msg) {
+//            items.home.setConnected(msg)
+//            menu.evalActiveEntries()
+//        }
+//        onJointStateReceived: function (msg) {
+//            if(items.monitoring !== undefined) {
+//                items.monitoring.setJointStateMessage(msg)
+//            }
+//        }
+//        onFinalized: {
+//            print('finalized!')
+//            menu.evalActiveEntries()
+//        }
+//    }
 
     // a timer to periodically try connection
     // with server

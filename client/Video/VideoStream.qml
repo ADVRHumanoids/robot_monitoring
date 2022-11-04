@@ -88,7 +88,6 @@ Item {
                     }
                 }
             }
-
         }
 
         VideoStreamPainter {

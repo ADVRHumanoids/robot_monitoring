@@ -6,14 +6,18 @@ import QtQuick.Controls.Material
 Item {
 
     id: root
-    height: col.implicitHeight
+    implicitHeight: col.implicitHeight
+    implicitWidth: col.implicitWidth
 
     property var client: undefined
     property var model: []
 
     Column {
         id: col
-        anchors.fill: parent
+        anchors {
+            horizontalCenter: parent.horizontalCenter
+            top: parent.top
+        }
 
         Repeater {
             id: repeater
@@ -22,7 +26,6 @@ Item {
             SinglePlugin {
                 name: modelData
                 period: 1.0
-                width: col.width
                 onStart: {
                     client.doRequest('PUT',
                                      '/plugin/' + name + '/start',

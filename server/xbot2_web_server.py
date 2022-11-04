@@ -10,7 +10,6 @@ import argparse
 from aiohttp import web
 import json
 
-from isort import stream
 import rospy
 from urdf_parser_py import urdf as urdf_parser
 from xbot_msgs.msg import JointState, Statistics2

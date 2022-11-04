@@ -40,5 +40,7 @@
         <file>Video/VideoStreamFrontend.qml</file>
         <file>Video/video.js</file>
         <file>Cartesian/cartesian.js</file>
+        <file>Icons/home_dark.png</file>
+        <file>TestThings/TestPage.qml</file>
     </qresource>
 </RCC>

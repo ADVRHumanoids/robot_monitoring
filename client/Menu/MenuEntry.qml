@@ -39,6 +39,23 @@ Item {
             }
         }
 
+        Image {
+            id: icon
+            source: '../Icons/home_dark.png'
+            anchors {
+                top: parent.top
+                right: parent.right
+                bottom: parent.bottom
+                margins: 5
+            }
+            width: height
+        }
+
+//        ShaderEffect {
+//            property variant src: icon
+//            fragmentShader: '/Icons/shader/invert.frag.qsb'
+//        }
+
     }
 
     MouseArea {

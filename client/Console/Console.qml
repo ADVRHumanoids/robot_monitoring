@@ -16,115 +16,141 @@ Item {
     ColumnLayout {
 
         anchors.fill: parent
+        anchors.margins: 10
+        spacing: 10
 
         // process widget row
-        RowLayout {
+        Frame {
 
-            id: rowLayout
             width: parent.width
-
-            Repeater {
-
-                id: procRepeater
-                model: 0
-
-                Process {
-
-                    id: process
-
-                    ConfigurePanel {
-                        id: configurePanel
-                        z: 10
-                        parent: root
-                        description: SharedData.processInfo[index].cmdline
-                    }
-
-                    Layout.fillWidth: true
-                    name: modelData.name
-                    status: modelData.status
-
-                    onStart: {
-
-                        root.client.doRequest('PUT',
-                                              '/proc',
-                                              JSON.stringify({name: name,
-                                                              cmd: 'start',
-                                                              options: configurePanel.options}),
-                                              function(msg){})
-                    }
-
-                    onStop: {
-
-                        root.client.doRequest('PUT',
-                                              '/proc',
-                                              JSON.stringify({name: name, cmd: 'stop'}),
-                                              function(msg){})
-                    }
-
-                    configureBtn.onPressed: {
-                        if(configPanelOpen) {
-                             configurePanel.hidden = true
-                        }
-                        else {
-                            configurePanel.hidden = false
-                        }
-
-
-                    }
-
-                    configPanelOpen: !configurePanel.hidden
-
-
-                }
-
-            }
-
-        }
-
-        ToolSeparator {
             Layout.fillWidth: true
-            orientation: Qt.Horizontal
-        }
 
-        RowLayout {
-            CheckBox {
-                id: scrollOnOutputCheck
-                text: "Scroll on output"
-                checked: true
-                checkable: true
-            }
-            Button {
-                id: clearBtn
-                text: "Clear console"
-                onReleased: {
-                    consoleText.clear()
+            GridLayout {
+
+                id: rowLayout
+                anchors.fill: parent
+                readonly property int elementWidth: 200
+
+                columns: Math.max(Math.floor(parent.width / elementWidth), 1)
+                rows: Math.max(Math.ceil(children.length / columns), 1)
+
+                Repeater {
+
+                    id: procRepeater
+
+                    model: 0
+
+                    Process {
+
+                        id: process
+                        Layout.fillWidth: true
+                        Layout.leftMargin: 5
+                        Layout.rightMargin: 5
+                        Layout.topMargin: 5
+                        Layout.bottomMargin: 5
+
+                        ConfigurePanel {
+                            id: configurePanel
+                            z: 10
+                            parent: root
+                            description: SharedData.processInfo[index].cmdline
+                        }
+
+                        name: modelData.name
+                        status: modelData.status
+
+                        onStart: {
+
+                            root.client.doRequest('PUT',
+                                                  '/proc',
+                                                  JSON.stringify({name: name,
+                                                                     cmd: 'start',
+                                                                     options: configurePanel.options}),
+                                                  function(msg){})
+                        }
+
+                        onStop: {
+
+                            root.client.doRequest('PUT',
+                                                  '/proc',
+                                                  JSON.stringify({name: name, cmd: 'stop'}),
+                                                  function(msg){})
+                        }
+
+                        configureBtn.onPressed: {
+                            if(configPanelOpen) {
+                                configurePanel.hidden = true
+                            }
+                            else {
+                                configurePanel.hidden = false
+                            }
+
+
+                        }
+
+                        configPanelOpen: !configurePanel.hidden
+
+
+                    }
+
                 }
+
             }
-        }
 
-        ScrollView {
+        }  // Frame
 
+        Frame {
+
+            Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.fillWidth: true
 
-            TextArea {
+            ColumnLayout {
 
-                width: parent.width
+                anchors.fill: parent
 
-                id: consoleText
-                color: "white"
-                readOnly: true
-
-                placeholderText: "Console output"
-                wrapMode: TextEdit.Wrap
-
-                textFormat: TextEdit.RichText
-
-                function addText(str) {
-                    append(str)
-                    if(scrollOnOutputCheck.checked) {
-                        cursorPosition = length - 1
+                RowLayout {
+                    CheckBox {
+                        id: scrollOnOutputCheck
+                        text: "Scroll on output"
+                        checked: true
+                        checkable: true
                     }
+                    Button {
+                        id: clearBtn
+                        text: "Clear console"
+                        onReleased: {
+                            consoleText.clear()
+                        }
+                    }
+                }
+
+                ScrollView {
+
+                    Layout.fillHeight: true
+                    Layout.fillWidth: true
+
+                    TextArea {
+
+                        width: parent.width
+
+                        id: consoleText
+                        color: "white"
+                        readOnly: true
+
+                        placeholderText: "Console output"
+                        wrapMode: TextEdit.Wrap
+
+                        textFormat: TextEdit.RichText
+
+                        function addText(str) {
+                            append(str)
+                            if(scrollOnOutputCheck.checked) {
+                                cursorPosition = length - 1
+                            }
+                        }
+
+                    }
+
                 }
 
             }
@@ -177,6 +203,7 @@ Item {
     }
 
     Component.onCompleted: {
+        console.log(JSON.stringify(SharedData.processInfo))
         procRepeater.model = SharedData.processInfo
     }
 

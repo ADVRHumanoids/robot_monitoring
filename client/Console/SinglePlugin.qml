@@ -6,8 +6,8 @@ import QtQuick.Controls.Material
 Item {
 
     id: root
-    height: row.implicitHeight
-    width: row.implicitWidth
+    implicitHeight: row.implicitHeight
+    implicitWidth: row.implicitWidth
 
     property alias name: nameLabel.text
     property string state: "None"

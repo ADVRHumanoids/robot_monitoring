@@ -13,6 +13,7 @@ GroupBox {
         id: grid
         columns: 3
         anchors.fill: parent
+        rowSpacing: -6
     }
 }
 

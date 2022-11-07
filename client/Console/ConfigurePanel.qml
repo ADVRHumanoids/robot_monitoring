@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import QtQuick.Controls.Material
@@ -18,6 +18,8 @@ Rectangle {
     property alias _grid: mainLayout
     property alias _cancelBtn: cancelBtn
     property alias _okBtn: okBtn
+
+    signal closeRequested()
 
     id: root
     height: parent.height
@@ -59,6 +61,7 @@ Rectangle {
         text: "Cancel"
         onReleased: {
             hidden = true
+            closeRequested()
         }
     }
 
@@ -70,6 +73,7 @@ Rectangle {
         onReleased: {
             Logic.apply()
             hidden = true
+            closeRequested()
         }
     }
 

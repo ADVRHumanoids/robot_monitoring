@@ -31,7 +31,7 @@ ApplicationWindow {
         id: pagesModel
 
         ListElement {
-            name: "TestPage"
+            name: "Test Page"
             page: "TestThings/TestPage.qml"
             requirement: "none"
         }
@@ -66,45 +66,54 @@ ApplicationWindow {
     }
 
 
-    Rectangle {
-        id: cose
-        height: parent.height
-        width: 90
+//    Rectangle {
+//        id: cose
+//        height: parent.height
+//        width: 90
+//        anchors.left: parent.left
+//        color: "red"
+//        z: 1
+
+//        // a sliding menu to select the active page
+//        SlidingMenu {
+
+//            id: menu
+
+//            width: mainWindow.width
+//            height: mainWindow.height
+//            model: pagesModel
+
+//            handleWidth: parent.width
+
+//            entryActiveCallback: function(i) {
+//                if(pagesModel.get(i).requirement === "none") {
+//                    return true
+//                }
+//                if(pagesModel.get(i).requirement === "active") {
+//                    return client.active
+//                }
+//                if(pagesModel.get(i).requirement === "finalized") {
+//                    return client.isFinalized
+//                }
+//            }
+
+//            // when a page is selected, make it active
+//            // on the stack layout
+//            onItemSelected: function(index) {
+//                pagesStack.currentIndex = index
+//                closeMenu()
+//            }
+//        }
+
+//    }
+
+    NavDrawer {
+        id: nav
         anchors.left: parent.left
-        color: "red"
+        height: parent.height
         z: 1
-
-        // a sliding menu to select the active page
-        SlidingMenu {
-
-            id: menu
-
-            width: mainWindow.width
-            height: mainWindow.height
-            model: pagesModel
-
-            handleWidth: parent.width
-
-            entryActiveCallback: function(i) {
-                if(pagesModel.get(i).requirement === "none") {
-                    return true
-                }
-                if(pagesModel.get(i).requirement === "active") {
-                    return client.active
-                }
-                if(pagesModel.get(i).requirement === "finalized") {
-                    return client.isFinalized
-                }
-            }
-
-            // when a page is selected, make it active
-            // on the stack layout
-            onItemSelected: function(index) {
-                pagesStack.currentIndex = index
-                closeMenu()
-            }
-        }
-
+        model: pagesModel
+        overlayWidth: mainWindow.width
     }
 
     // stack with all main pages, as defined
@@ -113,12 +122,13 @@ ApplicationWindow {
 
         id: pagesStack
 
-        width: mainWindow.width - cose.width
+        anchors {
+            left: nav.right
+            right: parent.right
+        }
+
         height: mainWindow.height
 
-        anchors {
-            left: cose.right
-        }
 
         // load all pages in the model
         Repeater {

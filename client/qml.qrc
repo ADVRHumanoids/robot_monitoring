@@ -42,5 +42,11 @@
         <file>Cartesian/cartesian.js</file>
         <file>Icons/home_dark.png</file>
         <file>TestThings/TestPage.qml</file>
+        <file>TestThings/MaterialResponsiveGrid.qml</file>
+        <file>TestThings/PluginStatus.qml</file>
+        <file>TestThings/ProcessStatus.qml</file>
+        <file>TestThings/NavDrawer.qml</file>
+        <file>TestThings/Hamburger.qml</file>
+        <file>TestThings/RailMenu.qml</file>
     </qresource>
 </RCC>

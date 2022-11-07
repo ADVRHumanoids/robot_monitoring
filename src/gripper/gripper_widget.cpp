@@ -145,6 +145,15 @@ bool GripperWidget::init(CustomQtWidget::Args& args)
        cmdSlider->setValue(value * 100.);
     });
 
+    auto openGripperBtn = findChild<QPushButton*>("openGripperBtn");
+
+    connect(openGripperBtn, &QPushButton::released,
+            [cmdSendBtn, cmdSpinBox]()
+    {
+        cmdSpinBox->setValue(0);
+        cmdSendBtn->released();
+    });
+
     connect(cmdSendBtn, &QPushButton::released,
             [this, cmdSpinBox]()
     {

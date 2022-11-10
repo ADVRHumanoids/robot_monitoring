@@ -48,5 +48,8 @@
         <file>TestThings/NavDrawer.qml</file>
         <file>TestThings/Hamburger.qml</file>
         <file>TestThings/RailMenu.qml</file>
+        <file>TestThings/NavBar.qml</file>
+        <file>TestThings/Console.qml</file>
+        <file>TestThings/Monitoring.qml</file>
     </qresource>
 </RCC>

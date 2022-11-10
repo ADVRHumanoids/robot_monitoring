@@ -8,7 +8,7 @@ Rectangle {
     property bool pluginRunning: true
     property string pluginName: 'Homing'
     implicitHeight: mainCol.implicitHeight + 32
-    color: Material.background
+    color: Qt.lighter(Material.background)
     radius: 4
 
     Column {

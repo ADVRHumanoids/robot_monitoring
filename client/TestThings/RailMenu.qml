@@ -6,11 +6,9 @@ Item {
 
     property real position: 0.0
     property int railWidth: 80
-    property int overlayWidth: 0
     property alias menuWidth: menu.width
     property alias color: menu.color
 
-    implicitWidth: railWidth
 
     function open() {
         position = 1
@@ -23,6 +21,7 @@ Item {
     Behavior on position {
         NumberAnimation {
             duration: 500
+            easing.type: Easing.OutQuad
         }
     }
 
@@ -33,6 +32,7 @@ Item {
         x: (-width + railWidth)*(1 - position)
         width: 200
         height: parent.height
+
     }
 
     Rectangle {
@@ -42,8 +42,8 @@ Item {
         anchors {
             left: menu.right
         }
+        width: root.position > 0 ? root.width - menu.width - menu.x : 0
         height: menu.height
-        width : position == 0 ? 0 : root.overlayWidth
 
         MouseArea {
             anchors.fill: parent

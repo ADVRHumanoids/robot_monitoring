@@ -7,10 +7,15 @@ Rectangle {
 
     id: root
     objectName: '__root__'
-    color: Material.color(Material.LightGreen)
-    property int margin: responsiveMargin(width)
+    color: debug ? Material.color(Material.LightGreen) : Qt.rgba(0, 0, 0, 0)
+    property int margin: responsiveMargin()
     property alias spacing: mainRow.spacing
-    property int columns: responsiveColumns(width)
+    property int columns: responsiveColumns()
+    property int sizeid: id(width)
+    property int brSmall: 480
+    property int brMedium: 768
+    property int brLarge: 1200
+    property bool debug: false
 
     RowLayout {
 
@@ -30,11 +35,10 @@ Rectangle {
 
             Rectangle {
 
-                height: root.height
                 Layout.preferredWidth: 1
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                color: Material.color(Material.Red)
+                color: debug ? Material.color(Material.Red) : Qt.rgba(0, 0, 0, 0)
 
                 onXChanged: {
                     Qt.callLater(root.computeLayout)
@@ -53,7 +57,7 @@ Rectangle {
 
     function computeLayout() {
 
-        let ncol = root.responsiveColumns(root.width)
+        let ncol = columns
 
         let colHeight = new Array(ncol).fill(0);
 
@@ -76,8 +80,17 @@ Rectangle {
             // get item's column span (defaults to 4)
             let colSpan = item.columnSpan || 4
 
+            if(Array.isArray(colSpan)) {
+
+                colSpan = colSpan[sizeid]
+            }
+
             // get item's column id
             let colId = item.column || -1
+
+            if(Array.isArray(colId)) {
+                colId = colId[sizeid]
+            }
 
             // if colId was -1, we compute it based on flow type
             if(colId === -1) {
@@ -110,19 +123,19 @@ Rectangle {
             }
 
             // set implicit height
-            root.implicitHeight = maxHeight + item.height + 16
+            root.implicitHeight = maxHeight + item.height + 16 + 100
 
         }
     }
 
     function id(viewportWidth) {
-        if(viewportWidth < 600) {
+        if(viewportWidth < brSmall) {
             return 0;
         }
-        else if(viewportWidth < 904) {
-            return 1;
+        else if(viewportWidth < brMedium) {
+            return 1
         }
-        else if(viewportWidth < 1440) {
+        else if(viewportWidth < brLarge) {
             return 2
         }
         else {
@@ -131,34 +144,14 @@ Rectangle {
     }
 
 
-    function responsiveMargin(viewportWidth) {
-        if(viewportWidth < 600) {
-            return 16;
-        }
-        else if(viewportWidth < 904) {
-            return 32;
-        }
-        else if(viewportWidth < 1440) {
-            return 32 + (viewportWidth - 904)/540*200
-        }
-        else {
-            return 200
-        }
+    function responsiveMargin() {
+        let margins = [16, 32, 32 + (root.width - brMedium)/(brLarge-brMedium)*200, 200]
+        return margins[sizeid]
     }
 
-    function responsiveColumns(viewportWidth) {
-        if(viewportWidth < 600) {
-            return 4;
-        }
-        else if(viewportWidth < 904) {
-            return 8;
-        }
-        else if(viewportWidth < 1440) {
-            return 12
-        }
-        else {
-            return 12
-        }
+    function responsiveColumns() {
+        let columns  = [4, 8, 12, 12]
+        return columns[sizeid]
     }
 
 }

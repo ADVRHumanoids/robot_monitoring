@@ -6,9 +6,10 @@ import QtQuick.Layouts
 RailMenu {
 
     id: root
-    color: "blue"
+    color: Material.primaryColor
     railWidth: ham.width + 2*16
     menuWidth: 300
+    property int currentIndex: 0
 
     property var model: []
 
@@ -29,24 +30,46 @@ RailMenu {
 
             for(let i = 0; i < model.count; i++) {
                 let obj = model.get(i)
-                nameComponent.createObject(grid, {'text': obj.name})
-                iconComponent.createObject(grid, {'text': obj.name[0]})
+                let nameObj = nameComponent.createObject(grid, {'text': obj.name})
+                let iconObj = iconComponent.createObject(grid, {'text': obj.name[0]})
+                nameObj.clicked.connect(function(){
+                    root.currentIndex = i
+                    root.close()
+                })
+                iconObj.clicked.connect(function(){
+                    root.currentIndex = i
+                    root.close()
+                })
             }
         }
 
         Component {
             id: nameComponent
             Label {
+                signal clicked()
                 Layout.fillWidth: true
                 font.pixelSize: 20
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        parent.clicked()
+                    }
+                }
             }
         }
 
         Component {
             id: iconComponent
             Label {
+                signal clicked()
                 font.pixelSize: 32
                 width: ham.width
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        parent.clicked()
+                    }
+                }
             }
         }
 

@@ -30,16 +30,16 @@ ApplicationWindow {
 
         id: pagesModel
 
-        ListElement {
-            name: "Test Page"
-            page: "TestThings/TestPage.qml"
-            requirement: "none"
-        }
-
         // the hello page
         ListElement {
             name: "Home"
             page: "HelloScreen.qml"
+            requirement: "none"
+        }
+
+        ListElement {
+            name: "Test Page"
+            page: "TestThings/TestPage.qml"
             requirement: "none"
         }
 
@@ -109,12 +109,41 @@ ApplicationWindow {
 
     NavDrawer {
         id: nav
-        anchors.left: parent.left
-        height: parent.height
+        anchors.fill: parent
         z: 1
         model: pagesModel
-        overlayWidth: mainWindow.width
+
     }
+
+    NavBar {
+        id: navBar
+        width: parent.width
+        height: 40
+        model: pagesModel
+        color: nav.color
+
+        onHamburgerClicked: {
+            nav.open()
+        }
+    }
+
+    function responsiveNav() {
+        if(mainWindow.width > mainWindow.height) {
+            // landscape
+            navBar.y = mainWindow.height
+            navBar.visible = false
+            nav.railWidth = 72
+            nav.menuWidth = 300
+        }
+        else {
+            // portrait
+            navBar.y = mainWindow.height - navBar.height
+            navBar.visible = true
+            nav.railWidth = 0
+            nav.menuWidth = mainWindow.width
+        }
+    }
+
 
     // stack with all main pages, as defined
     // in the pagesModel element
@@ -123,12 +152,14 @@ ApplicationWindow {
         id: pagesStack
 
         anchors {
-            left: nav.right
             right: parent.right
+            top: parent.top
+            bottom: navBar.top
         }
 
-        height: mainWindow.height
+        width: mainWindow.width - nav.railWidth
 
+        currentIndex: nav.currentIndex
 
         // load all pages in the model
         Repeater {
@@ -158,30 +189,25 @@ ApplicationWindow {
     }
 
     // the object handling communication with the backend (server)
-    Item {
+    ClientEndpoint {
         id: client
-        property bool active: true
+        onError: function (msg) {
+            items.home.setError(msg)
+        }
+        onConnected: function (msg) {
+            items.home.setConnected(msg)
+            menu.evalActiveEntries()
+        }
+        onJointStateReceived: function (msg) {
+            if(items.monitoring !== undefined) {
+                items.monitoring.setJointStateMessage(msg)
+            }
+        }
+        onFinalized: {
+            print('finalized!')
+            menu.evalActiveEntries()
+        }
     }
-
-//    ClientEndpoint {
-//        id: client
-//        onError: function (msg) {
-//            items.home.setError(msg)
-//        }
-//        onConnected: function (msg) {
-//            items.home.setConnected(msg)
-//            menu.evalActiveEntries()
-//        }
-//        onJointStateReceived: function (msg) {
-//            if(items.monitoring !== undefined) {
-//                items.monitoring.setJointStateMessage(msg)
-//            }
-//        }
-//        onFinalized: {
-//            print('finalized!')
-//            menu.evalActiveEntries()
-//        }
-//    }
 
     // a timer to periodically try connection
     // with server
@@ -195,5 +221,17 @@ ApplicationWindow {
             client.active = true
         }
 
+    }
+
+    onWidthChanged: {
+        responsiveNav()
+    }
+
+    onHeightChanged: {
+        responsiveNav()
+    }
+
+    Component.onCompleted: {
+        responsiveNav()
     }
 }

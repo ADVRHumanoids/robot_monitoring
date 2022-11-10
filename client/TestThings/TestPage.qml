@@ -3,50 +3,134 @@ import QtQuick.Layouts
 import QtQuick.Controls.Material
 
 
-Rectangle {
+Item {
 
+    TabBar {
+        id: bar
+        width: parent.width
+        TabButton {
+            text: 'Process'
+        }
+        TabButton {
+            text: 'Plugin'
+        }
+        y: mobileLayout ? 0 : -height
+    }
+
+    id: root
     property var client: undefined
-    color: "green"
+    property bool mobileLayout: width < gridLeft.brSmall
 
-    ScrollView {
+    onWidthChanged: {
+        if(mobileLayout) {
+            mainRow.children = []
+            mainSwipe.contentChildren = [scrollLeft, scrollRight]
+        }
+        else {
+            mainSwipe.contentChildren = []
+            mainRow.children = [scrollLeft, scrollRight]
+        }
+    }
 
-        id: scroll
-        anchors.fill: parent
-        contentWidth: availableWidth
-        contentHeight: grid.height
+    SwipeView {
+        id: mainSwipe
+        width: parent.width
+        anchors {
+            top: bar.bottom
+            bottom: parent.bottom
+        }
 
-        MaterialResponsiveGrid {
+        clip: true
+        currentIndex: bar.currentIndex
+    }
 
-            id: grid
-            width: scroll.contentWidth
+    RowLayout {
 
-//            PluginStatus {
+        id: mainRow
+        width: parent.width
+        anchors {
+            top: bar.bottom
+            bottom: parent.bottom
+        }
 
-//            }
+        ScrollView {
 
-            ProcessStatus {
+            id: scrollLeft
+
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            contentWidth: availableWidth
+            contentHeight: gridLeft.height
+
+            MaterialResponsiveGrid {
+
+                id: gridLeft
+                width: scrollLeft.contentWidth
+
+                Label {
+                    property int columnSpan: parent.columns
+                    text: "Process"
+                    font.pixelSize: 40
+                }
+
+                Repeater{
+                    model: 5
+
+                    ProcessStatus {
+                    }
+
+                }
+
+                Label {
+                    property int columnSpan: parent.columns
+                    text: "Console output"
+                    font.pixelSize: 40
+                }
+
+                Console {
+                    property int columnSpan: parent.columns
+                }
 
             }
 
-            ProcessStatus {
+        }
 
-            }
+        ScrollView {
 
-            ProcessStatus {
+            id: scrollRight
 
-            }
+            Layout.fillWidth: true
+            Layout.fillHeight: true
 
-            ProcessStatus {
+            contentWidth: availableWidth
+            contentHeight: gridRight.height
 
-            }
+            MaterialResponsiveGrid {
 
-            ProcessStatus {
+                id: gridRight
+                width: scrollRight.contentWidth
+                sizeid: gridLeft.sizeid
 
-            }
+                Label {
+                    property int columnSpan: parent.columns
+                    text: "Plugin"
+                    font.pixelSize: 40
+                }
 
-            Rectangle {
-                property int columnSpan: grid.columns
-                height: 300
+                PluginStatus {
+
+                }
+                PluginStatus {
+
+                }
+                PluginStatus {
+
+                }
+                PluginStatus {
+
+                }
+
             }
 
         }

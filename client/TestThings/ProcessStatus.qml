@@ -11,7 +11,7 @@ Rectangle {
     property bool processRunning: true
     property string processName: 'Xbot2'
     implicitHeight: mainCol.implicitHeight + 32
-    color: Material.background
+    color: Qt.lighter(Material.background)
     radius: 4
 
     Column {

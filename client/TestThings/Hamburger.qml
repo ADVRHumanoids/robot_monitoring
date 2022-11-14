@@ -1,50 +1,47 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Material
+import xbot2_gui.common
 
-Item {
+Rectangle {
     id: root
-    property int margin: 5
+    property int margin: 6
     property int lineWidth: 2
-    property color color: Material.primaryTextColor
+    property color lineColor: CommonProperties.colors.primaryText
+    color: mouseArea.containsMouse ? Qt.rgba(0, 0, 0, 0.3) : Qt.rgba(0, 0, 0, 0)
+    radius: 4
+
 
     signal clicked()
 
-    Rectangle {
+    Item {
         id: mainRect
-        color: Qt.rgba(0,0,0,0)
         anchors.fill: parent
         anchors.margins: root.margin
 
         Rectangle {
             id: centerLine
             height: root.lineWidth
-            anchors.centerIn: parent
+            y: parent.height/2 - height/2
             width: parent.width
-            color: root.color
+            color: root.lineColor
 
-            transform: Rotation {
 
-            }
         }
 
         Rectangle {
             id: topLine
             height: root.lineWidth
-            anchors.centerIn: parent
+            y: 0
             width: parent.width
-            color: root.color
-
-            anchors.verticalCenterOffset: mainRect.height / 2
-
+            color: root.lineColor
         }
 
         Rectangle {
             id: bottomLine
             height: root.lineWidth
-            anchors.centerIn: parent
+            y: parent.height - height/2
             width: parent.width
-            color: root.color
+            color: root.lineColor
 
             anchors.verticalCenterOffset: -mainRect.height / 2
 

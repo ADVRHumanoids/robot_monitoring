@@ -1,12 +1,12 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
-import QtQuick.Controls.Material
 import Qt.labs.settings
+import xbot2_gui.common
 
 import "configure_panel.js" as Logic
 
-Rectangle {
+Item {
 
     property bool hidden: true
 
@@ -25,7 +25,6 @@ Rectangle {
     height: parent.height
     width: Math.min(300, parent.width)
     x: hidden ? parent.width : parent.width - width
-    color: Material.dialogColor
 
 
     Behavior on x {
@@ -47,9 +46,8 @@ Rectangle {
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.margins: 10
             columns: 2
-            columnSpacing: 20
+            columnSpacing: 16
         }
 
     }
@@ -107,6 +105,10 @@ Rectangle {
 
         }
 
+    }
+
+    Settings {
+        id: settings
     }
 
     // initialization

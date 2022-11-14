@@ -5,7 +5,7 @@ import "logic.js" as Logic
 
 // allow to scroll this widget if viewport height
 // is too small
-ScrollView {
+Item {
 
     // main properties
     property var jointNames: []
@@ -23,20 +23,23 @@ ScrollView {
 
     signal jointClicked(string jname)
 
+    implicitWidth: grid.implicitWidth
+    implicitHeight: grid.implicitHeight
+
     id: root
-    clip : true
-    contentWidth: availableWidth
-    contentHeight: Math.max(grid.implicitHeight, parent.height)
+//    clip : true
+//    contentWidth: availableWidth
+//    contentHeight: Math.max(grid.implicitHeight, parent.height)
 
     GridLayout
     {
         id: grid
         anchors.fill: parent
-        rowSpacing: 2
+        rowSpacing: 4
         columnSpacing: 10
         flow: GridLayout.TopToBottom
 
-        readonly property int elementWidth: 200
+        readonly property int elementWidth: 180
 
         columns: Math.max(Math.floor(parent.width / elementWidth), 1)
         rows: Math.max(Math.ceil(children.length / columns), 1)

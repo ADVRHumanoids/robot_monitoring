@@ -3,9 +3,11 @@ import QtQuick.Controls
 
 Rectangle {
 
+    id: root
     color: "blue"
 
     property var model: []
+    property int currentIndex: 0
 
     signal hamburgerClicked()
 
@@ -18,7 +20,7 @@ Rectangle {
         }
 
         height: parent.height - 12
-        width: height
+        width: height*1.2
 
         onClicked: {
             hamburgerClicked()
@@ -34,15 +36,20 @@ Rectangle {
         Component.onCompleted: {
             for(let i = 0; i < model.count; i++) {
                 let obj = model.get(i)
-                iconComponent.createObject(row, {'text': obj.name[0]})
+                let icon = iconComponent.createObject(row, {'name': obj.name, 'index': i})
             }
         }
 
         Component {
             id: iconComponent
-            Label {
-                font.pixelSize: 24
+            NavIcon {
+                property int index: -1
                 width: ham.width
+                isSelected: currentIndex === index
+
+                onClicked: {
+                    currentIndex = index
+                }
             }
         }
     }

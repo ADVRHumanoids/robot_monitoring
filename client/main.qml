@@ -30,7 +30,6 @@ ApplicationWindow {
 
         id: pagesModel
 
-        // the hello page
         ListElement {
             name: "Home"
             page: "HelloScreen.qml"
@@ -38,31 +37,29 @@ ApplicationWindow {
         }
 
         ListElement {
-            name: "Test Page"
+            name: "Viewer"
+            page: "TestThings/Viewer3D.qml"
+            requirement: "none"
+        }
+
+        ListElement {
+            name: "Joy"
+            page: "TestThings/Joy.qml"
+            requirement: "none"
+        }
+
+        ListElement {
+            name: "Launcher"
             page: "TestThings/TestPage.qml"
             requirement: "none"
         }
 
-        // the console page
-        ListElement {
-            name: "Console"
-            page: "Console/Xbot2.qml"
-            requirement: "active"  // server connected
-        }
-
-        // the monitoring page
         ListElement {
             name: "Monitoring"
-            page: "Monitoring.qml"
-            requirement: "finalized"  // xbot2 connected
+            page: "TestThings/Monitoring.qml"
+            requirement: "none"
         }
 
-        // the cartesian control page
-        ListElement {
-            name: "Cartesian control"
-            page: "Cartesian/Cartesian.qml"
-            requirement: "finalized"  // xbot2 connected
-        }
     }
 
 
@@ -113,6 +110,10 @@ ApplicationWindow {
         z: 1
         model: pagesModel
 
+        onCurrentIndexChanged: {
+            pagesStack.currentIndex = currentIndex
+        }
+
     }
 
     NavBar {
@@ -124,6 +125,10 @@ ApplicationWindow {
 
         onHamburgerClicked: {
             nav.open()
+        }
+
+        onCurrentIndexChanged: {
+            pagesStack.currentIndex = currentIndex
         }
     }
 
@@ -197,11 +202,6 @@ ApplicationWindow {
         onConnected: function (msg) {
             items.home.setConnected(msg)
             menu.evalActiveEntries()
-        }
-        onJointStateReceived: function (msg) {
-            if(items.monitoring !== undefined) {
-                items.monitoring.setJointStateMessage(msg)
-            }
         }
         onFinalized: {
             print('finalized!')

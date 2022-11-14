@@ -126,8 +126,8 @@ class Process:
     
     async def _screen_session_running(self, name):
 
-        def print(string):
-            pass
+        # def print(string):
+        #     pass
 
         # make sure we have our ssh sesssion
         if self.ssh_session is None:

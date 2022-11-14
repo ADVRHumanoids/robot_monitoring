@@ -7,8 +7,8 @@ import "../sharedData.js" as SharedData
 Item {
 
     id: root
-    width: 400
-    height: 400
+    implicitWidth: col.implicitWidth
+    implicitHeight: col.implicitHeight
 
     function setJointStateMessage(js_msg) {
         container.itemAt(stack.currentIndex).item.setJointStateMessage(js_msg)
@@ -17,7 +17,7 @@ Item {
     signal jointClicked(string jointName)
 
     ColumnLayout {
-
+        id: col
         anchors.fill: parent
 
         ComboBox {

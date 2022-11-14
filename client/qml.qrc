@@ -51,5 +51,9 @@
         <file>TestThings/NavBar.qml</file>
         <file>TestThings/Console.qml</file>
         <file>TestThings/Monitoring.qml</file>
+        <file>TestThings/Joy.qml</file>
+        <file>TestThings/NavIcon.qml</file>
+        <file>TestThings/Viewer3D.qml</file>
+        <file>CommonProperties.qml</file>
     </qresource>
 </RCC>

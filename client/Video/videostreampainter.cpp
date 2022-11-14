@@ -433,8 +433,6 @@ void Decoder::onPacketReady()
     oggpacket.packetno   = pkt.packetno;
     oggpacket.packet = reinterpret_cast<unsigned char*>(data.data());
 
-    qInfo("pkt is %d bytes", oggpacket.bytes);
-
     tic = hrc::now();
 
     // beginning of logical stream flag means we're getting new headers

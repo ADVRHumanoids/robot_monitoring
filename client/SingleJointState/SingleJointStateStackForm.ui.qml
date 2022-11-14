@@ -8,42 +8,38 @@ Item {
     property alias repeater: repeater
 
     implicitWidth: stack.implicitWidth
+    implicitHeight: stack.implicitHeight
 
-    ScrollView {
 
-        id: scroll
+    StackLayout {
+
+        id: stack
         anchors.fill: parent
-        contentWidth: availableWidth
+        currentIndex: root.currentIndex
 
-        StackLayout {
+        Repeater {
 
-            id: stack
-            anchors.fill: parent
-            currentIndex: root.currentIndex
+            id: repeater
+            model: jointNames
 
-            Repeater {
+            Loader {
+                id: loader
+                active: index === stack.currentIndex
+                sourceComponent: root.jointStateComponent
 
-                id: repeater
-                model: jointNames
-
-                Loader {
-                    id: loader
-                    active: index === stack.currentIndex
-                    sourceComponent: root.jointStateComponent
-
-                    Connections {
-                        target: loader.item
-                        function onPlotAdded(jName, fieldName) {
-                            root.plotAdded(jName, fieldName)
-                        }
-                    }
-
-                    onLoaded: {
-                        item.jName = jointNames[index]
-                        item.setJointStateMessage(SharedData.latestJointState)
+                Connections {
+                    target: loader.item
+                    function onPlotAdded(jName, fieldName) {
+                        root.plotAdded(jName, fieldName)
                     }
                 }
+
+                onLoaded: {
+                    item.jName = jointNames[index]
+                    item.setJointStateMessage(SharedData.latestJointState)
+                }
             }
+
         }
 
     }

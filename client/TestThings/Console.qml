@@ -1,20 +1,22 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Controls.Material
+import xbot2_gui.common
 
 Rectangle {
 
+    property alias consoleText: consoleText
+
     id: root
     radius: 4
-    height: grid.height + 32
-    color: Qt.lighter(Material.background)
+    implicitHeight: grid.implicitHeight + 32
+    color: CommonProperties.colors.cardBackground
 
     MaterialResponsiveGrid {
 
         id: grid
 
-        width: parent.width
+        anchors.fill: parent
 
         CheckBox {
 
@@ -33,27 +35,33 @@ Rectangle {
             }
         }
 
-
-        TextArea {
-
+        ScrollView {
+            id: textScroll
             property int columnSpan: grid.columns
+            height: root.height * 0.8
 
-            id: consoleText
-            color: "white"
-            readOnly: true
+            TextArea {
 
-            placeholderText: "Console output"
-            wrapMode: TextEdit.Wrap
+                width: textScroll.contentWidth
 
-            textFormat: TextEdit.RichText
+                id: consoleText
+                color: "white"
+                readOnly: true
 
-            function addText(str) {
-                append(str)
-                if(scrollOnOutputCheck.checked) {
-                    cursorPosition = length - 1
+                placeholderText: "Console output"
+                wrapMode: TextEdit.Wrap
+
+                textFormat: TextEdit.RichText
+
+                font.pixelSize: 14
+
+                function addText(str) {
+                    append(str)
+                    if(scrollOnOutputCheck.checked) {
+                        cursorPosition = length - 1
+                    }
                 }
             }
-
         }
     }
 }

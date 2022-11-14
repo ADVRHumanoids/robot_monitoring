@@ -11,29 +11,35 @@ Item {
     property real timeSpan: 10
     property real initialTime: -1
 
-    property var currSeries: []
+    property var currSeries: Object()
 
     function addSeries(jName, fieldName) {
 
-        let idx = currSeries.findIndex( item => item.jName === jName && item.fieldName === fieldName)
+        let seriesName = jName + "/" + fieldName
 
-        if(idx > -1)
-        {
-            print('series already exists')
+        let seriesEntry = currSeries[seriesName]
+
+        if(seriesEntry !== undefined) {
             return
         }
 
-        let series = chart.createSeries(ChartView.SeriesTypeLine, jName + "/" + fieldName,
+        let series = chart.createSeries(ChartView.SeriesTypeLine, seriesName,
                                         axisTime, axisValue);
         series.useOpenGL = true
         series.antialiasing = false
 
-        currSeries.push({
-                            series: series,
-                            jName: jName,
-                            fieldName: fieldName,
-                            jIndex: 0
-                        })
+        currSeries[seriesName] = {
+            series: series,
+            jName: jName,
+            fieldName: fieldName,
+            jIndex: 0
+        }
+    }
+
+    function removeSeries(jName, fieldName) {
+        let seriesName = jName + "/" + fieldName
+        chart.removeSeries(chart.series(seriesName))
+        delete currSeries[seriesName]
     }
 
     function setJointStateMessage(msg) {
@@ -230,7 +236,7 @@ Item {
             ValuesAxis {
                 id: axisValue
                 min: -1
-                max: 1              
+                max: 1
             }
 
             LineSeries {
@@ -244,7 +250,7 @@ Item {
             }
 
             onSeriesRemoved: function(series) {
-                currSeries = currSeries.filter( item => item.series.name !== series.name )
+                currSeries = delete currSeries[series.name]
                 plotterLegend.removeSeries(series)
             }
 

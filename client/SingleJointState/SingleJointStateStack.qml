@@ -7,6 +7,7 @@ SingleJointStateStackForm {
     id: root
 
     signal plotAdded(string jName, string fieldName)
+    signal plotRemoved(string jName, string fieldName)
 
     property int currentIndex: 0
 

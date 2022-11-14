@@ -1,14 +1,24 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Material
 import QtQuick.Layouts
+import xbot2_gui.common
 
 Rectangle {
-    id: root
-    property bool pluginRunning: true
+
+    property bool pluginCanStart: pluginState === "Stopped" || pluginState === "Initialized"
     property string pluginName: 'Homing'
+    property string pluginState: 'Running'
+    property real pluginCpuTime: -1.0
+    property real pluginPeriod: 0.0
+
+    signal start()
+    signal stop()
+    signal abort()
+
+    id: root
     implicitHeight: mainCol.implicitHeight + 32
-    color: Qt.lighter(Material.background)
+    color: pluginState === 'Running' ? CommonProperties.color.ok :
+                                       CommonProperties.color.cardBackground
     radius: 4
 
     Column {
@@ -18,33 +28,37 @@ Rectangle {
         anchors.centerIn: parent
         spacing: 16
 
+        Label {
+            id: nameLabel
+            text: root.pluginName
+            font.bold: pluginState === 'Running'
+            font.pixelSize: CommonProperties.font.h3
+            color: pluginState === 'Running' ? CommonProperties.color.secondaryText :
+                                               CommonProperties.color.primaryText
+        }
+
         RowLayout {
 
             id: upperRow
             width: parent.width
             spacing: 16
 
-
-            Label {
-                id: nameLabel
-                text: root.pluginName
-                font.bold: root.pluginRunning
-                font.pixelSize: 16
-                color: root.pluginRunning ? Material.color(Material.Green) :
-                                            Material.primaryTextColor
-            }
-
-
             Button {
                 id: startStopBtn
-                text: 'Start'
+                text: pluginCanStart ? 'Start' : 'Stop'
                 Layout.fillWidth: true
+                onClicked: {
+                    text === 'Start' ? start() : stop()
+                }
             }
 
             Button {
                 id: abortBtn
                 text: 'Abort'
                 Layout.fillWidth: true
+                onClicked: {
+                    abort()
+                }
             }
 
         }
@@ -52,6 +66,7 @@ Rectangle {
         RowLayout {
 
             width: parent.width
+            spacing: 16
 
             Label {
                 text: 'CPU time'
@@ -59,8 +74,27 @@ Rectangle {
             }
 
             ProgressBar {
+                id: cpuBar
+                from: 0
+                to: pluginPeriod
+                value: pluginCpuTime
+                indeterminate: pluginCpuTime < 0
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignVCenter
+
+                Label {
+                    anchors.centerIn: parent
+                    text: (pluginCpuTime*1000).toFixed(2) + ' ms'
+
+                    Rectangle {
+                        color: "white"
+                        opacity: 0.2
+                        radius: 4
+                        anchors.centerIn: parent
+                        width: parent.width + 6
+                        height: parent.height + 6
+                    }
+                }
             }
 
         }

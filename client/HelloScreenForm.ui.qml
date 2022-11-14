@@ -1,14 +1,14 @@
-import QtQuick 2.4
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.11
-import QtQuick.Controls.Material
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import xbot2_gui.common
 
 Rectangle {
 
     id: mainRect
     width: 320
     height: 568
-    color: Material.frameColor
+    color: CommonProperties.colors.frame
 
     property string serverHost: hostField.text
     property string serverPort: portField.text
@@ -25,12 +25,12 @@ Rectangle {
 
         TextArea {
             id: titleText
-            text: "Xbot2 Gui\n"
+            text: "xbot2 gui\n"
             horizontalAlignment: Text.AlignHCenter
 
             font.weight: Font.DemiBold
             font.family: "Arial"
-            font.pointSize: 20
+            font.pointSize: CommonProperties.font.h1
 
             Layout.fillWidth: true
         }
@@ -41,6 +41,7 @@ Rectangle {
             text: "Server at " + serverHost + ":" + serverPort
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
+            font.pointSize: CommonProperties.font.h4
         }
 
         TextArea {
@@ -49,7 +50,7 @@ Rectangle {
             text: ""
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
-            font.pointSize: 12
+            font.pointSize: CommonProperties.font.h4
         }
 
         Item {

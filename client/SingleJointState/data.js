@@ -16,18 +16,18 @@ var fieldNames = [
 
 
 var shortToLongName = {
-    'posRef': 'Position ref.',
-    'motPos': 'Motor position',
-    'linkPos': 'Link position',
-    'velRef': 'Velocity ref.',
-    'motVel': 'Motor velocity',
-    'linkVel': 'Link velocity',
-    'torFfwd': 'Torque feedfwd',
-    'torRef': 'Torque ref.',
+    'posRef': 'Position Ref',
+    'motPos': 'Motor Position',
+    'linkPos': 'Link Position',
+    'velRef': 'Velocity Ref',
+    'motVel': 'Motor Velocity',
+    'linkVel': 'Link Velocity',
+    'torFfwd': 'Torque Ffwd',
+    'torRef': 'Torque Ref',
     'tor': 'Torque',
-    'motorTemp': 'Motor temperature',
-    'driverTemp': 'Driver temperature',
-    'fault': 'Fault code'
+    'motorTemp': 'Motor Temp',
+    'driverTemp': 'Driver Temp',
+    'fault': 'Fault Code'
 };
 
 

@@ -1,12 +1,12 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Material
 import QtQuick.Layouts
+import xbot2_gui.common
 
 RailMenu {
 
     id: root
-    color: Material.primaryColor
+    color: CommonProperties.colors.primary
     railWidth: ham.width + 2*16
     menuWidth: 300
     property int currentIndex: 0
@@ -31,12 +31,8 @@ RailMenu {
             for(let i = 0; i < model.count; i++) {
                 let obj = model.get(i)
                 let nameObj = nameComponent.createObject(grid, {'text': obj.name})
-                let iconObj = iconComponent.createObject(grid, {'text': obj.name[0]})
+                let iconObj = iconComponent.createObject(grid, {'name': obj.name[0], 'index': i})
                 nameObj.clicked.connect(function(){
-                    root.currentIndex = i
-                    root.close()
-                })
-                iconObj.clicked.connect(function(){
                     root.currentIndex = i
                     root.close()
                 })
@@ -48,7 +44,7 @@ RailMenu {
             Label {
                 signal clicked()
                 Layout.fillWidth: true
-                font.pixelSize: 20
+                font.pixelSize: CommonProperties.font.h2
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
@@ -60,16 +56,15 @@ RailMenu {
 
         Component {
             id: iconComponent
-            Label {
-                signal clicked()
-                font.pixelSize: 32
-                width: ham.width
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: {
-                        parent.clicked()
-                    }
+            NavIcon {
+                property int index: -1
+                Layout.preferredWidth: ham.width
+                isSelected: root.currentIndex === index
+                onClicked: {
+                    root.currentIndex = index
+                    root.close()
                 }
+
             }
         }
 
@@ -92,7 +87,7 @@ RailMenu {
         Label {
             id: guiNameLabel
             text: 'xbot2 gui'
-            font.pixelSize: Qt.application.font.pixelSize * 2
+            font.pixelSize: CommonProperties.font.h1
             font.bold: true
             anchors {
                 left: parent.left

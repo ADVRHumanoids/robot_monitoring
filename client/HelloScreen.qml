@@ -1,5 +1,5 @@
 import QtQuick 2.4
-import QtQuick.Controls.Material
+import xbot2_gui.common
 
 HelloScreenForm {
 
@@ -11,12 +11,12 @@ HelloScreenForm {
 
     function setError(msg) {
         msgText.text = "Error: " + msg
-        msgText.color = Material.color(Material.Red)
+        msgText.color = CommonProperties.colors.err
     }
 
     function setConnected(msg) {
         msgText.text = "Status OK: " + msg
-        msgText.color = Material.color(Material.Green)
+        msgText.color = CommonProperties.colors.ok
     }
 
     function setProgress(msg) {
@@ -47,9 +47,5 @@ HelloScreenForm {
         {
             mainLayout.anchors.margins = 50
         }
-    }
-
-    Component.onCompleted: {
-        print('hello built!!')
     }
 }

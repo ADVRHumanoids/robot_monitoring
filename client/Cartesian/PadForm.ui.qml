@@ -7,7 +7,7 @@ Item {
 
     id: rect
 
-    property int side: 200
+    property alias side: rect.width
     property alias mouseArea: mouseArea
     property alias inner: inner
     property alias returnAnimation: returnAnimation
@@ -15,9 +15,10 @@ Item {
     property bool horizontalOnly : false
     property string xLabel: 'Y'
     property string yLabel: 'X'
+    property alias color: outer.color
 
     width: 200
-    height: 200
+    height: width
 
     Rectangle {
 
@@ -35,7 +36,7 @@ Item {
             width: rect.side/4.
             height: width
             radius: width/2.
-            color: Qt.darker(outer.color)
+            color: Qt.rgba(0, 0, 0, 0.4)
 
             MouseArea {
                 anchors.fill: parent

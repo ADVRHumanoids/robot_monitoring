@@ -1,9 +1,14 @@
 import QtQuick 2.0
 import QtQuick.Layouts
 import QtQuick.Controls
+import QtQuick.Controls.Material
 import NextUiModules
 
-Item {
+Rectangle {
+
+    id: root
+    color: Qt.lighter(Material.backgroundColor)
+    radius: 4
 
     property alias names: combo.model
     property bool _hdr_recv: false
@@ -42,10 +47,18 @@ Item {
 
         id: col
         anchors.fill: parent
+        anchors.margins: 16
+
+        Label {
+            text: "Video Stream"
+            bottomPadding: 16
+            font.pixelSize: 28
+        }
 
         RowLayout {
 
             Layout.fillWidth: true
+            spacing: 16
 
             Label {
                 text: 'Camera'

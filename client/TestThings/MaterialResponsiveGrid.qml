@@ -16,6 +16,8 @@ Rectangle {
     property int brMedium: 768
     property int brLarge: 1200
     property bool debug: false
+    property int contentHeight: height - 32
+    property int contentWidth: width - 2*margin
 
     RowLayout {
 
@@ -32,6 +34,10 @@ Rectangle {
 
             id: mainColRepeater
             model: root.columns
+
+            onCountChanged: {
+                root.computeLayout()
+            }
 
             Rectangle {
 
@@ -58,6 +64,10 @@ Rectangle {
     function computeLayout() {
 
         let ncol = columns
+
+        if(mainColRepeater.count !== ncol) {
+            return
+        }
 
         let colHeight = new Array(ncol).fill(0);
 
@@ -123,9 +133,11 @@ Rectangle {
             }
 
             // set implicit height
-            root.implicitHeight = maxHeight + item.height + 16 + 100
+            maxHeight += item.height + 16
 
         }
+
+        root.implicitHeight = maxHeight
     }
 
     function id(viewportWidth) {
@@ -145,7 +157,7 @@ Rectangle {
 
 
     function responsiveMargin() {
-        let margins = [16, 32, 32 + (root.width - brMedium)/(brLarge-brMedium)*200, 200]
+        let margins = [16, 32, 32, 32]
         return margins[sizeid]
     }
 

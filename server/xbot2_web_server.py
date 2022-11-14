@@ -4,6 +4,8 @@ import logging
 import asyncio
 import re
 import contextlib
+import meshio
+import tempfile
 from queue import Queue
 import aiohttp
 import argparse
@@ -133,9 +135,10 @@ class Xbot2WebServer:
 
         # add routes
         routes = [
-            ('GET', '/', self.root_handler, 'root'),
+            # ('GET', '/', self.root_handler, 'root'),
             ('GET', '/ws', self.websocket_handler, 'websocket'),
             ('GET', '/info', self.info_handler, 'init'),
+            ('GET', '/get_mesh', self.get_mesh_handler, 'get_mesh'),
             ('GET', '/get_video_stream', self.get_video_stream_handler, 'get_video_stream'),
             ('GET', '/cartesian/get_task_list', self.cartesian_get_task_list_handler, 'cartesian_get_task_list'),
             ('PUT', '/set_video_stream', self.set_video_stream_handler, 'set_video_stream'),
@@ -154,8 +157,11 @@ class Xbot2WebServer:
     def run_server(self, static='.', host='0.0.0.0', port=8080):
         
         # serve static files
-        self.app.router.add_static('/', static)
-
+        self.resource_dir = tempfile.mkdtemp('xbot2-gui-server')
+        # self.app.router.add_static('/', static, show_index=True)
+        print(self.resource_dir)
+        self.app.router.add_static('/resources', self.resource_dir, show_index=True)
+        self.app.add_routes([web.static('/resources', self.resource_dir, show_index=True)])
         # run
         runner = web.AppRunner(self.app)
 
@@ -293,7 +299,29 @@ class Xbot2WebServer:
         plugin_list = get_plugin_list()
         init_data['plugins'] = plugin_list.plugins
 
+        # meshes
+        try:
+            mesh_file = '/home/arturo/code/robots_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/pelvis.stl'
+            mesh = meshio.read(filename=mesh_file)
+            tmpfile = self.resource_dir + '/' + mesh_file.split('/')[-1].split('.')[0] + '.mesh'
+            print(tmpfile)
+            meshio.write(filename=tmpfile, mesh=mesh)
+        except BaseException as e:
+            print(e)
+
         return web.Response(text=json.dumps(init_data))
+
+    
+    async def get_mesh_handler(self, request):
+        try:
+            print('MESHHHHHHHHHHHHH')
+            mesh_file = '/home/arturo/code/robots_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/pelvis.stl'
+            mesh = meshio.read(filename=mesh_file)
+            tmpfile = tempfile.NamedTemporaryFile()
+            meshio.write(filename=tmpfile.name)
+            return web.FileResponse(tmpfile.name)
+        except Exception as e:
+            print(e)
 
     
     async def cartesian_get_task_list_handler(self, request):

@@ -55,5 +55,9 @@
         <file>TestThings/NavIcon.qml</file>
         <file>TestThings/Viewer3D.qml</file>
         <file>CommonProperties.qml</file>
+        <file>TestThings/VisualEntity.qml</file>
+        <file>PageItem.qml</file>
+        <file>TestThings/JointDevice.qml</file>
+        <file>TestThings/Card.qml</file>
     </qresource>
 </RCC>

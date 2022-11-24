@@ -4,22 +4,23 @@ import logging
 import asyncio
 import re
 import contextlib
-import meshio
 import tempfile
 from queue import Queue
 import aiohttp
 import argparse
 from aiohttp import web
 import json
+import weakref
 
 import rospy
 from urdf_parser_py import urdf as urdf_parser
-from xbot_msgs.msg import JointState, Statistics2
+from xbot_msgs.msg import JointState, Statistics2, JointDeviceInfo
 from xbot_msgs.srv import GetPluginList, PluginStatus, PluginCommand
 from sensor_msgs.msg import CompressedImage
 from geometry_msgs.msg import TwistStamped
 from theora_image_transport.msg import Packet as TheoraPacket
 from screen_session import Process
+import utils
 from std_srvs.srv import SetBool
 from cartesian_interface.srv import SetControlMode, SetControlModeRequest
 import base64
@@ -47,20 +48,20 @@ def main():
         'Verbose': {
             'type': 'check',
             'default': True,
-            'cmd': '--verbose',
+            'arg': '--verbose',
             'help': 'verbose console output'
         },
         'HW Type': {
             'type': 'combo',
             'options': ['auto', 'ec_imp', 'ec_pos', 'dummy', 'sim'],
             'default': 0,
-            'cmd': ['', '--hw ec_imp', '--hw ec_pos', '--hw dummy', '--hw sim'],
+            'arg': ['', '--hw ec_imp', '--hw ec_pos', '--hw dummy', '--hw sim'],
             'help': 'Select hardware type'
         },
         'Config path': {
             'type': 'text',
             'default': '',
-            'cmd': '--config {__value__}',
+            'arg': '--config {__value__}',
             'help': 'Select configuration file'
         }
     }
@@ -97,8 +98,11 @@ class Xbot2WebServer:
         # joint state subscriber
         self.js_sub = rospy.Subscriber('xbotcore/joint_states', JointState, self.on_js_recv, queue_size=1)
 
-        # joint state subscriber
+        # xbot2 stats subscriber
         self.pstat_sub = rospy.Subscriber('xbotcore/statistics', Statistics2, self.on_pstat_recv, queue_size=1)
+
+        # xbot2 joint device info
+        self.jinfo_sub = rospy.Subscriber('xbotcore/joint_device_info', JointDeviceInfo, self.on_jdevinfo_recv, queue_size=1)
 
         # compressed (i.e. jpeg) img sub
         self.img_sub = rospy.Subscriber('/usb_cam/image_raw/compressed', CompressedImage, self.on_img_recv, queue_size=1)
@@ -114,6 +118,9 @@ class Xbot2WebServer:
 
         # global process stats message
         self.proc_stat_msg_to_send = {}
+
+        # global joint dev info message
+        self.jdevinfo_msg_to_send = {}
 
         # global image message
         self.img_msg_to_send = {}
@@ -133,12 +140,15 @@ class Xbot2WebServer:
         # websocket clients
         self.ws_clients = set()
 
+        # ws callbacks
+        self.ws_callbacks = list()
+
         # add routes
         routes = [
             # ('GET', '/', self.root_handler, 'root'),
             ('GET', '/ws', self.websocket_handler, 'websocket'),
             ('GET', '/info', self.info_handler, 'init'),
-            ('GET', '/get_mesh', self.get_mesh_handler, 'get_mesh'),
+            ('GET', '/get_mesh/{uri}', self.get_mesh_handler, 'get_mesh'),
             ('GET', '/get_video_stream', self.get_video_stream_handler, 'get_video_stream'),
             ('GET', '/cartesian/get_task_list', self.cartesian_get_task_list_handler, 'cartesian_get_task_list'),
             ('PUT', '/set_video_stream', self.set_video_stream_handler, 'set_video_stream'),
@@ -150,9 +160,21 @@ class Xbot2WebServer:
             self.app.router.add_route(method=route[0], path=route[1], handler=route[2], name=route[3])
 
     
+    def add_route(self, method, path, handler, name):
+        self.app.router.add_route(method=method, path=path, handler=handler, name=name)
+
+    
+    def schedule_task(self, task):
+        self.loop.create_task(task)
+
+    
     def add_process(self, p: Process):
         self.procs[p.name] = p
 
+    
+    def register_ws_callback(self, callback):
+        self.ws_callbacks.append(callback)
+    
     
     def run_server(self, static='.', host='0.0.0.0', port=8080):
         
@@ -174,9 +196,10 @@ class Xbot2WebServer:
             loop.create_task(self.proc_output_broadcaster(p, stream_type='stdout'))
             loop.create_task(self.proc_output_broadcaster(p, stream_type='stderr'))
 
+        loop.create_task(self.heartbeat())
         loop.create_task(self.js_broadcaster())
         loop.create_task(self.plugin_stat_broadcaster())
-        loop.create_task(self.heartbeat())
+        loop.create_task(self.jdevinfo_broadcaster())
         loop.create_task(self.video_broadcaster_jpeg())
         loop.create_task(self.video_broadcaster_theora())
 
@@ -203,6 +226,13 @@ class Xbot2WebServer:
                 'expected_period': th.expected_period,
                 'state': ts.state,
             }
+
+    
+    def on_jdevinfo_recv(self, msg: JointDeviceInfo):
+        self.jdevinfo_msg_to_send['type'] = 'joint_device_info'
+        self.jdevinfo_msg_to_send['joint_active'] = msg.mask != 0
+        self.jdevinfo_msg_to_send['filter_active'] = msg.filter_active
+        self.jdevinfo_msg_to_send['filter_cutoff_hz'] = msg.filter_cutoff_hz
 
 
     def on_img_recv(self, msg: CompressedImage):
@@ -265,7 +295,9 @@ class Xbot2WebServer:
 
         # joint state data
         try:
-            js_msg : JointState = rospy.wait_for_message(self.js_sub.name, JointState, rospy.Duration(0.1))
+            js_msg : JointState = await utils.to_thread(
+                rospy.wait_for_message,
+                self.js_sub.name, JointState, rospy.Duration(0.1))
             self.on_js_recv(js_msg)
             init_data['message'] = 'ok'
             init_data['success'] = True
@@ -278,6 +310,7 @@ class Xbot2WebServer:
         init_data['jstate'] = self.js_msg_to_send
         init_data['jnames'] = js_msg.name
 
+        # read joint limits from urdf
         urdf = rospy.get_param('xbotcore/robot_description')
         model = urdf_parser.Robot.from_xml_string(urdf)
         print('got urdf')
@@ -294,41 +327,40 @@ class Xbot2WebServer:
             init_data['vmax'].append(joint.limit.velocity)
             init_data['taumax'].append(joint.limit.effort)
 
+        # get list of visuals
+        visuals = dict()
+        for lname, l in model.link_map.items():
+            for c in l.visuals:
+                if isinstance(c.geometry, urdf_parser.Mesh):
+                    visuals[lname] = c.geometry.filename
+
+        init_data['visuals'] = visuals
+        self.visuals = visuals
+
         # plugins
         get_plugin_list = rospy.ServiceProxy('xbotcore/get_plugin_list', service_class=GetPluginList)
-        plugin_list = get_plugin_list()
+        plugin_list = await utils.to_thread(get_plugin_list)
         init_data['plugins'] = plugin_list.plugins
-
-        # meshes
-        try:
-            mesh_file = '/home/arturo/code/robots_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/pelvis.stl'
-            mesh = meshio.read(filename=mesh_file)
-            tmpfile = self.resource_dir + '/' + mesh_file.split('/')[-1].split('.')[0] + '.mesh'
-            print(tmpfile)
-            meshio.write(filename=tmpfile, mesh=mesh)
-        except BaseException as e:
-            print(e)
 
         return web.Response(text=json.dumps(init_data))
 
     
     async def get_mesh_handler(self, request):
+        uri = request.match_info.get('uri', None)
+        path = utils.resolve_ros_uri(uri)
+        print(uri, path)
         try:
-            print('MESHHHHHHHHHHHHH')
-            mesh_file = '/home/arturo/code/robots_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/pelvis.stl'
-            mesh = meshio.read(filename=mesh_file)
-            tmpfile = tempfile.NamedTemporaryFile()
-            meshio.write(filename=tmpfile.name)
-            return web.FileResponse(tmpfile.name)
+            return web.FileResponse(path)
         except Exception as e:
             print(e)
 
     
     async def cartesian_get_task_list_handler(self, request):
         from cartesian_interface.srv import GetTaskList
-        rospy.wait_for_service('cartesian/get_task_list', timeout=0.1)
+        utils.to_thread(rospy.wait_for_service, 
+                        'cartesian/get_task_list', timeout=1.0)
         get_task_list = rospy.ServiceProxy('cartesian/get_task_list', GetTaskList)
-        res = get_task_list()
+        res = utils.to_thread(get_task_list)
         return web.Response(text=json.dumps(
             {
                 'names': res.names,
@@ -336,8 +368,6 @@ class Xbot2WebServer:
             }
         ))
 
-
-    
     async def set_video_stream_handler(self, request):
 
         body = await request.text()
@@ -385,7 +415,7 @@ class Xbot2WebServer:
     
     async def get_video_stream_handler(self, request):
 
-        topic_name_type_list = rospy.get_published_topics()
+        topic_name_type_list = utils.to_thread(rospy.get_published_topics)
         vs_topics = list()
         for tname, ttype in topic_name_type_list:
             if ttype == 'theora_image_transport/Packet':
@@ -550,6 +580,27 @@ class Xbot2WebServer:
                     print(f'error: {e}')
             
             
+    # video broadcaster coroutine
+    async def jdevinfo_broadcaster(self):
+
+        while True:
+
+            # periodic loop at 60 Hz
+            await asyncio.sleep(0.1)
+
+            if not self.jdevinfo_msg_to_send: 
+                continue
+
+            msg_str = json.dumps(self.jdevinfo_msg_to_send)
+
+            for ws in self.ws_clients:
+                
+                try:
+                    await ws.send_str(msg_str)  
+                except ConnectionResetError as e:
+                    pass
+                except BaseException as e:
+                    print(f'error: {e}')
 
 
     # root handler serves html for web app
@@ -569,10 +620,11 @@ class Xbot2WebServer:
                     'name': p.name, 
                     'status': await p.status()
                 }
+            
+            msg_str = json.dumps(msg)
 
             for ws in self.ws_clients:
                 try:
-                    msg_str = json.dumps(msg)
                     await ws.send_str(msg_str)  
                 except ConnectionResetError as e:
                     pass
@@ -649,6 +701,8 @@ class Xbot2WebServer:
         async for msg in ws:
             if msg.type == aiohttp.WSMsgType.TEXT:
                 msg = json.loads(msg.data)
+                for wcoro in self.ws_callbacks:
+                    await wcoro(msg, ws)
                 if msg['type'] == 'velocity_command':
                     await self.handle_velocity_command(msg)
                 else:

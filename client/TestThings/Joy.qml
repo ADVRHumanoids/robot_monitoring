@@ -71,7 +71,7 @@ Item {
 
                 onJoystickMoved: {
                     vref[0] = joyY
-                    vref[5] = -joyX
+                    vref[1] = -joyX
                     Logic.sendVref()
                 }
 
@@ -84,9 +84,16 @@ Item {
                     margins: 48
                 }
 
+                horizontalOnly: true
+
                 side: Math.min(200, parent.width/2 - 64)
 
                 opacity: 0.7
+
+                onJoystickMoved: {
+                    vref[5] = -joyX
+                    Logic.sendVref()
+                }
             }
         }
 

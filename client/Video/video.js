@@ -1,6 +1,6 @@
 function setStream (stream_name) {
     let body = JSON.stringify({'stream_name': stream_name})
-    client.doRequest('PUT', '/set_video_stream', body,
+    client.doRequest('PUT', '/video/set_stream', body,
                      function(msg) {
 
                          if(!msg.success) {
@@ -14,7 +14,7 @@ function setStream (stream_name) {
 }
 
 function refreshNames() {
-    client.doRequest('GET', '/get_video_stream', {},
+    client.doRequest('GET', '/video/get_names', {},
                      function(msg) {
 
                          if(!msg.success) {

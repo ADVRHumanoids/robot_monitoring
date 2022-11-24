@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import QtQuick.Controls
 
 Item {
 
@@ -92,7 +93,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
-                Text {
+                Label {
 
 
                     id: nameText

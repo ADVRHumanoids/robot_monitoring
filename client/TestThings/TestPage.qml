@@ -40,13 +40,28 @@ Item {
     }
 
     Component.onCompleted: {
+        // compute initial layout
         responsiveLayout()
+
+        // register callbacks
         client.procMessageReceived.connect(onProcMessageReceived)
         client.pluginStatMessageReceived.connect(onPluginMessageReceived)
-        pluginRepeater.model = SharedData.pluginNames
-        client.finalized.connect(function(){
-            pluginRepeater.model = SharedData.pluginNames
-        })
+
+        // create process cards when available
+        let process_list_received = function (msg) {
+            SharedData.processInfo = msg
+            procRepeater.model = msg
+        }
+
+        client.doRequest('GET', '/process/get_list', '', process_list_received)
+
+        // create plugin cards when available
+        let plugin_list_received = function (msg) {
+            SharedData.pluginNames = msg.plugins
+            pluginRepeater.model = msg.plugins
+        }
+
+        client.doRequest('GET', '/plugin/get_list', '', plugin_list_received)
     }
 
     SwipeView {
@@ -93,7 +108,7 @@ Item {
 
                 Repeater{
                     id: procRepeater
-                    model: SharedData.processInfo
+                    model: 0
 
                     ProcessStatus {
                         processName: modelData.name
@@ -108,11 +123,38 @@ Item {
 
                 }
 
-                Label {
+                Item {
+                    width: 1
                     property int columnSpan: gridLeft.columns
-                    text: "Plugin control"
-                    font.pixelSize: CommonProperties.font.h1
-                    topPadding: 10
+                }
+
+                RowLayout {
+                    property int columnSpan: gridLeft.columns
+                    spacing: 16
+
+                    Label {
+                        text: "Plugin control"
+                        font.pixelSize: CommonProperties.font.h1
+                    }
+
+                    Item {
+                        Layout.fillHeight: true
+                        Layout.fillWidth: true
+                    }
+
+                    Button {
+                        text: 'Refresh'
+                        onClicked: {
+                            // create plugin cards when available
+                            let plugin_list_received = function (msg) {
+                                SharedData.pluginNames = msg.plugins
+                                pluginRepeater.model = msg.plugins
+                            }
+
+                            client.doRequest('GET', '/plugin/get_list', '', plugin_list_received)
+                        }
+                    }
+
                 }
 
                 Repeater {
@@ -213,7 +255,7 @@ Item {
         }
 
         client.doRequest('PUT',
-                         '/proc',
+                         '/process/' + name + '/command/' + cmd,
                          JSON.stringify(body),
                          function(msg){console.log(JSON.stringify(msg))})
     }
@@ -221,7 +263,7 @@ Item {
     function pluginCmd(name, cmd) {
 
         client.doRequest('PUT',
-                         '/plugin/' + name + '/' + cmd,
+                         '/plugin/' + name + '/command/' + cmd,
                          '',
                          function(msg){console.log(JSON.stringify(msg))})
     }

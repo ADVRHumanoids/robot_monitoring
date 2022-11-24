@@ -11,7 +11,7 @@ RailMenu {
     menuWidth: 300
     property int currentIndex: 0
 
-    property var model: []
+    property Item model: []
 
     GridLayout {
 
@@ -28,14 +28,16 @@ RailMenu {
 
         Component.onCompleted: {
 
-            for(let i = 0; i < model.count; i++) {
-                let obj = model.get(i)
+            for(let i = 0; i < model.children.length; i++) {
+                let obj = model.children[i]
                 let nameObj = nameComponent.createObject(grid, {'text': obj.name})
                 let iconObj = iconComponent.createObject(grid, {'name': obj.name[0], 'index': i})
                 nameObj.clicked.connect(function(){
                     root.currentIndex = i
                     root.close()
                 })
+                nameObj.enabled = Qt.binding(() => {return obj.active})
+                iconObj.enabled = Qt.binding(() => {return obj.active})
             }
         }
 

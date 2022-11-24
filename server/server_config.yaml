@@ -1,0 +1,29 @@
+xbot2_process:
+  type: process_handler
+  name: xbot2
+  rate: 1.0
+  cmd: xbot2-core
+  machine: arturo@localhost
+  args:
+    - name: Verbose
+      type: check  # checkbox
+      default: true
+      arg: --verbose
+      help: Enable verbose output
+    - name: HW Type
+      type: combo  # combobox
+      default: 0
+      options: ['Default', 'HW (pos)', 'HW (imp)', 'Dummy', 'Simulation']
+      arg: ['', --hw ec_imp, --hw ec_pos, --hw dummy, --hw sim]
+      help: Select hardware type
+    - name: Config Path
+      type: text  # textfield
+      arg: --config {value}
+      help: Path to a configuration file
+    
+ecat_master_process:
+  type: process_handler
+  name: ecat_master
+  cmd: ecat_master
+  machine: embedded@10.24.4.100
+  rate: 1.0

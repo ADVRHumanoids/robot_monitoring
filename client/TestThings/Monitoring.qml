@@ -36,6 +36,16 @@ Item {
         }
 
         client.jointStateReceived.connect(jsCallback)
+
+        let objCallback = function(obj) {
+            if(obj.type === 'joint_device_info') {
+                jointDevice.filterActive = obj.filter_active
+                jointDevice.filterCutoff = obj.filter_cutoff_hz
+                jointDevice.jointActive = obj.joint_active
+            }
+        }
+
+        client.objectReceived.connect(objCallback)
     }
 
     SwipeView {
@@ -57,13 +67,20 @@ Item {
                 id: mainGrid
                 brMedium: 900
                 width: scroll.contentWidth
-                height: scroll.contentHeight
+
+                JointDevice {
+                    id: jointDevice
+                    property int column: 0
+                    property var columnSpan: [4, 8, 4, 4]
+                }
 
                 Rectangle {
 
                     color: CommonProperties.colors.cardBackground
-                    height: barPlot.implicitHeight + barPlotTitle.height + 16*5
+                    height: childrenRect.height + 16*2
+
                     radius: 4
+                    property int column: 0
                     property var columnSpan: [4, 8, 8, 8]
 
                     Label {
@@ -79,7 +96,6 @@ Item {
 
                         anchors {
                             top: barPlotTitle.bottom
-                            bottom: parent.bottom
                             left: parent.left
                             right: parent.right
                         }
@@ -121,6 +137,10 @@ Item {
 
                         onPlotAdded: (jName, fieldName) => {
                             plotter.addSeries(jName, fieldName)
+                        }
+
+                        onPlotRemoved: (jName, fieldName) => {
+                            plotter.removeSeries(jName, fieldName)
                         }
                     }
                 }

@@ -11,6 +11,8 @@ Rectangle {
 
     signal hamburgerClicked()
 
+    height: row.implicitHeight + 20
+
     Hamburger {
         id: ham
         anchors {
@@ -19,7 +21,7 @@ Rectangle {
             margins: 6
         }
 
-        height: parent.height - 12
+        height: parent.height - 20
         width: height*1.2
 
         onClicked: {
@@ -34,8 +36,8 @@ Rectangle {
         anchors.centerIn: parent
 
         Component.onCompleted: {
-            for(let i = 0; i < model.count; i++) {
-                let obj = model.get(i)
+            for(let i = 0; i < model.children.length; i++) {
+                let obj = model.children[i]
                 let icon = iconComponent.createObject(row, {'name': obj.name, 'index': i})
             }
         }

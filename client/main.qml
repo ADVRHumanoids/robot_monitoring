@@ -26,83 +26,42 @@ ApplicationWindow {
     // this model contains all main pages
     // (i) hello page (select server address)
     // (ii) monitoring page
-    ListModel {
+    Item {
 
         id: pagesModel
 
-        ListElement {
+        PageItem {
             name: "Home"
             page: "HelloScreen.qml"
-            requirement: "none"
+            active: true
         }
 
-        ListElement {
-            name: "Viewer"
-            page: "TestThings/Viewer3D.qml"
-            requirement: "none"
-        }
-
-        ListElement {
-            name: "Joy"
-            page: "TestThings/Joy.qml"
-            requirement: "none"
-        }
-
-        ListElement {
+        PageItem {
             name: "Launcher"
             page: "TestThings/TestPage.qml"
-            requirement: "none"
+            active: client.active
         }
 
-        ListElement {
+        PageItem {
             name: "Monitoring"
             page: "TestThings/Monitoring.qml"
-            requirement: "none"
+            active: client.isFinalized
+        }
+
+        PageItem {
+            name: "Joy"
+            page: "TestThings/Joy.qml"
+            active: client.active
+        }
+
+        PageItem {
+            name: "Viewer"
+            page: "TestThings/Viewer3D.qml"
+            active: true
         }
 
     }
 
-
-//    Rectangle {
-//        id: cose
-//        height: parent.height
-//        width: 90
-//        anchors.left: parent.left
-//        color: "red"
-//        z: 1
-
-//        // a sliding menu to select the active page
-//        SlidingMenu {
-
-//            id: menu
-
-//            width: mainWindow.width
-//            height: mainWindow.height
-//            model: pagesModel
-
-//            handleWidth: parent.width
-
-//            entryActiveCallback: function(i) {
-//                if(pagesModel.get(i).requirement === "none") {
-//                    return true
-//                }
-//                if(pagesModel.get(i).requirement === "active") {
-//                    return client.active
-//                }
-//                if(pagesModel.get(i).requirement === "finalized") {
-//                    return client.isFinalized
-//                }
-//            }
-
-//            // when a page is selected, make it active
-//            // on the stack layout
-//            onItemSelected: function(index) {
-//                pagesStack.currentIndex = index
-//                closeMenu()
-//            }
-//        }
-
-//    }
 
     NavDrawer {
         id: nav
@@ -119,7 +78,7 @@ ApplicationWindow {
     NavBar {
         id: navBar
         width: parent.width
-        height: 40
+        height: 50
         model: pagesModel
         color: nav.color
 
@@ -169,7 +128,7 @@ ApplicationWindow {
         // load all pages in the model
         Repeater {
 
-            model: pagesModel
+            model: pagesModel.children
 
             // lazy-loading of active page
             Loader {
@@ -180,14 +139,14 @@ ApplicationWindow {
                 active: pagesStack.currentIndex === index
 
                 onLoaded: {
-                    items[name.toLowerCase()] = item
+                    items[modelData.name.toLowerCase()] = item
                     active = true
                 }
 
                 Component.onCompleted: {
                     // this is the "constructor"
                     // each page has a .client elem
-                    setSource(page, {'client': client})
+                    setSource(modelData.page, {'client': client})
                 }
             }
         }

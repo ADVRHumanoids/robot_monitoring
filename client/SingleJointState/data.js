@@ -53,7 +53,12 @@ function buildValuePlot (fieldName, container) {
     var plotBtnObj = plotBtnComponent.createObject(container)
 
     plotBtnObj.released.connect( function() {
-        singleJointState.plotAdded(jName, fieldName)
+        if(plotBtnObj.checked) {
+            singleJointState.plotAdded(jName, fieldName)
+        }
+        else {
+            singleJointState.plotRemoved(jName, fieldName)
+        }
     })
 
     plotBtnMap[fieldName] = plotBtnObj

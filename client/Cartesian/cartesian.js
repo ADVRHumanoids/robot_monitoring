@@ -4,6 +4,7 @@ function sendVref() {
         'task_name': taskCombo.currentText,
         'vref': vref
     }
+    console.log(JSON.stringify(msg))
     client.sendTextMessage(JSON.stringify(msg))
 }
 

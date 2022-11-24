@@ -71,7 +71,7 @@ Rectangle {
 
         let colHeight = new Array(ncol).fill(0);
 
-        let maxHeight = 0
+        let implicitHeight = 0
 
         let currentCol = 0
 
@@ -88,7 +88,7 @@ Rectangle {
             }
 
             // get item's column span (defaults to 4)
-            let colSpan = item.columnSpan || 4
+            let colSpan = item.columnSpan === undefined ? 4 : item.columnSpan
 
             if(Array.isArray(colSpan)) {
 
@@ -96,7 +96,7 @@ Rectangle {
             }
 
             // get item's column id
-            let colId = item.column || -1
+            let colId = item.column === undefined ? -1 : item.column
 
             if(Array.isArray(colId)) {
                 colId = colId[sizeid]
@@ -111,10 +111,13 @@ Rectangle {
                     colId = 0
                 }
             }
+            else {
+                currentCol = colId
+            }
 
             // compute max y for all spanned columns
             let cols = colHeight.slice(colId, colId + colSpan)
-            maxHeight = Math.max(...cols)
+            let maxHeight = Math.max(...cols)
 
             // place item and compute its width
             item.y = maxHeight + mainRow.y + mainRow.childrenRect.y
@@ -134,10 +137,11 @@ Rectangle {
 
             // set implicit height
             maxHeight += item.height + 16
+            implicitHeight = Math.max(implicitHeight, maxHeight)
 
         }
 
-        root.implicitHeight = maxHeight
+        root.implicitHeight = implicitHeight + 16
     }
 
     function id(viewportWidth) {

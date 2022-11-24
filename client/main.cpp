@@ -37,6 +37,7 @@ int main(int argc, char *argv[])
     QQuickStyle::setStyle("Material");
     qputenv("QT_QUICK_CONTROLS_MATERIAL_THEME", "Dark");
     qputenv("QT_QUICK_CONTROLS_MATERIAL_VARIANT", "Dense");
+    qputenv("QT3D_RENDERER", "opengl");
 
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)

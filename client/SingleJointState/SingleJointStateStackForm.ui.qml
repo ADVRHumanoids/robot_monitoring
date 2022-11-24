@@ -28,9 +28,15 @@ Item {
                 sourceComponent: root.jointStateComponent
 
                 Connections {
+
                     target: loader.item
+
                     function onPlotAdded(jName, fieldName) {
                         root.plotAdded(jName, fieldName)
+                    }
+
+                    function onPlotRemoved(jName, fieldName) {
+                        root.plotRemoved(jName, fieldName)
                     }
                 }
 

@@ -1,6 +1,7 @@
 import QtQuick
 import QtCharts
 import QtQuick.Controls
+import xbot2_gui.common
 
 Item {
 
@@ -43,13 +44,12 @@ Item {
     }
 
     function setJointStateMessage(msg) {
-        for(let i = 0; i < currSeries.length; i++) {
+        for(let [key, value] of Object.entries(currSeries)) {
+            let series = value.series
+            let jName = value.jName
 
-            let series = currSeries[i].series
-            let jName = currSeries[i].jName
-
-            if(msg.name[currSeries[i].jIndex] !== jName) {
-                currSeries[i].jIndex = msg.name.indexOf(jName)
+            if(msg.name[value.jIndex] !== jName) {
+                value.jIndex = msg.name.indexOf(jName)
             }
 
             let t = msg.stamp
@@ -59,7 +59,7 @@ Item {
             }
 
             t = t - initialTime
-            let val = msg[currSeries[i].fieldName][currSeries[i].jIndex]
+            let val = msg[value.fieldName][value.jIndex]
 
             series.append(t, val)
 
@@ -109,7 +109,7 @@ Item {
                 left: 3
                 right: 3
             }
-            backgroundColor: Qt.rgba(1, 1, 1, 0.3)
+            backgroundColor: Qt.rgba(1, 1, 1, 0.2)
 
             property bool autoscale: true
             property bool autoscroll: true
@@ -231,12 +231,14 @@ Item {
                 max: currTime
                 min: Math.max(currTime - timeSpan, 0)
                 titleText: "time [s]"
+                labelsColor: CommonProperties.colors.primaryText
             }
 
             ValuesAxis {
                 id: axisValue
                 min: -1
                 max: 1
+                labelsColor: CommonProperties.colors.primaryText
             }
 
             LineSeries {
@@ -250,7 +252,7 @@ Item {
             }
 
             onSeriesRemoved: function(series) {
-                currSeries = delete currSeries[series.name]
+                delete currSeries[series.name]
                 plotterLegend.removeSeries(series)
             }
 

@@ -44,6 +44,9 @@ Page {
         onPlotAdded: function(jName, fieldName) {
             plotter.addSeries(jName, fieldName)
         }
+        onPlotRemoved: function(jName, fieldName) {
+            plotter.removeSeries(jName, fieldName)
+        }
     }
 
     Plotter {

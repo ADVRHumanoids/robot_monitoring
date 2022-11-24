@@ -44,6 +44,9 @@ Item
     signal jpegReceived(var msg)
     signal theoraPacketReceived(var msg)
 
+    // generic message
+    signal objectReceived(var msg)
+
 
     // method for performing am http request
     function doRequest(verb, url, body, callback) {
@@ -98,8 +101,7 @@ Item
             }
             else
             {
-                console.log("unknown msg type " + obj.type + " received: ")
-                console.log(message)
+                objectReceived(obj)
             }
         }
 
@@ -111,9 +113,10 @@ Item
                 active = false
             } else if (socket.status === WebSocket.Open) {
                 console.log("Server connected")
-                connected("Connected to " + url + ", requesting configuration..")
+                connected('Server connected')
             } else if (socket.status === WebSocket.Closed) {
                 console.log("Socket closed")
+                error('Socket closed')
                 active = false
             }
         }
@@ -124,8 +127,6 @@ Item
     function onInfoReceived(msg) {
 
         _nattempt++
-
-        SharedData.processInfo = msg.proc_data
 
         if(!msg.success) {
             error('[' + _nattempt + '] server replied: ' + msg.message)
@@ -139,7 +140,6 @@ Item
         SharedData.taumax = msg.taumax
         SharedData.jointNames = msg.jnames
         SharedData.latestJointState = msg.jstate
-        SharedData.pluginNames = msg.plugins
         isFinalized = true
         finalized()
     }
@@ -152,9 +152,12 @@ Item
         interval: 1000
         repeat: true
         running: !parent.isFinalized && socket.active
+        property int _nattempt: 0
 
         onTriggered: {
-            doRequest("GET", "/info", "", onInfoReceived)
+            parent.connected("[" + _nattempt + "] connected to " + socket.url + ", requesting configuration..")
+            doRequest("GET", "/joint_states/info", "", onInfoReceived)
+            _nattempt++
         }
     }
 

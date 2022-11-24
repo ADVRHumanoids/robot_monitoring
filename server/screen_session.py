@@ -121,17 +121,17 @@ class Process:
         while True:
             self.ssh_session = await self._create_ssh_session()
             retcode = await self.ssh_session.wait()
-            print(f'ssh session died with exit code {retcode}, restarting..')
+            print(f'ssh session with {self.hostname} died with exit code {retcode}, restarting..')
 
     
     async def _screen_session_running(self, name):
 
-        # def print(string):
-        #     pass
+        def print(string):
+            pass
 
         # make sure we have our ssh sesssion
         if self.ssh_session is None:
-            self.ssh_session = self._create_ssh_session()
+            return False
 
         # consume stdout
         read_coro =  self.ssh_session.stdout.read(4096)
@@ -150,6 +150,9 @@ class Process:
         while True:
             print(f'[{name}] reading line..')
             line = await self.ssh_session.stdout.readline()
+            if len(line) == 0:
+                self.ssh_session = None 
+                return await self._screen_session_running(name)
             line = line.decode().strip()
             print(f'got line "{line}"')
             
@@ -175,6 +178,7 @@ class Process:
                     res = True
                     break
         
+        print('***********************************************')
         return res
 
     async def _lifetime_handler(self):
@@ -203,15 +207,15 @@ class Process:
 
             if opt_type == 'check':
                 if v:
-                    cmdline += self.cmdline[k]['cmd']
+                    cmdline += self.cmdline[k]['arg']
             elif opt_type == 'combo':
                 options = self.cmdline[k]['options']
                 if v in options:
                     index = options.index(v)
-                    cmdline += self.cmdline[k]['cmd'][index]
+                    cmdline += self.cmdline[k]['arg'][index]
             elif opt_type == 'text':
                 if v:
-                     cmdline += self.cmdline[k]['cmd'].format(__value__=v)
+                     cmdline += self.cmdline[k]['arg'].format(__value__=v)
             else:
                 raise KeyError(f'invalid option type {opt_type}')
             

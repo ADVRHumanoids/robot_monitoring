@@ -17,8 +17,8 @@ Rectangle {
 
     id: root
     implicitHeight: mainCol.implicitHeight + 32
-    color: pluginState === 'Running' ? CommonProperties.color.ok :
-                                       CommonProperties.color.cardBackground
+    color: pluginState === 'Running' ? CommonProperties.colors.ok :
+                                       CommonProperties.colors.cardBackground
     radius: 4
 
     Column {
@@ -33,8 +33,8 @@ Rectangle {
             text: root.pluginName
             font.bold: pluginState === 'Running'
             font.pixelSize: CommonProperties.font.h3
-            color: pluginState === 'Running' ? CommonProperties.color.secondaryText :
-                                               CommonProperties.color.primaryText
+            color: pluginState === 'Running' ? CommonProperties.colors.secondaryText :
+                                               CommonProperties.colors.primaryText
         }
 
         RowLayout {

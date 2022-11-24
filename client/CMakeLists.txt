@@ -24,7 +24,16 @@ set(QT_VERSION_MAJOR 6)
 #    endif()
 #endif()
 
-find_package(Qt6 COMPONENTS Core Quick WebSockets Widgets QuickControls2 ShaderTools REQUIRED)
+find_package(Qt6 COMPONENTS
+    Core
+    Quick
+    WebSockets
+    Widgets
+    QuickControls2
+    ShaderTools
+    3DRender
+    3DCore
+    REQUIRED)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -56,7 +65,9 @@ target_link_libraries(next_ui
           Qt${QT_VERSION_MAJOR}::Quick
           Qt${QT_VERSION_MAJOR}::WebSockets
           Qt${QT_VERSION_MAJOR}::QuickControls2
-          Qt${QT_VERSION_MAJOR}::Widgets)
+          Qt${QT_VERSION_MAJOR}::Widgets
+          Qt${QT_VERSION_MAJOR}::3DRender
+          Qt${QT_VERSION_MAJOR}::3DCore)
 
 add_subdirectory(Video/theora_cmake)
 

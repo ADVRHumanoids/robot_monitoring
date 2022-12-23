@@ -15,9 +15,9 @@ namespace
 
 QWidget * LoadUiFile(QWidget * parent)
 {
-    
+
     initSlidersResource();
-    
+
     QUiLoader loader;
 
     QFile file(":/ui/impedance_widget.ui");
@@ -27,8 +27,8 @@ QWidget * LoadUiFile(QWidget * parent)
     file.close();
 
     return formWidget;
-    
-    
+
+
 }
 
 int value_to_perc(double val, double min, double max)
@@ -52,7 +52,7 @@ namespace cartesio_gui
 {
 
 
-SlidersWidget::SlidersWidget (std::string group_name, 
+SlidersWidget::SlidersWidget (std::string group_name,
                              std::vector<std::string>  joint_names,
                              QWidget *parent) :
     QWidget(parent),
@@ -81,33 +81,33 @@ SlidersWidget::SlidersWidget (std::string group_name,
     for(int i = 0; i < 10 && i < joint_names.size(); i++)
     {
         _widget_vec.emplace_back(this, i + 1);
-        
+
         // set label
         _widget_vec.back().label->setText(QString::fromStdString(joint_names[i]));
-        
+
         // set intial value
         _widget_vec.back().spinbox->setValue(0.0);
         on_spinbox_changed(i);
-        
+
         // connect slider to spinbox
         connect(_widget_vec.back().slider, &QSlider::valueChanged,
-               std::bind(&SlidersWidget::on_slider_changed, this, 
+               std::bind(&SlidersWidget::on_slider_changed, this,
                          std::placeholders::_1, i)
                );
-        
+
         // connect spinbox to slider
         connect(_widget_vec.back().spinbox, &QDoubleSpinBox::editingFinished,
-               std::bind(&SlidersWidget::on_spinbox_changed, this, i) 
+               std::bind(&SlidersWidget::on_spinbox_changed, this, i)
                );
 
-        
-        // set locked value when a lock is checked 
+
+        // set locked value when a lock is checked
         connect(_widget_vec.back().lock, &QCheckBox::stateChanged,
-               std::bind(&SlidersWidget::on_lock_checked, this, 
+               std::bind(&SlidersWidget::on_lock_checked, this,
                          std::placeholders::_1, i)
                );
     }
-    
+
     /* Hide unused */
     for(int i = joint_names.size(); i < 10; i++)
     {
@@ -121,18 +121,57 @@ SlidersWidget::SlidersWidget (std::string group_name,
     /* Connect lock all / unlock all buttons */
     auto * lock_all = findChild<QPushButton *>("lockallButton");
     auto * unlock_all = findChild<QPushButton *>("unlockallButton");
-    
+
     connect(lock_all, &QPushButton::pressed,
             this, &SlidersWidget::on_lockall_pressed);
-    
+
     connect(unlock_all, &QPushButton::pressed,
             this, &SlidersWidget::on_unlockall_pressed);
-    
+
     /* Apply initial value for max stiffness */
     on_max_stiffness_changed();
 
     /* Save binding combo box  */
     _binding_groupbox = findChild<QGroupBox *>("bindGroupBox");
+
+    /* Continuous control check */
+    _send_btn = findChild<QPushButton *>("sendBtn");
+    _abort_btn = findChild<QPushButton *>("abortBtn");
+    _continuous_checkbox = findChild<QCheckBox *>("continuousCheckBox");
+    _info_text = findChild<QLineEdit *>("infoText");
+
+    connect(_continuous_checkbox, &QCheckBox::stateChanged,
+            [this](int s)
+    {
+        _send_btn->setEnabled(s == 0);
+        _moved_joints.clear();
+    });
+
+    /* Connect send btn to callback */
+    connect(_send_btn, &QPushButton::released,
+            [this]()
+    {
+        if(!_callback_enabled) return;
+
+        if(!_send_callback) return;
+
+        std::vector<std::string> mj;
+        std::vector<double> mv;
+        for(auto item : _moved_joints)
+        {
+            mj.push_back(item.first);
+            mv.push_back(item.second);
+        }
+
+        _send_callback(mj, mv);
+
+        _moved_joints.clear();
+
+        _send_btn->setEnabled(false);
+
+        _info_text->setText("Sending target positions..");
+
+    });
 
 
 }
@@ -140,7 +179,7 @@ SlidersWidget::SlidersWidget (std::string group_name,
 void SlidersWidget::on_max_stiffness_changed()
 {
     double k_max = _max_stiffness_spinbox->value();
-    
+
     // check that max value is > than the max slider
     double curr_max = -1;
 
@@ -151,7 +190,7 @@ void SlidersWidget::on_max_stiffness_changed()
 
     k_max = std::max(k_max, curr_max);
     _max_stiffness_spinbox->setValue(k_max);
-    
+
     // update sliders
     for(auto w : _widget_vec)
     {
@@ -165,7 +204,7 @@ void SlidersWidget::on_max_stiffness_changed()
         w.spinbox->setSingleStep((upd_max - upd_min) / 100.);
         w.spinbox->setDecimals(2);
 
-        
+
         w.slider->blockSignals(true);
         w.slider->setValue(::value_to_perc(value, upd_min, upd_max));
         w.slider->blockSignals(false);
@@ -201,38 +240,38 @@ SlidersWidget::JointWidgets::JointWidgets(QWidget * ui, int id):
         throw std::runtime_error("Unable to get label " + std::to_string(id));
     }
 
-    
+
 }
 
 void SlidersWidget::handle_locked_joints(int i, double value)
 {
     auto wi = _widget_vec.at(i);
-    
+
     if(std::fabs(wi.locked_value) < 0.1)
     {
         return;
     }
-    
+
     for(int j = 0; j < _widget_vec.size(); j++)
     {
         if(i == j)
         {
             continue;
         }
-        
+
         auto wj = _widget_vec.at(j);
-        
+
         // j-th slider is binded, set its value in proportion to the i-th value
         if(wj.lock->isChecked())
         {
             double value_j = wj.locked_value / wi.locked_value * value;
             wj.spinbox->setValue(value_j);
-            
-            if(_callback && _callback_enabled)
+
+            if(_sli_callback && _callback_enabled)
             {
-                _callback(wj.label->text().toStdString(), value_j);
+                _sli_callback(wj.label->text().toStdString(), value_j);
             }
-            
+
             double k_min = wj.spinbox->minimum();
             double k_max = wj.spinbox->maximum();
             wj.slider->blockSignals(true);
@@ -246,41 +285,50 @@ void SlidersWidget::handle_locked_joints(int i, double value)
 void SlidersWidget::on_slider_changed(int perc, int i)
 {
     auto wi = _widget_vec.at(i);
-    
+
     // compute slider value
     double k_min = wi.spinbox->minimum();
     double k_max = wi.spinbox->maximum();
     double value = ::perc_to_value(perc, k_min, k_max);
-    
+
     // update spinbox
     wi.spinbox->setValue(value);
-    
+
     // if i-th slider binded, change all other binded sliders
     if(wi.lock->isChecked())
     {
         handle_locked_joints(i, value);
     }
 
-    // trigger callback
-    if(_callback && _callback_enabled)
+    // trigger slider callback
+    if(_sli_callback && _callback_enabled &&
+            _continuous_checkbox->isChecked())
     {
-        _callback(wi.label->text().toStdString(), value);
+        _sli_callback(wi.label->text().toStdString(), value);
+    }
+
+    // save moved joint for use inside send callback
+    if(_send_callback && _callback_enabled &&
+            !_continuous_checkbox->isChecked())
+    {
+        _moved_joints[wi.label->text().toStdString()] = value;
+        _send_btn->setEnabled(true);
     }
 }
 
 void SlidersWidget::on_spinbox_changed(int i)
 {
     auto wi = _widget_vec.at(i);
-    
+
     double value = wi.spinbox->value();
     double k_min = wi.spinbox->minimum();
     double k_max = wi.spinbox->maximum();
-    
+
     // update slider
     wi.slider->blockSignals(true);
     wi.slider->setValue(::value_to_perc(value, k_min, k_max));
     wi.slider->blockSignals(false);
-    
+
     // if i-th slider binded, change all other binded sliders
     if(wi.lock->isChecked())
     {
@@ -288,9 +336,9 @@ void SlidersWidget::on_spinbox_changed(int i)
     }
 
     // trigger callback
-    if(_callback && _callback_enabled)
+    if(_sli_callback && _callback_enabled)
     {
-        _callback(wi.label->text().toStdString(), value);
+        _sli_callback(wi.label->text().toStdString(), value);
     }
 }
 
@@ -354,22 +402,22 @@ void SlidersWidget::setRange(std::vector<double> min, std::vector<double> max)
 void SlidersWidget::setInitialValue(std::vector<double> x_0)
 {
     _callback_enabled = false;
-    
+
     if(x_0.size() != _widget_vec.size())
     {
         throw std::invalid_argument("x_0.size() != joint num");
     }
-    
+
     on_unlockall_pressed();
 
     auto compare_abs = [](double a, double b)
-    { 
+    {
         return std::fabs(a) < std::fabs(b);
     };
-    
+
     double max_val = *(std::max_element(x_0.begin(), x_0.end(), compare_abs));
     double curr_max = _max_stiffness_spinbox->value();
-    
+
     if(curr_max < max_val)
     {
         _max_stiffness_spinbox->setValue(max_val);
@@ -381,7 +429,7 @@ void SlidersWidget::setInitialValue(std::vector<double> x_0)
         _widget_vec[i].spinbox->setValue(x_0[i]);
         on_spinbox_changed(i);
     }
-    
+
     _callback_enabled = true;
 }
 
@@ -399,14 +447,26 @@ void SlidersWidget::setBindEnabled(bool enabled)
     }
 }
 
-void SlidersWidget::setCallback( SlidersWidget::CallbackType f)
+void SlidersWidget::setSendCallback(SlidersWidget::SendCallbackType f)
 {
-    _callback = f;
+    _send_callback = f;
+}
+
+void SlidersWidget::enableSend()
+{
+    _continuous_checkbox->setChecked(false);
+//    _send_btn->setEnabled(true);
+//    _abort_btn->setEnabled(true);
+}
+
+void SlidersWidget::setSliderCallback( SlidersWidget::SliderCallbackType f)
+{
+    _sli_callback = f;
 }
 
 SlidersWidget::~SlidersWidget()
 {
-    
+
 }
 
 }

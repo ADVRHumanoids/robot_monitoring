@@ -357,8 +357,6 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent) :
         mediumBtn->setEnabled(msg->filter_active);
         fastBtn->setEnabled(msg->filter_active);
 
-        std::cout << disableEnableBtn->text().toStdString() << "\n";
-
         if(msg->mask == 0 &&
             disableEnableBtn->text().replace('&', "") == "Disable device")
         {

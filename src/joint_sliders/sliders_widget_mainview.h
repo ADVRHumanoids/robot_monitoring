@@ -2,8 +2,12 @@
 #define IMPEDANCEWIDGETMAINVIEW_H
 
 #include "sliders_widget.h"
-#include <XBotInterface/XBotInterface.h>
+
 #include <ros/ros.h>
+#include <control_msgs/FollowJointTrajectoryAction.h>
+#include <actionlib/client/simple_action_client.h>
+
+#include <XBotInterface/XBotInterface.h>
 
 namespace cartesio_gui
 {
@@ -13,7 +17,7 @@ class SlidersWidgetMainView : public QWidget
 
 
 public:
-    
+
     struct Options
     {
         std::string message_type;
@@ -23,7 +27,7 @@ public:
         std::string ns;
         std::string joint_state_topic;
         std::string command_topic;
-        
+
         Options();
     };
 
@@ -33,15 +37,18 @@ public:
     void contextMenuEvent(QContextMenuEvent * event) override;
 
     void makeJointVisible(QString jointname);
-    
+
     ~SlidersWidgetMainView();
 
 private:
 
+    typedef control_msgs::FollowJointTrajectoryAction ActionType;
+    typedef actionlib::SimpleActionClient<ActionType> ActionClient;
+
     void make_publisher();
     void try_construct();
     void construct();
-    
+
     XBot::XBotInterface::Ptr _robot;
 
     std::map<std::string, cartesio_gui::SlidersWidget *> _wid_p_map, _wid_k_map, _wid_d_map;
@@ -67,11 +74,16 @@ private:
     void tau_callback(std::string, double value);
     void k_callback(std::string, double value);
     void d_callback(std::string, double value);
+    void send_callback(std::vector<std::string>,
+                       std::vector<double>);
 
     void print_status_msg(QString msg);
 
     ros::NodeHandle _nh;
     ros::Publisher _pub;
+    ActionClient _cli;
+
+
 };
 
 }

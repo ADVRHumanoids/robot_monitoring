@@ -50,7 +50,8 @@ cartesio_gui::SlidersWidgetMainView::SlidersWidgetMainView (Options opt,
     QWidget(parent),
     _load_success(false),
     _opt(opt),
-    _nh(opt.ns)
+    _nh(opt.ns),
+    _cli(_nh, "follow_joint_trajectory", true)
 {
 
     /* Create publisher */
@@ -66,7 +67,7 @@ cartesio_gui::SlidersWidgetMainView::SlidersWidgetMainView (Options opt,
     _status = new QStatusBar;
     layout->addWidget(_status);
 
-    
+
     /* Fill chain selector and widget stack */
     _chain_select = findChild<QComboBox *>("chainSelector");
     _wid_stack = findChild<QStackedWidget *>("stackedWidget");
@@ -75,7 +76,7 @@ cartesio_gui::SlidersWidgetMainView::SlidersWidgetMainView (Options opt,
 
     /* Try to contruct all slider widgets */
     try_construct();
-    
+
     /* Connect chain selector to stacked layout */
     void (QComboBox::* activated_int)(int) = &QComboBox::currentIndexChanged;
     connect(_chain_select, activated_int,
@@ -115,7 +116,7 @@ void cartesio_gui::SlidersWidgetMainView::makeJointVisible(QString jointname)
 void cartesio_gui::SlidersWidgetMainView::contextMenuEvent(QContextMenuEvent * event)
 {
     /* Right-click context menu */
-    
+
     QMenu menu(this);
 
     auto * ns_action = new QAction("Set ROS namespace", this);
@@ -188,7 +189,7 @@ void cartesio_gui::SlidersWidgetMainView::on_disable_enable()
     }
 
     // if button says "Enable", enable the gui...
-    
+
     auto * button = findChild<QPushButton *>("disableButton");
 
     if(button->text() == "Disable")
@@ -250,7 +251,7 @@ void cartesio_gui::SlidersWidgetMainView::vel_callback(std::string jname, double
         _pub.publish(msg);
 #endif
     }
-    
+
 }
 
 
@@ -276,13 +277,13 @@ void cartesio_gui::SlidersWidgetMainView::tau_callback(std::string jname, double
         _pub.publish(msg);
 #endif
     }
-    
+
 }
 
 
 void cartesio_gui::SlidersWidgetMainView::k_callback(std::string jname, double value)
 {
-    
+
 #ifdef XBOT_MSGS_SUPPORT
     xbot_msgs::JointCommand msg;
     msg.header.stamp = ros::Time::now();
@@ -292,13 +293,13 @@ void cartesio_gui::SlidersWidgetMainView::k_callback(std::string jname, double v
     msg.ctrl_mode.push_back(8);
     _pub.publish(msg);
 #endif
-    
+
 }
 
 
 void cartesio_gui::SlidersWidgetMainView::d_callback(std::string jname, double value)
 {
-    
+
 #ifdef XBOT_MSGS_SUPPORT
     xbot_msgs::JointCommand msg;
     msg.header.stamp = ros::Time::now();
@@ -308,7 +309,32 @@ void cartesio_gui::SlidersWidgetMainView::d_callback(std::string jname, double v
     msg.ctrl_mode.push_back(16);
     _pub.publish(msg);
 #endif
-    
+
+}
+
+void cartesio_gui::SlidersWidgetMainView::send_callback(
+        std::vector<std::string> jnames,
+        std::vector<double> jvalues)
+{
+    std::cout << "send !! \n";
+
+    control_msgs::FollowJointTrajectoryGoal goal;
+    goal.trajectory.points.resize(1);
+    goal.trajectory.joint_names = jnames;
+    goal.trajectory.points[0].positions = jvalues;
+    goal.trajectory.points[0].time_from_start.fromSec(1.0);
+
+    for(int i = 0; i < jnames.size(); i++)
+    {
+        std::cout << jnames[i] << " = " << jvalues[i] << "\n";
+    }
+
+    _cli.waitForServer();
+    _cli.sendGoal(goal,
+                  [this](auto state, auto res_ptr)
+    {
+        print_status_msg("Action completed with state: " + state->text_)
+    });
 }
 
 void cartesio_gui::SlidersWidgetMainView::print_status_msg(QString msg)
@@ -334,14 +360,14 @@ void cartesio_gui::SlidersWidgetMainView::make_publisher()
     else if(_opt.message_type == "xbot_msgs")
     {
 #ifdef XBOT_MSGS_SUPPORT
-        auto op = 
-            ros::AdvertiseOptions::create<xbot_msgs::JointCommand>(_opt.command_topic, 
-                                                                   10, 
+        auto op =
+            ros::AdvertiseOptions::create<xbot_msgs::JointCommand>(_opt.command_topic,
+                                                                   10,
                                                                    connected,
-                                                                   disconnected, 
-                                                                   ros::VoidPtr(), 
+                                                                   disconnected,
+                                                                   ros::VoidPtr(),
                                                                    NULL);
-        op.has_header = false; 
+        op.has_header = false;
         _pub = _nh.advertise(op);
 #else
         throw std::runtime_error("Widget was compiled without -DXBOT_MSGS_SUPPORT");
@@ -367,7 +393,7 @@ void cartesio_gui::SlidersWidgetMainView::try_construct()
 
 void cartesio_gui::SlidersWidgetMainView::construct()
 {
-    // load an xbotinterface from param server 
+    // load an xbotinterface from param server
     auto opt = XBot::ConfigOptionsFromParamServer(_nh);
     _robot = std::make_shared<XBot::XBotInterface>();
     _robot->init(opt);
@@ -383,9 +409,9 @@ void cartesio_gui::SlidersWidgetMainView::construct()
     if(!sense()) // updates robot from ros topic
     {
         throw std::runtime_error("Unable to get joint states");
-    } 
+    }
 
-    // construct all widgets 
+    // construct all widgets
     for(auto ch : _robot->getChainNames())
     {
         Eigen::VectorXd zero, ones, q, k, d, qmin, qmax, qdotmax, taumax;
@@ -407,30 +433,36 @@ void cartesio_gui::SlidersWidgetMainView::construct()
         p_wid->setBindEnabled(false);
         p_wid->setRange(::eigen_to_std(qmin), ::eigen_to_std(qmax));
         p_wid->setInitialValue(::eigen_to_std(q));
-        p_wid->setCallback(std::bind(&SlidersWidgetMainView::pos_callback,
+        p_wid->setSliderCallback(std::bind(&SlidersWidgetMainView::pos_callback,
                                      this,
                                      pl::_1, pl::_2));
+
+        p_wid->setSendCallback(std::bind(&SlidersWidgetMainView::send_callback,
+                                         this,
+                                         pl::_1, pl::_2));
+
+        p_wid->enableSend();
         _wid_p_map[ch] = p_wid;
         tab_wid->addTab(p_wid, "Position");
 
         auto * v_wid = new cartesio_gui::SlidersWidget(ch, j_list);
         v_wid->setBindEnabled(false);
         v_wid->setRange(::eigen_to_std(-qdotmax), ::eigen_to_std(qdotmax));
-        v_wid->setCallback(std::bind(&SlidersWidgetMainView::vel_callback,
+        v_wid->setSliderCallback(std::bind(&SlidersWidgetMainView::vel_callback,
                                      this,
                                      pl::_1, pl::_2));
 
         auto * tau_wid = new cartesio_gui::SlidersWidget(ch, j_list);
         tau_wid->setBindEnabled(false);
         tau_wid->setRange(::eigen_to_std(-taumax), ::eigen_to_std(taumax));
-        tau_wid->setCallback(std::bind(&SlidersWidgetMainView::tau_callback,
+        tau_wid->setSliderCallback(std::bind(&SlidersWidgetMainView::tau_callback,
                                        this,
                                        pl::_1, pl::_2));
 
         auto * k_wid = new cartesio_gui::SlidersWidget(ch, j_list);
         k_wid->setInitialValue(::eigen_to_std(k));
         k_wid->setRange(::eigen_to_std(zero), ::eigen_to_std(ones * 2000));
-        k_wid->setCallback(std::bind(&SlidersWidgetMainView::k_callback,
+        k_wid->setSliderCallback(std::bind(&SlidersWidgetMainView::k_callback,
                                      this,
                                      pl::_1, pl::_2));
         _wid_k_map[ch] = k_wid;
@@ -439,7 +471,7 @@ void cartesio_gui::SlidersWidgetMainView::construct()
         auto * d_wid = new cartesio_gui::SlidersWidget(ch, j_list);
         d_wid->setInitialValue(::eigen_to_std(d));
         d_wid->setRange(::eigen_to_std(zero), ::eigen_to_std(ones * 100));
-        d_wid->setCallback(std::bind(&SlidersWidgetMainView::d_callback,
+        d_wid->setSliderCallback(std::bind(&SlidersWidgetMainView::d_callback,
                                      this,
                                      pl::_1, pl::_2));
         _wid_d_map[ch] = d_wid;

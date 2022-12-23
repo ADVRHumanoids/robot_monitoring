@@ -15,9 +15,14 @@ class SlidersWidget : public QWidget
 
 public:
 
-    typedef std::function<void(std::string, double)> CallbackType;
+    typedef std::function<void(std::string,
+                               double)> SliderCallbackType;
 
-    explicit SlidersWidget (std::string group_name, 
+    typedef std::function<void(std::vector<std::string>,
+                               std::vector<double>)> SendCallbackType;
+
+
+    explicit SlidersWidget (std::string group_name,
                              std::vector<std::string> joint_names,
                              QWidget * parent = 0);
 
@@ -28,8 +33,12 @@ public:
 
     void setBindEnabled(bool enabled);
 
-    void setCallback(CallbackType f);
-    
+    void setSliderCallback(SliderCallbackType f);
+
+    void setSendCallback(SendCallbackType f);
+
+    void enableSend();
+
     ~SlidersWidget();
 
 private:
@@ -55,16 +64,22 @@ private:
     void on_lock_checked(int state, int i);
     void on_lockall_pressed();
     void on_unlockall_pressed();
-    
+
     void handle_locked_joints(int i, double value);
 
     QDoubleSpinBox * _max_stiffness_spinbox;
     QGroupBox * _binding_groupbox;
     std::vector<JointWidgets> _widget_vec;
+    QCheckBox *_continuous_checkbox;
+    QPushButton *_send_btn, *_abort_btn;
+    QLineEdit *_info_text;
 
-    CallbackType _callback;
+    std::map<std::string, double> _moved_joints;
+
+    SliderCallbackType _sli_callback;
+    SendCallbackType _send_callback;
     bool _callback_enabled;
-    
+
 };
 
 }

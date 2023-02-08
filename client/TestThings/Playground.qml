@@ -11,11 +11,15 @@ Item {
 
         name: 'ecat_master'
 
+        hidden: true
+
         width: 400
-        defaultHeight: 400
+//        defaultHeight: 400
 
         frontItem: ScrollView {
-            anchors.fill: parent
+            enabled: !card.hidden
+            width: parent.width
+            height: Math.min(contentHeight, 400)
             contentHeight: rec.height
             contentWidth: rec.width
             ScrollBar.horizontal.policy: ScrollBar.AlwaysOn
@@ -30,7 +34,8 @@ Item {
         }
 
         backItem: ScrollView {
-            anchors.fill: parent
+            width: parent.width
+            height: Math.min(contentHeight, 400)
             contentHeight: col.implicitHeight
             Column {
                 id: col

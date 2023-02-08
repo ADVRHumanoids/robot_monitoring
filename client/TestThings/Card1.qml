@@ -40,8 +40,6 @@ Item {
 
     height: hidden ? _hiddenHeight : (defaultHeight > 0 ? defaultHeight : implicitHeight)
 
-    clip: true
-
     Behavior on height {
         id: heightTransition
         enabled: false
@@ -118,7 +116,10 @@ Item {
                 font.family: CommonProperties.fontAwesome.solid.family
                 font.pixelSize: titleLabel.font.pixelSize
 
-                onClicked: root.flipped = true
+                onClicked: {
+                    root.flipped = true
+                    root.hidden = false
+                }
             }
 
             ToolButton {
@@ -146,6 +147,8 @@ Item {
                 implicitHeight: childrenRect.height
                 width: parent.width - 2*root.margins
                 height: parent.height - 3*root.margins - titleLabel.height
+
+                clip: true
 
                 anchors {
                     top: titleLabel.bottom
@@ -195,6 +198,7 @@ Item {
                 implicitHeight: childrenRect.height
                 width: parent.width - 2*root.margins
                 height: parent.height - 4*root.margins - titleLabelBack.height - cfgOkBtn.height
+                clip: true
                 anchors {
                     top: titleLabelBack.bottom
                     left: parent.left

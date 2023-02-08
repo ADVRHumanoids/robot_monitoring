@@ -216,9 +216,13 @@ void VideoStreamPainter::geometryChange(const QRectF &newGeometry, const QRectF 
 void VideoStreamPainter::onFrameReady(QSGTexture *y, QSGTexture *cb, QSGTexture *cr)
 {
     _new_frame_available = true;
+
     _yTex = y;
     _cbTex = cb;
     _crTex = cr;
+
+    setImplicitSize(y->textureSize().width(), y->textureSize().height());
+
     update();
 }
 #endif

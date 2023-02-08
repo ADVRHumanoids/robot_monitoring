@@ -7,6 +7,8 @@ var fieldNames = [
             '__sep__',
             'torFfwd', 'torRef', 'tor',
             '__sep__',
+            'k', 'd',
+            '__sep__',
             'aux',
             '__sep__',
             'motorTemp', 'driverTemp',
@@ -27,7 +29,9 @@ var shortToLongName = {
     'tor': 'Torque',
     'motorTemp': 'Motor Temp',
     'driverTemp': 'Driver Temp',
-    'fault': 'Fault Code'
+    'fault': 'Fault Code',
+    'k': 'Stiffness',
+    'd': 'Damping',
 };
 
 

@@ -21,9 +21,21 @@ xbot2_process:
       arg: --config {value}
       help: Path to a configuration file
     
-ecat_master_process:
+ls:
   type: process_handler
-  name: ecat_master
-  cmd: ecat_master
-  machine: embedded@10.24.4.100
-  rate: 1.0
+  name: do_ls
+  cmd: ls
+  machine: arturo@localhost
+  args:
+    - name: Folder
+      type: text
+      arg: "{__value__}"
+      help: File or directory to list
+      default: /home/arturo
+  
+#ecat_master_process:
+#  type: process_handler
+#  name: ecat_master
+#  cmd: ecat_master
+#  machine: embedded@10.24.4.100
+#  rate: 1.0

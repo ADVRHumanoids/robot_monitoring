@@ -16,6 +16,14 @@ Item {
     property alias taskCombo: taskCombo
     property bool portrait: width < height
 
+    property real maxLinearV: maxSpeedLinearSpinBox.value
+    property real maxAngularV: maxSpeedLinearSpinBox.value
+
+
+    Component.onCompleted: {
+        Logic.updateTaskNames()
+    }
+
     TabBar {
         id: bar
         anchors.top: parent.top
@@ -70,8 +78,8 @@ Item {
                 opacity: 0.7
 
                 onJoystickMoved: {
-                    vref[0] = joyY
-                    vref[1] = -joyX
+                    vref[0] = joyY*maxLinearV
+                    vref[1] = -joyX*maxLinearV
                     Logic.sendVref()
                 }
 
@@ -91,7 +99,7 @@ Item {
                 opacity: 0.7
 
                 onJoystickMoved: {
-                    vref[5] = -joyX
+                    vref[5] = -joyX*maxAngularV
                     Logic.sendVref()
                 }
             }
@@ -106,7 +114,7 @@ Item {
                 anchors.fill: parent
                 anchors.margins: 16
 
-                columns: 3
+                columns: 4
 
                 Label {
                     text: 'Tasks'
@@ -116,6 +124,33 @@ Item {
                     id: taskCombo
                     model: []
                     Layout.fillWidth: true
+                    onCurrentTextChanged: {
+                        // get state from server to update enable/disable btn
+                        Logic.taskIsEnabled(currentText,
+                                            function (is_active) {
+                                                enableDisableBtn.taskActive = is_active
+                                            })
+                    }
+                }
+
+                Button {
+                    id: enableDisableBtn
+                    text: taskActive ? 'Disable' : 'Enable'
+                    property bool taskActive: true
+                    onReleased: {
+                        let callback = function () {
+                            Logic.taskIsEnabled(taskCombo.currentText,
+                                                (is_active) => {
+                                                    taskActive = is_active
+                                                })
+                        }
+                        if(taskActive) {
+                            Logic.disableTask(taskCombo.currentText, callback)
+                        }
+                        else {
+                            Logic.enableTask(taskCombo.currentText, callback)
+                        }
+                    }
                 }
 
                 Button {
@@ -129,28 +164,11 @@ Item {
                     text: 'Max speed (linear)'
                 }
 
-                SpinBox {
-                    id: spinbox
+                DoubleSpinBox {
                     Layout.columnSpan: 2
-                    from: 0
-                    value: 10
-                    to: 100
-                    stepSize: 10
-                    property int decimals: 1
-                    property real realValue: value / 100
-
-                    validator: DoubleValidator {
-                        bottom: Math.min(spinbox.from, spinbox.to)
-                        top:  Math.max(spinbox.from, spinbox.to)
-                    }
-
-                    textFromValue: function(value, locale) {
-                        return Number(value / 100).toLocaleString(locale, 'f', spinbox.decimals)
-                    }
-
-                    valueFromText: function(text, locale) {
-                        return Number.fromLocaleString(locale, text) * 100
-                    }
+                    id: maxSpeedLinearSpinBox
+                    from: 0.0
+                    to: 2.0
                 }
             }
         }

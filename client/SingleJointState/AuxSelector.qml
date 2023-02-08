@@ -5,4 +5,6 @@ ComboBox {
     displayText: "Select joint"
     editable: true
     model: ['iq_out_fb', 'iq_ref_fb', 'rtt']
+    topPadding: 0
+    bottomPadding: 0
 }

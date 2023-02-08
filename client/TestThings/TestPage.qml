@@ -40,6 +40,7 @@ Item {
     }
 
     Component.onCompleted: {
+
         // compute initial layout
         responsiveLayout()
 
@@ -62,6 +63,11 @@ Item {
         }
 
         client.doRequest('GET', '/plugin/get_list', '', plugin_list_received)
+    }
+
+    Component.onDestruction: {
+        client.procMessageReceived.disconnect(onProcMessageReceived)
+        client.pluginStatMessageReceived.disconnect(onPluginMessageReceived)
     }
 
     SwipeView {
@@ -106,7 +112,7 @@ Item {
                     font.pixelSize: 28
                 }
 
-                Repeater{
+                Repeater {
                     id: procRepeater
                     model: 0
 
@@ -118,9 +124,7 @@ Item {
                         onStart: processCmd(processName, 'start', processOptions)
                         onStop: processCmd(processName, 'stop', {})
                         onKill: processCmd(processName, 'kill', {})
-
                     }
-
                 }
 
                 Item {
@@ -204,7 +208,6 @@ Item {
     }
 
     function onProcMessageReceived(msg) {
-        console.log(JSON.stringify(msg))
         // look for process with name msg.name
         for(let i = 0; i < procRepeater.count; i++) {
 

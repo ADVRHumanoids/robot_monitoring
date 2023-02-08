@@ -60,6 +60,12 @@ ApplicationWindow {
             active: true
         }
 
+        PageItem {
+            name: "Playground"
+            page: "TestThings/Playground.qml"
+            active: true
+        }
+
     }
 
 
@@ -128,10 +134,27 @@ ApplicationWindow {
         // load all pages in the model
         Repeater {
 
+            id: pagesStackRepeater
+
+            function reloadAll() {
+                console.log(count)
+                for(let i = 0; i < count; i++) {
+                    let ch = itemAt(i)
+                    if(ch.active) {
+                        console.log('restarted child ' + ch.pageName)
+                        ch.active = false
+                        ch.active = true
+                    }
+                }
+            }
+
             model: pagesModel.children
 
             // lazy-loading of active page
             Loader {
+
+                id: stackPageLoader
+                property string pageName: ''
 
                 Layout.fillHeight: true
                 Layout.fillWidth: true
@@ -141,12 +164,22 @@ ApplicationWindow {
                 onLoaded: {
                     items[modelData.name.toLowerCase()] = item
                     active = true
+                    pageName = modelData.name
                 }
 
                 Component.onCompleted: {
                     // this is the "constructor"
                     // each page has a .client elem
                     setSource(modelData.page, {'client': client})
+                }
+
+                Connections {
+                    target: stackPageLoader.item
+                    ignoreUnknownSignals: true
+                    function onRestartUi() {
+                        console.log('onRestartUi: calling pagesStackRepeater.reloadAll()')
+                        pagesStackRepeater.reloadAll()
+                    }
                 }
             }
         }
@@ -160,11 +193,9 @@ ApplicationWindow {
         }
         onConnected: function (msg) {
             items.home.setConnected(msg)
-            menu.evalActiveEntries()
         }
         onFinalized: {
             print('finalized!')
-            menu.evalActiveEntries()
         }
     }
 

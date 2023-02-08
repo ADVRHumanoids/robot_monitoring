@@ -55,6 +55,11 @@ def main():
             print(f'found process handler {extname}')
             ext = ProcessHandler(srv, extcfg)
             extensions.append(ext)
+    
+    # visual
+    from .visual import VisualHandler
+    ext = VisualHandler(srv, cfg.get('visual', {}))
+    extensions.append(ext)
 
     # run server
     srv.run_server()

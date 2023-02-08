@@ -56,14 +56,32 @@ Item {
             InputSettings { }
         ]
 
+        NodeInstantiator {
 
-        VisualEntity {
-            source: "http://" + client.hostname + ":" + client.port + "/get_mesh/" + encodeURIComponent('package://centauro_urdf/meshes/v2/wheel.stl')
-            Component.onCompleted: {
-                console.log(source)
+            id: visualRepeater
+
+            delegate: VisualEntity {
+                source: "http://" + client.hostname + ":" + client.port + "/visual/get_mesh/" + encodeURIComponent(modelData.uri)
+                Component.onCompleted: {
+                    console.log(source)
+                }
             }
         }
+    }
 
+    Component.onCompleted: {
+        let loadMeshes = function(link_to_uri) {
+            let model = []
+            for (const [key, value] of Object.entries(link_to_uri)) {
+                console.log(`${key}: ${value}`);
+                let obj = {}
+                obj.linkName = key
+                obj.uri = value
+                model.push(obj)
+            }
+            visualRepeater.model = model
+        }
+        client.doRequest('GET', '/visual/get_mesh_entities', '', loadMeshes)
     }
 
 }

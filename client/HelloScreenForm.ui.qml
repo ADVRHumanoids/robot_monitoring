@@ -13,6 +13,7 @@ Rectangle {
     property string serverHost: hostField.text
     property string serverPort: portField.text
     property alias applyBtn: applyBtn
+    property alias resetUiBtn: resetUiBtn
     property alias msgText: msgText
     property alias statusText: statusText
     property alias mainLayout: mainLayout
@@ -84,11 +85,23 @@ Rectangle {
             Layout.preferredHeight: 10
         }
 
-        Button {
-            id: applyBtn
-            text: "Retry"
+        Row {
+
+            spacing: 16
             Layout.alignment: Qt.AlignHCenter
-            focus: true
+
+            Button {
+                id: applyBtn
+                text: "Retry"
+                focus: true
+            }
+
+            Button {
+                id: resetUiBtn
+                text: "Reset UI"
+                focus: true
+            }
+
         }
     }
 }

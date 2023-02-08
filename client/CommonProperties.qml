@@ -30,4 +30,20 @@ Item {
         property int h4: 14
     }
 
+    property Item fontAwesome: Item {
+        id: fontAwesome
+
+        readonly property FontLoader fontAwesomeSolid: FontLoader {
+            source: "./Font/fontawesome-free-6.3.0-desktop/otfs/Font Awesome 6 Free-Solid-900.subset.otf"
+        }
+
+        readonly property FontLoader fontAwesomeRegular: FontLoader {
+            source: "./Font/fontawesome-free-6.3.0-desktop/otfs/Font Awesome 6 Free-Regular-400.subset.otf"
+        }
+
+        property alias regular: fontAwesome.fontAwesomeRegular.font
+        property alias solid: fontAwesome.fontAwesomeSolid.font
+
+    }
+
 }

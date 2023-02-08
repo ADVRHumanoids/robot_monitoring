@@ -4,7 +4,7 @@ import json
 
 import rospy
 from std_srvs.srv import SetBool, Trigger
-from cartesian_interface.srv import SetControlMode, SetControlModeRequest, GetTaskList
+from cartesian_interface.srv import SetControlMode, SetControlModeRequest, GetTaskList, GetCartesianTaskInfo
 from geometry_msgs.msg import TwistStamped
 
 from .server import ServerBase
@@ -22,7 +22,15 @@ class CartesianHandler:
         self.srv = srv
         self.srv.register_ws_coroutine(self.handle_ws_msg)
         self.srv.schedule_task(self.run())
-        self.srv.add_route('GET', '/cartesian/get_task_list', self.cartesian_get_task_list_handler, 'cartesian_get_task_list')
+        self.srv.add_route('GET', '/cartesian/get_task_list',
+                           self.cartesian_get_task_list_handler,
+                           'cartesian_get_task_list')
+        self.srv.add_route('PUT', '/cartesian/{task_name}/set_control_mode',
+                           self.cartesian_set_control_mode_handler,
+                           'cartesian_set_control_mode')
+        self.srv.add_route('GET', '/cartesian/{task_name}/get_cartesian_task_properties',
+                           self.cartesian_get_cartesian_task_properties_handler,
+                           'cartesian_get_cartesian_task_properties')
 
         # vel ref pub
         self.vref_pub = None
@@ -43,30 +51,87 @@ class CartesianHandler:
         ))
 
 
+    @utils.handle_exceptions
+    async def cartesian_get_cartesian_task_properties_handler(self, request):
+
+        # we need the task name and ctrl mode
+        task_name = request.match_info.get('task_name', None)
+        if task_name is None:
+            raise ValueError('no task name specified in url')
+
+        # call service
+        srv_name = f'cartesian/{task_name}/get_cartesian_task_properties'
+        get_cartesian_task_properties = rospy.ServiceProxy(srv_name, GetCartesianTaskInfo)
+        res = await utils.to_thread(get_cartesian_task_properties)
+
+        return web.Response(text=json.dumps(
+            {
+                'success': True,
+                'message': 'ok',
+                'base_link': res.base_link,
+                'distal_link': res.distal_link,
+                'control_mode': res.control_mode,
+
+            }
+        ))
+
+
     async def run(self):
         pass
     
+
+    @utils.handle_exceptions
+    async def cartesian_set_control_mode_handler(self, request):
+
+        # parse body into a python dict
+        print(request)
+        body = await request.text()
+        print(body)
+        body = json.loads(body)
+        print(body)
+
+        # we need the task name and ctrl mode
+        task_name = request.match_info.get('task_name', None)
+        if task_name is None:
+            raise ValueError('no task name specified in url')
+        control_mode = body['control_mode']
+
+        # call service
+        ctrl_mode_srv_name = rospy.resolve_name(f'cartesian/{task_name}/set_control_mode')
+        ctrl_mode_srv = rospy.ServiceProxy(ctrl_mode_srv_name, service_class=SetControlMode)
+        req = SetControlModeRequest()
+        req.ctrl_mode = control_mode
+        res = await utils.to_thread(ctrl_mode_srv, req)
+
+        # respond to client
+        return web.Response(text=json.dumps(
+            {
+                'success': res.success,
+                'message': res.message,
+            }
+        ))
+
+
     async def handle_ws_msg(self, msg, ws):
         if msg['type'] == 'velocity_command':
             await self.handle_velocity_command(msg)
 
 
     async def handle_velocity_command(self, msg):
+
         task_name = msg['task_name']
+
+        if(len(task_name) == 0):
+            print('empty task name, skipping..')
+            return
+
         topic_name = rospy.resolve_name(f'cartesian/{task_name}/velocity_reference')
-        ctrl_mode_srv_name = rospy.resolve_name(f'cartesian/{task_name}/set_control_mode')
 
         if self.vref_pub is None or self.vref_pub.resolved_name != topic_name:
             try:
                 print(f'unregistering {self.vref_pub.name}')
             except:
                 pass
-            print(f'waiting {ctrl_mode_srv_name}')
-            ctrl_mode_srv = rospy.ServiceProxy(ctrl_mode_srv_name, service_class=SetControlMode)
-            req = SetControlModeRequest()
-            req.ctrl_mode = 'velocity'
-            res = await utils.to_thread(ctrl_mode_srv, req)
-            print(f'returned {res}')
             print(f'advertising {topic_name}')
             self.vref_pub = rospy.Publisher(topic_name, TwistStamped, queue_size=1)
 

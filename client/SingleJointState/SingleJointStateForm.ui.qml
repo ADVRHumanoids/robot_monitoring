@@ -26,7 +26,7 @@ Item {
             right: parent.right
         }
 
-        rowSpacing: -6
+        rowSpacing: 0
     }
 }
 

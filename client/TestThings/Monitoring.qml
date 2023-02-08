@@ -25,27 +25,36 @@ Item {
         TabButton {
             text: 'Plot'
         }
+
+        onCurrentIndexChanged: {
+            console.log('tab bar index changed to ' + currentIndex)
+            mainSwipe.setCurrentIndex(currentIndex)
+        }
+    }
+
+    function _jsCallback(js) {
+        barPlot.setJointStateMessage(js)
+        jointState.setJointStateMessage(js)
+        plotter.setJointStateMessage(js)
+    }
+
+    function _objCallback(obj) {
+        if(obj.type === 'joint_device_info') {
+            jointDevice.filterActive = obj.filter_active
+            jointDevice.filterCutoff = obj.filter_cutoff_hz
+            jointDevice.jointActive = obj.joint_active
+        }
     }
 
     Component.onCompleted: {
 
-        let jsCallback = function(js) {
-            barPlot.setJointStateMessage(js)
-            jointState.setJointStateMessage(js)
-            plotter.setJointStateMessage(js)
-        }
+        client.jointStateReceived.connect(_jsCallback)
+        client.objectReceived.connect(_objCallback)
+    }
 
-        client.jointStateReceived.connect(jsCallback)
-
-        let objCallback = function(obj) {
-            if(obj.type === 'joint_device_info') {
-                jointDevice.filterActive = obj.filter_active
-                jointDevice.filterCutoff = obj.filter_cutoff_hz
-                jointDevice.jointActive = obj.joint_active
-            }
-        }
-
-        client.objectReceived.connect(objCallback)
+    Component.onDestruction: {
+        client.jointStateReceived.disconnect(_jsCallback)
+        client.objectReceived.disconnect(_objCallback)
     }
 
     SwipeView {
@@ -55,7 +64,11 @@ Item {
             top: bar.bottom
             bottom: parent.bottom
         }
-        currentIndex: bar.currentIndex
+
+        onCurrentIndexChanged: {
+            console.log('swipe index changed to ' + currentIndex)
+            bar.setCurrentIndex(currentIndex)
+        }
 
         ScrollView {
 
@@ -103,8 +116,8 @@ Item {
                         anchors.margins: 16
 
                         onJointClicked: jointName => {
-                            jointState.selectJoint(jointName)
-                        }
+                                            jointState.selectJoint(jointName)
+                                        }
                     }
 
                 }
@@ -136,12 +149,12 @@ Item {
                         anchors.margins: 16
 
                         onPlotAdded: (jName, fieldName) => {
-                            plotter.addSeries(jName, fieldName)
-                        }
+                                         plotter.addSeries(jName, fieldName)
+                                     }
 
                         onPlotRemoved: (jName, fieldName) => {
-                            plotter.removeSeries(jName, fieldName)
-                        }
+                                           plotter.removeSeries(jName, fieldName)
+                                       }
                     }
                 }
             }

@@ -108,5 +108,9 @@ class JointStateHandler:
         js_msg_dict['velRef'] = msg.velocity_reference
         js_msg_dict['motVel'] = msg.motor_velocity
         js_msg_dict['linkVel'] = msg.link_velocity
+        js_msg_dict['motorTemp'] = msg.temperature_motor
+        js_msg_dict['driverTemp'] = msg.temperature_driver
+        js_msg_dict['k'] = msg.stiffness
+        js_msg_dict['d'] = msg.damping
         js_msg_dict['stamp'] = msg.header.stamp.to_sec()
         return js_msg_dict

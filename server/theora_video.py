@@ -28,6 +28,9 @@ class TheoraVideoHandler:
         self.img_sub = None
         self.img_msg_to_send = {}
 
+        # event loop
+        self.loop = asyncio.get_event_loop()
+
     
     @utils.handle_exceptions
     async def get_names_handler(self, request):

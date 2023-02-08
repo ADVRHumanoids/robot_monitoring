@@ -59,5 +59,10 @@
         <file>PageItem.qml</file>
         <file>TestThings/JointDevice.qml</file>
         <file>TestThings/Card.qml</file>
+        <file>TestThings/DoubleSpinBox.qml</file>
+        <file>TestThings/Playground.qml</file>
+        <file>TestThings/Card1.qml</file>
+        <file>Font/fontawesome-free-6.3.0-desktop/otfs/Font Awesome 6 Free-Solid-900.subset.otf</file>
+        <file>Font/fontawesome-free-6.3.0-desktop/otfs/Font Awesome 6 Free-Regular-400.subset.otf</file>
     </qresource>
 </RCC>

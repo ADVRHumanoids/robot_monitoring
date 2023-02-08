@@ -8,6 +8,7 @@ HelloScreenForm {
     property ClientEndpoint client: undefined
 
     signal updateServerUrl(var host, var port)
+    signal restartUi()
 
     function setError(msg) {
         msgText.text = "Error: " + msg
@@ -36,6 +37,11 @@ HelloScreenForm {
         client.hostname = serverHost
         client.port = serverPort
         client.active = true
+    }
+
+    resetUiBtn.onReleased: {
+        console.log('Restart UI Pressed')
+        restartUi()
     }
 
     onWidthChanged: {

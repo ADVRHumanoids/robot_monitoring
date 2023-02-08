@@ -57,7 +57,7 @@ function setJointStateMessage(msg)
     }
 }
 
-var barPlotFields = ['motPos', 'linkPos', 'motVel', 'linkVel', 'tor']
+var barPlotFields = ['motPos', 'linkPos', 'motVel', 'linkVel', 'tor', 'motorTemp']
 
 var shortToLongName = SjsData.shortToLongName
 

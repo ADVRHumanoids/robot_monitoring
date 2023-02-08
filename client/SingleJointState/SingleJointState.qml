@@ -30,7 +30,10 @@ SingleJointStateForm {
     }
 
     property var plotBtnComponent: Component {
-        Switch { }
+        Switch {
+//            topPadding: 0
+//            bottomPadding: 0
+        }
     }
 
     property string jName: "joint_name"

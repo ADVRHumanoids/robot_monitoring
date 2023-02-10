@@ -58,11 +58,21 @@
         <file>TestThings/VisualEntity.qml</file>
         <file>PageItem.qml</file>
         <file>TestThings/JointDevice.qml</file>
-        <file>TestThings/Card.qml</file>
         <file>TestThings/DoubleSpinBox.qml</file>
-        <file>TestThings/Playground.qml</file>
-        <file>TestThings/Card1.qml</file>
+        <file>TestThings/Launcher.qml</file>
+        <file>TestThings/Card.qml</file>
         <file>Font/fontawesome-free-6.3.0-desktop/otfs/Font Awesome 6 Free-Solid-900.subset.otf</file>
         <file>Font/fontawesome-free-6.3.0-desktop/otfs/Font Awesome 6 Free-Regular-400.subset.otf</file>
+        <file>TestThings/ProcessCard.qml</file>
+        <file>TestThings/SmallToolButton.qml</file>
+        <file>TestThings/MultiColumnPage.qml</file>
+        <file>TestThings/PluginCard.qml</file>
+        <file>TestThings/LabeledProgressBar.qml</file>
+        <file>TestThings/SectionHeader.qml</file>
+        <file>TestThings/DebugRectangle.qml</file>
+        <file>TestThings/ConsoleCard.qml</file>
+        <file>TestThings/ConsoleCard.js</file>
+        <file>TestThings/Launcher.js</file>
+        <file>TestThings/Playground.qml</file>
     </qresource>
 </RCC>

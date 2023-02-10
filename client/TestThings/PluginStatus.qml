@@ -6,7 +6,7 @@ import xbot2_gui.common
 Rectangle {
 
     property bool pluginCanStart: pluginState === "Stopped" || pluginState === "Initialized"
-    property string pluginName: 'Homing'
+    property string pluginName: 'PluginName'
     property string pluginState: 'Running'
     property real pluginCpuTime: -1.0
     property real pluginPeriod: 0.0

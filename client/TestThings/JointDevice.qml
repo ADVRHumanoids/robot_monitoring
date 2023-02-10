@@ -3,36 +3,36 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import xbot2_gui.common
 
-Rectangle {
+Card {
 
     property bool jointActive: false
     property real filterCutoff: 0.0
     property bool filterActive: true
 
-    color: jointActive ? CommonProperties.colors.cardBackground :
-                         CommonProperties.colors.err
-    radius: 4
-    implicitHeight: grid.implicitHeight + 32
-    implicitWidth: grid.implicitWidth + 32
+    signal triggerSafety(bool ok)
 
-    GridLayout {
+    id: root
+
+    backgroundColor: jointActive ? CommonProperties.colors.ok :
+                                   CommonProperties.colors.err
+
+    configurable: false
+
+    name: 'Safety'
+
+    toolButtons: [
+        Switch {
+            checked: jointActive
+            onClicked: root.triggerSafety(checked)
+        }
+    ]
+
+    frontItem: GridLayout {
 
         id: grid
         anchors.fill: parent
-        anchors.margins: 16
-        rows: 3
         columns: 2
-
-        Label {
-            id: label
-            text: 'Joint Device'
-            font.pixelSize: CommonProperties.font.h1
-        }
-
-        Switch {
-//            text: jointActive ? 'Disable' : 'Enable'
-            checked: jointActive
-        }
+        columnSpacing: root.margins
 
         Label {
             text: 'Cutoff [Hz]'

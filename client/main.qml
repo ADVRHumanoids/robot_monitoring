@@ -38,7 +38,7 @@ ApplicationWindow {
 
         PageItem {
             name: "Launcher"
-            page: "TestThings/TestPage.qml"
+            page: "TestThings/Launcher.qml"
             active: client.active
         }
 

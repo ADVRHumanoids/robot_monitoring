@@ -29,8 +29,8 @@ function construct() {
         root._controls[key] = control
     }
 
-    root._cancelBtn.parent = root._grid
-    root._okBtn.parent = root._grid
+//    root._cancelBtn.parent = root._grid
+//    root._okBtn.parent = root._grid
 }
 
 function apply() {

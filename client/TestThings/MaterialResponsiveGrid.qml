@@ -9,6 +9,8 @@ Rectangle {
     objectName: '__root__'
     color: debug ? Material.color(Material.LightGreen) : Qt.rgba(0, 0, 0, 0)
     property int margin: responsiveMargin()
+    property int topMargin: 16
+    property int bottomMargin: 16
     property alias spacing: mainRow.spacing
     property int columns: responsiveColumns()
     property int sizeid: id(width)
@@ -26,8 +28,8 @@ Rectangle {
         anchors.fill: parent
         anchors.leftMargin: root.margin
         anchors.rightMargin: root.margin
-        anchors.topMargin: 16
-        anchors.bottomMargin: 16
+        anchors.topMargin: root.topMargin
+        anchors.bottomMargin: root.bottomMargin
         spacing: 16
 
         Repeater {

@@ -57,12 +57,7 @@ function buildValuePlot (fieldName, container) {
     var plotBtnObj = plotBtnComponent.createObject(container)
 
     plotBtnObj.released.connect( function() {
-        if(plotBtnObj.checked) {
-            singleJointState.plotAdded(jName, fieldName)
-        }
-        else {
-            singleJointState.plotRemoved(jName, fieldName)
-        }
+        singleJointState.plotAdded(jName, fieldName)
     })
 
     plotBtnMap[fieldName] = plotBtnObj
@@ -118,7 +113,7 @@ function setJointStateMessage(msg)
 
         if(fName in msg)
         {
-            fValue.value = msg[fName][jIndex]
+            fValue.setValue(msg[fName][jIndex])
         }
     }
 }

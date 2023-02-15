@@ -1,6 +1,6 @@
-import QtQuick 2.4
+import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls 2.12
+import QtQuick.Controls
 import "logic.js" as Logic
 
 // allow to scroll this widget if viewport height
@@ -13,9 +13,17 @@ Item {
     property var max: []
     property string fieldName: "tor"
     property string fieldNameRef: "torRef"
-
     property alias container: container
     property int type: TwoSideBar.Type.Bar
+
+    function setStatus(ok) {
+        console.log(ok)
+        console.log(ok.length)
+        console.log(container.count)
+        for(let idx = 0; idx < container.count; idx++) {
+            container.itemAt(idx).statusOk = ok[idx]
+        }
+    }
 
     function setJointStateMessage(js_msg) {
         Logic.setJointStateMessage(js_msg)
@@ -23,7 +31,7 @@ Item {
 
     signal jointClicked(string jname)
 
-    implicitWidth: grid.implicitWidth
+//    implicitWidth: grid.elementWidth
     implicitHeight: grid.implicitHeight
 
     id: root
@@ -39,7 +47,7 @@ Item {
         columnSpacing: 10
         flow: GridLayout.TopToBottom
 
-        readonly property int elementWidth: 180
+        readonly property int elementWidth: 220
 
         columns: Math.max(Math.floor(parent.width / elementWidth), 1)
         rows: Math.max(Math.ceil(children.length / columns), 1)

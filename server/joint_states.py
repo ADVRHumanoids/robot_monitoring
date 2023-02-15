@@ -3,7 +3,7 @@ from aiohttp import web
 import json
 
 import rospy 
-from xbot_msgs.msg import JointState
+from xbot_msgs.msg import JointState, Fault
 from urdf_parser_py import urdf as urdf_parser
 
 from .server import ServerBase
@@ -20,7 +20,9 @@ class JointStateHandler:
         
         # joint state subscriber
         self.js_sub = rospy.Subscriber('xbotcore/joint_states', JointState, self.on_js_recv, queue_size=1)
+        self.fault_sub = rospy.Subscriber('xbotcore/fault', Fault, self.on_fault_recv, queue_size=20)
         self.msg = None
+        self.fault = None
 
         # config
         self.rate = config.get('rate', 60.0)
@@ -79,11 +81,20 @@ class JointStateHandler:
 
             await asyncio.sleep(1./self.rate)
 
+            if self.fault is not None:
+                fault_msg = dict()
+                fault_msg['type'] = 'joint_fault'
+                fault_msg['name'] = self.fault.name
+                fault_msg['fault'] = self.fault.fault
+                self.fault = None
+                await self.srv.ws_send_to_all(json.dumps(fault_msg))
+
             if self.msg is None:
                 continue
             
             # convert to dict
             js_msg_to_send = JointStateHandler.js_msg_to_dict(self.msg)
+            self.msg = None
 
             # serialize msg to json
             js_str = json.dumps(js_msg_to_send)
@@ -94,6 +105,10 @@ class JointStateHandler:
 
     def on_js_recv(self, msg: JointState):
         self.msg = msg
+
+
+    def on_fault_recv(self, msg):
+        self.fault = msg
 
 
     def js_msg_to_dict(msg: JointState):

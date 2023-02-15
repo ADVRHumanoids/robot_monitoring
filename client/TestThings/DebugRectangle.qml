@@ -4,6 +4,7 @@ import QtQuick.Controls
 Rectangle {
 
     property Item target
+    property string name: 'dbg'
 
     anchors.fill: target
     color: Qt.rgba(0, 0, 0, 0)
@@ -13,7 +14,7 @@ Rectangle {
     }
 
     Label {
-        text: `${parent.width} x ${parent.height} (${parent.implicitWidth} x ${parent.implicitHeight})`
+        text: `[${name}] ${target.width} x ${target.height} (${target.implicitWidth} x ${target.implicitHeight})`
         anchors.centerIn: parent
         onTextChanged: console.log(text)
         color: parent.border.color

@@ -1,6 +1,10 @@
-import QtQuick 2.4
+import QtQuick
 
 BarPlotItemForm {
+
+    id: root
+
+    property alias statusOk: root.statusOk
 
     signal jointClicked(string jName)
 

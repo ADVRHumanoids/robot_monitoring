@@ -7,6 +7,7 @@ import "ConsoleCard.js" as Logic
 
 Item {
 
+    property alias defaultHeight: card.defaultHeight
     property alias hidden: card.hidden
     property alias name: card.name
     property alias processNames: combo.model
@@ -21,12 +22,13 @@ Item {
     implicitHeight: card.implicitHeight
     implicitWidth: card.implicitWidth
 
+
     Card {
 
         id: card
 
         width: root.width
-        defaultHeight: parent.height
+        height: root.height
 
         name: combo.currentText
 

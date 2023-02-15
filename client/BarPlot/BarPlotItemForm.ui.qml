@@ -1,17 +1,19 @@
-import QtQuick 2.4
+import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
 RowLayout {
 
+    id: row
+
     property string jointName: "joint_name"
     property alias bar: bar
     property real labelColorAlpha: 0.3
     property alias labelMouseArea: labelMouseArea
-    property bool statusOk: false
+    property bool statusOk: true
 
-    width: 400
-    height: 80
+//    width: 400
+//    height: 80
 
     Label {
         id: jointNameLabel

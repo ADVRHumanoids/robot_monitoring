@@ -1,12 +1,27 @@
 import QtQuick
 import QtCharts
 import QtQuick.Controls
+import QtQuick.Layouts
 import xbot2_gui.common
 
 Item {
 
+    // public
+    function addSeries(jName, fieldName) {
+        _addSeries(jName, fieldName)
+    }
+
+    function resetView() {
+        chart.autoscale = true
+        chart.autoscroll = true
+    }
+
+
+    // private
     id: root
-    implicitWidth: 300
+
+    implicitWidth: column.implicitWidth
+    implicitHeight: column.implicitHeight
 
     property real currTime: 0
     property real timeSpan: 10
@@ -14,7 +29,7 @@ Item {
 
     property var currSeries: Object()
 
-    function addSeries(jName, fieldName) {
+    function _addSeries(jName, fieldName) {
 
         let seriesName = jName + "/" + fieldName
 
@@ -75,13 +90,13 @@ Item {
         }
     }
 
-    Column {
+    ColumnLayout {
         id: column
         anchors.fill: parent
 
         PlotterLegend {
             id: plotterLegend
-            width: root.width
+            Layout.fillWidth: true
 
             onHideSeries: function(seriesName, hidden) {
                 chart.series(seriesName).visible = !hidden
@@ -99,17 +114,17 @@ Item {
         ChartView {
 
             id: chart
-            width: root.width
-            height: parent.height - plotterLegend.height - buttonRow.height
+            Layout.fillHeight: true
+            Layout.fillWidth: true
             legend.visible: false
             antialiasing: true
-            margins {
-                bottom: 3
-                top: 3
-                left: 3
-                right: 3
-            }
-            backgroundColor: Qt.rgba(1, 1, 1, 0.2)
+//            margins {
+//                bottom: 3
+//                top: 3
+//                left: 3
+//                right: 3
+//            }
+            backgroundColor: Qt.rgba(1, 1, 1, 0.1)
 
             property bool autoscale: true
             property bool autoscroll: true
@@ -230,7 +245,7 @@ Item {
                 id: axisTime
                 max: currTime
                 min: Math.max(currTime - timeSpan, 0)
-                titleText: "time [s]"
+                titleText: "<font color='white'>time [s]</font>"
                 labelsColor: CommonProperties.colors.primaryText
             }
 
@@ -262,18 +277,17 @@ Item {
 
         }
 
-        Row {
-            id: buttonRow
-            width: root.width
+//        Row {
+//            id: buttonRow
 
-            Button {
-                text: "Reset view"
-                onReleased: {
-                    chart.autoscale = true
-                    chart.autoscroll = true
-                }
-            }
-        }
+//            Button {
+//                text: "Reset view"
+//                onReleased: {
+//                    chart.autoscale = true
+//                    chart.autoscroll = true
+//                }
+//            }
+//        }
 
     }
 

@@ -96,40 +96,15 @@ MultiColumnPage {
 
 
 
-    property Item rightItem: ColumnLayout {
-
+    property Item rightItem: LauncherConsoleItem {
         objectName: 'Console'
-
         Layout.fillWidth: true
+        Layout.fillHeight: true
         Layout.preferredWidth: 1
-
-        Item {
-            property string textAggregated
-            property var textMap
-        }
-
-        SectionHeader {
-            text: 'Console'
-        }
-
-        ConsoleCard {
-            id: mainConsole
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            Layout.preferredHeight: 1
-            name: 'All processes'
-        }
-
-        ConsoleCard {
-            Layout.fillWidth: true
-            hidden: true
-            processNames: ['xbot2', 'ecat_master', 'perception']
-        }
-
     }
 
     Component.onCompleted: Logic.construct(processRepeater,
                                            pluginRepeater,
-                                           mainConsole)
+                                           rightItem.mainConsole)
 
 }

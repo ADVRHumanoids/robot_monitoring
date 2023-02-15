@@ -21,9 +21,9 @@ class JointDeviceHandler:
         # save server object, register our handlers
         self.srv = srv
         self.srv.schedule_task(self.run())
-        self.srv.add_route('PUT', '/joint/set_filter_profile', self.set_filter_profile_handler, 'set_filter_profile')
-        self.srv.add_route('PUT', '/joint/set_filter_active', self.set_filter_active_handler, 'set_filter_active')
-        self.srv.add_route('PUT', '/joint/set_enabled', self.set_enabled_handler, 'set_enabled')
+        self.srv.add_route('POST', '/joint/safety/set_filter_profile', self.set_filter_profile_handler, 'set_filter_profile')
+        self.srv.add_route('POST', '/joint/safety/set_filter_active', self.set_filter_active_handler, 'set_filter_active')
+        self.srv.add_route('POST', '/joint/safety/set_enabled', self.set_enabled_handler, 'set_enabled')
 
         # xbot2 joint device info
         self.jinfo_sub = rospy.Subscriber('xbotcore/joint_device_info', JointDeviceInfo, self.on_jdevinfo_recv, queue_size=1)
@@ -43,7 +43,7 @@ class JointDeviceHandler:
     
     @utils.handle_exceptions
     async def set_filter_active_handler(self, request: web.Request):
-        active = request.rel_url.query['active']
+        active = utils.str2bool(request.rel_url.query['active'])
         enable_joint_filter = rospy.ServiceProxy(name=f'xbotcore/enable_joint_filter', service_class=SetBool)
         res = await utils.to_thread(enable_joint_filter, active)
         return web.Response(text=json.dumps({
@@ -54,7 +54,7 @@ class JointDeviceHandler:
     
     @utils.handle_exceptions
     async def set_enabled_handler(self, request: web.Request):
-        enabled = request.rel_url.query['enabled']
+        enabled = utils.str2bool(request.rel_url.query['enabled'])
         set_control_mask = rospy.ServiceProxy(name=f'xbotcore/joint_master/set_control_mask', service_class=SetControlMask)
         res = await utils.to_thread(set_control_mask, 255 if enabled else 0)
         return web.Response(text=json.dumps({

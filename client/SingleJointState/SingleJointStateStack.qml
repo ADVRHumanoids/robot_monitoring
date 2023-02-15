@@ -36,4 +36,18 @@ SingleJointStateStackForm {
         item.setJointStateMessage(msg)
 
     }
+
+    function setFaultCode(jName, faultCode) {
+
+        let item = repeater.itemAt(currentIndex).item
+
+        if(item === null)
+        {
+            return
+        }
+
+        if(item.jName === jName) {
+            item.setFaultCode(faultCode)
+        }
+    }
 }

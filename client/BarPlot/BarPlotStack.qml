@@ -6,9 +6,9 @@ import "../sharedData.js" as SharedData
 
 Item {
 
-    id: root
-    implicitWidth: col.implicitWidth
-    implicitHeight: col.implicitHeight
+    property var fieldNames: Logic.barPlotFields.map(f => Logic.shortToLongName[f])
+
+    property alias currentIndex: stack.currentIndex
 
     function setJointStateMessage(js_msg) {
         container.itemAt(stack.currentIndex).item.setJointStateMessage(js_msg)
@@ -16,49 +16,56 @@ Item {
 
     signal jointClicked(string jointName)
 
-    ColumnLayout {
-        id: col
+    function setStatus(jName, ok) {
+        let idx = SharedData.jointNames.indexOf(jName)
+        statusOk[idx] = ok
+
+        for(let i = 0; i < container.count; i++) {
+            let loader = container.itemAt(i)
+            if(loader.active) {
+                loader.item.setStatus(statusOk)
+            }
+        }
+    }
+
+
+    // private
+
+    id: root
+    implicitWidth: stack.implicitWidth
+    implicitHeight: stack.implicitHeight
+
+    property list<bool> statusOk
+
+    StackLayout {
+
+        id: stack
         anchors.fill: parent
 
-        ComboBox {
-            id: combo
-            Layout.fillWidth: true
-            model: Logic.barPlotFields.map(f => Logic.shortToLongName[f])
-            wheelEnabled: true
+        onCurrentIndexChanged: {
+            root.setJointStateMessage(SharedData.latestJointState)
         }
 
-        StackLayout {
+        Repeater {
 
-            id: stack
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            currentIndex: combo.currentIndex
+            id: container
+            model: Logic.barPlotFields.length
 
-            onCurrentIndexChanged: {
-                root.setJointStateMessage(SharedData.latestJointState)
-            }
+            Loader {
 
-            Repeater {
+                active: index === stack.currentIndex
+                sourceComponent: barPlotComponent
 
-                id: container
-                model: Logic.barPlotFields.length
-
-                Loader {
-
-                    active: index === stack.currentIndex
-                    sourceComponent: barPlotComponent
-
-                    onLoaded: {
-                        active = true
-                        item.jointNames = SharedData.jointNames
-                        item.min = Logic.barPlotMin()[index]
-                        item.max = Logic.barPlotMax()[index]
-                        item.fieldName = Logic.barPlotFields[index]
-                        item.fieldNameRef = Logic.refName[index]
-                        item.setJointStateMessage(SharedData.latestJointState)
-                    }
+                onLoaded: {
+                    active = true
+                    item.jointNames = SharedData.jointNames
+                    item.min = Logic.barPlotMin()[index]
+                    item.max = Logic.barPlotMax()[index]
+                    item.fieldName = Logic.barPlotFields[index]
+                    item.fieldNameRef = Logic.refName[index]
+                    item.setJointStateMessage(SharedData.latestJointState)
+                    item.setStatus(root.statusOk)
                 }
-
             }
 
         }
@@ -78,4 +85,10 @@ Item {
 
         }
     }
+
+    Component.onCompleted: {
+        statusOk = Array(SharedData.jointNames.length)
+        statusOk.fill(true)
+    }
+
 }

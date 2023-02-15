@@ -15,7 +15,7 @@ Item {
 
     id: root
 
-    property bool mobileLayout: width < mobileBreakpoint
+    property bool mobileLayout: width < CommonProperties.geom.mobileBreakpoint
 
     function _responsiveLayout() {
         if(mobileLayout) {

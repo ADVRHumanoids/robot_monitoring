@@ -21,8 +21,6 @@ Item {
 
     property alias nameFont: titleLabel.font
 
-    width: implicitWidth
-
     property int defaultHeight: -1
 
     property bool flipped: false
@@ -46,34 +44,28 @@ Item {
 
     // private
 
-    property int _hiddenHeight: 2*margins + titleLabel.height
+    property bool completed: false
 
-    height: hidden ? _hiddenHeight : (defaultHeight > 0 ? defaultHeight : implicitHeight)
-
-    Behavior on height {
-        id: heightTransition
-        enabled: false
-        NumberAnimation {
-            duration: 500
-            easing.type: Easing.OutQuad
-        }
-    }
+    property int _hiddenHeight: 2*margins + frontSideRoot.implicitBannerHeight
 
     Component.onCompleted: {
         frontItem.parent = flip.frontSide.contentItemWrapper
         backItem.parent = flip.backSide.contentItemWrapper
-        heightTransition.enabled = true
+        console.log(`card ${name} impl size is ${frontItem.implicitWidth} x ${frontItem.implicitHeight}`)
     }
 
-    implicitWidth: flipped ? flip.backSide.implicitWidth : flip.frontSide.implicitWidth
-    implicitHeight: hidden ? _hiddenHeight :
-                             (flipped ? flip.backSide.implicitHeight : flip.frontSide.implicitHeight)
+    implicitWidth: flip.implicitWidth
+    implicitHeight: flip.implicitHeight
 
     Flipable {
 
         id: flip
 
-        anchors.fill: parent
+        implicitWidth: root.flipped ? backSide.implicitWidth : frontSide.implicitWidth
+        implicitHeight: root.flipped ? backSide.implicitHeight : frontSide.implicitHeight
+
+        width: parent.width
+        height: parent.height
 
         property Item frontSide: Rectangle {
 
@@ -85,23 +77,28 @@ Item {
             color: root.backgroundColor
             radius: CommonProperties.geom.cardRadius
 
+            property int hiddenImplicitHeight: 2*root.margins +
+                                             implicitBannerHeight
+
+            property int defaultImplicitHeight: hiddenImplicitHeight +
+                                               root.margins +
+                                               contentItemWrapper.implicitHeight
+
             implicitWidth: 2*root.margins +
                            Math.max(contentItemWrapper.implicitWidth,
                                     titleLabel.implicitWidth +
-                                        toolBtnRow.implicitWidth +
-                                        root.margins)
+                                    toolBtnRow.implicitWidth +
+                                    root.margins)
 
-            implicitHeight: 3*root.margins +
-                            implicitBannerHeight +
-                            contentItemWrapper.implicitHeight
+            implicitHeight: root.hidden ? hiddenImplicitHeight : defaultImplicitHeight
+
 
             property int implicitBannerHeight: Math.max(titleLabel.implicitHeight,
-                                                toolBtnRow.implicitHeight - 16)
+                                                        toolBtnRow.implicitHeight - 16)
 
             Component.onCompleted: {
                 for(let i = 0; i < root.toolButtons.length; i++) {
                     let tb = root.toolButtons[i]
-                    console.log(tb)
                     tb.parent = toolBtnRow
                     try {
                         tb.font.pixelSize = CommonProperties.font.h3
@@ -169,10 +166,14 @@ Item {
 
             Item {
                 id: frontItemWrapper
-                implicitWidth: children[0].implicitWidth
-                implicitHeight: children[0].implicitHeight
+                implicitWidth: children[0].implicitWidth > 0 ? children[0].implicitWidth : childrenRect.width
+                implicitHeight: children[0].implicitHeight > 0 ? children[0].implicitHeight : childrenRect.height
                 width: parent.width - 2*root.margins
                 height: parent.height - 3*root.margins - titleLabel.height
+
+                onHeightChanged: {
+                    console.log('ASWDSDS ' + height)
+                }
 
                 clip: true
 
@@ -198,8 +199,8 @@ Item {
                            Math.max(contentItemWrapper.implicitWidth,
                                     titleLabelBack.implicitWidth,
                                     cfgCancelBtn.implicitWidth +
-                                        cfgOkBtn.implicitWidth +
-                                        root.margins
+                                    cfgOkBtn.implicitWidth +
+                                    root.margins
                                     )
 
             implicitHeight: 4*root.margins +

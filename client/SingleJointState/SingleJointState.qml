@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts
 
 import "data.js" as Data
+import "../TestThings"
 
 SingleJointStateForm {
 
@@ -30,9 +31,11 @@ SingleJointStateForm {
     }
 
     property var plotBtnComponent: Component {
-        Switch {
-//            topPadding: 0
-//            bottomPadding: 0
+        ToolButton {
+            text: 'Plot'
+            Layout.preferredHeight: implicitHeight - 12
+            topPadding: 0
+            bottomPadding: 0
         }
     }
 
@@ -48,6 +51,12 @@ SingleJointStateForm {
 
     function setJointStateMessage(msg) {
         Data.setJointStateMessage(msg)
+    }
+
+    function setFaultCode(faultCode) {
+        let faultValue = fieldValueMap['fault']
+        faultValue.setText(faultCode)
+        faultValue.alert = true
     }
 
     Component.onCompleted: {

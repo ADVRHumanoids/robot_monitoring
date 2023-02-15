@@ -21,7 +21,6 @@
         <file>Menu/SlidingMenu.qml</file>
         <file>Menu/MenuEntry.qml</file>
         <file>Menu/MenuHeader.qml</file>
-        <file>Monitoring.qml</file>
         <file>Console/Process.qml</file>
         <file>Console/ProcessForm.ui.qml</file>
         <file>Console/ConsoleClient.qml</file>
@@ -50,7 +49,6 @@
         <file>TestThings/RailMenu.qml</file>
         <file>TestThings/NavBar.qml</file>
         <file>TestThings/Console.qml</file>
-        <file>TestThings/Monitoring.qml</file>
         <file>TestThings/Joy.qml</file>
         <file>TestThings/NavIcon.qml</file>
         <file>TestThings/Viewer3D.qml</file>
@@ -73,6 +71,9 @@
         <file>TestThings/ConsoleCard.qml</file>
         <file>TestThings/ConsoleCard.js</file>
         <file>TestThings/Launcher.js</file>
+        <file>TestThings/Monitoring.qml</file>
         <file>TestThings/Playground.qml</file>
+        <file>TestThings/LauncherConsoleItem.qml</file>
+        <file>TestThings/Monitoring.js</file>
     </qresource>
 </RCC>

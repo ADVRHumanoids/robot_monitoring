@@ -1,4 +1,5 @@
-import QtQuick 2.4
+import QtQuick
+import xbot2_gui.common
 
 Rectangle {
 
@@ -22,23 +23,24 @@ Rectangle {
         id: bar
         anchors.verticalCenter: parent.verticalCenter
         height: parent.height - 2 * barMargin
-        color: "lightseagreen"
+        color: CommonProperties.colors.primary
         radius: barRadius
     }
 
-//    Rectangle {
-//        id: centerLine
-//        anchors.verticalCenter: parent.verticalCenter
-//        height: bar.height
-//        width: 2
-//        color: "black"
-//    }
+    Rectangle {
+        id: centerLine
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.horizontalCenter: value > 0 ? bar.left : bar.right
+        height: bar.height
+        width: 1
+        color: Qt.darker(CommonProperties.colors.primary)
+    }
 
     ReferenceMarker {
         id: refMarker
         height: bar.height
         width: 8
-        fillColor: "darkblue"
+        fillColor: Qt.darker(CommonProperties.colors.primary)
     }
 
     Rectangle {

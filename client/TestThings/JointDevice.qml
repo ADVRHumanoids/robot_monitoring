@@ -9,7 +9,9 @@ Card {
     property real filterCutoff: 0.0
     property bool filterActive: true
 
-    signal triggerSafety(bool ok)
+    signal setSafetyState(bool ok)
+    signal setFilterCutoff(string profile)
+    signal setFilterActive(bool ok)
 
     id: root
 
@@ -21,9 +23,9 @@ Card {
     name: 'Safety'
 
     toolButtons: [
-        Switch {
-            checked: jointActive
-            onClicked: root.triggerSafety(checked)
+        Button {
+            text: jointActive ? 'Stop' : 'Restore'
+            onClicked: root.setSafetyState(!jointActive)
         }
     ]
 
@@ -54,6 +56,9 @@ Card {
                     id: filterCheck
                     text: 'Enabled'
                     checked: filterActive
+                    onReleased: {
+                        root.setFilterActive(checked)
+                    }
                 }
 
                 RadioButton {
@@ -61,17 +66,26 @@ Card {
                     text: 'Safe'
                     enabled: filterCheck.checked
                     checked: filterCutoff <= 2.0
+                    onReleased: {
+                        if(checked) root.setFilterCutoff('safe')
+                    }
                 }
                 RadioButton {
                     id: medium
                     text: 'Medium'
                     enabled: filterCheck.checked
                     checked: filterCutoff <= 10.0 && !safe.checked
+                    onReleased: {
+                        if(checked) root.setFilterCutoff('medium')
+                    }
                 }
                 RadioButton {
                     text: 'Fast'
                     enabled: filterCheck.checked
                     checked: filterCutoff > 10.0
+                    onReleased: {
+                        if(checked) root.setFilterCutoff('fast')
+                    }
                 }
             }
         }

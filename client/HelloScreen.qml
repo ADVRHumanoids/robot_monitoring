@@ -1,4 +1,5 @@
 import QtQuick 2.4
+import Qt.labs.settings
 import xbot2_gui.common
 
 HelloScreenForm {
@@ -54,4 +55,5 @@ HelloScreenForm {
             mainLayout.anchors.margins = 50
         }
     }
+
 }

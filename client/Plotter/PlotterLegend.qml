@@ -4,7 +4,7 @@ import QtQuick.Controls
 Item {
 
     id: root
-    height: grid.implicitHeight
+    implicitHeight: grid.implicitHeight
 
     signal hideSeries(string name, bool hide)
     signal highlightSeries(string name, bool highlight)

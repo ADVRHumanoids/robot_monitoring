@@ -69,7 +69,7 @@ Rectangle {
             }
             TextField {
                 id: hostField
-                text: appData.hostname
+                text: client.hostname
             }
 
             Label {
@@ -77,7 +77,7 @@ Rectangle {
             }
             TextField {
                 id: portField
-                text: appData.port
+                text: client.port
             }
         }
 

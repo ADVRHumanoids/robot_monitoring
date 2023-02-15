@@ -1,175 +1,175 @@
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
-import xbot2_gui.common
+import QtQuick.Controls
 
-import "../SingleJointState"
-import "../BarPlot"
 import "../Plotter"
+import "../BarPlot"
+import "../SingleJointState"
 import ".."
 
+import "Monitoring.js" as Logic
 
-Item {
+MultiColumnPage {
+
+    property ClientEndpoint client
+
+    columnItems: [leftItem, rightItem]
 
     id: root
-    property ClientEndpoint client: undefined
-    property bool mobileLayout: width < mainGrid.brMedium
 
-    TabBar {
-        id: bar
-        width: mainGrid.contentWidth
-        anchors.horizontalCenter: parent.horizontalCenter
-        TabButton {
-            text: 'Joint Monitoring'
-        }
-        TabButton {
-            text: 'Plot'
-        }
+    property Item leftItem: Item {
 
-        onCurrentIndexChanged: {
-            console.log('tab bar index changed to ' + currentIndex)
-            mainSwipe.setCurrentIndex(currentIndex)
-        }
-    }
+        objectName: 'Global'
 
-    function _jsCallback(js) {
-        barPlot.setJointStateMessage(js)
-        jointState.setJointStateMessage(js)
-        plotter.setJointStateMessage(js)
-    }
-
-    function _objCallback(obj) {
-        if(obj.type === 'joint_device_info') {
-            jointDevice.filterActive = obj.filter_active
-            jointDevice.filterCutoff = obj.filter_cutoff_hz
-            jointDevice.jointActive = obj.joint_active
-        }
-    }
-
-    Component.onCompleted: {
-
-        client.jointStateReceived.connect(_jsCallback)
-        client.objectReceived.connect(_objCallback)
-    }
-
-    Component.onDestruction: {
-        client.jointStateReceived.disconnect(_jsCallback)
-        client.objectReceived.disconnect(_objCallback)
-    }
-
-    SwipeView {
-        id: mainSwipe
-        width: parent.width
-        anchors {
-            top: bar.bottom
-            bottom: parent.bottom
-        }
-
-        onCurrentIndexChanged: {
-            console.log('swipe index changed to ' + currentIndex)
-            bar.setCurrentIndex(currentIndex)
-        }
+        Layout.fillWidth: true
+        Layout.fillHeight: true
 
         ScrollView {
 
-            id: scroll
-            contentWidth: availableWidth
-            contentHeight: mainGrid.implicitHeight
+            id: leftScroll
 
-            MaterialResponsiveGrid {
-                id: mainGrid
-                brMedium: 900
-                width: scroll.contentWidth
+            anchors.fill: parent
 
-                JointDevice {
-                    id: jointDevice
-                    property int column: 0
-                    property var columnSpan: [4, 8, 4, 4]
-                }
+            contentWidth: leftCol.width
+            contentHeight: leftCol.height
 
-                Rectangle {
+            ColumnLayout {
 
-                    color: CommonProperties.colors.cardBackground
-                    height: childrenRect.height + 16*2
+                id: leftCol
+                width: leftScroll.availableWidth
 
-                    radius: 4
-                    property int column: 0
-                    property var columnSpan: [4, 8, 8, 8]
+                Card {
 
-                    Label {
-                        id: barPlotTitle
-                        text: "Joint overview"
-                        font.pixelSize: CommonProperties.font.h1
-                        x: 16
-                        y: 16
-                    }
+                    id: livePlotCard
+                    name: 'Live plot'
+                    hidden: true
 
-                    BarPlotStack {
-                        id: barPlot
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: hidden ?
+                                                implicitHeight :
+                                                root.height - 2*margins
 
-                        anchors {
-                            top: barPlotTitle.bottom
-                            left: parent.left
-                            right: parent.right
+                    toolButtons: [
+                        SmallToolButton {
+                            text: '\uf021'
+                            font.family: CommonProperties.fontAwesome.solid.family
+                            onClicked: livePlot.resetView()
                         }
 
-                        anchors.margins: 16
+                    ]
+
+                    frontItem: Plotter {
+                        id: livePlot
+                        anchors.fill: parent
+                    }
+
+
+                    backItem: Item {
+                        anchors.fill: parent
+                        implicitHeight: heightSpin.implicitHeight
+                        SpinBox {
+                            id: heightSpin
+                            from: 0
+                            to: 1000
+                            value: 300
+                            editable: true
+                            stepSize: 50
+                        }
+                    }
+                }
+
+
+                Card {
+
+                    name: barPlotCombo.currentText
+                    configurable: false
+                    width: parent.width
+
+                    toolButtons: [
+                        ComboBox {
+                            id: barPlotCombo
+                            model: barPlot.fieldNames
+                            width: implicitWidth
+                            wheelEnabled: true
+                        }
+
+                    ]
+
+                    frontItem: BarPlotStack {
+                        id: barPlot
+                        width: parent.width
+                        currentIndex: barPlotCombo.currentIndex
 
                         onJointClicked: jointName => {
                                             jointState.selectJoint(jointName)
                                         }
                     }
-
                 }
 
-                Rectangle {
 
-                    color: Qt.lighter(Material.background)
-                    height: jointState.implicitHeight + singleJointTitle.height + 16*4
-                    radius: 4
-                    property var columnSpan: [4, 8, 4, 4]
-
-                    Label {
-                        id: singleJointTitle
-                        text: "Joint data"
-                        font.pixelSize: CommonProperties.font.h1
-                        x: 16
-                        y: 16
-                    }
-
-                    SingleJointStateStack {
-                        id: jointState
-                        anchors {
-                            top: singleJointTitle.bottom
-                            bottom: parent.bottom
-                            left: parent.left
-                            right: parent.right
-                        }
-
-                        anchors.margins: 16
-
-                        onPlotAdded: (jName, fieldName) => {
-                                         plotter.addSeries(jName, fieldName)
-                                     }
-
-                        onPlotRemoved: (jName, fieldName) => {
-                                           plotter.removeSeries(jName, fieldName)
-                                       }
-                    }
+                Item {
+                    Layout.fillHeight: true
                 }
-            }
-        }
-
-        MaterialResponsiveGrid {
-            id: plotterGrid
-
-            Plotter {
-                id: plotter
-                property alias columnSpan: plotterGrid.columns
-                height: parent.contentHeight
             }
         }
 
     }
+
+    property Item rightItem: ScrollView {
+
+        objectName: 'Safety / Joint State'
+
+        id: rightScroll
+        Layout.fillHeight: true
+
+        ColumnLayout {
+
+            width: rightScroll.availableWidth
+
+            JointDevice {
+                id: jointDevice
+                Layout.fillWidth: true
+                hidden: true
+
+                onSetSafetyState: (ok) => Logic.setSafetyState(ok)
+                onSetFilterActive: (active) => Logic.setFilterActive(active)
+                onSetFilterCutoff: (profile) => Logic.setFilterProfile(profile)
+            }
+
+            Card {
+
+                Layout.fillWidth: true
+                configurable: false
+                name: 'Joint <i>' + jointState.jointNames[jointState.currentIndex] + '</i>'
+
+                frontItem: SingleJointStateStack {
+                    id: jointState
+                    anchors.fill: parent
+
+                    onPlotAdded: (jName, fieldName) => {
+                                     livePlot.addSeries(jName, fieldName)
+                                     livePlotCard.hidden = false
+                                 }
+                }
+
+            }
+
+            Item {
+                Layout.fillHeight: true
+            }
+
+        }
+
+    }
+
+    property alias jointDevice: jointDevice
+    property alias barPlot: barPlot
+    property alias livePlot: livePlot
+
+    Component.onCompleted: {
+        Logic.construct()
+    }
+
+
 
 }

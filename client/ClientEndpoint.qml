@@ -1,5 +1,7 @@
 import QtQuick 2.0
 import QtWebSockets
+import Qt.labs.settings
+
 import "client.js" as Client
 import "sharedData.js" as SharedData
 
@@ -62,6 +64,10 @@ Item
             socket.sendTextMessage(msg)
         }
     }
+
+
+    // private
+    id: root
 
     // websocket for streaming data
     WebSocket {
@@ -159,6 +165,12 @@ Item
             doRequest("GET", "/joint_states/info", "", onInfoReceived)
             _nattempt++
         }
+    }
+
+    Settings {
+        category: 'client'
+        property alias hostname: root.hostname
+        property alias port: root.port
     }
 
 }

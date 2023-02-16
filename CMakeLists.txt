@@ -57,6 +57,7 @@ add_subdirectory(src/aux)
 add_subdirectory(src/maintenance)
 add_subdirectory(src/ft)
 add_subdirectory(src/gripper)
+add_subdirectory(src/softhand)
 add_subdirectory(src/rviz/)
 add_subdirectory(src/qcustomplot)
 

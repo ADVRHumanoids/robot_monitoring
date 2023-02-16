@@ -75,5 +75,9 @@
         <file>TestThings/Playground.qml</file>
         <file>TestThings/LauncherConsoleItem.qml</file>
         <file>TestThings/Monitoring.js</file>
+        <file>TestThings/AspectRatio.qml</file>
+        <file>TestThings/VideoStream.qml</file>
+        <file>TestThings/VideoStreamCard.qml</file>
+        <file>TestThings/VideoStream.js</file>
     </qresource>
 </RCC>

@@ -49,6 +49,11 @@ Item
     // generic message
     signal objectReceived(var msg)
 
+    // bytes received counter
+    property int bytesRecv: 0
+    property int bytesSent: 0
+    property real srvRtt: 0
+
 
     // method for performing am http request
     function doRequest(verb, url, body, callback) {
@@ -61,6 +66,7 @@ Item
     // method for sending a text message over websocket
     function sendTextMessage(msg) {
         if(socket.active) {
+            bytesSent += msg.length
             socket.sendTextMessage(msg)
         }
     }
@@ -77,6 +83,8 @@ Item
         active: true
 
         onTextMessageReceived: function (message) {
+
+            root.bytesRecv += message.length
 
             var obj = JSON.parse(message)
 
@@ -105,6 +113,10 @@ Item
             {
                 // do nothing
             }
+            else if(obj.type === 'ping')
+            {
+                root.srvRtt = (appData.getTimeNs() - obj.cli_time_ns)*1e-6
+            }
             else
             {
                 objectReceived(obj)
@@ -120,6 +132,8 @@ Item
             } else if (socket.status === WebSocket.Open) {
                 console.log("Server connected")
                 connected('Server connected')
+                root.bytesRecv = 0
+                root.bytesSent = 0
             } else if (socket.status === WebSocket.Closed) {
                 console.log("Socket closed")
                 error('Socket closed')
@@ -164,6 +178,20 @@ Item
             parent.connected("[" + _nattempt + "] connected to " + socket.url + ", requesting configuration..")
             doRequest("GET", "/joint_states/info", "", onInfoReceived)
             _nattempt++
+        }
+    }
+
+    Timer {
+        id: pingTimer
+        running: socket.active
+        repeat: true
+        interval: 1000
+
+        onTriggered: {
+            let msg = Object()
+            msg.type = 'ping'
+            msg.cli_time_ns = appData.getTimeNs()
+            sendTextMessage(JSON.stringify(msg))
         }
     }
 

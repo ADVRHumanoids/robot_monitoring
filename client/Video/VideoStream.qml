@@ -2,7 +2,10 @@ import QtQuick 2.0
 import QtQuick.Layouts
 import QtQuick.Controls
 import QtQuick.Controls.Material
+
 import NextUiModules
+import "../TestThings"
+
 
 Rectangle {
 
@@ -11,6 +14,7 @@ Rectangle {
     radius: 4
 
     property alias names: combo.model
+    property alias streamName: combo.currentText
     property bool _hdr_recv: false
 
     signal refreshNamesRequested
@@ -26,7 +30,7 @@ Rectangle {
                                   hdr[i].packetno)
         }
         _hdr_recv = true
-        console.log('set headers!!!')
+        console.log(streamName + ': set headers done')
     }
 
     function setTheoraPacket(msg) {
@@ -103,10 +107,16 @@ Rectangle {
             }
         }
 
-        VideoStreamPainter {
-            id: video
+        AspectRatio {
+
             Layout.fillWidth: true
             Layout.fillHeight: true
+            aspectRatio: video.implicitWidth/video.implicitHeight
+
+            VideoStreamPainter {
+                id: video
+                anchors.fill: parent
+            }
         }
     }
 

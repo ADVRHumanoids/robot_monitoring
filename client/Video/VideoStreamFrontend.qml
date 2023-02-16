@@ -15,6 +15,7 @@ Item {
     VideoStream {
 
         id: video
+
         anchors.fill: parent
 
         onVideoStreamChanged: (name) => Logic.setStream(name)
@@ -26,7 +27,9 @@ Item {
     Component.onCompleted: {
 
         client.theoraPacketReceived.connect(function(msg) {
-            video.setTheoraPacket(msg)
+            if(msg.stream_name === video.streamName) {
+                video.setTheoraPacket(msg)
+            }
         })
 
     }

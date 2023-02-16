@@ -22,6 +22,7 @@ public:
     Q_PROPERTY(QString hostname MEMBER hostname);
     Q_PROPERTY(int port MEMBER port);
     Q_INVOKABLE void updateUi();
+    Q_INVOKABLE uint64_t getTimeNs() const;
 
 public:
     QString hostname { "localhost" }; // "10.240.23.38" };
@@ -79,4 +80,10 @@ int main(int argc, char *argv[])
 void AppData::updateUi()
 {
     QCoreApplication::processEvents();
+}
+
+uint64_t AppData::getTimeNs() const
+{
+    auto now = std::chrono::high_resolution_clock::now();
+    return now.time_since_epoch().count();
 }

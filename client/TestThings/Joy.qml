@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import "../Cartesian"
-import "../Video"
 import ".."
 import "../Cartesian/cartesian.js" as Logic
 
@@ -50,18 +49,28 @@ Item {
 
             id: joypad
 
-            VideoStreamFrontend {
-                anchors.top: parent.top
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.margins: 16
-                height: (parent.width - 32)/1.33 > parent.height - 32 ?
-                            parent.height - 32 : (parent.width - 32)/1.33
-                width: (parent.height - 32)*1.33 > parent.width - 32 ?
-                           parent.width - 32 : (parent.height - 32)*1.33
+            GridLayout {
 
-                client: root.client
-                property var column: [0, 0, 2, 2]
-                property var columnSpan: [4, 8, 8, 8]
+                anchors.fill: parent
+                anchors.margins: CommonProperties.geom.spacing
+                columnSpacing: CommonProperties.geom.spacing
+                rowSpacing: CommonProperties.geom.spacing
+
+                rows: root.portrait ? 2 : 1
+                columns: root.portrait ? 1 : 2
+
+                Repeater {
+
+                    model: 2
+
+                    VideoStream {
+                        Layout.fillHeight: true
+                        Layout.fillWidth: true
+
+                        property string streamName
+                    }
+
+                }
 
             }
 
@@ -108,6 +117,33 @@ Item {
         Item {
 
             id: settings
+
+            MaterialResponsiveGrid {
+
+                anchors.fill: parent
+
+                Card {
+                    name: 'Camera'
+                    frontItem: GridLayout {
+
+                        anchors.fill: parent
+
+                            Repeater {
+
+                            Label { text: 'Camera 1' }
+
+                            ComboBox {
+
+                            }
+
+                            TextField {
+
+                            }
+
+                        }
+                    }
+                }
+            }
 
             GridLayout {
 

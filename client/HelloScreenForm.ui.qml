@@ -1,14 +1,14 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+
+import "TestThings"
+
 import xbot2_gui.common
 
-Rectangle {
+MaterialResponsiveGrid {
 
-    id: mainRect
-    width: 320
-    height: 568
-    color: CommonProperties.colors.frame
+    id: mainGrid
 
     property string serverHost: hostField.text
     property string serverPort: portField.text
@@ -17,6 +17,54 @@ Rectangle {
     property alias msgText: msgText
     property alias statusText: statusText
     property alias mainLayout: mainLayout
+
+    SectionHeader {
+        property int columnSpan: mainGrid.columns
+        text: 'XBot2 GUI'
+    }
+
+    Card {
+        name: 'Server status'
+
+        configurable: false
+
+        frontItem: GridLayout {
+            id: formLayout
+            anchors.fill: parent
+            columns: 2
+            columnSpacing: 20
+
+            Label {
+                text: "Host"
+            }
+            TextField {
+                id: hostField
+                text: client.hostname
+            }
+
+            Label {
+                text: "Port"
+            }
+            TextField {
+                id: portField
+                text: client.port
+            }
+
+            Label {
+                text: "Data RX (KB/s)"
+            }
+            TextField {
+                text: client.port
+            }
+
+            Label {
+                text: "Data TX (KB/s)"
+            }
+            TextField {
+                text: client.port
+            }
+        }
+    }
 
     ColumnLayout {
 

@@ -111,7 +111,7 @@ Item {
             Label {
                 id: titleLabel
                 text: root.name
-                font.pixelSize: CommonProperties.font.h3
+                font.pixelSize: CommonProperties.font.h2
                 height: frontSideRoot.implicitBannerHeight
                 verticalAlignment: Text.AlignVCenter
                 anchors {
@@ -170,10 +170,6 @@ Item {
                 implicitHeight: children[0].implicitHeight > 0 ? children[0].implicitHeight : childrenRect.height
                 width: parent.width - 2*root.margins
                 height: parent.height - 3*root.margins - titleLabel.height
-
-                onHeightChanged: {
-                    console.log('ASWDSDS ' + height)
-                }
 
                 clip: true
 

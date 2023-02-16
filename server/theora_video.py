@@ -16,7 +16,6 @@ class TheoraVideoHandler:
 
         # save server object, register our handlers
         self.srv = srv
-        self.srv.schedule_task(self.run())
         self.srv.add_route('GET', '/video/get_names', self.get_names_handler, 'video_get_names')
         self.srv.add_route('PUT', '/video/set_stream', self.set_stream_handler, 'video_set_stream')
 
@@ -25,6 +24,7 @@ class TheoraVideoHandler:
         self.th_hdr_pkt = []
 
         # subscribers
+        self.img_data = dict()
         self.img_sub = None
         self.img_msg_to_send = {}
 
@@ -59,64 +59,78 @@ class TheoraVideoHandler:
         body = json.loads(body)
         stream_name = body['stream_name']
 
-        if self.img_sub is not None:
-            self.img_sub.unregister()
+        if len(stream_name) == 0:
+            return
+
+        if stream_name in self.img_data.keys():
+            img_sub = self.img_data[stream_name][1]
+            img_sub.unregister()
+
         
-        self.th_hdr_pkt.clear()
+        img_hdr_pkt = list()
 
-        self.img_msg_to_send = {}
+        img_msg_queue = asyncio.Queue(maxsize=0)
 
-        if stream_name == '':
-            print('disconnected image subscriber')
-            return web.Response(text=json.dumps({
-                'success': True,
-                'message': f'disconnected from image topic"',
-                }))
+        self.img_data[stream_name] = [stream_name, None, img_hdr_pkt, img_msg_queue]
         
         print(f'requested stream {stream_name}, registering subscriber and waiting for headers..')
 
-        self.img_sub = rospy.Subscriber(stream_name, 
-            TheoraPacket, self.on_th_pkt_recv, queue_size=20)
+        img_sub = rospy.Subscriber(stream_name, 
+            TheoraPacket, self.on_th_pkt_recv, self.img_data[stream_name], queue_size=20, tcp_nodelay=True)
+
+        self.img_data[stream_name][1] = img_sub
 
         # wait for headers
         iter = 0
-        while len(self.th_hdr_pkt) < 3 and iter < 500:
-            await asyncio.sleep(0.01)
+        while len(img_hdr_pkt) < 3 and iter < 500:
+            await asyncio.sleep(0.1)
 
-        if len(self.th_hdr_pkt) < 3:
+        if len(img_hdr_pkt) < 3:
             return web.Response(text=json.dumps({
                 'success': False,
                 'message': f'failed to receive headers for "{stream_name}"',
                 }))
 
         print('got headers')
+        
+        self.srv.schedule_task(self.run(self.img_data[stream_name]))
 
         return web.Response(text=json.dumps({
                 'success': True,
                 'message': f'subscribed to "{stream_name}"',
-                'hdr': self.th_hdr_pkt,
+                'hdr': img_hdr_pkt,
                 }))
 
 
     
-    async def run(self):
+    async def run(self, stream_data):
 
-        while True:
+        # unpack
+        stream_name, img_sub, img_hdr_pkt, img_msg_queue = stream_data
+
+        print(f'{stream_name} started')
+
+        while img_sub is not None:
 
             # await for a new packet to be received from ros
-            th_pkt = await self.th_pkt_queue.get()
+            th_pkt = await img_msg_queue.get()
 
             # serialize msg to json
             msg_str = json.dumps(th_pkt)
-
+            
             # iterate over sockets (one per client)
             await self.srv.ws_send_to_all(msg_str)
 
+        print(f'{stream_name} exiting')
+
     
-    def on_th_pkt_recv(self, msg: TheoraPacket):
+    def on_th_pkt_recv(self, msg: TheoraPacket, stream_data):
+
+        stream_name, img_sub, img_hdr_pkt, img_msg_queue = stream_data
 
         th_pkt = dict()
         th_pkt['type'] = 'theora'
+        th_pkt['stream_name'] = stream_name
         th_pkt['data'] = base64.b64encode(msg.data).decode('ascii')
         th_pkt['b_o_s'] = msg.b_o_s
         th_pkt['e_o_s'] = msg.e_o_s
@@ -124,14 +138,14 @@ class TheoraVideoHandler:
         th_pkt['packetno'] = msg.packetno
 
         if msg.b_o_s == 1:
-            self.th_hdr_pkt = [th_pkt]
-            print(f'got header {len(self.th_hdr_pkt)}/3')
+            img_hdr_pkt.append(th_pkt)
+            print(f'got header {len(img_hdr_pkt)}/3')
             return 
 
         if msg.granulepos == 0:
-            self.th_hdr_pkt.append(th_pkt)
-            print(f'got header {len(self.th_hdr_pkt)}/3')
+            img_hdr_pkt.append(th_pkt)
+            print(f'got header {len(img_hdr_pkt)}/3')
             return
 
-        _ = asyncio.run_coroutine_threadsafe(self.th_pkt_queue.put(th_pkt), self.loop)
+        _ = asyncio.run_coroutine_threadsafe(img_msg_queue.put(th_pkt), self.loop)
         

@@ -118,12 +118,6 @@ Item {
             Layout.fillWidth: true
             legend.visible: false
             antialiasing: true
-//            margins {
-//                bottom: 3
-//                top: 3
-//                left: 3
-//                right: 3
-//            }
             backgroundColor: Qt.rgba(1, 1, 1, 0.1)
 
             property bool autoscale: true

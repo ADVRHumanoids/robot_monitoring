@@ -43,6 +43,7 @@ class Xbot2WebServer(ServerBase):
 
         # ws callbacks
         self.ws_callbacks = list()
+        self.register_ws_coroutine(self.handle_ping_msg)
 
         # add routes
         routes = [
@@ -188,4 +189,7 @@ class Xbot2WebServer(ServerBase):
                     ws.exception())
                 break
 
-    
+
+    async def handle_ping_msg(self, msg, ws):
+        if msg['type'] == 'ping':
+            await self.ws_send_to_all(json.dumps(msg))

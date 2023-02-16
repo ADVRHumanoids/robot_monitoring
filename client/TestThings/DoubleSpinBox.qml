@@ -23,7 +23,7 @@ Item {
 
         validator: DoubleValidator {
             bottom: root.from
-            top:  root.top
+            top:  root.to
         }
 
         textFromValue: function(int_value, locale) {

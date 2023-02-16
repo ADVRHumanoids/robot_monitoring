@@ -3,7 +3,7 @@ xbot2_process:
   name: xbot2
   rate: 1.0
   cmd: xbot2-core
-  machine: arturo@localhost
+  machine: alaurenzi@localhost
   args:
     - name: Verbose
       type: check  # checkbox
@@ -25,7 +25,7 @@ ls:
   type: process_handler
   name: do_ls
   cmd: ls
-  machine: arturo@localhost
+  machine: alaurenzi@localhost
   args:
     - name: Folder
       type: text

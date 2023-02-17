@@ -1,26 +1,13 @@
-import QtQuick 2.0
+import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
-import QtQuick.Controls.Material
 
 import NextUiModules
-import "../TestThings"
+import "../Common"
 
+Item {
 
-Rectangle {
-
-    id: root
-    color: Qt.lighter(Material.backgroundColor)
-    radius: 4
-
-    property alias names: combo.model
-    property alias streamName: combo.currentText
-    property bool _hdr_recv: false
-
-    signal refreshNamesRequested
-
-    signal videoStreamChanged(string name)
-
+    // public
     function setTheoraHeader(hdr) {
         for(let i = 0; i < 3; i++) {
             video.setTheoraPacket(hdr[i].data,
@@ -35,10 +22,9 @@ Rectangle {
 
     function setTheoraPacket(msg) {
 
-        if(!_hdr_recv ||! activeCheck.checked) {
+        if(!_hdr_recv) {
             return
         }
-
 
         video.setTheoraPacket(msg.data,
                               msg.b_o_s,
@@ -47,80 +33,21 @@ Rectangle {
                               msg.packetno)
     }
 
-    ColumnLayout {
+    // private
+    id: root
 
-        id: col
+    property bool _hdr_recv: false
+
+    // force video painter to respect the source aspect ratio
+    AspectRatio {
+
         anchors.fill: parent
-        anchors.margins: 16
+        aspectRatio: video.implicitWidth/video.implicitHeight
 
-        Label {
-            text: "Video Stream"
-            bottomPadding: 16
-            font.pixelSize: 28
+        VideoStreamPainter {
+            id: video
+            anchors.fill: parent
         }
-
-        RowLayout {
-
-            Layout.fillWidth: true
-            spacing: 16
-
-            Label {
-                text: 'Camera'
-            }
-
-            ComboBox {
-                id: combo
-                enabled: count > 0
-                Layout.fillWidth: true
-
-                onCurrentTextChanged: {
-                    if(activeCheck.checked) {
-                        _hdr_recv = false
-                        videoStreamChanged(currentText)
-                    }
-                }
-
-            }
-
-            Button {
-                text: "Refresh"
-                onReleased: {
-                    refreshNamesRequested()
-                }
-            }
-
-            CheckBox {
-                id: activeCheck
-                text: "Active"
-                checked: true
-
-                onCheckedChanged: {
-                    if(checked && combo.enabled) {
-                        _hdr_recv = false
-                        videoStreamChanged(combo.currentText)
-                    }
-                    if(!checked) {
-                        _hdr_recv = false
-                        videoStreamChanged("")
-                    }
-                }
-            }
-        }
-
-        AspectRatio {
-
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            aspectRatio: video.implicitWidth/video.implicitHeight
-
-            VideoStreamPainter {
-                id: video
-                anchors.fill: parent
-            }
-        }
-    }
-
-    Component.onCompleted: {
-        refreshNamesRequested()
     }
 }
+

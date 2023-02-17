@@ -38,7 +38,6 @@ find_package(Qt6 COMPONENTS
 set(PROJECT_SOURCES
         main.cpp
         qml.qrc
-        SingleJointState/qml.qrc
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -92,5 +91,4 @@ qt_add_shaders(next_ui "next_ui-shaders"
     FILES
         "Video/yuv2rgb.vert"
         "Video/yuv2rgb.frag"
-        "Icons/shader/invert.frag"
 )

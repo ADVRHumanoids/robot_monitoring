@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("appData", &appdata);
 
     qmlRegisterType<VideoStreamPainter>("NextUiModules", 1, 0, "VideoStreamPainter");
-    qmlRegisterSingletonType(QUrl("qrc:/CommonProperties.qml"), "xbot2_gui.common", 1, 0, "CommonProperties");
+    qmlRegisterSingletonType(QUrl("qrc:/Common/CommonProperties.qml"), "xbot2_gui.common", 1, 0, "CommonProperties");
 
     const QUrl url(QStringLiteral("qrc:/main.qml"));
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,

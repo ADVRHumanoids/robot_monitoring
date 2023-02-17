@@ -2,7 +2,7 @@ import QtQuick 2.0
 import QtWebSockets
 import QtCore
 
-import "client.js" as Client
+import "ClientEndpoint.js" as Client
 import "sharedData.js" as SharedData
 
 Item

@@ -1,17 +1,9 @@
-import QtQuick 2.15
-import QtQuick.Window 2.15
-import QtQuick.Layouts 1.12
-import QtQuick.Controls 2.12
-import QtQuick.Shapes 1.14
+import QtQuick
+import QtQuick.Window
+import QtQuick.Layouts
+import QtQuick.Controls
 
-import "SingleJointState"
-import "BarPlot"
-import "sharedData.js" as SharedData
-import "Plotter"
 import "Menu"
-import "Console"
-import "Cartesian"
-import "TestThings"
 
 ApplicationWindow {
 
@@ -32,31 +24,31 @@ ApplicationWindow {
 
         PageItem {
             name: "Home"
-            page: "HelloScreen.qml"
+            page: "Home/HelloScreen.qml"
             active: true
         }
 
         PageItem {
             name: "Launcher"
-            page: "TestThings/Launcher.qml"
+            page: "Launcher/Launcher.qml"
             active: client.active
         }
 
         PageItem {
             name: "Monitoring"
-            page: "TestThings/Monitoring.qml"
+            page: "Monitoring/Monitoring.qml"
             active: client.isFinalized
         }
 
         PageItem {
             name: "Joy"
-            page: "TestThings/Joy.qml"
+            page: "Joy/Joy.qml"
             active: client.active
         }
 
         PageItem {
             name: "Viewer"
-            page: "TestThings/Viewer3D.qml"
+            page: "Viewer3D/Viewer3D.qml"
             active: true
         }
 
@@ -137,7 +129,6 @@ ApplicationWindow {
             id: pagesStackRepeater
 
             function reloadAll() {
-                console.log(count)
                 for(let i = 0; i < count; i++) {
                     let ch = itemAt(i)
                     if(ch.active) {

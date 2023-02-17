@@ -1,6 +1,6 @@
 import QtQuick 2.0
 import QtWebSockets
-import Qt.labs.settings
+import QtCore
 
 import "client.js" as Client
 import "sharedData.js" as SharedData
@@ -55,12 +55,18 @@ Item
     property real srvRtt: 0
 
 
-    // method for performing am http request
+    // method for performing an http request
     function doRequest(verb, url, body, callback) {
         Client.httpRequest(verb,
                            "http://" + hostname + ":" + port + url,
                            body,
                            callback)
+    }
+
+    function doRequestAsync(verb, url, body) {
+        return Client.httpRequestAsync(verb,
+                                       "http://" + hostname + ":" + port + url,
+                                       body)
     }
 
     // method for sending a text message over websocket
@@ -129,6 +135,7 @@ Item
                 console.log("Error: " + socket.errorString)
                 error(socket.errorString)
                 active = false
+                root.isFinalized = false
             } else if (socket.status === WebSocket.Open) {
                 console.log("Server connected")
                 connected('Server connected')
@@ -138,6 +145,7 @@ Item
                 console.log("Socket closed")
                 error('Socket closed')
                 active = false
+                root.isFinalized = false
             }
         }
     }
@@ -172,11 +180,13 @@ Item
         interval: 1000
         repeat: true
         running: !parent.isFinalized && socket.active
+        triggeredOnStart: true
         property int _nattempt: 0
 
         onTriggered: {
             parent.connected("[" + _nattempt + "] connected to " + socket.url + ", requesting configuration..")
-            doRequest("GET", "/joint_states/info", "", onInfoReceived)
+            doRequestAsync("GET", "/joint_states/info", "")
+            .then((response) => {root.onInfoReceived(response)})
             _nattempt++
         }
     }

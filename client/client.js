@@ -30,3 +30,26 @@ function httpRequest(verb, url, body, callback) {
 
     xhr.send(body);
 }
+
+
+function httpRequestAsync(verb, url, body) {
+
+    let promise = new Promise(
+            (resolve, reject) =>
+            {
+                let xhr = new XMLHttpRequest();
+                xhr.open(verb, url);
+                xhr.onload = () => {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        var object = JSON.parse(xhr.responseText.toString());
+                        resolve(object);
+                    } else {
+                        reject(xhr.statusText);
+                    }
+                };
+                xhr.onerror = () => reject(xhr.statusText);
+                xhr.send(body);
+            });
+
+    return promise
+}

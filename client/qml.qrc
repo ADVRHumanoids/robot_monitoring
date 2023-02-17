@@ -3,7 +3,6 @@
         <file>main.qml</file>
         <file>ClientEndpoint.qml</file>
         <file>HelloScreen.qml</file>
-        <file>HelloScreenForm.ui.qml</file>
         <file>BarPlot/TwoSideBar.qml</file>
         <file>BarPlot/TwoSideBarForm.ui.qml</file>
         <file>BarPlot/logic.js</file>
@@ -31,7 +30,6 @@
         <file>Console/Plugins.qml</file>
         <file>Console/SinglePlugin.qml</file>
         <file>Cartesian/Pad.qml</file>
-        <file>Cartesian/Cartesian.qml</file>
         <file>Cartesian/PadForm.ui.qml</file>
         <file>Video/yuv2rgb.frag.qsb</file>
         <file>Video/yuv2rgb.vert.qsb</file>
@@ -53,7 +51,6 @@
         <file>TestThings/Viewer3D.qml</file>
         <file>CommonProperties.qml</file>
         <file>TestThings/VisualEntity.qml</file>
-        <file>PageItem.qml</file>
         <file>TestThings/JointDevice.qml</file>
         <file>TestThings/DoubleSpinBox.qml</file>
         <file>TestThings/Launcher.qml</file>
@@ -81,5 +78,6 @@
         <file>TestThings/Joy.js</file>
         <file>TestThings/JoyCartesianCard.qml</file>
         <file>TestThings/Playground.qml</file>
+        <file>PageItem.qml</file>
     </qresource>
 </RCC>

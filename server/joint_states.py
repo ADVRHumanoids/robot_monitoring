@@ -22,6 +22,7 @@ class JointStateHandler:
         self.js_sub = rospy.Subscriber('xbotcore/joint_states', JointState, self.on_js_recv, queue_size=1)
         self.fault_sub = rospy.Subscriber('xbotcore/fault', Fault, self.on_fault_recv, queue_size=20)
         self.msg = None
+        self.last_js_msg = None
         self.fault = None
 
         # config
@@ -33,9 +34,9 @@ class JointStateHandler:
 
         joint_info = dict()
 
-        if self.msg is not None:
+        if self.last_js_msg is not None:
             # convert to dict
-            js_msg = JointStateHandler.js_msg_to_dict(self.msg)
+            js_msg = JointStateHandler.js_msg_to_dict(self.last_js_msg)
             joint_info['message'] = 'ok'
             joint_info['success'] = True
 
@@ -49,6 +50,7 @@ class JointStateHandler:
         joint_info['jnames'] = js_msg['name']
 
         # get urdf
+        print('retrieving robot description..')
         urdf = rospy.get_param('xbotcore/robot_description', default='')
         if len(urdf) == 0:
             joint_info['message'] = 'unable to get robot description'
@@ -56,6 +58,7 @@ class JointStateHandler:
             return web.Response(text=json.dumps(joint_info))
 
         # parse urdf
+        print('parsing urdf..')
         model = urdf_parser.Robot.from_xml_string(urdf)
 
         # read joint limits from urdf
@@ -71,6 +74,8 @@ class JointStateHandler:
             joint_info['qmax'].append(joint.limit.upper)
             joint_info['vmax'].append(joint.limit.velocity)
             joint_info['taumax'].append(joint.limit.effort)
+
+        print('done!')
 
         return web.Response(text=json.dumps(joint_info))
 
@@ -105,6 +110,7 @@ class JointStateHandler:
 
     def on_js_recv(self, msg: JointState):
         self.msg = msg
+        self.last_js_msg = msg
 
 
     def on_fault_recv(self, msg):

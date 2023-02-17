@@ -62,8 +62,6 @@
         <file>Monitoring/SingleJointState/AuxSelector.qml</file>
         <file>Monitoring/SingleJointState/data.js</file>
         <file>Monitoring/SingleJointState/FieldValue.qml</file>
-        <file>Monitoring/SingleJointState/JointState.qml</file>
-        <file>Monitoring/SingleJointState/JointStateForm.ui.qml</file>
         <file>Monitoring/SingleJointState/PlotButton.qml</file>
         <file>Monitoring/SingleJointState/qml.qrc</file>
         <file>Monitoring/SingleJointState/Separator.qml</file>

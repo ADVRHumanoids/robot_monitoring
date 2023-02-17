@@ -9,6 +9,20 @@ from urdf_parser_py import urdf as urdf_parser
 from .server import ServerBase
 from . import utils
 
+
+## limit float precision in json serialization
+class RoundingFloat(float):
+    __repr__ = staticmethod(lambda x: format(x, '.4f'))
+
+json.encoder.c_make_encoder = None
+if hasattr(json.encoder, 'FLOAT_REPR'):
+    # Python 2
+    json.encoder.FLOAT_REPR = RoundingFloat.__repr__
+else:
+    # Python 3
+    json.encoder.float = RoundingFloat
+
+
 class JointStateHandler:
     
     def __init__(self, srv: ServerBase, config=dict()) -> None:

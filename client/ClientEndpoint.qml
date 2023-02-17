@@ -186,7 +186,7 @@ Item
         onTriggered: {
             parent.connected("[" + _nattempt + "] connected to " + socket.url + ", requesting configuration..")
             doRequestAsync("GET", "/joint_states/info", "")
-            .then((response) => {root.onInfoReceived(response)})
+                .then((response) => {root.onInfoReceived(response)})
             _nattempt++
         }
     }

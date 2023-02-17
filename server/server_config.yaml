@@ -21,17 +21,12 @@ xbot2_process:
       arg: --config {value}
       help: Path to a configuration file
     
-ls:
+ik:
   type: process_handler
-  name: do_ls
-  cmd: ls
+  name: ik
+  cmd: roslaunch concert_cartesio concert.launch xbot:=true gui:=false
   machine: alaurenzi@localhost
-  args:
-    - name: Folder
-      type: text
-      arg: "{__value__}"
-      help: File or directory to list
-      default: /home/arturo
+
   
 #ecat_master_process:
 #  type: process_handler

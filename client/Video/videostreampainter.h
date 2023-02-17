@@ -89,6 +89,8 @@ public:
 
     VideoStreamPainter();
 
+    ~VideoStreamPainter();
+
 #ifdef VSP_USE_PAINTER
 public:
     void paint(QPainter *painter) override;

@@ -1,7 +1,7 @@
 import QtQuick 2.4
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Controls.Material
+import xbot2_gui.common
 
 Item {
 
@@ -27,7 +27,7 @@ Item {
         width: verticalOnly ? rect.side/4. + 10 : rect.side
         height: horizontalOnly ? rect.side/4. + 10 : rect.side
         radius: rect.side/2.
-        color: Material.accent
+        color: CommonProperties.colors.primary
 
         Rectangle {
 
@@ -36,7 +36,7 @@ Item {
             width: rect.side/4.
             height: width
             radius: width/2.
-            color: Qt.rgba(0, 0, 0, 0.4)
+            color: CommonProperties.colors.accent
 
             MouseArea {
                 anchors.fill: parent

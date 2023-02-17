@@ -1,212 +1,140 @@
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Controls
+import QtCore
 
-import "../Cartesian"
 import ".."
-import "../Cartesian/cartesian.js" as Logic
+import "VideoStream.js" as VideoStream
+import "Joy.js" as Joy
+import "../Cartesian"
 
 Item {
 
-    id: root
+    property ClientEndpoint client
 
-    property ClientEndpoint client: undefined
+    JoyCartesianCard {
+        id: setupCard
+        anchors {
+            left: parent.left
+            right: parent.right
+            top: parent.top
+            margins: CommonProperties.geom.spacing
+        }
+    }
+
+
+    GridLayout {
+
+        anchors{
+            left: parent.left
+            right: parent.right
+            top: setupCard.bottom
+            bottom: parent.bottom
+            margins: CommonProperties.geom.spacing
+        }
+        columns: width > height ? 2 : 1
+        columnSpacing: 16
+        rowSpacing: 16
+
+        Repeater {
+
+            model: 2
+
+            VideoStreamCard {
+
+                id: video
+
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
+
+                Component.onCompleted: VideoStream.refreshNames(video)
+
+                onUpdateAvailableStreamIds: VideoStream.refreshNames(video)
+
+                onStreamIdChanged: {
+                    VideoStream.setStream(streamId, video)
+                    streamName = streamId
+                }
+
+                property bool _constructed: false
+
+                onAvailableStreamIdsChanged: {
+                    if(!_constructed) {
+                        console.log(`setting idx = ${settings.streamIndex}`)
+                        currentIndex = settings.streamIndex
+                        streamName = settings.streamName
+                        _constructed = true
+                    }
+                }
+
+                Connections {
+                    target: client
+                    function onTheoraPacketReceived(msg) {
+                        if(msg.stream_name === streamId) {
+                            video.setTheoraPacket(msg)
+                        }
+                    }
+                }
+
+                Settings {
+                    id: settings
+                    category: 'videoStreamCard' + index
+                    property int streamIndex: 0
+                    property string streamName: 'Stream Name'
+                }
+
+                Component.onDestruction: {
+                    console.log(`saving settings ` + index)
+                    settings.streamIndex = video.currentIndex
+                    settings.streamName = video.streamName
+                    settings.sync()
+                }
+            }
+        }
+    }
+
     property var vref: [0, 0, 0, 0, 0, 0]
-    property alias taskCombo: taskCombo
-    property bool portrait: width < height
+    property alias maxLinearV: setupCard.maxSpeed
+    property alias maxAngularV: setupCard.maxSpeed
+    property alias currentTask: setupCard.currentTask
 
-    property real maxLinearV: maxSpeedLinearSpinBox.value
-    property real maxAngularV: maxSpeedLinearSpinBox.value
+    Pad  {
+        anchors {
+            left: parent.left
+            bottom: parent.bottom
+            margins: 48
+        }
 
+        side: Math.min(200, parent.width/2 - 64)
 
-    Component.onCompleted: {
-        Logic.updateTaskNames()
+        opacity: 0.7
+
+        onJoystickMoved: {
+            vref[0] = joyY*maxLinearV
+            vref[1] = -joyX*maxLinearV
+            Joy.sendVref(currentTask, vref)
+        }
+
     }
 
-    TabBar {
-        id: bar
-        anchors.top: parent.top
-        width: parent.width
-        TabButton {
-            text: 'Joypad'
-        }
-        TabButton {
-            text: 'Settings'
-        }
-    }
-
-    SwipeView {
-
-        id: swipe
-        currentIndex: bar.currentIndex
-        interactive: false
-
-        anchors.top: bar.bottom
-        anchors.bottom: parent.bottom
-        width: parent.width
-
-        Item {
-
-            id: joypad
-
-            GridLayout {
-
-                anchors.fill: parent
-                anchors.margins: CommonProperties.geom.spacing
-                columnSpacing: CommonProperties.geom.spacing
-                rowSpacing: CommonProperties.geom.spacing
-
-                rows: root.portrait ? 2 : 1
-                columns: root.portrait ? 1 : 2
-
-                Repeater {
-
-                    model: 2
-
-                    VideoStream {
-                        Layout.fillHeight: true
-                        Layout.fillWidth: true
-
-                        property string streamName
-                    }
-
-                }
-
-            }
-
-
-            Pad  {
-                anchors {
-                    left: parent.left
-                    bottom: parent.bottom
-                    margins: 48
-                }
-
-                side: Math.min(200, parent.width/2 - 64)
-
-                opacity: 0.7
-
-                onJoystickMoved: {
-                    vref[0] = joyY*maxLinearV
-                    vref[1] = -joyX*maxLinearV
-                    Logic.sendVref()
-                }
-
-            }
-
-            Pad  {
-                anchors {
-                    right: parent.right
-                    bottom: parent.bottom
-                    margins: 48
-                }
-
-                horizontalOnly: true
-
-                side: Math.min(200, parent.width/2 - 64)
-
-                opacity: 0.7
-
-                onJoystickMoved: {
-                    vref[5] = -joyX*maxAngularV
-                    Logic.sendVref()
-                }
-            }
+    Pad  {
+        anchors {
+            right: parent.right
+            bottom: parent.bottom
+            margins: 48
         }
 
-        Item {
+        horizontalOnly: true
 
-            id: settings
+        side: Math.min(200, parent.width/2 - 64)
 
-            MaterialResponsiveGrid {
+        opacity: 0.7
 
-                anchors.fill: parent
-
-                Card {
-                    name: 'Camera'
-                    frontItem: GridLayout {
-
-                        anchors.fill: parent
-
-                            Repeater {
-
-                            Label { text: 'Camera 1' }
-
-                            ComboBox {
-
-                            }
-
-                            TextField {
-
-                            }
-
-                        }
-                    }
-                }
-            }
-
-            GridLayout {
-
-                anchors.fill: parent
-                anchors.margins: 16
-
-                columns: 4
-
-                Label {
-                    text: 'Tasks'
-                }
-
-                ComboBox {
-                    id: taskCombo
-                    model: []
-                    Layout.fillWidth: true
-                    onCurrentTextChanged: {
-                        // get state from server to update enable/disable btn
-                        Logic.taskIsEnabled(currentText,
-                                            function (is_active) {
-                                                enableDisableBtn.taskActive = is_active
-                                            })
-                    }
-                }
-
-                Button {
-                    id: enableDisableBtn
-                    text: taskActive ? 'Disable' : 'Enable'
-                    property bool taskActive: true
-                    onReleased: {
-                        let callback = function () {
-                            Logic.taskIsEnabled(taskCombo.currentText,
-                                                (is_active) => {
-                                                    taskActive = is_active
-                                                })
-                        }
-                        if(taskActive) {
-                            Logic.disableTask(taskCombo.currentText, callback)
-                        }
-                        else {
-                            Logic.enableTask(taskCombo.currentText, callback)
-                        }
-                    }
-                }
-
-                Button {
-                    text: 'Refresh'
-                    onReleased: {
-                        Logic.updateTaskNames()
-                    }
-                }
-
-                Label {
-                    text: 'Max speed (linear)'
-                }
-
-                DoubleSpinBox {
-                    Layout.columnSpan: 2
-                    id: maxSpeedLinearSpinBox
-                    from: 0.0
-                    to: 2.0
-                }
-            }
+        onJoystickMoved: {
+            vref[5] = -joyX*maxAngularV
+            Joy.sendVref(currentTask, vref)
         }
     }
 }
+

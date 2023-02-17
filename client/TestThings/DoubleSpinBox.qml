@@ -13,6 +13,9 @@ Item {
 
     property real _range: to - from
 
+    implicitHeight: spinbox.implicitHeight
+    implicitWidth: spinbox.implicitWidth
+
     SpinBox {
         id: spinbox
 

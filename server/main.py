@@ -7,11 +7,16 @@ import yaml
 import sys
 import importlib
 import rospy
+import logging
 
 def main():
 
+
+
     # init rospy node
     rospy.init_node('xbot2_gui_server')
+
+    logging.basicConfig(level=logging.INFO, force=True)
     
     # load config
     cfgpath = sys.argv[1]

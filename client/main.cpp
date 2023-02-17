@@ -34,7 +34,7 @@ public:
 int main(int argc, char *argv[])
 {
     // verbose output
-//    qputenv("QSG_INFO", "1");
+    //    qputenv("QSG_INFO", "1");
     QQuickStyle::setStyle("Material");
     qputenv("QT_QUICK_CONTROLS_MATERIAL_THEME", "Dark");
     qputenv("QT_QUICK_CONTROLS_MATERIAL_VARIANT", "Dense");
@@ -56,6 +56,10 @@ int main(int argc, char *argv[])
     auto font = app.font();
     font.setPixelSize(12);
     app.setFont(font);
+
+    app.setOrganizationName("iit-hhcm");
+    app.setOrganizationDomain("hhcm.iit");
+    app.setApplicationName("XBot2 UI");
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("appData", &appdata);

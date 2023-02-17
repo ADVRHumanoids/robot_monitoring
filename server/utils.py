@@ -5,6 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 import asyncio
 from aiohttp import web 
 import json 
+import traceback
 
 th_executor = ThreadPoolExecutor(max_workers=8)
 
@@ -47,6 +48,7 @@ def handle_exceptions(func):
             return await func(*args, **kwargs)
         except BaseException as e:
             print(f'[{func.__name__}] exception occurred: {e}')
+            traceback.print_exc()
             return web.Response(text=json.dumps({
                     'success': False, 
                     'message': str(e),

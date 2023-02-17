@@ -2,7 +2,6 @@ import asyncio
 import aiohttp
 from typing import List
 from aiohttp import web
-import logging
 import tempfile
 import json
 
@@ -34,9 +33,6 @@ class Xbot2WebServer(ServerBase):
 
         # event loop
         self.loop = asyncio.get_event_loop()
-
-        # show all prints
-        logging.basicConfig(level=logging.DEBUG)
 
         # websocket clients
         self.ws_clients = set()

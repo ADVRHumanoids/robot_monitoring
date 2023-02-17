@@ -87,6 +87,12 @@ VideoStreamPainter::VideoStreamPainter()
     _thread.start(QThread::Priority::LowPriority);
 }
 
+VideoStreamPainter::~VideoStreamPainter()
+{
+    _thread.quit();
+    _thread.wait();
+}
+
 #ifdef VSP_USE_PAINTER
 void VideoStreamPainter::paint(QPainter *painter)
 {

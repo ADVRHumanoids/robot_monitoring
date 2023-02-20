@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>softhand.ui</file>
+        <file>hand_state.ui</file>
     </qresource>
 </RCC>

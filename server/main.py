@@ -11,7 +11,7 @@ import logging
 
 def main():
 
-
+    print('starting server, initializing rospy..')
 
     # init rospy node
     rospy.init_node('xbot2_gui_server')

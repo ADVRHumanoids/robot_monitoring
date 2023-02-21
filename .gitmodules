@@ -5,3 +5,12 @@
 [submodule "client/Video/theora_cmake/external/ogg"] 
   path = client/Video/theora_cmake/external/ogg
   url = https://github.com/xiph/ogg.git
+[submodule "client/RobotModel/external/URDF_Parser"]
+	path = client/RobotModel/external/URDF_Parser
+	url = git@github.com:ADVRHumanoids/URDF_Parser.git
+[submodule "client/RobotModel/external/eigen"]
+	path = client/RobotModel/external/eigen
+	url = https://gitlab.com/libeigen/eigen.git
+[submodule "client/RobotModel/external/rbdl-orb"]
+	path = client/RobotModel/external/rbdl-orb
+	url = https://github.com/ORB-HD/rbdl-orb.git

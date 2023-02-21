@@ -7,14 +7,45 @@ import xbot2_gui.common
 Item {
 
     // public
-    function addSeries(jName, fieldName) {
-        _addSeries(jName, fieldName)
+    property string axisLeftTitle: ''
+
+    property string axisRightTitle: ''
+
+    function addSeries(seriesName, seriesProps, useSecondaryValueAxis) {
+        _addSeries(seriesName, seriesProps, useSecondaryValueAxis)
+    }
+
+    function addPoint(seriesData, t, val) {
+
+        // add point
+        seriesData.series.append(t, val)
+
+        // handle autoscale
+        let axisValue = seriesData.axisValue
+
+        if(axisValue.max < val && chart.autoscale) {
+            axisValue.max = val + (axisValue.max - axisValue.min)*0.05
+        }
+        else if(axisValue.min > val && chart.autoscale) {
+            axisValue.min = val - (axisValue.max - axisValue.min)*0.05
+        }
+
+        // save current time for autoscroll
+        currTime = t
     }
 
     function resetView() {
+        axisValueLeft.min = -1
+        axisValueLeft.max = 1
+        axisValueRight.min = -1
+        axisValueRight.max = 1
         chart.autoscale = true
         chart.autoscroll = true
     }
+
+    property real timeSpan: 10
+
+    property var currSeries: Object()
 
 
     // private
@@ -24,71 +55,52 @@ Item {
     implicitHeight: column.implicitHeight
 
     property real currTime: 0
-    property real timeSpan: 10
-    property real initialTime: -1
 
-    property var currSeries: Object()
 
-    function _addSeries(jName, fieldName) {
+    function _addSeries(seriesName, seriesProps, useSecondaryValueAxis) {
 
-        let seriesName = jName + "/" + fieldName
-
+        // check for existance
         let seriesEntry = currSeries[seriesName]
 
+        // already exists, do nothing
         if(seriesEntry !== undefined) {
+            console.log(`series "${seriesName}" already exists`)
             return
         }
 
-        let series = chart.createSeries(ChartView.SeriesTypeLine, seriesName,
-                                        axisTime, axisValue);
+        // create series, attach to axes
+        let series = chart.createSeries(ChartView.SeriesTypeLine,
+                                        seriesName);
         series.useOpenGL = true
         series.antialiasing = false
+        series.axisX = axisTime
 
+        let axisValue = undefined
+
+        if(useSecondaryValueAxis) {
+            series.axisYRight = axisValueRight
+            axisValue = axisValueRight
+        }
+        else {
+            series.axisY = axisValueLeft
+            axisValue = axisValueLeft
+        }
+
+
+        // save to internal dict
         currSeries[seriesName] = {
             series: series,
-            jName: jName,
-            fieldName: fieldName,
-            jIndex: 0
+            axisValue: axisValue,
+            properties: seriesProps
         }
     }
 
-    function removeSeries(jName, fieldName) {
-        let seriesName = jName + "/" + fieldName
+    function removeSeries(seriesName) {
         chart.removeSeries(chart.series(seriesName))
         delete currSeries[seriesName]
     }
 
-    function setJointStateMessage(msg) {
-        for(let [key, value] of Object.entries(currSeries)) {
-            let series = value.series
-            let jName = value.jName
 
-            if(msg.name[value.jIndex] !== jName) {
-                value.jIndex = msg.name.indexOf(jName)
-            }
-
-            let t = msg.stamp
-
-            if(initialTime < 0) {
-                initialTime = t
-            }
-
-            t = t - initialTime
-            let val = msg[value.fieldName][value.jIndex]
-
-            series.append(t, val)
-
-            if(axisValue.max < val && chart.autoscale) {
-                axisValue.max = val + (axisValue.max - axisValue.min)*0.05
-            }
-            else if(axisValue.min > val && chart.autoscale) {
-                axisValue.min = val - (axisValue.max - axisValue.min)*0.05
-            }
-
-            currTime = t
-
-        }
-    }
 
     ColumnLayout {
         id: column
@@ -155,24 +167,23 @@ Item {
 
                     if(new_width > 0) {
                         width = new_width
-                        transform.xScale = 1
+                        xScale = 1
                     }
                     else {
                         width = -new_width
-                        transform.xScale = -1
+                        xScale = -1
                     }
-
                 }
 
                 function setSignedHeight(new_height) {
 
                     if(new_height > 0) {
                         height = new_height
-                        transform.yScale = 1
+                        yScale = 1
                     }
                     else {
                         height = -new_height
-                        transform.yScale = -1
+                        yScale = -1
                     }
                 }
 
@@ -182,20 +193,19 @@ Item {
                 border.width: 1
                 visible: false
                 transform: Scale {
-                    xScale: 1
-                    yScale: 1
+                    xScale: rubberBand.xScale
+                    yScale: rubberBand.yScale
                 }
+                property real xScale: 1.0
+                property real yScale: 1.0
             }
 
             MouseArea {
+
                 id: mouseArea
                 anchors.fill: parent
 
                 onWheel: function (wheel) {
-                    print(wheel.angleDelta)
-                    print(wheel.x)
-                    print(wheel.y)
-                    print(chart.plotArea)
 
                     let scale = wheel.angleDelta.y > 0 ? 6/5 : 5/6
                     let scaleXy = Qt.point(scale, scale)
@@ -244,16 +254,19 @@ Item {
             }
 
             ValuesAxis {
-                id: axisValue
+                id: axisValueLeft
                 min: -1
                 max: 1
+                titleText: `<font color='white'>${root.axisLeftTitle}</font>`
                 labelsColor: CommonProperties.colors.primaryText
             }
 
-            LineSeries {
-                id: emptySeries
-                axisX: axisTime
-                axisY: axisValue
+            ValuesAxis {
+                id: axisValueRight
+                min: -1
+                max: 1
+                titleText: `<font color='white'>${root.axisRightTitle}</font>`
+                labelsColor: CommonProperties.colors.primaryText
             }
 
             onSeriesAdded: function(series) {
@@ -270,18 +283,6 @@ Item {
             }
 
         }
-
-//        Row {
-//            id: buttonRow
-
-//            Button {
-//                text: "Reset view"
-//                onReleased: {
-//                    chart.autoscale = true
-//                    chart.autoscroll = true
-//                }
-//            }
-//        }
 
     }
 

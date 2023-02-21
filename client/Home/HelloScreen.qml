@@ -5,6 +5,7 @@ import Qt.labs.settings
 
 import xbot2_gui.common
 import "../Common"
+import "../LivePlot"
 import ".."
 
 Item {
@@ -15,13 +16,13 @@ Item {
     signal restartUi()
 
     function setError(msg) {
-        msgText.text = "Error: " + msg
-        msgText.color = CommonProperties.colors.err
+        srvStatus.msgText.text = "Error: " + msg
+        srvStatus.msgText.color = CommonProperties.colors.err
     }
 
     function setConnected(msg) {
-        msgText.text = "Status OK: " + msg
-        msgText.color = CommonProperties.colors.ok
+        srvStatus.msgText.text = "Status OK: " + msg
+        srvStatus.msgText.color = CommonProperties.colors.ok
     }
 
     function setProgress(msg) {
@@ -43,122 +44,42 @@ Item {
             text: 'XBot2 GUI'
         }
 
+        ServerStatusCard {
+            id: srvStatus
+            client: root.client
+            onStatsUpdated: {
+                let t = appData.getTimeNs()*1e-9 - statsPlot.t0
+                statsPlot.addPoint(statsPlot.currSeries['rx data'],
+                                   t, rxKbps)
+                statsPlot.addPoint(statsPlot.currSeries['tx data'],
+                                   t, txKbps)
+                statsPlot.addPoint(statsPlot.currSeries['server rtt'],
+                                   t, client.srvRtt)
+            }
+        }
+
         Card {
-            name: 'Server status'
 
-            configurable: false
+            height: srvStatus.height
 
-            Timer {
-                interval: 1000
-                repeat: true
-                property int _rxBytes: 0
-                property int _txBytes: 0
+            property int columnSpan: 8
 
-                Component.onCompleted: start()
+            frontItem: Plotter {
+                id: statsPlot
+                anchors.fill: parent
+                property real t0: appData.getTimeNs()*1e-9
+                axisLeftTitle: 'RTT [ms]'
+                axisRightTitle: 'Data rate [kbps]'
 
-                onTriggered: {
-                    let rx = client.bytesRecv - _rxBytes
-                    let tx = client.bytesSent - _txBytes
-                    rxText.text = (rx/1000.0*8).toFixed(1)
-                    txText.text = (tx/1000.0*8).toFixed(1)
-                    _rxBytes = client.bytesRecv;
-                    _txBytes = client.bytesSent;
-                }
             }
 
-            frontItem: GridLayout {
-                id: formLayout
-                anchors.fill: parent
-                columns: 2
-                columnSpacing: CommonProperties.geom.spacing
-
-                Label {
-                    Layout.columnSpan: 2
-                    text: `Connecting to ${client.hostname}:${client.port}`
-                }
-
-                Label {
-                    text: "Host"
-                }
-                TextField {
-                    id: hostField
-                    Layout.fillWidth: true
-                    text: client.hostname
-                    onAccepted: {
-                        root.updateServerUrl()
-                    }
-                }
-
-
-
-                Label {
-                    text: "Port"
-                }
-                TextField {
-                    id: portField
-                    Layout.fillWidth: true
-                    text: client.port
-                    onAccepted: {
-                        root.updateServerUrl()
-                    }
-                }
-
-                Button {
-                    Layout.alignment: Qt.AlignHCenter
-                    Layout.columnSpan: 2
-                    text: 'Apply'
-                    onClicked: {
-                        root.updateServerUrl()
-                    }
-                }
-
-                Label {
-                    text: "Status"
-                }
-                TextArea {
-                    id: msgText
-                    Layout.fillWidth: true
-                    text: ''
-                    readOnly: true
-                    wrapMode: TextEdit.Wrap
-                }
-
-                Label {
-                    text: "Data RX (kbps)"
-                }
-                TextField {
-                    id: rxText
-                    Layout.fillWidth: true
-                    text: '0'
-                    readOnly: true
-                }
-
-                Label {
-                    text: "Data TX (kbps)"
-                }
-                TextField {
-                    id: txText
-                    Layout.fillWidth: true
-                    text: '0'
-                    readOnly: true
-                }
-
-                Label {
-                    text: "Ping (ms)"
-                }
-                TextField {
-                    id: pingText
-                    Layout.fillWidth: true
-                    text: client.srvRtt.toFixed(1)
-                    readOnly: true
-                }
+            Component.onCompleted: {
+                statsPlot.addSeries('server rtt', {})
+                statsPlot.addSeries('rx data', {}, true)
+                statsPlot.addSeries('tx data', {}, true)
             }
         }
     }
 
-   function updateServerUrl() {
-        client.hostname = hostField.text
-        client.port = parseInt(portField.text)
-        client.active = true
-    }
+
 }

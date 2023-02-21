@@ -6,7 +6,7 @@ function handleFault(jName, faultCode) {
 function jsCallback(js) {
     barPlot.setJointStateMessage(js)
     jointState.setJointStateMessage(js)
-    livePlot.setJointStateMessage(js)
+    addJointStatePoint(livePlot, js)
 }
 
 function objCallback(obj) {
@@ -34,6 +34,51 @@ function destroy() {
     client.jointStateReceived.disconnect(jsCallback)
     client.objectReceived.disconnect(objCallback)
 }
+
+function addJointStateSeries(livePlot, jName, fieldName) {
+
+    let seriesName = jName + '/' + fieldName
+
+    let props = Object()
+    props.jIndex = 0
+    props.jName = jName
+    props.fieldName = fieldName
+
+    livePlot.addSeries(seriesName, props)
+
+}
+
+function addJointStatePoint(livePlot, msg) {
+
+    // iterate over current series
+    for(let [seriesName, seriesData] of Object.entries(livePlot.currSeries)) {
+
+        // get series properties
+        let props = seriesData.properties
+
+        // recompute jIndex if needed
+        if(msg.name[props.jIndex] !== props.jName) {
+            props.jIndex = msg.name.indexOf(props.jName)
+        }
+
+        // compute relative time
+        let t = msg.stamp
+
+        if(livePlot.initialTime < 0) {
+            livePlot.initialTime = t
+        }
+
+        t = t - livePlot.initialTime
+
+        // get value from msg
+        let val = msg[props.fieldName][props.jIndex]
+
+        // add point to plot
+        livePlot.addPoint(seriesData, t, val)
+
+    }
+}
+
 
 function setFilterActive(active) {
 

@@ -1,6 +1,6 @@
-import QtQuick 2.0
+import QtQuick
 import QtWebSockets
-import QtCore
+import Qt.labs.settings
 
 import "ClientEndpoint.js" as Client
 import "sharedData.js" as SharedData
@@ -195,7 +195,7 @@ Item
         id: pingTimer
         running: socket.active
         repeat: true
-        interval: 1000
+        interval: 300
 
         onTriggered: {
             let msg = Object()

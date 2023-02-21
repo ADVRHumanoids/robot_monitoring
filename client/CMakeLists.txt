@@ -69,6 +69,8 @@ target_link_libraries(next_ui
 #          Qt${QT_VERSION_MAJOR}::3DCore
       )
 
+
+# video support
 add_subdirectory(Video/theora_cmake)
 
 add_library(VideoStream STATIC
@@ -92,3 +94,6 @@ qt_add_shaders(next_ui "next_ui-shaders"
         "Video/yuv2rgb.vert"
         "Video/yuv2rgb.frag"
 )
+
+# robot model
+add_subdirectory(RobotModel/)

@@ -62,6 +62,7 @@ MultiColumnPage {
                     frontItem: Plotter {
                         id: livePlot
                         anchors.fill: parent
+                        property real initialTime: -1.0
                     }
 
 
@@ -148,7 +149,7 @@ MultiColumnPage {
                     anchors.fill: parent
 
                     onPlotAdded: (jName, fieldName) => {
-                                     livePlot.addSeries(jName, fieldName)
+                                     Logic.addJointStateSeries(livePlot, jName, fieldName)
                                      livePlotCard.hidden = false
                                  }
                 }

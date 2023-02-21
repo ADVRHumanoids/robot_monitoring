@@ -10,6 +10,9 @@ Entity {
     property url source: ''
     property alias rotation: tf.rotation
     property alias translation: tf.translation
+    property alias scale: tf.scale3D
+    property alias alpha: material.alpha
+    property alias color: material.diffuse
 
     id: root
 
@@ -19,22 +22,21 @@ Entity {
         id: mesh
         source: root.source
         onStatusChanged: {
-            console.log('[Mesh] status: ', status)
+            if(status === 3) {
+                console.error(`could not load mesh from ${source}`)
+            }
         }
     }
 
-//    SphereMesh {
-//        id: mesh
-//        radius: 0.6
-//    }
-
     Transform {
         id: tf
-        scale: 0.001
+        scale3D: Qt.vector3d(0.001, 0.001, 0.001)
     }
 
     PhongMaterial {
         id: material
+        specular: Qt.lighter(diffuse)
+        property real alpha: 0
     }
 
 }

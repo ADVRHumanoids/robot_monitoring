@@ -2,7 +2,7 @@ import QtQuick
 import QtCharts
 import QtQuick.Controls
 import QtQuick.Layouts
-import xbot2_gui.common
+import xbot2_gui.Common
 
 Item {
 
@@ -204,6 +204,7 @@ Item {
 
                 id: mouseArea
                 anchors.fill: parent
+                preventStealing: true
 
                 onWheel: function (wheel) {
 

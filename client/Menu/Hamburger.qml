@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import xbot2_gui.common
+import xbot2_gui.Common
 
 ToolButton {
     text: CommonProperties.fontAwesome.hamburger

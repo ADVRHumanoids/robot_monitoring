@@ -31,6 +31,7 @@ class JointStateHandler:
         self.srv = srv
         self.srv.schedule_task(self.run())
         self.srv.add_route('GET', '/joint_states/info', self.get_joint_info_handler, 'get_joint_info')
+        self.srv.add_route('GET', '/joint_states/urdf', self.get_urdf_handler, 'get_urdf')
         
         # joint state subscriber
         self.js_sub = rospy.Subscriber('xbotcore/joint_states', JointState, self.on_js_recv, queue_size=1)
@@ -41,8 +42,15 @@ class JointStateHandler:
 
         # config
         self.rate = config.get('rate', 60.0)
+
     
+    @utils.handle_exceptions
+    async def get_urdf_handler(self, request: web.Request):
+        print('retrieving robot description..')
+        urdf = rospy.get_param('xbotcore/robot_description', default='')
+        return web.Response(text=json.dumps({'urdf': urdf}))
     
+
     @utils.handle_exceptions
     async def get_joint_info_handler(self, request: web.Request):
 

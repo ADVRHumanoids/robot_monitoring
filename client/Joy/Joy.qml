@@ -7,7 +7,7 @@ import ".."
 import "../Video"
 import "../Video/VideoStream.js" as VideoStream
 import "Joy.js" as Joy
-import xbot2_gui.common
+import xbot2_gui.Common
 
 Item {
 

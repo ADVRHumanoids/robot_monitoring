@@ -32,6 +32,20 @@ Item {
             text: 'Update TF'
             onClicked: robot.updateTf()
         }
+
+        ComboBox {
+            id: jointCombo
+            model: robot.jointNames
+        }
+
+        Slider {
+            from: -3
+            to: 3
+            onValueChanged: {
+                robot.q[jointCombo.currentIndex] = value
+                robot.updateQ(robot.q)
+            }
+        }
     }
 
     Scene3D {
@@ -103,18 +117,19 @@ Item {
             translation: Qt.vector3d(-3, 3, 3)
         }
 
-        RobotModel {
+        RobotModelViewer {
             id: robot
             client: root.client
             color: 'green'
             alpha: 1
+            property var q: Array(robot.ndof).fill(0.0)
         }
 
 
     }
 
     Component.onCompleted: {
-        robot.updateModel()
+        robot.createViewer()
     }
 
 }

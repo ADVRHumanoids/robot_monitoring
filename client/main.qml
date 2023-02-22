@@ -3,7 +3,7 @@ import QtQuick.Window
 import QtQuick.Layouts
 import QtQuick.Controls
 
-import xbot2_gui.common
+import xbot2_gui.Common
 import "Menu"
 
 ApplicationWindow {

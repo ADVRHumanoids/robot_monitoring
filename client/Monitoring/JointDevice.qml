@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import "../Common"
-import xbot2_gui.common
+import xbot2_gui.Common
 
 Card {
 

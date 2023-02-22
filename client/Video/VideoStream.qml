@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 
-import NextUiModules
+import xbot2_gui.Video
 import "../Common"
 
 Item {

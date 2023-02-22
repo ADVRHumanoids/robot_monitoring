@@ -97,3 +97,6 @@ qt_add_shaders(next_ui "next_ui-shaders"
 
 # robot model
 add_subdirectory(RobotModel/)
+
+target_link_libraries(next_ui PRIVATE RobotModel)
+

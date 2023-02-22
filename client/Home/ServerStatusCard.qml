@@ -3,7 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import Qt.labs.settings
 
-import xbot2_gui.common
+import xbot2_gui.Common
 import "../Common"
 import ".."
 

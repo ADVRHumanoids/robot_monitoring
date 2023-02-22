@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import xbot2_gui.common
+import xbot2_gui.Common
 
 import "../Common"
 import "ConsoleCard.js" as Logic

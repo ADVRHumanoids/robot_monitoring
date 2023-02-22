@@ -1,5 +1,5 @@
 import QtQuick
-import xbot2_gui.common
+import xbot2_gui.Common
 
 Rectangle {
 

@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
-import xbot2_gui.common
+import xbot2_gui.Common
 
 Item {
 

@@ -7,8 +7,9 @@ import Qt3D.Animation
 import QtQuick.Scene2D
 import QtQuick.Scene3D
 
+import xbot2_gui.RobotModel
 import ".."
-import "RobotModel.js" as Logic
+import "RobotModelViewer.js" as Logic
 
 Node {
 
@@ -18,12 +19,20 @@ Node {
 
     property color color: 'red'
 
+    property alias jointNames: model.jointNames
+
+    property alias ndof: model.ndof
+
+    function updateQ(q) {
+        Logic.updateQ(q)
+    }
+
     function updateTf() {
         Logic.updateTf()
     }
 
-    function updateModel() {
-        Logic.updateModel()
+    function createViewer() {
+        Logic.createViewer()
     }
 
 
@@ -44,5 +53,9 @@ Node {
             color: root.color
             alpha: root.alpha
         }
+    }
+
+    RobotModel {
+        id: model
     }
 }

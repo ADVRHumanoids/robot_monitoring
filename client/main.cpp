@@ -8,6 +8,7 @@
 #include <QtQml/qqmlregistration.h>
 
 #include "Video/videostreampainter.h"
+#include "RobotModel/robot_model.h"
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/val.h>
@@ -64,8 +65,9 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("appData", &appdata);
 
-    qmlRegisterType<VideoStreamPainter>("NextUiModules", 1, 0, "VideoStreamPainter");
-    qmlRegisterSingletonType(QUrl("qrc:/Common/CommonProperties.qml"), "xbot2_gui.common", 1, 0, "CommonProperties");
+    qmlRegisterType<VideoStreamPainter>("xbot2_gui.Video", 1, 0, "VideoStreamPainter");
+    qmlRegisterType<RobotModel>("xbot2_gui.RobotModel", 1, 0, "RobotModel");
+    qmlRegisterSingletonType(QUrl("qrc:/Common/CommonProperties.qml"), "xbot2_gui.Common", 1, 0, "CommonProperties");
 
     const QUrl url(QStringLiteral("qrc:/main.qml"));
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,

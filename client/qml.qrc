@@ -70,11 +70,11 @@
         <file>Monitoring/SingleJointState/SingleJointStateStack.qml</file>
         <file>Monitoring/SingleJointState/SingleJointStateStackForm.ui.qml</file>
         <file>main.js</file>
-	<file>Common/MultiMouseArea.qml</file>
+        <file>Common/MultiMouseArea.qml</file>
         <file>Home/ServerStatusCard.qml</file>
         <file>Viewer3D/CustomOrbitalController.qml</file>
         <file>Viewer3D/SunLight.qml</file>
-        <file>Viewer3D/RobotModel.qml</file>
-        <file>Viewer3D/RobotModel.js</file>
+        <file>Viewer3D/RobotModelViewer.qml</file>
+        <file>Viewer3D/RobotModelViewer.js</file>
     </qresource>
 </RCC>

@@ -1,7 +1,9 @@
 import QtQuick 2.4
 import QtQuick.Controls
 import QtQuick.Layouts
+
 import xbot2_gui.common
+import "../Common"
 
 Item {
 
@@ -76,7 +78,7 @@ Item {
             visible: !horizontalOnly
         }
 
-        MouseArea {
+        MultiMouseArea {
             id: mouseArea
             anchors.fill: parent
             z: 1

@@ -3,6 +3,7 @@ import QtQuick.Window
 import QtQuick.Layouts
 import QtQuick.Controls
 
+import xbot2_gui.common
 import "Menu"
 
 ApplicationWindow {
@@ -24,6 +25,8 @@ ApplicationWindow {
 
         PageItem {
             name: "Home"
+            iconText: CommonProperties.fontAwesome.home
+            iconFont: CommonProperties.fontAwesome.solid
             page: "Home/HelloScreen.qml"
             active: true
         }
@@ -94,7 +97,7 @@ ApplicationWindow {
             // landscape
             navBar.y = mainWindow.height
             navBar.visible = false
-            nav.railWidth = 72
+            nav.railWidth = nav.implicitRailWidth
             nav.menuWidth = 300
         }
         else {

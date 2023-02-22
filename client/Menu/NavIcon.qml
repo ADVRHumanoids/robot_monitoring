@@ -6,6 +6,7 @@ Item {
 
     property string name: "A"
     property bool isSelected: false
+    property alias fontFamily: label.font.family
 
     signal clicked()
 

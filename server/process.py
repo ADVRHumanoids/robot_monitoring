@@ -2,6 +2,7 @@ import asyncio
 from aiohttp import web
 import json
 import re
+import time
 
 from .server import ServerBase
 from .screen_session import Process
@@ -17,6 +18,7 @@ class ProcessHandler:
         # config
         self.name = config['name']
         self.rate = config.get('rate', 10.)
+        self.max_bw = config.get('max_bw_kbps', 1000)
 
         # create process
         self.proc = Process(name=self.name,
@@ -41,6 +43,9 @@ class ProcessHandler:
                            self.process_command_handler, f'process_{self.name}_cmd_handler')
         self.srv.add_route('GET', f'/process/{self.name}/state',
                            self.process_state_handler, f'process_{self.name}_state_handler')
+
+        # if running, attach
+        self.srv.schedule_task(self.proc.attach())
 
     
     async def process_get_list_handler(request):
@@ -120,6 +125,10 @@ class ProcessHandler:
 
         ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
 
+        throttle_print = True
+        msg_size = 0
+        prev_time = time.time()
+
         while True:
 
             if p.proc is None:
@@ -138,6 +147,25 @@ class ProcessHandler:
 
             # line not empty, decode it and remove ansi colors
             line = ansi_escape.sub('', line.decode().strip())
+
+            # throttle logic
+            if time.time() - prev_time > 1.0:
+                print(msg_size)
+                prev_time = time.time()
+                msg_size = 0
+                throttle_print = True
+            
+            # compute msg size over a 1 sec window
+            msg_size += len(line) + 80  # note: 80 bytes to account for json overhead
+
+            # too much data: send once, then skip for the rest of the window duration
+            if msg_size*8./1000. > self.max_bw:  # kbps -> Bps
+                if throttle_print:
+                    line = f'[{p.name}] process exceeding max output bandwith (max_bw = {self.max_bw} kbps) over a 1 sec window'
+                    print(line)
+                    throttle_print = False
+                else:
+                    continue
 
             msg = {
                 'type': 'proc',

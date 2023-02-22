@@ -38,6 +38,7 @@ Item {
 
         name: root.pluginName
         nameFont.bold: root.pluginRunning
+        nameFont.pixelSize: CommonProperties.font.h3
 
         hidden: true
         configurable: false

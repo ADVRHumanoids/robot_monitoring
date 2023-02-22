@@ -1,3 +1,3 @@
 #!/bin/bash
-pyftsubset Font\ Awesome\ 6\ Free-Solid-900.otf --unicodes=F077-F078,F013,F021,F04B,F04D,F256
+pyftsubset Font\ Awesome\ 6\ Free-Solid-900.otf --unicodes=F11B,F077-F078,F013,F021,F04B,F04D,F0C9,F256,F015
 pyftsubset Font\ Awesome\ 6\ Free-Regular-400.otf --unicodes=F077-F078,F013

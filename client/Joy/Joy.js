@@ -75,7 +75,7 @@ function updateTaskNames(taskCombo) {
     client.doRequest('GET', '/cartesian/get_task_list', '',
                      function(response) {
                          if(!response.success) {
-                             console.log('//cartesian/get_task_list FAILED (no ik running)')
+                             console.log('/cartesian/get_task_list FAILED (no ik running)')
                              taskCombo.enabled = false
                              return
                          }

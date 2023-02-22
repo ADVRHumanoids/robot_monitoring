@@ -34,6 +34,7 @@ Item {
         width: root.width
 
         name: root.processName
+        nameFont.pixelSize: CommonProperties.font.h3
 
         hidden: true
 

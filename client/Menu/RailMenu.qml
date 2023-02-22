@@ -8,6 +8,7 @@ Item {
     property int railWidth: 80
     property alias menuWidth: menu.width
     property alias color: menu.color
+    default property alias content: menu.children
 
 
     function open() {
@@ -29,7 +30,7 @@ Item {
 
         id: menu
 
-        x: (-width + railWidth)*(1 - position)
+        x: (-width + root.railWidth)*(1 - root.position)
         width: 200
         height: parent.height
 
@@ -51,10 +52,5 @@ Item {
                 root.close()
             }
         }
-    }
-
-    onChildrenChanged: {
-        let child = children[children.length - 1]
-        child.parent = menu
     }
 }

@@ -45,6 +45,14 @@ Item {
         property alias regular: fontAwesome.fontAwesomeRegular.font
         property alias solid: fontAwesome.fontAwesomeSolid.font
 
+        property string hamburger: '\uf0c9'
+        property string home: '\uf015'
+        property string settings: '\uf013'
+        property string play: '\uf04b'
+        property string stop: '\uf04d'
+        property string halt: '\uf256'
+        property string gamepad: '\uf11b'
+
     }
 
 }

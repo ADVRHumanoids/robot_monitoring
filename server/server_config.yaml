@@ -27,6 +27,12 @@ ik:
   cmd: roslaunch concert_cartesio concert.launch xbot:=true gui:=false
   machine: alaurenzi@localhost
 
+too_much_print:
+  type: process_handler
+  cmd: python3 -c \"while True:print('ABC')\"
+  name: too_much_print
+  machine: alaurenzi@localhost
+
   
 #ecat_master_process:
 #  type: process_handler

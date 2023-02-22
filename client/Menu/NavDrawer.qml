@@ -5,40 +5,68 @@ import xbot2_gui.common
 
 RailMenu {
 
-    id: root
-    color: CommonProperties.colors.primary
-    railWidth: ham.width + 2*16
-    menuWidth: 300
+    readonly property int implicitRailWidth: ham.implicitWidth + 2*margins
+
     property int currentIndex: 0
 
     property Item model: []
 
-    GridLayout {
 
-        id: grid
+    // private
+    id: root
+    color: CommonProperties.colors.primary
+    railWidth: 20
+    menuWidth: 300
+    property int margins: 8
 
-        columns: 2
+
+    ScrollView {
+
+        id: scroll
 
         anchors {
-            verticalCenter: parent.verticalCenter
-            horizontalCenter: parent.horizontalCenter
+            left: parent.left
+            right: parent.right
         }
 
-        width: parent.width - 32
+        anchors.margins: root.margins
 
-        Component.onCompleted: {
+        y: Math.max(header.y + header.height + 26,
+                    root.height/2. - height/2.)
 
-            for(let i = 0; i < model.children.length; i++) {
-                let obj = model.children[i]
-                let nameObj = nameComponent.createObject(grid, {'text': obj.name})
-                let iconObj = iconComponent.createObject(grid, {'name': obj.name[0], 'index': i})
-                nameObj.clicked.connect(function(){
-                    root.currentIndex = i
-                    root.close()
-                })
-                nameObj.enabled = Qt.binding(() => {return obj.active})
-                iconObj.enabled = Qt.binding(() => {return obj.active})
+        height: Math.min(contentHeight,
+                         root.height - header.height - 32)
+
+        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+        ScrollBar.vertical.policy: ScrollBar.AlwaysOff
+
+        GridLayout {
+
+            id: grid
+
+            columns: 2
+
+            width: scroll.availableWidth
+
+            Component.onCompleted: {
+
+                for(let i = 0; i < model.children.length; i++) {
+                    let obj = model.children[i]
+                    let nameObj = nameComponent.createObject(grid, {'text': obj.name})
+                    let iconObj = iconComponent.createObject(grid, {
+                                                                 'name': obj.iconText,
+                                                                 'index': i,
+                                                                 'fontFamily': obj.iconFont.family
+                                                             })
+                    nameObj.clicked.connect(function(){
+                        root.currentIndex = i
+                        root.close()
+                    })
+                    nameObj.enabled = Qt.binding(() => {return obj.active})
+                    iconObj.enabled = Qt.binding(() => {return obj.active})
+                }
             }
+
         }
 
         Component {
@@ -66,10 +94,8 @@ RailMenu {
                     root.currentIndex = index
                     root.close()
                 }
-
             }
         }
-
 
     }
 
@@ -83,7 +109,7 @@ RailMenu {
             left: parent.left
             right: parent.right
             top: parent.top
-            margins: 16
+            margins: root.margins
         }
 
         Label {
@@ -99,8 +125,6 @@ RailMenu {
 
         Hamburger {
             id: ham
-            width: 40
-            height: guiNameLabel.height
             anchors {
                 right: parent.right
                 verticalCenter: parent.verticalCenter
@@ -115,8 +139,6 @@ RailMenu {
                 }
             }
         }
-
-
     }
 
 }

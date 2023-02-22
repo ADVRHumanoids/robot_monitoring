@@ -45,7 +45,7 @@ Item {
 
                 id: video
 
-                Layout.fillHeight: true
+                Layout.fillHeight: !hidden
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
 

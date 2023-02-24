@@ -13,15 +13,16 @@ Entity {
     property alias scale: tf.scale3D
     property alias alpha: material.alpha
     property alias color: material.diffuse
+    property bool visible: true
 
     id: root
 
-    components: [ mesh, material, tf ]
+    components: visible ? [ mesh, material, tf ] : []
 
     Mesh {
         id: mesh
         source: root.source
-        onStatusChanged: {
+        onStatusChanged: (status) => {
             if(status === 3) {
                 console.error(`could not load mesh from ${source}`)
             }
@@ -30,7 +31,7 @@ Entity {
 
     Transform {
         id: tf
-        scale3D: Qt.vector3d(0.001, 0.001, 0.001)
+        scale3D: Qt.vector3d(0.001, 0.001, 0.001)*visible
     }
 
     PhongMaterial {

@@ -24,10 +24,10 @@ Item {
         let axisValue = seriesData.axisValue
 
         if(axisValue.max < val && chart.autoscale) {
-            axisValue.max = val + (axisValue.max - axisValue.min)*0.05
+            axisValue.max = val + (axisValue.max - axisValue.min)*0.1
         }
         else if(axisValue.min > val && chart.autoscale) {
-            axisValue.min = val - (axisValue.max - axisValue.min)*0.05
+            axisValue.min = val - (axisValue.max - axisValue.min)*0.1
         }
 
         // save current time for autoscroll

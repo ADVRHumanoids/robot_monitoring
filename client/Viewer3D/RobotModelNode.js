@@ -31,6 +31,21 @@ function updateTf() {
 }
 
 
+function getPose(model, linkName) {
+
+    let pose = model.getPose(linkName)
+
+    return {
+        'translation': Qt.vector3d(pose.translation[0],
+                                   pose.translation[1],
+                                   pose.translation[2]),
+        'rotation': Qt.quaternion(pose.rotation[0],
+                                  pose.rotation[1],
+                                  pose.rotation[2],
+                                  pose.rotation[3],)
+    }
+}
+
 function updateQ(q) {
 
     model.setJointPosition(q)
@@ -42,8 +57,6 @@ function updateQ(q) {
         let linkName = visualRepeater.model[i].linkName
 
         let pose = model.getPose(linkName)
-
-        console.log(`[${linkName}] ${pose.translation} ${pose.rotation}`)
 
         obj.translation = Qt.vector3d(pose.translation[0],
                                       pose.translation[1],
@@ -62,18 +75,18 @@ function createViewer() {
     // clear mesh repeater model
     visualRepeater.model = 0
 
-    // get urdf
-    client.doRequestAsync('GET', '/joint_states/urdf', '')
-        .then((response) =>
-              {
-                  model.setUrdf(response.urdf, false)
+    // get mesh and then robot
+    client.doRequestAsync('GET', '/visual/get_mesh_entities', '')
+    .then((response) =>
+          {
+              visualRepeater.model = makeModel(response)
 
-                  return client.doRequestAsync('GET', '/visual/get_mesh_entities', '')
-              })
-        .then((response) =>
-              {
-                  visualRepeater.model = makeModel(response)
-                  updateQ(Array(model.ndof).fill(0))
-              })
-        .catch((err) => { console.error(err) })
+              return client.doRequestAsync('GET', '/joint_states/urdf', '')
+          })
+    .then((response) =>
+          {
+              model.setUrdf(response.urdf, false)
+          })
+
+    .catch((err) => { console.error(err) })
 }

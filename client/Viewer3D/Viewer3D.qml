@@ -1,3 +1,7 @@
+import QtQuick
+import QtQuick.Layouts
+import QtQuick.Controls
+
 import Qt3D.Core
 import Qt3D.Render
 import Qt3D.Input
@@ -7,65 +11,38 @@ import Qt3D.Animation
 import QtQuick.Scene2D
 import QtQuick.Scene3D
 
-import QtQuick
-import QtQuick.Layouts
-import QtQuick.Controls
 
+import "../Viewer3D"
 import ".."
 
 Item {
 
+    property alias sceneVisible: scene3d.visible
+    property color backgroundColor: 'transparent'
+    property alias nodes: sceneRoot.childNodes
+
+    // private
     id: root
-
-    property ClientEndpoint client
-
-    RowLayout {
-        id: btnRow
-        width: parent.width
-
-        Button {
-            text: camTimer.running ? 'Stop' : 'Start'
-            onClicked: camTimer.running ? camTimer.stop() : camTimer.start()
-        }
-
-        Button {
-            text: 'Update TF'
-            onClicked: robot.updateTf()
-        }
-
-        ComboBox {
-            id: jointCombo
-            model: robot.jointNames
-        }
-
-        Slider {
-            from: -3
-            to: 3
-            onValueChanged: {
-                robot.q[jointCombo.currentIndex] = value
-                robot.updateQ(robot.q)
-            }
-        }
-    }
+    property bool _robotCmdFinalized: false
+    property bool _robotStateFinalized: false
 
     Scene3D {
         id: scene3d
-
-        anchors {
-            top: btnRow.bottom
-            bottom: parent.bottom
-            left: parent.left
-            right: parent.right
-        }
-
-        anchors.margins: 10
+        width: Math.max(1, parent.width)
+        height: Math.max(1, parent.height)
         focus: true
         aspects: ["input", "logic"]
         cameraAspectRatioMode: Scene3D.AutomaticAspectRatio
         entity: sceneRoot
     }
 
+    CameraController {
+        camera: camera
+        anchors.fill: scene3d
+    }
+
     Entity {
+
         id: sceneRoot
 
         Camera {
@@ -78,15 +55,6 @@ Item {
             position: Qt.vector3d( 2.0, 0.0, 0.0 )
             upVector: Qt.vector3d( 0.0, 0.0, 1.0 )
             viewCenter: Qt.vector3d( 0.0, 0.0, 0.0 )
-
-            Timer {
-                id: camTimer
-                repeat: true
-                interval: 8
-                onTriggered: {
-                    camera.tiltAboutViewCenter(1)
-                }
-            }
         }
 
         CustomOrbitalController {
@@ -95,10 +63,10 @@ Item {
 
         components: [
             RenderSettings {
+                id: renderSettings
                 activeFrameGraph: ForwardRenderer {
-                    clearColor: Qt.rgba(0, 0.5, 1, 1)
+                    clearColor: root.backgroundColor
                     camera: camera
-                    showDebugOverlay: true
                 }
             },
             // Event Source will be set by the Qt3DQuickWindow
@@ -107,29 +75,15 @@ Item {
 
         SunLight {
             direction: Qt.vector3d(0, 1, -1)
-            intensity: 0.3
+            intensity: 0.5
             translation: Qt.vector3d(-3, -3, 3)
         }
 
         SunLight {
             direction: Qt.vector3d(0, -1, -1)
-            intensity: 0.3
+            intensity: 0.5
             translation: Qt.vector3d(-3, 3, 3)
         }
 
-        RobotModelViewer {
-            id: robot
-            client: root.client
-            color: 'green'
-            alpha: 1
-            property var q: Array(robot.ndof).fill(0.0)
-        }
-
-
     }
-
-    Component.onCompleted: {
-        robot.createViewer()
-    }
-
 }

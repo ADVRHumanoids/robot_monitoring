@@ -82,6 +82,25 @@ MultiColumnPage {
 
 
                 Card {
+                    id: viewer3dCard
+                    name: '3D Viewer'
+                    hidden: true
+
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: hidden ?
+                                                implicitHeight :
+                                                root.height - 2*margins
+
+                    frontItem: RobotModelViewer {
+                        id: robotViewer
+                        anchors.fill: parent
+                        client: root.client
+                        backgroundColor: 'transparent'
+                    }
+                }
+
+
+                Card {
 
                     name: barPlotCombo.currentText
                     configurable: false
@@ -136,6 +155,16 @@ MultiColumnPage {
                 onSetSafetyState: (ok) => Logic.setSafetyState(ok)
                 onSetFilterActive: (active) => Logic.setFilterActive(active)
                 onSetFilterCutoff: (profile) => Logic.setFilterProfile(profile)
+            }
+
+            JointCommandCard {
+                id: cmdCard
+                Layout.fillWidth: true
+                robotCmd: robotViewer.robotCmd
+                client: root.client
+                hidden: true
+
+                onResetCmd: robotViewer.resetCmd()
             }
 
             Card {

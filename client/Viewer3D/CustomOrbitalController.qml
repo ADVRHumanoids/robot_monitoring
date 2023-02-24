@@ -30,6 +30,7 @@ Entity{
         onPressed: (mouse) => {
             lastPos = Qt.point(mouse.x, mouse.y);
         }
+
         onPositionChanged: (mouse) => {
             // You can change the button as you like for rotation or translation
             if (mouse.buttons === 1){ // Left button for rotation
@@ -46,8 +47,10 @@ Entity{
 
             lastPos = Qt.point(mouse.x, mouse.y)
         }
+
         onWheel: (wheel) => {
             zoom(wheel.angleDelta.y * dt * linearSpeed)
+            wheel.accepted = true
         }
 
         function zoom(ry) {

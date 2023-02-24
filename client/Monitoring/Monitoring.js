@@ -1,3 +1,5 @@
+.import "../sharedData.js" as SharedData
+
 function handleFault(jName, faultCode) {
     barPlot.setStatus(jName, faultCode === "" ? true : false)
     jointState.setFaultCode(jName, faultCode)
@@ -7,7 +9,11 @@ function jsCallback(js) {
     barPlot.setJointStateMessage(js)
     jointState.setJointStateMessage(js)
     addJointStatePoint(livePlot, js)
+    robotViewer.updateRobotState(js,
+                                 robotViewer.robotState,
+                                 'linkPos')
 }
+
 
 function objCallback(obj) {
 

@@ -9,7 +9,7 @@ import QtQuick.Scene3D
 
 import xbot2_gui.RobotModel
 import ".."
-import "RobotModelViewer.js" as Logic
+import "RobotModelNode.js" as Logic
 
 Node {
 
@@ -22,6 +22,14 @@ Node {
     property alias jointNames: model.jointNames
 
     property alias ndof: model.ndof
+
+    property bool visible: true
+
+    property var q: Array(ndof).fill(0.0)
+
+    signal modelChanged()
+
+    onQChanged: updateQ(q)
 
     function updateQ(q) {
         Logic.updateQ(q)
@@ -52,10 +60,12 @@ Node {
                                modelData.scale[2])
             color: root.color
             alpha: root.alpha
+            visible: root.visible
         }
     }
 
     RobotModel {
         id: model
+        onModelChanged: root.modelChanged()
     }
 }

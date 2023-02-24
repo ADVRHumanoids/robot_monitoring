@@ -33,13 +33,14 @@ private:
 void RobotModel::setUrdf(QString urdf, bool is_floating_base)
 {
     i = std::make_unique<Impl>(urdf.toStdString(), is_floating_base);
-    emit modelChanged();
 
     i->jointNames = i->getJointNames();
     jointNamesChanged(jointNames());
 
     i->ndof = i->getJointNames().size();
     ndofChanged(ndof());
+
+    emit modelChanged();
 }
 
 RobotModel::RobotModel(QObject *parent):
@@ -49,12 +50,12 @@ RobotModel::RobotModel(QObject *parent):
 
 void RobotModel::setJointPosition(QVector<qreal> q)
 {
-    i->setJointPosition(q);
+    i ? i->setJointPosition(q) : void();
 }
 
 Pose RobotModel::getPose(QString frame)
 {
-    return i->getPose(frame);
+    return i ? i->getPose(frame) : Pose();
 }
 
 int RobotModel::ndof()
@@ -69,6 +70,12 @@ QList<QString> RobotModel::jointNames()
 
 void RobotModel::Impl::setJointPosition(QList<qreal> q)
 {
+    if(q.size() != _qeig.size())
+    {
+        qFatal("wrong q size");
+        return;
+    }
+
     _qeig = Eigen::VectorXd::Map(q.data(), q.size());
     RigidBodyDynamics::UpdateKinematicsCustom(_model, &_qeig, nullptr, nullptr);
 }
@@ -154,7 +161,6 @@ QList<QString> RobotModel::Impl::getJointNames()
 
         ret[_model.mJoints[i].q_index] = QString::fromStdString(joint_name);
 
-        _qeig.setZero(_model.dof_count);
 
     }
 
@@ -183,5 +189,9 @@ RobotModel::Impl::Impl(std::string urdf, bool is_floating_base)
 
     // Restore locale setting
     setlocale(LC_NUMERIC, oldLocale.c_str());
+
+    // set zero config
+    _qeig.setZero(_model.dof_count);
+    RigidBodyDynamics::UpdateKinematicsCustom(_model, &_qeig, nullptr, nullptr);
 
 }

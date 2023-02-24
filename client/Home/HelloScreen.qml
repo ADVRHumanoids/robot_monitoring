@@ -64,6 +64,14 @@ Item {
 
             property int columnSpan: 8
 
+            toolButtons: [
+                SmallToolButton {
+                    text: '\uf021'
+                    font.family: CommonProperties.fontAwesome.solid.family
+                    onClicked: statsPlot.resetView()
+                }
+            ]
+
             frontItem: Plotter {
                 id: statsPlot
                 anchors.fill: parent

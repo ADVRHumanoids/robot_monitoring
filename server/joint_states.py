@@ -3,7 +3,7 @@ from aiohttp import web
 import json
 
 import rospy 
-from xbot_msgs.msg import JointState, Fault
+from xbot_msgs.msg import JointState, Fault, JointCommand
 from urdf_parser_py import urdf as urdf_parser
 
 from .server import ServerBase
@@ -32,6 +32,8 @@ class JointStateHandler:
         self.srv.schedule_task(self.run())
         self.srv.add_route('GET', '/joint_states/info', self.get_joint_info_handler, 'get_joint_info')
         self.srv.add_route('GET', '/joint_states/urdf', self.get_urdf_handler, 'get_urdf')
+        self.srv.add_route('PUT', '/joint_command/goto/{joint_name}', self.command_handler, 'command')
+        self.srv.add_route('POST', '/joint_command/goto/stop', self.stop_handler, 'stop')
         
         # joint state subscriber
         self.js_sub = rospy.Subscriber('xbotcore/joint_states', JointState, self.on_js_recv, queue_size=1)
@@ -39,6 +41,12 @@ class JointStateHandler:
         self.msg = None
         self.last_js_msg = None
         self.fault = None
+
+        # command publisher
+        self.cmd_pub = rospy.Publisher('xbotcore/command', JointCommand, queue_size=1)
+        self.cmd_busy = False
+        self.cmd_guard = JointStateHandler.CommandGuard(self.command_acquire, self.command_release)
+        self.cmd_should_stop = True
 
         # config
         self.rate = config.get('rate', 60.0)
@@ -128,6 +136,80 @@ class JointStateHandler:
 
             # send to all connected clients
             await self.srv.ws_send_to_all(js_str)
+
+    
+    def command_acquire(self):
+        if self.cmd_busy:
+            raise RuntimeError('joint command busy')
+        self.cmd_busy = True
+
+    def command_release(self):
+        self.cmd_busy = False
+
+    class CommandGuard:
+        def __init__(self, acq, res) -> None:
+            self.acquire = acq 
+            self.release = res 
+        def __enter__(self):
+            self.acquire()
+        def __exit__(self, *args):
+            self.release()
+    
+    @utils.handle_exceptions
+    async def command_handler(self, req: web.Request):
+
+        with self.cmd_guard:
+
+            self.cmd_should_stop = False
+            
+            qf = float(req.rel_url.query['qref'])
+            trj_time = float(req.rel_url.query['time'])
+            joint_name = req.match_info['joint_name']
+
+            time = rospy.Time.now()
+            t0 = time
+            dt = 0.01
+            jidx = self.last_js_msg.name.index(joint_name)
+            q0 = self.last_js_msg.position_reference[jidx]
+            
+            print(f'commanding joint {joint_name} from q0 = {q0} to qf = {qf} in {trj_time} s')
+            
+            while time.to_sec() <= t0.to_sec() + trj_time \
+                and not self.cmd_should_stop:
+
+                tau = (time.to_sec() - t0.to_sec())/trj_time
+                alpha = ((6*tau - 15)*tau + 10)*tau**3
+                qref = q0*(1 - alpha) + qf*alpha
+                msg = JointCommand()
+                msg.name = [joint_name]
+                msg.ctrl_mode = [1]
+                msg.position = [qref]
+                self.cmd_pub.publish(msg)
+                await asyncio.sleep(dt)
+                time = rospy.Time.now()
+
+            if self.cmd_should_stop:
+                print('trj stopped!')
+                return web.json_response(
+                    {
+                        'success': True,
+                        'message': f'stopped while commanding joint {joint_name} from q0 = {q0} to qf = {qf} in {trj_time} s'
+                    }
+                ) 
+            else:
+                print('trj done!')
+                return web.json_response(
+                    {
+                        'success': True,
+                        'message': f'commanded joint {joint_name} from q0 = {q0} to qf = {qf} in {trj_time} s'
+                    }
+                )
+
+    
+    @utils.handle_exceptions
+    async def stop_handler(self, req: web.Request):
+        self.cmd_should_stop = True 
+        return web.Response(text='["ok"]')
             
 
     def on_js_recv(self, msg: JointState):

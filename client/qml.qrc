@@ -74,7 +74,12 @@
         <file>Home/ServerStatusCard.qml</file>
         <file>Viewer3D/CustomOrbitalController.qml</file>
         <file>Viewer3D/SunLight.qml</file>
-        <file>Viewer3D/RobotModelViewer.qml</file>
-        <file>Viewer3D/RobotModelViewer.js</file>
+        <file>Viewer3D/RobotModelNode.qml</file>
+        <file>Viewer3D/RobotModelNode.js</file>
+        <file>Viewer3D/CameraController.qml</file>
+        <file>Monitoring/RobotModelViewer.qml</file>
+        <file>Monitoring/RobotModelViewer.js</file>
+        <file>Monitoring/JointCommandCard.qml</file>
+        <file>Monitoring/JointCommand.js</file>
     </qresource>
 </RCC>

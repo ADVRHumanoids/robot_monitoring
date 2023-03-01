@@ -81,5 +81,6 @@
         <file>Monitoring/RobotModelViewer.js</file>
         <file>Monitoring/JointCommandCard.qml</file>
         <file>Monitoring/JointCommand.js</file>
+        <file>Viewer3D/VisualEntity.js</file>
     </qresource>
 </RCC>

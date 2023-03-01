@@ -54,10 +54,16 @@ Node {
         model: 0
 
         delegate: VisualEntity {
-            source: `http://${client.hostname}:${client.port}/visual/get_mesh/${encodeURIComponent(modelData.uri)}`
-            scale: Qt.vector3d(modelData.scale[0],
-                               modelData.scale[1],
-                               modelData.scale[2])
+            name: modelData.linkName
+            type: modelData.type
+            meshSource: modelData.type === 'MESH' ?
+                            `http://${client.hostname}:${client.port}/visual/get_mesh/${encodeURIComponent(modelData.filename)}` :
+                            ''
+            cylinderLength: modelData.length || 0
+            cylinderRadius: modelData.radius || 0
+            scale: modelData.scale
+            localTranslation: modelData.origin_xyz
+            localRotation: modelData.origin_rot
             color: root.color
             alpha: root.alpha
             visible: root.visible

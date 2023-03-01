@@ -97,6 +97,15 @@ Viewer3D {
             checkable: true
         }
 
+        Button {
+            Layout.columnSpan: 2
+            text: 'Reload'
+            onClicked: {
+                robotState.createViewer()
+                robotCmd.createViewer()
+            }
+        }
+
         Item {
             Layout.fillHeight: true
         }

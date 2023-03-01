@@ -18,6 +18,10 @@ function updateViewerQ(js, jointNames, fieldName, q) {
 
         let name = js.name[i]
         let idx = jointNames.indexOf(name)
+        if(idx < 0)
+        {
+            continue
+        }
 
         q[idx] = js[fieldName][i]
 

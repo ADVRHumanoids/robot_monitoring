@@ -205,6 +205,7 @@ Item {
                 id: mouseArea
                 anchors.fill: parent
                 preventStealing: true
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
 
                 onWheel: function (wheel) {
 
@@ -216,18 +217,52 @@ Item {
                     chart.centredZoom(scaleXy, center)
                 }
 
-                onPressed: {
-                    rubberBand.x = mouseX
-                    rubberBand.y = mouseY
-                    rubberBand.visible = true
+                property point lastPos
+
+                onPressed: function(mouse){
+                    if(mouse.button === Qt.LeftButton)
+                    {
+                        lastPos.x = mouse.x
+                        lastPos.y = mouse.y
+                        chart.autoscale = false
+                        chart.autoscroll = false
+                    }
+                    else if(mouse.button === Qt.RightButton)
+                    {
+                        rubberBand.x = mouseX
+                        rubberBand.y = mouseY
+                        rubberBand.visible = true
+                    }
                 }
 
                 onMouseXChanged: {
-                    rubberBand.setSignedWidth(mouseX - rubberBand.x)
+                    if(rubberBand.visible)
+                    {
+                        rubberBand.setSignedWidth(mouseX - rubberBand.x)
+                    }
+                    else
+                    {
+                         if(mouseX > lastPos.x)
+                            chart.scrollLeft(mouseX - lastPos.x)
+                        else
+                            chart.scrollRight(-mouseX + lastPos.x)
+                        lastPos.x = mouseX
+                    }
                 }
 
                 onMouseYChanged: {
-                    rubberBand.setSignedHeight(mouseY - rubberBand.y)
+                    if(rubberBand.visible)
+                    {
+                        rubberBand.setSignedHeight(mouseY - rubberBand.y)
+                    }
+                    else
+                    {
+                        if(mouseY > lastPos.Y)
+                            chart.scrollUp(mouseY - lastPos.y)
+                        else
+                            chart.scrollDown(-mouseY + lastPos.y)
+                        lastPos.y = mouseY
+                    }
                 }
 
                 onReleased: {
@@ -235,14 +270,12 @@ Item {
                     if(rubberBand.visible) {
                         chart.autoscale = false
                         chart.autoscroll = false
+                        chart.zoomIn(Qt.rect(rubberBand.x,
+                                             rubberBand.y,
+                                             rubberBand.width,
+                                             rubberBand.height));
+                        rubberBand.visible = false
                     }
-
-                    rubberBand.visible = false
-
-                    chart.zoomIn(Qt.rect(rubberBand.x,
-                                         rubberBand.y,
-                                         rubberBand.width,
-                                         rubberBand.height));
                 }
             }
 

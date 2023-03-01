@@ -11,6 +11,7 @@ Card {
     name: 'Joy Setup'
     property alias currentTask: taskCombo.currentText
     property real maxSpeed: maxSpeedLinearSpinBox.value
+    property bool ikRunning: false
 
     // private
     id: root
@@ -18,8 +19,8 @@ Card {
 
     toolButtons: [
         Label {
-            text: taskCombo.enabled ? `Current task:  <i>${currentTask}</i>` :
-                                      'IK is not running'
+            text: ikRunning ? `Current task:  <i>${currentTask}</i>` :
+                               'IK is not running'
         },
         Button {
             text: 'Refresh'
@@ -37,7 +38,7 @@ Card {
 
         id: grid
 
-        enabled: taskCombo.enabled
+        enabled: ikRunning
 
         anchors.fill: parent
 
@@ -102,6 +103,13 @@ Card {
         id: settings
         category: 'JoyCartesianCard'
         property string currentTask
+    }
+
+    Timer {
+        repeat: true
+        interval: 5000
+        onTriggered: Logic.updateTaskNames(taskCombo)
+        Component.onCompleted: start()
     }
 
     Component.onCompleted: {

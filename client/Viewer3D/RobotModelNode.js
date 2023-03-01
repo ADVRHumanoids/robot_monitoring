@@ -3,11 +3,23 @@ function makeModel(linkToUri) {
     let model = []
 
     for (const [key, value] of Object.entries(linkToUri)) {
-        console.log(`${key}: ${value}`);
+        console.log(`${key}: ${JSON.stringify(value)}`);
         let obj = {}
         obj.linkName = key
-        obj.uri = value[0]
-        obj.scale = value[1]
+        obj.filename = value.filename
+        obj.scale = Qt.vector3d(value.scale[0],
+                                value.scale[1],
+                                value.scale[2])
+        obj.type = value.type
+        obj.radius = value.radius
+        obj.length = value.length
+        obj.origin_xyz = Qt.vector3d(value.origin_xyz[0],
+                                     value.origin_xyz[1],
+                                     value.origin_xyz[2])
+        obj.origin_rot = Qt.quaternion(value.origin_rot[3],
+                                       value.origin_rot[0],
+                                       value.origin_rot[1],
+                                       value.origin_rot[2])
         model.push(obj)
     }
 
@@ -54,7 +66,7 @@ function updateQ(q) {
 
         let obj = visualRepeater.objectAt(i)
 
-        let linkName = visualRepeater.model[i].linkName
+        let linkName = visualRepeater.model[i].linkName || ''
 
         let pose = model.getPose(linkName)
 

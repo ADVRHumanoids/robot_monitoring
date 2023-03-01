@@ -57,9 +57,9 @@ Item {
             viewCenter: Qt.vector3d( 0.0, 0.0, 0.0 )
         }
 
-        CustomOrbitalController {
-            camera: camera
-        }
+//        CustomOrbitalController {
+//            camera: camera
+//        }
 
         components: [
             RenderSettings {
@@ -76,13 +76,13 @@ Item {
         SunLight {
             direction: Qt.vector3d(0, 1, -1)
             intensity: 0.5
-            translation: Qt.vector3d(-3, -3, 3)
+            translation: Qt.vector3d(-30, -30, 30)
         }
 
         SunLight {
             direction: Qt.vector3d(0, -1, -1)
             intensity: 0.5
-            translation: Qt.vector3d(-3, 3, 3)
+            translation: Qt.vector3d(-30, 30, 30)
         }
 
     }

@@ -76,11 +76,11 @@ function updateTaskNames(taskCombo) {
                      function(response) {
                          if(!response.success) {
                              console.log('/cartesian/get_task_list FAILED (no ik running)')
-                             taskCombo.enabled = false
+                             ikRunning = false
                              return
                          }
 
-                         taskCombo.enabled = true
+                         ikRunning = true
 
                          var cartesianTaskNames = []
                          for(let i = 0; i < response.names.length; i++) {

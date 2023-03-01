@@ -5,6 +5,7 @@ import json
 import rospy
 from urdf_parser_py import urdf as urdf_parser
 import tf
+from scipy.spatial.transform import Rotation as R
 
 from .server import ServerBase
 from . import utils
@@ -40,9 +41,9 @@ class VisualHandler:
     @utils.handle_exceptions
     async def visual_get_mesh_handler(self, request):
         
-        uri = request.match_info.get('uri', None)
+        uri = request.match_info['uri']
         path = utils.resolve_ros_uri(uri)
-        print(uri, path)
+        print('URI/PATH: ', uri, path)
         return web.FileResponse(path)
 
     
@@ -56,9 +57,31 @@ class VisualHandler:
         # get list of visuals
         visuals = dict()
         for lname, l in model.link_map.items():
+            
+            if l.collision is None:
+                continue
+            
+            origin = {
+                'origin_xyz': l.collision.origin.xyz,
+                'origin_rot': R.from_euler('XYZ', l.collision.origin.rpy).as_quat().tolist()
+            }
+            
             for c in l.collisions:
                 if isinstance(c.geometry, urdf_parser.Mesh):
-                    visuals[lname] = [c.geometry.filename, c.geometry.scale]
+                    visuals[lname] = {
+                        **origin,
+                        'type': 'MESH',
+                        'filename': c.geometry.filename,
+                        'scale': c.geometry.scale,
+                    }
+                elif isinstance(c.geometry, urdf_parser.Cylinder):
+                    visuals[lname] = {
+                        **origin,
+                        'type': 'CYLINDER',
+                        'radius': c.geometry.radius*1000,
+                        'length': c.geometry.length*1000,
+                        'scale': [0.001, 0.001, 0.001]
+                    }
         
         return web.json_response(visuals)
 

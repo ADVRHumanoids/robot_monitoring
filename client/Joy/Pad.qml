@@ -58,5 +58,11 @@ PadForm {
         onTriggered: {
             joystickMoved(joyX, joyY)
         }
+        onRunningChanged: {
+            if(!root.joyPressed)
+            {
+                joystickMoved(0, 0)
+            }
+        }
     }
 }

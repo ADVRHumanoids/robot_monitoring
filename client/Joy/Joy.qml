@@ -23,7 +23,6 @@ Item {
         }
     }
 
-
     GridLayout {
 
         anchors{

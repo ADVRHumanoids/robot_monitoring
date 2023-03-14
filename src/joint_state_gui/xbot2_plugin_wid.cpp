@@ -80,14 +80,14 @@ void XBot2PluginWidget::setStatus(QString status)
 {
     _statusLine->setText(status);
 
-    if(status == "Initialized" || status == "Stopped")
+    if(status == "Initialized" || status == "Stopped" || status == "Aborted")
     {
         _btnStarts = true;
     }
 
     _startStopBtn->setEnabled(true);
 
-    if(status == "InitFailed" || status == "Aborted")
+    if(status == "InitFailed" || status == "Closed")
     {
         setEnabled(false);
     }

@@ -110,9 +110,10 @@ Item {
 
         opacity: 0.7
 
-        onJoystickMoved: {
-            vref[0] = joyY*maxLinearV
-            vref[1] = -joyX*maxLinearV
+        onJoystickMoved: (x, y) => {
+            console.log(`${x} ${y}`)
+            vref[0] = y*maxLinearV
+            vref[1] = -x*maxLinearV
             Joy.sendVref(currentTask, vref)
         }
 
@@ -131,8 +132,9 @@ Item {
 
         opacity: 0.7
 
-        onJoystickMoved: {
-            vref[5] = -joyX*maxAngularV
+        onJoystickMoved: (x, y) => {
+            console.log(`${x} ${y}`)
+            vref[5] = -x*maxAngularV
             Joy.sendVref(currentTask, vref)
         }
     }

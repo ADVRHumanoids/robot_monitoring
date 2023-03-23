@@ -5,6 +5,7 @@ function sendVref(task, vref) {
         'vref': vref
     }
     client.sendTextMessage(JSON.stringify(msg))
+    vref = [0, 0, 0, 0, 0, 0]
 }
 
 

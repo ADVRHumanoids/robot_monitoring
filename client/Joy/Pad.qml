@@ -38,7 +38,7 @@ PadForm {
         // Fire the signal to indicate the joystick has moved
         angle = Math.atan2(mouseArea.signal_y, mouseArea.signal_x)
 
-        if(mouseArea.fingerInBounds) {
+        if(mouseArea.fingerInBounds && mouseArea.containsPress) {
             joystickMoved(
                         verticalOnly ? 0 : Math.cos(angle) * Math.sqrt(mouseArea.fingerDistance2) / mouseArea.distanceBound,
                         horizontalOnly ? 0 : Math.sin(angle) * Math.sqrt(mouseArea.fingerDistance2) / mouseArea.distanceBound
@@ -56,13 +56,17 @@ PadForm {
         running: root.joyPressed
         interval: 50
         onTriggered: {
-            joystickMoved(joyX, joyY)
+            root.joystickMoved(joyX, joyY)
         }
-        onRunningChanged: {
-            if(!root.joyPressed)
-            {
-                joystickMoved(0, 0)
-            }
+    }
+
+    Timer {
+        running: !root.joyPressed
+        interval: 20
+        onTriggered: {
+            joyX = 0
+            joyY = 0
+            root.joystickMoved(0, 0)
         }
     }
 }

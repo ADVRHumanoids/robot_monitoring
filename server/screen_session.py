@@ -1,15 +1,17 @@
 import asyncio
-import parse
+import builtins
 
 class Process:
 
     def __init__(self, name, cmd, machine, loop=None):
         self.name = name
-        self.proc: asyncio.subprocess.Process = None
+        self.stdout_proc: asyncio.subprocess.Process = None
+        self.stderr_proc: asyncio.subprocess.Process = None
+        self.ssh_session: asyncio.subprocess.Process = None
+        self.running = False
         self.cmd = cmd
         self.hostname = machine
         self.cmdline = dict()
-        self.ssh_session = None
         asyncio.get_event_loop().create_task(self._keep_ssh_session_running())
         
 
@@ -23,33 +25,27 @@ class Process:
             True if the session exists
         """
 
-        # if proc is not none, we have an alive session
-        if self.proc is not None:
-            return True
-        
         # first check if session running, attach if it is
-        cmd = f'screen -xr {self.name}'
+        cmd = f'tmux has-session -t {self.name}'
         args = ['-tt', self.hostname, cmd]
-        tmp_proc = await asyncio.create_subprocess_exec('/usr/bin/ssh', *args,
+        proc = await asyncio.create_subprocess_exec('/usr/bin/ssh', *args,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
                 stdin=asyncio.subprocess.PIPE)
-
-        # if this command fails immediately, no session exists 
-        try:
-            # give it 1 sec
-            retcode = await asyncio.wait_for(tmp_proc.wait(), 1.0)
-            return False
-
-        except asyncio.TimeoutError:
-            # timeout expired, we got the session
-            print('got session')
-
-            # run lifetime handler
-            self.proc = tmp_proc
-            asyncio.get_running_loop().create_task(self._lifetime_handler())
-
+        
+        # give it 1 sec
+        retcode = await asyncio.wait_for(proc.wait(), 1.0)
+        if retcode == 0:
+            print(f'{self.name} session detected on {self.hostname}')
+            asyncio.get_running_loop().create_task(self._keep_ssh_session_running())
+            await self._create_stdout_stderr_session()
             return True
+        else: 
+            print(f'{self.name} no session detected on {self.hostname}')
+            return False
+        
+        # on timeout exception is raised
+
 
     async def start(self, options=None):
 
@@ -61,40 +57,66 @@ class Process:
         """
         
         # first check if session running, attach if it is
-        await self.attach()
+        session_exists = await self.attach()
 
-        if self.proc is not None:
+        if session_exists:
             return True
 
         # parse options
         opt_cmd = ''
         if options is not None:
             opt_cmd = self._parse_options(options)
-            print(opt_cmd)
 
         # create new session
-        cmd = f'rm -rf /tmp/{self.name}_log; bash -ic "screen -mS {self.name} -L -Logfile /tmp/{self.name}_log {self.cmd} {opt_cmd}"'
+        cmd = f'bash -ic "tmux new-session -s {self.name} \
+-d \
+\\"{self.cmd} {opt_cmd} \
+1> >(tee /tmp/{self.name}.stdout) \
+2> >(tee /tmp/{self.name}.stderr >&2); sleep 1\\""'
+        
         args = ['-tt', self.hostname, cmd]
         print('executing command ssh ' + ' '.join(args))
-        self.proc = await asyncio.create_subprocess_exec('/usr/bin/ssh', *args,
+        proc = await asyncio.create_subprocess_exec('/usr/bin/ssh', *args,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
                 stdin=asyncio.subprocess.PIPE)
-        print('DONE executing command ssh ' + ' '.join(args))
 
-        # run lifetime handler
-        asyncio.get_running_loop().create_task(self._lifetime_handler())
+        # give it 1 sec
+        retcode = await asyncio.wait_for(proc.wait(), 1.0)
+        if retcode == 0:
+            print(f'{self.name} session started on {self.hostname}')
+            asyncio.get_running_loop().create_task(self._keep_ssh_session_running())
+            await self._create_stdout_stderr_session()
+            return True
+        else: 
+            print(f'{self.name} failed to start session on {self.hostname}')
+            return False
 
-        return True
     
     async def stop(self):
         """
         Send CTRL+C to the remote session
         """
-        if self.proc is None:
-            await self.attach()
-        self.proc.stdin.write('\x03\n'.encode())
-        await self.proc.stdin.drain()  
+        
+        # send ctrl c
+        cmd = f'tmux send-keys -t {self.name} C-c'
+        args = ['-tt', self.hostname, cmd]
+        proc = await asyncio.create_subprocess_exec('/usr/bin/ssh', *args,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                stdin=asyncio.subprocess.PIPE)
+        
+        # give it 1 sec
+        retcode = await asyncio.wait_for(proc.wait(), 1.0)
+        if retcode == 0:
+            print(f'{self.name} session detected on {self.hostname}')
+            asyncio.get_running_loop().create_task(self._keep_ssh_session_running())
+            await self._create_stdout_stderr_session()
+            return True
+        else: 
+            print(f'{self.name} no session detected on {self.hostname}')
+            return False
+
 
     async def status(self):
         """
@@ -102,35 +124,84 @@ class Process:
         to it. Not super cheap.
         """
 
-        is_running = await self._screen_session_running(self.name)
+        self.running = await self._screen_session_running(self.name)
 
-        if is_running:
+        if self.running:
             return 'Running'
         else:
             return 'Stopped'
+        
+    
+    async def read_stdout(self):
+        while True:
+            yield await self.stdout_proc.stdout.readline()
+
+
+    async def read_stderr(self):
+        while True:
+            yield await self.stderr_proc.stdout.readline()
+        
 
     async def _create_ssh_session(self):
-        return await asyncio.create_subprocess_exec(
+        
+        ssh_proc = await asyncio.create_subprocess_exec(
                 '/usr/bin/ssh', '-o ConnectTimeout=3', self.hostname,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
                 stdin=asyncio.subprocess.PIPE)
+        
+        while True:
+            try:
+                line = await asyncio.wait_for(ssh_proc.stdout.readline(), 1.0)
+            except asyncio.TimeoutError:
+                break
+        
+        print(f'[{self.name}] ssh session ready')
+        return ssh_proc
+    
+
+    async def _create_stdout_stderr_session(self):
+        
+        cmd = f'touch /tmp/{self.name}.stdout && tail -f -n +1 /tmp/{self.name}.stdout'
+        
+        args = ['-tt', self.hostname, cmd]
+
+        self.stdout_proc =  await asyncio.create_subprocess_exec(
+                                        '/usr/bin/ssh', *args,
+                                        stdout=asyncio.subprocess.PIPE,
+                                        stderr=asyncio.subprocess.PIPE,
+                                        stdin=asyncio.subprocess.PIPE)
+        
+        cmd = f'touch /tmp/{self.name}.stderr && tail -f -n +1 /tmp/{self.name}.stderr'
+        
+        args = ['-tt', self.hostname, cmd]
+
+        self.stderr_proc =  await asyncio.create_subprocess_exec(
+                                        '/usr/bin/ssh', *args,
+                                        stdout=asyncio.subprocess.PIPE,
+                                        stderr=asyncio.subprocess.PIPE,
+                                        stdin=asyncio.subprocess.PIPE)
+        
+        return self.stdout_proc, self.stderr_proc
+        
 
     async def _keep_ssh_session_running(self):
 
         while True:
             self.ssh_session = await self._create_ssh_session()
             retcode = await self.ssh_session.wait()
+            self.ssh_session = None
             print(f'ssh session with {self.hostname} died with exit code {retcode}, restarting..')
 
     
     async def _screen_session_running(self, name):
 
         def print(string):
-            pass
+            pass #builtins.print(string)
 
         # make sure we have our ssh sesssion
         if self.ssh_session is None:
+            builtins.print(f'{self.name} ssh session offline')
             return False
 
         # consume stdout
@@ -141,61 +212,16 @@ class Process:
             pass
         
         # send command
-        print('issue screen -ls over ssh..')
-        self.ssh_session.stdin.write('screen -ls \n'.encode())
+        print(f'issue tmux has-session -t {self.name} over ssh..')
+        self.ssh_session.stdin.write(f'tmux has-session -t {self.name} 1>/dev/null 2>/dev/null;\necho $?\n'.encode())
         await self.ssh_session.stdin.drain()
         print('..done')
         
-        res = None
-        while True:
-            print(f'[{name}] reading line..')
-            line = await self.ssh_session.stdout.readline()
-            if len(line) == 0:
-                self.ssh_session = None 
-                return await self._screen_session_running(name)
-            line = line.decode().strip()
-            print(f'got line "{line}"')
-            
-            if line.startswith('No Sockets found'):
-                print('not running (no sockets found)')
-                res = False
-                break
-            elif len(line) == 0:
-                print('empty')
-                continue
-            else:
-                end_line =  parse.parse('{} Socket{}in {}', line)
-                print(f'end_line? {end_line}')
-                if end_line is not None:
-                    print(f'not running (but {end_line[0]} sockets were found)')
-                    res = False
-                    break
-                
-                session_line = parse.parse('{}.{}\t({})\t({})', line)
-                print(f'[{name}] session_line? {session_line}')
-                if session_line is not None and session_line[1] == name:
-                    print(f'{name} found!')
-                    res = True
-                    break
+        line = (await self.ssh_session.stdout.readline()).decode().strip()
+        print(f'got line "{line}"')
         
-        print('***********************************************')
-        return res
+        return line == '0'
 
-    async def _lifetime_handler(self):
-        """
-        Task to set self.proc to None after session exit
-        """
-        
-        if self.proc is None:
-            return
-
-        print(f'started task _lifetime_handler for {self.name}')
-
-        retcode = await self.proc.wait()
-
-        print(f'process {self.name} died with exit code {retcode}')
-
-        self.proc = None
 
     def _parse_options(self, options):
 

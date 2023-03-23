@@ -129,21 +129,15 @@ class ProcessHandler:
         msg_size = 0
         prev_time = time.time()
 
+        async_generator = getattr(p, f'read_{stream_type}')()
+
         while True:
 
-            if p.proc is None:
+            if not p.running:
                 await asyncio.sleep(1./self.rate)
                 continue
-            
-            # await stream to return something
-            line = await getattr(p.proc, stream_type).readline()
 
-            # note: important! if line is empty, process is dead!
-            # we must set proc to none, otherwise this loop runs
-            # too fast and starves all other coroutines!
-            if len(line) == 0:
-                p.proc = None
-                continue
+            line = await async_generator.asend(None)
 
             # line not empty, decode it and remove ansi colors
             line = ansi_escape.sub('', line.decode().strip())

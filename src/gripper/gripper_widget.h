@@ -38,12 +38,15 @@ private:
 
     static void setProgressBarValue(QProgressBar * pb, double value, double max);
 
+    ros::Publisher getCommandPublisher();
+
     ros::NodeHandle _nh;
     std::vector<ros::Subscriber> _subs;
     std::vector<QProgressBar*> _force, _torque;
     QComboBox * _select_gripper;
     std::map<QString, QString> _link_name_map;
     std::map<QString, ros::Publisher> _pub_map;
+    QTimer * _pub_timer;
 
 
 };

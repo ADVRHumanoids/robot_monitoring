@@ -44,6 +44,31 @@ void GripperWidget::setProgressBarValue(QProgressBar* pb, double value, double m
     pb->setFormat(QString("%1").arg(value, 5, 'f', 1));
 }
 
+ros::Publisher GripperWidget::getCommandPublisher()
+{
+    ros::Publisher pub;
+
+    auto it = _pub_map.find(_select_gripper->currentText());
+
+    if(it == _pub_map.end())
+    {
+        auto state_topic = _select_gripper->currentText();
+        auto cmd_topic = state_topic;
+        cmd_topic.replace("state", "command");
+        std::cout << "advertised " << cmd_topic.toStdString() << "\n";
+        pub = _nh.advertise<sensor_msgs::JointState>(cmd_topic.toStdString(),
+                                                     1);
+        _pub_map[state_topic] = pub;
+    }
+    else
+    {
+        pub = it->second;
+    }
+
+    return pub;
+
+}
+
 bool GripperWidget::init(CustomQtWidget::Args& args)
 {
     if(!CustomQtWidget::init(args))
@@ -157,30 +182,62 @@ bool GripperWidget::init(CustomQtWidget::Args& args)
     connect(cmdSendBtn, &QPushButton::released,
             [this, cmdSpinBox]()
     {
-        ros::Publisher pub;
-
-        auto it = _pub_map.find(_select_gripper->currentText());
-
-        if(it == _pub_map.end())
-        {
-            auto state_topic = _select_gripper->currentText();
-            auto cmd_topic = state_topic;
-            cmd_topic.replace("state", "command");
-            std::cout << "advertised " << cmd_topic.toStdString() << "\n";
-            pub = _nh.advertise<sensor_msgs::JointState>(cmd_topic.toStdString(),
-                                                         1);
-            _pub_map[state_topic] = pub;
-        }
-        else
-        {
-            pub = it->second;
-        }
+        ros::Publisher pub = getCommandPublisher();
 
         sensor_msgs::JointState msg;
         msg.header.stamp = ros::Time::now();
         msg.position = {cmdSpinBox->value()};
         pub.publish(msg);
 
+    });
+
+    // torque publisher
+    auto torqueSlider = findChild<QSlider*>("torqueSlider");
+    auto torqueSpinBox = findChild<QDoubleSpinBox*>("torqueSpinBox");
+    auto torqueSendBtn = findChild<QPushButton*>("torqueSendBtn");
+
+    const double max_torque = 10.0;
+
+    connect(torqueSlider, &QSlider::valueChanged,
+            [torqueSpinBox, max_torque](int value)
+    {
+        torqueSpinBox->setValue(((value / 500.0) - 1.0) * max_torque);
+    });
+
+    connect(torqueSpinBox, qOverload<double>(&QDoubleSpinBox::valueChanged),
+            [torqueSlider, max_torque](double value)
+    {
+         torqueSlider->setValue((value + max_torque) * 500. / max_torque);
+    });
+
+    connect(torqueSendBtn, &QPushButton::released,
+            [this, torqueSpinBox, torqueSendBtn]()
+    {
+        if(torqueSendBtn->text() == "Send")
+        {
+            _pub_timer->start();
+            torqueSendBtn->setText("Stop");
+        }
+        else
+        {
+            _pub_timer->stop();
+            torqueSendBtn->setText("Send");
+        }
+    });
+
+    _pub_timer = new QTimer(this);
+    _pub_timer->setInterval(10);
+    _pub_timer->setSingleShot(false);
+
+    connect(_pub_timer, &QTimer::timeout,
+            [this, torqueSpinBox]()
+    {
+        ros::Publisher pub = getCommandPublisher();
+
+        sensor_msgs::JointState msg;
+        msg.header.stamp = ros::Time::now();
+        msg.effort = {torqueSpinBox->value()};
+        pub.publish(msg);
     });
 
     return true;

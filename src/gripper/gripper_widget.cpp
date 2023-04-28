@@ -213,30 +213,12 @@ bool GripperWidget::init(CustomQtWidget::Args& args)
     connect(torqueSendBtn, &QPushButton::released,
             [this, torqueSpinBox, torqueSendBtn]()
     {
-        if(torqueSendBtn->text() == "Send")
-        {
-            _pub_timer->start();
-            torqueSendBtn->setText("Stop");
-        }
-        else
-        {
-            _pub_timer->stop();
-            torqueSendBtn->setText("Send");
-        }
-    });
-
-    _pub_timer = new QTimer(this);
-    _pub_timer->setInterval(10);
-    _pub_timer->setSingleShot(false);
-
-    connect(_pub_timer, &QTimer::timeout,
-            [this, torqueSpinBox]()
-    {
         ros::Publisher pub = getCommandPublisher();
 
         sensor_msgs::JointState msg;
         msg.header.stamp = ros::Time::now();
         msg.effort = {torqueSpinBox->value()};
+
         pub.publish(msg);
     });
 

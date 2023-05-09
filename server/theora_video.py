@@ -38,9 +38,11 @@ class TheoraVideoHandler:
         # get topic names from ros master
         topic_name_type_list = await utils.to_thread(rospy.get_published_topics)
 
-        # filter those with theora type
+        # filter those with theora type and nice name
         vs_topics = list()
         for tname, ttype in topic_name_type_list:
+            if '/color/image_raw/' not in tname:
+                continue
             if ttype == 'theora_image_transport/Packet':
                 vs_topics.append(tname)
         

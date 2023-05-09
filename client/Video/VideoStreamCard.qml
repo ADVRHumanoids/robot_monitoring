@@ -17,7 +17,9 @@ Card {
     }
 
     function setTheoraPacket(pkt) {
-        video.setTheoraPacket(pkt)
+        if(videoActiveChk.checked) {
+            video.setTheoraPacket(pkt)
+        }
     }
 
     signal updateAvailableStreamIds()
@@ -25,6 +27,14 @@ Card {
     // private
     id: root
     name: streamName
+
+    toolButtons: [
+        CheckBox {
+            id: videoActiveChk
+            checked: true
+        }
+
+    ]
 
     frontItem: VideoStream {
         id: video

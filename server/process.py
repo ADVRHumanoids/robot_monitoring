@@ -77,8 +77,7 @@ class ProcessHandler:
         elif cmd == 'stop':
             await self.proc.stop()
         elif cmd == 'kill':
-            res['success'] = False
-            res['message'] = 'kill command not supported yet'
+            await self.proc.kill()
         else:
             res['success'] = False
             res['message'] = f'{cmd} command not supported'

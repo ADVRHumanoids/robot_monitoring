@@ -109,12 +109,33 @@ class Process:
         # give it 1 sec
         retcode = await asyncio.wait_for(proc.wait(), 1.0)
         if retcode == 0:
-            print(f'{self.name} session detected on {self.hostname}')
-            asyncio.get_running_loop().create_task(self._keep_ssh_session_running())
-            await self._create_stdout_stderr_session()
+            print(f'[{self.name}] sent ctrl+c to target session')
             return True
         else: 
-            print(f'{self.name} no session detected on {self.hostname}')
+            print(f'[{self.name}] could NOT send ctrl+c to target session')
+            return False
+        
+    
+    async def kill(self):
+        """
+        Send CTRL+C to the remote session
+        """
+        
+        # send ctrl c
+        cmd = f'tmux send-keys -t {self.name} C-\\'
+        args = ['-tt', self.hostname, cmd]
+        proc = await asyncio.create_subprocess_exec('/usr/bin/ssh', *args,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                stdin=asyncio.subprocess.PIPE)
+        
+        # give it 1 sec
+        retcode = await asyncio.wait_for(proc.wait(), 1.0)
+        if retcode == 0:
+            print(f'[{self.name}] sent ctrl+\\ to target session')
+            return True
+        else: 
+            print(f'[{self.name}] could NOT send ctrl+\\ to target session')
             return False
 
 
@@ -161,6 +182,12 @@ class Process:
     
 
     async def _create_stdout_stderr_session(self):
+        
+        if self.stderr_proc:
+            self.stderr_proc.kill()
+
+        if self.stdout_proc:
+            self.stdout_proc.kill()
         
         cmd = f'touch /tmp/{self.name}.stdout && tail -f -n +1 /tmp/{self.name}.stdout'
         

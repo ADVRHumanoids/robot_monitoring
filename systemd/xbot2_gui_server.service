@@ -1,0 +1,13 @@
+[Unit]
+Description=XBot2 Gui Server
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+WorkingDirectory=%h/robot_monitoring
+ExecStart=/bin/bash -ic 'source %h/.bashrc; /usr/bin/python3 -m server.main server/centauro_config.yaml'
+
+[Install]
+WantedBy=default.target

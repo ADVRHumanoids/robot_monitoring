@@ -11,6 +11,12 @@ function sendVref(task, vref) {
 
 function enableTask(task_name, callback) {
 
+    if(task_name.startsWith('[simple topic]'))
+    {
+        callback()
+        return
+    }
+
     let req_body = Object()
     req_body.task_name = task_name
     req_body.control_mode = 'velocity'
@@ -33,6 +39,12 @@ function enableTask(task_name, callback) {
 
 function disableTask(task_name, callback) {
 
+    if(task_name.startsWith('[simple topic]'))
+    {
+        callback()
+        return
+    }
+
     let req_body = Object()
     req_body.task_name = task_name
     req_body.control_mode = 'position'
@@ -54,6 +66,12 @@ function disableTask(task_name, callback) {
 
 
 function taskIsEnabled(task_name, callback) {
+
+    if(task_name.startsWith('[simple topic]'))
+    {
+        callback(true)
+        return
+    }
 
     let req_callback = function(response) {
         if(!response.success) {
@@ -87,6 +105,9 @@ function updateTaskNames(taskCombo) {
                          for(let i = 0; i < response.names.length; i++) {
                              if(response.types[i] === "Cartesian") {
                                  cartesianTaskNames.push(response.names[i])
+                             }
+                             if(response.types[i] === "SimpleTopic") {
+                                 cartesianTaskNames.push('[simple topic] '+response.names[i])
                              }
                          }
                          taskCombo.model = cartesianTaskNames

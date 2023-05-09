@@ -5,7 +5,7 @@ import json
 import rospy
 from std_srvs.srv import SetBool, Trigger
 from cartesian_interface.srv import SetControlMode, SetControlModeRequest, GetTaskList, GetCartesianTaskInfo
-from geometry_msgs.msg import TwistStamped
+from geometry_msgs.msg import TwistStamped, Twist
 
 from .server import ServerBase
 from . import utils
@@ -17,6 +17,7 @@ class CartesianHandler:
 
         # config
         self.rate = config.get('rate', 10.0)
+        self.cmd_vel_topics = config.get('cmd_vel_topics', [])
 
         # save server object, register our handlers
         self.srv = srv
@@ -39,8 +40,18 @@ class CartesianHandler:
     @utils.handle_exceptions
     async def cartesian_get_task_list_handler(self, request):
         
-        get_task_list = rospy.ServiceProxy('cartesian/get_task_list', GetTaskList)
-        res = await utils.to_thread(get_task_list)
+        # get cartesio tasks
+        try:
+            get_task_list = rospy.ServiceProxy('cartesian/get_task_list', GetTaskList)
+            res = await utils.to_thread(get_task_list)
+        except:
+            res = GetTaskList._response_class()
+
+         # get topic names from ros master
+        for tname in self.cmd_vel_topics:
+            res.names.append(tname)
+            res.types.append('SimpleTopic')
+
         return web.Response(text=json.dumps(
             {
                 'success': True, 
@@ -124,8 +135,14 @@ class CartesianHandler:
         if(len(task_name) == 0):
             print('empty task name, skipping..')
             return
-
-        topic_name = rospy.resolve_name(f'cartesian/{task_name}/velocity_reference')
+        
+        simple_topic_prefix = '[simple topic] '
+        if task_name.startswith(simple_topic_prefix):
+            topic_name = task_name[len(simple_topic_prefix):]
+            TopicType = Twist
+        else:
+            topic_name = rospy.resolve_name(f'cartesian/{task_name}/velocity_reference')
+            TopicType = TwistStamped
 
         if self.vref_pub is None or self.vref_pub.resolved_name != topic_name:
             try:
@@ -133,19 +150,25 @@ class CartesianHandler:
             except:
                 pass
             print(f'advertising {topic_name}')
-            self.vref_pub = rospy.Publisher(topic_name, TwistStamped, queue_size=1)
+            self.vref_pub = rospy.Publisher(topic_name, TopicType, queue_size=1)
 
 
-        rosmsg = TwistStamped()
-        rosmsg.header.stamp = rospy.Time.now()
-        rosmsg.header.frame_id = task_name
+        rosmsg = TopicType()
+
+        if TopicType is TwistStamped:
+            rosmsg.header.stamp = rospy.Time.now()
+            rosmsg.header.frame_id = task_name
+            twist = rosmsg.twist
+        else:
+            twist = rosmsg
+
         vref = msg['vref']
-        rosmsg.twist.linear.x = vref[0]
-        rosmsg.twist.linear.y = vref[1]
-        rosmsg.twist.linear.z = vref[2]
-        rosmsg.twist.angular.x = vref[3]
-        rosmsg.twist.angular.y = vref[4]
-        rosmsg.twist.angular.z = vref[5]
+        twist.linear.x = vref[0]
+        twist.linear.y = vref[1]
+        twist.linear.z = vref[2]
+        twist.angular.x = vref[3]
+        twist.angular.y = vref[4]
+        twist.angular.z = vref[5]
 
         self.vref_pub.publish(rosmsg)
 

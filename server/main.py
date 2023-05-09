@@ -14,7 +14,7 @@ def main():
     print('starting server, initializing rospy..')
 
     # init rospy node
-    rospy.init_node('xbot2_gui_server')
+    rospy.init_node('xbot2_gui_server', disable_signals=True)
 
     logging.basicConfig(level=logging.INFO, force=True)
     

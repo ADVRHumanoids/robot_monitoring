@@ -404,9 +404,25 @@ void JointMonitorWidget::on_jstate_recv(xbot_msgs::JointStateConstPtr msg)
         else if(barplot_wid->getFieldType() == "torque")
         {
             auto wid = barplot_wid->wid_map.at(msg->name[i]);
-            wid->setValue(std::fabs(msg->effort[i]), msg->effort[i]);
-            double taumax = _urdf->getJoint(msg->name[i])->limits->effort;
-            wid->setRange(0, taumax);
+            wid->setValue(std::fabs(msg->effort[i]), msg->effort[i]);   
+            
+            auto joint = _urdf->getJoint(msg->name[i]);
+            
+            if(!joint)
+            {
+            	std::cout << "joint " << msg->name[i] << " not found in urdf" << std::endl;
+                wid->setRange(0, 100.0);
+            }
+            else if(auto limits = joint->limits)
+            {
+		        double taumax = limits->effort;
+                wid->setRange(0, taumax);
+            }
+            else
+            {
+                std::cout << "effort limits undefined for joint " << msg->name[i] << std::endl;
+                wid->setRange(0, 100.0);
+            }
 
         }
         else if(barplot_wid->getFieldType() == "torque tracking error")
@@ -435,34 +451,100 @@ void JointMonitorWidget::on_jstate_recv(xbot_msgs::JointStateConstPtr msg)
         else if(barplot_wid->getFieldType() == "link position")
         {
             auto wid = barplot_wid->wid_map.at(msg->name[i]);
-            wid->setValue(msg->link_position[i]);
-            double qmin = _urdf->getJoint(msg->name[i])->limits->lower;
-            double qmax = _urdf->getJoint(msg->name[i])->limits->upper;
-            wid->setRange(qmin, qmax);
+            wid->setValue(msg->link_position[i]);  
+            
+            auto joint = _urdf->getJoint(msg->name[i]);
+            
+            if(!joint)
+            {
+            	std::cout << "joint " << msg->name[i] << " not found in urdf" << std::endl;
+                wid->setRange(-M_PI, M_PI);
+            }
+            else if(auto limits = joint->limits)
+            {
+		        double qmin = limits->lower;
+		        double qmax = limits->upper;
+		        wid->setRange(qmin, qmax);
+            }
+            else
+            {
+                std::cout << "joint limits undefined for joint " << msg->name[i] << std::endl;
+                wid->setRange(-M_PI, M_PI);
+            }
+            
         }
         else if(barplot_wid->getFieldType() == "motor position")
         {
             auto wid = barplot_wid->wid_map.at(msg->name[i]);
-            wid->setValue(msg->motor_position[i]);
-            double qmin = _urdf->getJoint(msg->name[i])->limits->lower;
-            double qmax = _urdf->getJoint(msg->name[i])->limits->upper;
-            wid->setRange(qmin, qmax);
+            wid->setValue(msg->motor_position[i]);  
+            
+            auto joint = _urdf->getJoint(msg->name[i]);
+            
+            if(!joint)
+            {
+            	std::cout << "joint " << msg->name[i] << " not found in urdf" << std::endl;
+                wid->setRange(-M_PI, M_PI);
+            }
+            else if(auto limits = joint->limits)
+            {
+		        double qmin = limits->lower;
+		        double qmax = limits->upper;
+		        wid->setRange(qmin, qmax);
+            }
+            else
+            {
+                std::cout << "joint limits undefined for joint " << msg->name[i] << std::endl;
+                wid->setRange(-M_PI, M_PI);
+            }
         }
         else if(barplot_wid->getFieldType() == "link velocity")
         {
             auto wid = barplot_wid->wid_map.at(msg->name[i]);
             double vel = msg->link_velocity[i];
-            wid->setValue(std::fabs(vel), vel);
-            double qdmax = _urdf->getJoint(msg->name[i])->limits->velocity;
-            wid->setRange(0, qdmax);
+            wid->setValue(std::fabs(vel), vel);  
+            
+            auto joint = _urdf->getJoint(msg->name[i]);
+            
+            if(!joint)
+            {
+            	std::cout << "joint " << msg->name[i] << " not found in urdf" << std::endl;
+                wid->setRange(0, 10.0);
+            }
+            else if(auto limits = joint->limits)
+            {
+		        double qdmax = limits->velocity;
+		        wid->setRange(0, qdmax);
+            }
+            else
+            {
+                std::cout << "velocity limits undefined for joint " << msg->name[i] << std::endl;
+                wid->setRange(0, 10.0);
+            }
+            
         }
         else if(barplot_wid->getFieldType() == "motor velocity")
         {
             auto wid = barplot_wid->wid_map.at(msg->name[i]);
             double vel = msg->motor_velocity[i];
-            wid->setValue(std::fabs(vel), vel);
-            double qdmax = _urdf->getJoint(msg->name[i])->limits->velocity;
-            wid->setRange(0, qdmax);
+            wid->setValue(std::fabs(vel), vel);  
+            
+            auto joint = _urdf->getJoint(msg->name[i]);
+            
+            if(!joint)
+            {
+            	std::cout << "joint " << msg->name[i] << " not found in urdf" << std::endl;
+                wid->setRange(0, 10.0);
+            }
+            else if(auto limits = joint->limits)
+            {
+		        double qdmax = limits->velocity;
+		        wid->setRange(0, qdmax);
+            }
+            else
+            {
+                std::cout << "velocity limits undefined for joint " << msg->name[i] << std::endl;
+                wid->setRange(0, 10.0);
+            }
         }
         else if(barplot_wid->getFieldType() == "stiffness")
         {

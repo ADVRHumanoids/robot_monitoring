@@ -6,6 +6,9 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Compile commands
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # avoid installing catkin-related files
 set(CATKIN_BUILD_BINARY_PACKAGE TRUE)
 
@@ -59,6 +62,9 @@ add_subdirectory(src/ft)
 add_subdirectory(src/gripper)
 add_subdirectory(src/rviz/)
 add_subdirectory(src/qcustomplot)
+
+add_subdirectory(src/automatica)
+
 
 include(cmake/GenerateDeb.cmake)
 

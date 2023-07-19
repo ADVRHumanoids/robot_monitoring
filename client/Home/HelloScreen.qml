@@ -60,6 +60,8 @@ Item {
 
         Card {
 
+            name: 'Statistics'
+
             height: srvStatus.height
 
             property int columnSpan: 8

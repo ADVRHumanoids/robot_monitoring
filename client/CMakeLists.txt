@@ -31,8 +31,9 @@ find_package(Qt6 COMPONENTS
     Widgets
     QuickControls2
     ShaderTools
-    # 3DRender
+#    3DRender
 #    3DCore
+    Quick3D
     REQUIRED)
 
 set(PROJECT_SOURCES
@@ -65,6 +66,7 @@ target_link_libraries(next_ui
           Qt${QT_VERSION_MAJOR}::WebSockets
           Qt${QT_VERSION_MAJOR}::QuickControls2
           Qt${QT_VERSION_MAJOR}::Widgets
+          mesh_geometry
 #          Qt${QT_VERSION_MAJOR}::3DRender
 #          Qt${QT_VERSION_MAJOR}::3DCore
       )
@@ -100,3 +102,9 @@ add_subdirectory(RobotModel/)
 
 target_link_libraries(next_ui PRIVATE RobotModel)
 
+
+# quick3d
+add_library(mesh_geometry STATIC
+    ViewerQuick3D/meshgeometry.cpp)
+
+target_link_libraries(mesh_geometry PUBLIC Qt${QT_VERSION_MAJOR}::Quick3D)

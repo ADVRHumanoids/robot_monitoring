@@ -4,129 +4,93 @@ import QtCharts
 
 import ".."
 import xbot2_gui.RobotModel
+import xbot2_gui.MeshGeometry
+
+
+import QtQuick.Layouts
+import QtQuick3D
+import QtQuick3D.Helpers
+
+
 
 Item {
 
+    id: root
     property ClientEndpoint client
 
-    RobotModel {
 
-        id: model
+    View3D {
 
-        onJointNamesChanged: {
-            console.log(jointNames)
+        id: v3d
+        anchors.fill: parent
+        camera: camera
+
+        environment: SceneEnvironment {
+            clearColor: "blue"
+            antialiasingMode: SceneEnvironment.MSAA
+//            backgroundMode: SceneEnvironment.Color
+
         }
+
+        Node {
+
+            id: originNode
+            position: Qt.vector3d(2.0, 0, 0.0)
+            eulerRotation: Qt.vector3d(90, 0, 0)
+
+            PerspectiveCamera {
+                id: camera
+
+                clipNear: 0.05
+                clipFar: 2
+                fieldOfView: 90
+            }
+
+        }
+
+        OrbitCameraController {
+            anchors.fill: parent
+            origin: originNode
+            camera: camera
+        }
+
+        DirectionalLight {
+            position: Qt.vector3d(-5, 5, -1)
+            color: Qt.rgba(0.4, 0.2, 0.6, 1.0)
+            ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0)
+        }
+
+        PointLight {
+            position: Qt.vector3d(0, 2, 2)
+            color: Qt.rgba(1, 1, 1, 1.0)
+            ambientColor: Qt.rgba(0.2, 0.2, 0.2, 1.0)
+        }
+
+        PointLight {
+            position: Qt.vector3d(0, -2, 2)
+            color: Qt.rgba(1, 1, 1, 1.0)
+            ambientColor: Qt.rgba(0.2, 0.2, 0.2, 1.0)
+        }
+
+        RobotModelNode {
+            client: root.client
+        }
+
+        Model {
+            scale: Qt.vector3d(10, 10, 10)
+            geometry: GridGeometry {
+                horizontalLines: 100
+                verticalLines: 100
+            }
+            materials: [ DefaultMaterial { } ]
+        }
+
 
     }
 
     Component.onCompleted: {
-
-        client.doRequestAsync('GET', '/joint_states/urdf', '')
-            .then((response) =>
-                  {
-                      model.setUrdf(response.urdf, false)
-                      let q = Array(model.ndof).fill(0)
-                      model.setJointPosition(q)
-                      let pose = model.getPose('wheel_A')
-                      console.log(`${pose.translation} ${pose.rotation}`)
-                  })
-            .catch((err) => { console.error(err) } )
-
+        camera.lookAt(Qt.vector3d(0, 0, 0))
     }
 
 }
 
-//Item {
-
-//    ChartView {
-//           id: chart
-//           anchors.fill: parent
-//           theme: ChartView.ChartThemeBrownSand
-//           antialiasing: true
-
-//           LineSeries {
-//               name: "LineSeries"
-//               XYPoint { x: 0; y: 0 }
-//               XYPoint { x: 1.1; y: 2.1 }
-//               XYPoint { x: 1.9; y: 3.3 }
-//               XYPoint { x: 2.1; y: 2.1 }
-//               XYPoint { x: 2.9; y: 4.9 }
-//               XYPoint { x: 3.4; y: 3.0 }
-//               XYPoint { x: 4.1; y: 3.3 }
-//           }
-//           PinchArea{
-//               id: pa
-//               anchors.fill: parent
-//               property real currentPinchScaleX: 1
-//               property real currentPinchScaleY: 1
-//               property real pinchStartX : 0
-//               property real pinchStartY : 0
-
-//               onPinchStarted: {
-//                   // Pinching has started. Record the initial center of the pinch
-//                   // so relative motions can be reversed in the pinchUpdated signal
-//                   // handler
-//                   pinchStartX = pinch.center.x;
-//                   pinchStartY = pinch.center.y;
-//               }
-
-//               onPinchUpdated: {
-//                   chart.zoomReset();
-
-//                   // Reverse pinch center motion direction
-//                   var center_x = pinchStartX + (pinchStartX - pinch.center.x);
-//                   var center_y = pinchStartY + (pinchStartY - pinch.center.y);
-
-//                   // Compound pinch.scale with prior pinch scale level and apply
-//                   // scale in the absolute direction of the pinch gesture
-//                   var scaleX = currentPinchScaleX * (1 + (pinch.scale - 1) * Math.abs(Math.cos(pinch.angle * Math.PI / 180)));
-//                   var scaleY = currentPinchScaleY * (1 + (pinch.scale - 1) * Math.abs(Math.sin(pinch.angle * Math.PI / 180)));
-
-//                   // Apply scale to zoom levels according to pinch angle
-//                   var width_zoom = height / scaleX;
-//                   var height_zoom = width / scaleY;
-
-//                   var r = Qt.rect(center_x - width_zoom / 2, center_y - height_zoom / 2, width_zoom, height_zoom);
-//                   chart.zoomIn(r);
-//               }
-
-//               onPinchFinished: {
-//                   // Pinch finished. Record compounded pinch scale.
-//                   currentPinchScaleX = currentPinchScaleX * (1 + (pinch.scale - 1) * Math.abs(Math.cos(pinch.angle * Math.PI / 180)));
-//                   currentPinchScaleY = currentPinchScaleY * (1 + (pinch.scale - 1) * Math.abs(Math.sin(pinch.angle * Math.PI / 180)));
-//               }
-
-//               MouseArea{
-//                   anchors.fill: parent
-//                   drag.target: dragTarget
-//                   drag.axis: Drag.XAndYAxis
-
-//                   onDoubleClicked: {
-//                       chart.zoomReset();
-//                       parent.currentPinchScaleX = 1;
-//                       parent.currentPinchScaleY = 1;
-//                   }
-//               }
-
-//               Item {
-//                   // A virtual item to receive drag signals from the MouseArea.
-//                   // When x or y properties are changed by the MouseArea's
-//                   // drag signals, the ChartView is scrolled accordingly.
-//                   id: dragTarget
-
-//                   property real oldX : x
-//                   property real oldY : y
-
-//                   onXChanged: {
-//                       chart.scrollLeft( x - oldX );
-//                       oldX = x;
-//                   }
-//                   onYChanged: {
-//                       chart.scrollUp( y - oldY );
-//                       oldY = y;
-//                   }
-//                }
-//            }
-//        }
-
-//}

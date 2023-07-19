@@ -9,6 +9,7 @@
 
 #include "Video/videostreampainter.h"
 #include "RobotModel/robot_model.h"
+#include "ViewerQuick3D/meshgeometry.h"
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/val.h>
@@ -51,7 +52,6 @@ int main(int argc, char *argv[])
     emscripten::val location = emscripten::val::global("location");
     appdata.hostname = QString::fromStdString(location["hostname"].as<std::string>());
     appdata.port = std::stoi(location["port"].as<std::string>());
-    QQuickStyle::setStyle("Fusion");
 #endif
     QApplication app(argc, argv);
     auto font = app.font();
@@ -67,6 +67,7 @@ int main(int argc, char *argv[])
 
     qmlRegisterType<VideoStreamPainter>("xbot2_gui.Video", 1, 0, "VideoStreamPainter");
     qmlRegisterType<RobotModel>("xbot2_gui.RobotModel", 1, 0, "RobotModel");
+    qmlRegisterType<MeshGeometry>("xbot2_gui.MeshGeometry", 1, 0, "MeshGeometry");
     qmlRegisterSingletonType(QUrl("qrc:/Common/CommonProperties.qml"), "xbot2_gui.Common", 1, 0, "CommonProperties");
 
     const QUrl url(QStringLiteral("qrc:/main.qml"));

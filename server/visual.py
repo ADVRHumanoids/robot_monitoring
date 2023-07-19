@@ -60,11 +60,17 @@ class VisualHandler:
             
             if l.collision is None:
                 continue
-            
-            origin = {
-                'origin_xyz': l.collision.origin.xyz,
-                'origin_rot': R.from_euler('XYZ', l.collision.origin.rpy).as_quat().tolist()
-            }
+
+            if l.collision.origin is None:
+                origin = {
+                    'origin_xyz': [0, 0, 0],
+                    'origin_rot': [0, 0, 0, 1]
+                }
+            else:
+                origin = {
+                    'origin_xyz': l.collision.origin.xyz,
+                    'origin_rot': R.from_euler('XYZ', l.collision.origin.rpy).as_quat().tolist()
+                }
             
             for c in l.collisions:
                 if isinstance(c.geometry, urdf_parser.Mesh):
@@ -78,6 +84,7 @@ class VisualHandler:
                     visuals[lname] = {
                         **origin,
                         'type': 'CYLINDER',
+                        'filename': '#CYLINDER',
                         'radius': c.geometry.radius*1000,
                         'length': c.geometry.length*1000,
                         'scale': [0.001, 0.001, 0.001]

@@ -16,7 +16,7 @@ def main():
     # init rospy node
     rospy.init_node('xbot2_gui_server', disable_signals=True)
 
-    logging.basicConfig(level=logging.INFO, force=True)
+    logging.basicConfig(level=logging.DEBUG, force=True)
     
     # load config
     cfgpath = sys.argv[1]
@@ -27,6 +27,11 @@ def main():
 
     # load default extensions
     extensions = []
+
+    # wasm ui
+    from .webui import WebUiHandler
+    ext = WebUiHandler(srv, cfg.get('webui', {}))
+    extensions.append(ext)
 
     # joint states
     from .joint_states import JointStateHandler

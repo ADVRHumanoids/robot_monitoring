@@ -85,5 +85,6 @@
         <file>TestThings/RobotModelNode.qml</file>
         <file>TestThings/RobotModelNode.js</file>
         <file>TestThings/CustomMesh.qml</file>
+        <file>TestThings/ConcertGuidedDrilling.qml</file>
     </qresource>
 </RCC>

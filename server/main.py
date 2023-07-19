@@ -71,6 +71,11 @@ def main():
     ext = VisualHandler(srv, cfg.get('visual', {}))
     extensions.append(ext)
 
+    # concert
+    from .concert import ConcertHandler
+    ext = ConcertHandler(srv, cfg.get('concert', {}))
+    extensions.append(ext)
+
     # run server
     srv.run_server()
 

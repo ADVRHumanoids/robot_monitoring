@@ -61,6 +61,12 @@ ApplicationWindow {
             active: true
         }
 
+        PageItem {
+            name: "Concert"
+            page: "TestThings/ConcertGuidedDrilling.qml"
+            active: true
+        }
+
     }
 
 

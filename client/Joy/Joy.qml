@@ -106,6 +106,8 @@ Item {
             margins: 48
         }
 
+        verticalOnly: setupCard.linXOnly
+
         side: Math.min(200, parent.width/2 - 64)
 
         opacity: 0.7

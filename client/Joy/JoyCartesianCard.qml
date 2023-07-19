@@ -10,6 +10,7 @@ Card {
 
     name: 'Joy Setup'
     property alias currentTask: taskCombo.currentText
+    property alias linXOnly: linXCheck.checked
     property real maxSpeed: maxSpeedLinearSpinBox.value
     property bool ikRunning: false
 
@@ -92,10 +93,15 @@ Card {
         }
 
         DoubleSpinBox {
-            Layout.columnSpan: 2
             id: maxSpeedLinearSpinBox
             from: 0.0
             to: 2.0
+        }
+
+        CheckBox {
+            id: linXCheck
+            text: 'Linear X Only'
+            checked: false
         }
     }
 

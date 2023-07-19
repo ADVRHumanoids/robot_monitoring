@@ -63,6 +63,13 @@ Item
                            callback)
     }
 
+    function doRequestRaw(verb, url, body, callback) {
+        Client.httpRequestRaw(verb,
+                           "http://" + hostname + ":" + port + url,
+                           body,
+                           callback)
+    }
+
     function doRequestAsync(verb, url, body) {
         return Client.httpRequestAsync(verb,
                                        "http://" + hostname + ":" + port + url,
@@ -80,6 +87,7 @@ Item
 
     // private
     id: root
+
 
     // websocket for streaming data
     WebSocket {

@@ -4,7 +4,12 @@ from typing import List
 from aiohttp import web
 import tempfile
 import json
+#import ssl
 
+#ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+#ssl_context.load_default_certs()
+#ssl_context.load_cert_chain(certfile='/home/alaurenzi/code/cert/localhost+1.pem',
+#                            keyfile='/home/alaurenzi/code/cert/localhost+1-key.pem')
 
 class ServerBase:
 
@@ -86,7 +91,6 @@ class Xbot2WebServer(ServerBase):
         
         # serve static files
         self.resource_dir = tempfile.mkdtemp('xbot2-gui-server')
-        self.app.router.add_static('/resources', self.resource_dir, show_index=True)
         self.app.router.add_static('/app', static, show_index=True)
 
         # run
@@ -107,7 +111,7 @@ class Xbot2WebServer(ServerBase):
     
     async def start_http_server(self, runner, host, port):
         await runner.setup()
-        site = web.TCPSite(runner, host, port)
+        site = web.TCPSite(runner, host, port)  #, ssl_context=ssl_context)
         await site.start()
 
       

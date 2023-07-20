@@ -11,6 +11,8 @@
 #include <QMouseEvent>
 #include <QFrame>
 
+using namespace std::chrono_literals;
+
 void joint_bar_widget_qrc_init()
 {
     Q_INIT_RESOURCE(ui_resources);
@@ -59,28 +61,36 @@ JointBarWidget::JointBarWidget(const QString& jname, QWidget *parent) :
     _jname->setText(jname);
 
     _on_double_click = [](){};
+
+    setColor(Qt::green);
+
+    setToolTip("Double left-click to show this joint inside the single joint view \n"
+               "Double right-click to plot this signal inside the chart");
 }
 
 void JointBarWidget::setRange(double min, double max)
 {
-    _bar->setRange(min, max);
+    _bar->setRange(min*1000, max*1000);
 }
 
 void JointBarWidget::setValue(double x)
 {
-    _bar->setValue(x);
+    _bar->setValue(x*1000);
     _bar->setFormat(QString("%1").arg(x, 5,'f',1));
+    _value_timeout = time_point::clock::now() + 300ms;
 }
 
 void JointBarWidget::setValue(double xbar, double xtext)
 {
-    _bar->setValue(xbar);
+    _bar->setValue(xbar*1000);
     _bar->setFormat(QString("%1").arg(xtext, 5,'f',1));
+    _value_timeout = time_point::clock::now() + 300ms;
 }
 
 void JointBarWidget::setStatus(QString status)
 {
-//    _status->setText(status);
+    auto frame = findChild<QFrame *>("StatusFrame");
+    frame->setToolTip(status);
 }
 
 void JointBarWidget::setSafe(bool force)
@@ -89,7 +99,6 @@ void JointBarWidget::setSafe(bool force)
 
     if(_state != 0)
     {
-        printf("Started blinker..\n");
         _blinker.blink(10);
     }
 
@@ -100,15 +109,38 @@ void JointBarWidget::setSafe(bool force)
 
 void JointBarWidget::setDanger(bool force)
 {
-    if(_state == 0)
-    {
-        _blinker.stop();
-    }
+    _blinker.stop();
 
     setColor(Qt::red);
 
     _state = 1;
 
+    _last_fault_time = std::chrono::high_resolution_clock::now();
+
+}
+
+void JointBarWidget::updateStatus()
+{
+    using namespace std::chrono;
+
+    const auto fault_timeout = seconds(1);
+
+    if(_last_fault_time.time_since_epoch().count() > 0 &&
+        high_resolution_clock::now() > _last_fault_time + fault_timeout)
+    {
+        setSafe();
+
+        _last_fault_time = high_resolution_clock::time_point(nanoseconds(0));
+    }
+
+    if(_value_timeout < time_point::clock::now())
+    {
+        _bar->setEnabled(false);
+    }
+    else
+    {
+        _bar->setEnabled(true);
+    }
 }
 
 void JointBarWidget::setActive()
@@ -174,6 +206,7 @@ Blinker::Blinker(JointBarWidget * parent):
 void Blinker::stop()
 {
     _blinks = 0;
+    _parent->setColor(Qt::green);
     _timer.stop();
 }
 
@@ -181,11 +214,9 @@ void Blinker::on_timeout()
 {
     if(_blinks == 0)
     {
-        _parent->setColor(Qt::green);
-        _timer.stop();
+        stop();
+        return;
     }
-
-    printf("Blinking..\n");
 
     if(_state == 0)
     {

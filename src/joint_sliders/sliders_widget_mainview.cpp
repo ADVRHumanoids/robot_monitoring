@@ -1,4 +1,4 @@
-#include <robot_monitoring/joint_sliders/sliders_widget_mainview.h>
+#include "sliders_widget_mainview.h"
 #include <sensor_msgs/JointState.h>
 
 #ifdef XBOT_MSGS_SUPPORT

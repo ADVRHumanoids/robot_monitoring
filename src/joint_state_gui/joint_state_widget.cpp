@@ -1,18 +1,22 @@
 #include "joint_state_widget.h"
 
+#include <iostream>
+
 #include <QUiLoader>
 #include <QFile>
 #include <QVBoxLayout>
 #include <QComboBox>
 #include <QPushButton>
 
+
+
+/* Code to initialize the .ui resource and load it */
 void joint_state_widget_qrc_init()
 {
     Q_INIT_RESOURCE(ui_resources);
 }
 
 namespace  {
-
 
 QWidget * LoadUiFile(QWidget * parent)
 {
@@ -44,6 +48,7 @@ JointStateWidget::JointStateWidget(QWidget * parent):
     setLayout(layout);
     setMinimumWidth(400);
 
+    // find all spinboxes, etc (by name)
     posref = findChild<QDoubleSpinBox *>("posref");
     motopos = findChild<QDoubleSpinBox *>("motopos");
     linkpos = findChild<QDoubleSpinBox *>("linkpos");
@@ -56,7 +61,8 @@ JointStateWidget::JointStateWidget(QWidget * parent):
     torref_imp = findChild<QDoubleSpinBox *>("torref_imp");
     tor = findChild<QDoubleSpinBox *>("tor");
 
-    current = findChild<QDoubleSpinBox *>("current");
+    aux = findChild<QDoubleSpinBox *>("aux");
+    aux_type_combo = findChild<QComboBox *>("auxCombo");
 
     mototemp = findChild<QDoubleSpinBox *>("mototemp");
     drivertemp = findChild<QDoubleSpinBox *>("drivertemp");
@@ -68,6 +74,7 @@ JointStateWidget::JointStateWidget(QWidget * parent):
 
     _fault = findChild<QLabel *>("faulttext");
 
+    // initialize range
     posref      ->setRange(-1e9, 1e9);
     motopos     ->setRange(-1e9, 1e9);
     linkpos     ->setRange(-1e9, 1e9);
@@ -77,12 +84,13 @@ JointStateWidget::JointStateWidget(QWidget * parent):
     torref      ->setRange(-1e9, 1e9);
     tor         ->setRange(-1e9, 1e9);
     torref_imp  ->setRange(-1e9, 1e9);
-    current     ->setRange(-1e9, 1e9);
+    aux         ->setRange(-1e9, 1e9);
     mototemp    ->setRange(-1e9, 1e9);
     drivertemp  ->setRange(-1e9, 1e9);
     stiffness   ->setRange(-1e9, 1e9);
     damping     ->setRange(-1e9, 1e9);
 
+    // set all 'plot' buttons to emit the plotAdded signal (used by chart)
     auto plot_link_pos = findChild<QPushButton *>("plotLinkPos");
     connect(plot_link_pos, &QPushButton::released,
             [this](){ emit plotAdded("link_pos");});
@@ -127,8 +135,14 @@ JointStateWidget::JointStateWidget(QWidget * parent):
     connect(plot_driver_motor, &QPushButton::released,
             [this](){ emit plotAdded("driver_temp");});
 
-
-
+    auto plot_aux = findChild<QPushButton *>("plotAux");
+    connect(plot_aux, &QPushButton::released,
+            [this]()
+    {
+        auto aux_type = aux_type_combo->currentText();
+        emit plotAdded("aux/" + aux_type);
+    }
+    );
 
 }
 
@@ -138,7 +152,64 @@ void JointStateWidget::setJointName(QString jname, int jid)
     _jname = jname;
 }
 
+void JointStateWidget::setAux(QString aux_name, double value)
+{
+    using namespace std::chrono_literals;
+
+    if(aux_type_combo->count() == 1)
+    {
+        aux_type_combo->setCurrentIndex(0);
+    }
+
+    if(aux_type_combo->currentText() == aux_name)
+    {
+        aux->setValue(value);
+        _aux_timeout[aux_name] = time_point::clock::now() + 300ms;
+        aux->setEnabled(true);
+        return;
+    }
+
+    if(aux_type_combo->findText(aux_name) == -1)
+    {
+        aux_type_combo->insertItem(0, aux_name);
+        std::cout << "added new aux '" << aux_name.toStdString() << "' \n";
+    }
+
+}
+
 void JointStateWidget::setStatus(std::string status)
 {
+    // set fault text
     _fault->setText(QString::fromStdString(status));
+
+    // if not Ok, set text color to black
+    if(status != "Ok")
+    {
+        _fault->setStyleSheet("color: black");
+
+        // save fault time
+        _last_fault_time = std::chrono::high_resolution_clock::now();
+    }
+
+}
+
+void JointStateWidget::updateStatus()
+{
+    using namespace std::chrono;
+
+    // time after which an old fault becomes grayed out
+    const auto fault_timeout = seconds(1);
+
+    if(_last_fault_time.time_since_epoch().count() > 0 &&
+        high_resolution_clock::now() > _last_fault_time + fault_timeout)
+    {
+        _fault->setStyleSheet("color: grey");
+
+        _last_fault_time = high_resolution_clock::time_point(nanoseconds(0));
+    }
+
+    if(_aux_timeout[aux_type_combo->currentText()] < time_point::clock::now())
+    {
+        aux->setEnabled(false);
+    }
 }

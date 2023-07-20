@@ -33,7 +33,9 @@ QWidget * LoadUiFile(QWidget * parent)
 
 }
 
-BarPlotWidget::BarPlotWidget(std::vector<std::string> jnames, QWidget *parent) : QWidget(parent)
+BarPlotWidget::BarPlotWidget(std::vector<std::string> jnames,
+                             QWidget *parent) :
+    QWidget(parent)
 {
     /* Create GUI layout */
     auto * ui = ::LoadUiFile(this);
@@ -42,7 +44,12 @@ BarPlotWidget::BarPlotWidget(std::vector<std::string> jnames, QWidget *parent) :
     setLayout(layout);
 
     auto bars_layout_left = findChild<QVBoxLayout *>("BarsLayoutLeft");
+    auto bars_layout_center = findChild<QVBoxLayout *>("BarsLayoutCenter");
     auto bars_layout_right = findChild<QVBoxLayout *>("BarsLayoutRight");
+
+    bars_layout_left->setSpacing(2);
+    bars_layout_center->setSpacing(2);
+    bars_layout_right->setSpacing(2);
 
     for(int i = 0; i < jnames.size(); i++)
     {
@@ -50,9 +57,13 @@ BarPlotWidget::BarPlotWidget(std::vector<std::string> jnames, QWidget *parent) :
         auto wid = new JointBarWidget(QString::fromStdString(jnames[i]),
                                       this);
 
-        if(i < jnames.size() / 2 || jnames.size() < 8)
+        if(i < jnames.size() / 3 || jnames.size() < 8)
         {
             bars_layout_left->addWidget(wid);
+        }
+        else if(i < jnames.size() / 3 * 2)
+        {
+            bars_layout_center->addWidget(wid);
         }
         else
         {
@@ -65,16 +76,16 @@ BarPlotWidget::BarPlotWidget(std::vector<std::string> jnames, QWidget *parent) :
 
 
     _fieldtype_combobox = findChild<QComboBox *>("SelectFieldComboBox");
-    _fieldtype_combobox->addItem("Link position");
-    _fieldtype_combobox->addItem("Motor position");
-    _fieldtype_combobox->addItem("Link velocity");
-    _fieldtype_combobox->addItem("Motor velocity");
-    _fieldtype_combobox->addItem("Torque");
-    _fieldtype_combobox->addItem("Stiffness");
-    _fieldtype_combobox->addItem("Damping");
-    _fieldtype_combobox->addItem("Temperature");
-    _fieldtype_combobox->addItem("Current");
-    _fieldtype_combobox->addItem("Torque tracking error");
+    _fieldtype_combobox->addItem("link position");
+    _fieldtype_combobox->addItem("motor position");
+    _fieldtype_combobox->addItem("link velocity");
+    _fieldtype_combobox->addItem("motor velocity");
+    _fieldtype_combobox->addItem("torque");
+    _fieldtype_combobox->addItem("stiffness");
+    _fieldtype_combobox->addItem("damping");
+    _fieldtype_combobox->addItem("temperature");
+    _fieldtype_combobox->addItem("torque tracking error");
+    _fieldtype_combobox->addItem("position tracking error");
 
 
 }
@@ -96,20 +107,38 @@ std::string BarPlotWidget::getFieldShortType() const
 {
     auto type = getFieldType();
 
+    // aux case
+    if(type.length() > 4 &&
+            type.substr(0, 4) == "aux/")
+    {
+        return type;
+    }
+
+    // non-aux fields
     std::map<std::string, std::string> type_to_short_type;
-    type_to_short_type["Link position" ] = "link_pos";
-    type_to_short_type["Motor position"] = "motor_pos";
-    type_to_short_type["Link velocity" ] = "link_vel";
-    type_to_short_type["Motor velocity"] = "motor_vel";
-    type_to_short_type["Torque"        ] = "torque";
-    type_to_short_type["Stiffness"     ] = "k";
-    type_to_short_type["Damping"       ] = "d";
-    type_to_short_type["Current"       ] = "current";
+    type_to_short_type["link position" ] = "link_pos";
+    type_to_short_type["motor position"] = "motor_pos";
+    type_to_short_type["link velocity" ] = "link_vel";
+    type_to_short_type["motor velocity"] = "motor_vel";
+    type_to_short_type["torque"        ] = "torque";
+    type_to_short_type["stiffness"     ] = "k";
+    type_to_short_type["damping"       ] = "d";
 
     if(type_to_short_type.count(type) > 0)
     {
         return type_to_short_type.at(type);
     }
 
-    return "";
+    return "unsupported";
+}
+
+void BarPlotWidget::addAuxType(std::string aux_type)
+{
+    QString qt_aux_type = "aux/" + QString::fromStdString(aux_type);
+
+    if(_fieldtype_combobox->findText(qt_aux_type) == -1)
+    {
+        int nitems = _fieldtype_combobox->count();
+        _fieldtype_combobox->insertItem(nitems, qt_aux_type);
+    }
 }

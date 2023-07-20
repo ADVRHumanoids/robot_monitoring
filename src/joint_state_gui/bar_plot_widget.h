@@ -19,6 +19,8 @@ public:
     std::string getFieldType() const;
     std::string getFieldShortType() const;
 
+    void addAuxType(std::string aux_type);
+
     std::unordered_map<std::string, JointBarWidget *> wid_map;
 
 private:

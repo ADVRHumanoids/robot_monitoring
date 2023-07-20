@@ -10,6 +10,8 @@
 
 #include <QApplication>
 
+#include <cmath>
+
 void qrc_init()
 {
     Q_INIT_RESOURCE(chart_resources);
@@ -131,7 +133,7 @@ void ChartWidget::addSeries(QString name)
 
     auto series = new QLineSeries;
     series->setName(name);
-    series->setUseOpenGL();
+//    series->setUseOpenGL(); // not possible to have more than one gl widget!!
     _chart->addSeries(series);
     series->attachAxis(_axis_x);
     series->attachAxis(_axis_y);
@@ -228,26 +230,43 @@ void ChartWidget::on_timer_event()
 {
     auto tic = std::chrono::high_resolution_clock::now();
 
+    // add pending points to their series
     for(const auto& p : _point_to_add)
     {
         _series.at(p.first)->append(p.second);
     }
 
+    // cleare pending points
     _point_to_add.clear();
 
-    if(_autoscroll)
+    // find a series with at least one point
+    auto series_has_points = [](const auto& pair)
     {
-        auto range = _axis_x->max() - _axis_x->min();
-        auto dx = _chart->plotArea().width() / range * _timer_period_ms * 0.001;
-        _chart->scroll(dx, 0);
+        return pair.second->points().size() > 0;
+    };
+
+    auto it = std::find_if(_series.begin(), _series.end(),
+                           series_has_points);
+
+    // if found, use it to autoscroll x-axis
+    if(it != _series.end() && _autoscroll)
+    {
+        auto curr_time = it->second->points().back().x();
+        _chart->scroll(curr_time - _axis_x->max(), 0);
     }
 
     auto toc = std::chrono::high_resolution_clock::now();
 
+    // print FPS every 1 sec
     std::chrono::duration<double> dt = toc - tic;
     int fps = 1/dt.count();
 
-    _fps_label->setText(QString("%1 FPS").arg(fps));
+    static auto last_print = std::chrono::high_resolution_clock::now();
+    if(toc - last_print > std::chrono::seconds(1))
+    {
+        _fps_label->setText(QString("%1 FPS").arg(fps));
+        last_print = toc;
+    }
 
 
 }

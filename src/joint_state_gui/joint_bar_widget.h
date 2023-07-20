@@ -9,6 +9,10 @@
 
 class JointBarWidget;
 
+/**
+ * @brief The Blinker class implements the red-green
+ * blinking of the fault square box
+ */
 class Blinker : public QObject
 {
     Q_OBJECT
@@ -38,6 +42,10 @@ private:
     JointBarWidget * _parent;
 };
 
+/**
+ * @brief The JointBarWidget class implements the single bar for a
+ * single joint
+ */
 class JointBarWidget : public QWidget
 {
 
@@ -55,6 +63,7 @@ public:
     void setStatus(QString status);
     void setSafe(bool force = false);
     void setDanger(bool force = false);
+    void updateStatus();
     void setActive();
     void setInactive();
     QString getJointName() const;
@@ -65,6 +74,8 @@ signals:
     void doubleRightClicked();
 
 private:
+
+    typedef std::chrono::high_resolution_clock::time_point time_point;
 
     void setColor(Qt::GlobalColor color);
 
@@ -78,6 +89,9 @@ private:
 
     Blinker _blinker;
     int _state;
+
+    time_point _last_fault_time;
+    time_point _value_timeout;
 
 
 

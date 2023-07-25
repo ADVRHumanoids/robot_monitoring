@@ -22,16 +22,29 @@ class ConcertHandler:
         self.srv.register_ws_coroutine(self.handle_ws_msg)
         self.srv.schedule_task(self.run())
 
-        # vel ref pub
-        self.vref_pub = None
+        self.srv.add_route('POST', '/concert/do_drill',
+                           self.do_drill_handler,
+                           'concert_do_drill')
 
 
     async def run(self):
         pass
 
+
+    async def do_drill_handler(self, req):
+        print('DRILL!!!!!')
+        return web.Response(text=json.dumps(
+            {
+                'success': True,
+                'message': 'ok',
+            }
+        ))
+
+
     async def handle_ws_msg(self, msg, ws):
         if msg['type'] == 'concert_drill_vref':
             await self.handle_velocity_command(msg)
+
 
     async def handle_velocity_command(self, msg):
         print(msg)

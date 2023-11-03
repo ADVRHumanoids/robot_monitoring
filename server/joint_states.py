@@ -2,6 +2,9 @@ import asyncio
 from aiohttp import web
 import json
 
+import base64
+
+
 import rospy 
 from xbot_msgs.msg import JointState, Fault, JointCommand
 from urdf_parser_py import urdf as urdf_parser
@@ -9,6 +12,7 @@ from urdf_parser_py import urdf as urdf_parser
 from .server import ServerBase
 from . import utils
 
+from .proto import joint_states_pb2
 
 ## limit float precision in json serialization
 class RoundingFloat(float):
@@ -129,13 +133,26 @@ class JointStateHandler:
             
             # convert to dict
             js_msg_to_send = JointStateHandler.js_msg_to_dict(self.msg)
-            self.msg = None
 
             # serialize msg to json
             js_str = json.dumps(js_msg_to_send)
 
             # send to all connected clients
             await self.srv.ws_send_to_all(js_str)
+
+            # experimental proto based
+            pbjs = joint_states_pb2.JointStates()
+            pbjs.motor_position.extend(self.msg.motor_position)
+            self.msg = None
+
+            pb_msg = {
+                'type': 'pb',
+                'data': base64.b64encode(pbjs.SerializeToString()).decode('ascii'),
+            }
+
+            # send to all connected clients
+            await self.srv.ws_send_to_all(json.dumps(pb_msg))
+
 
     
     def command_acquire(self):

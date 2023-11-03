@@ -1,0 +1,16 @@
+
+syntax = "proto3";
+
+package xbot2_gui.msgs.tlv;
+
+enum MessageType {
+    Coordinates = 0;
+    Temperature = 1;
+    WarningNotification = 2;
+}
+
+// Protobuf messages imply inline data size.
+message TlvMessage {
+    MessageType type = 1;
+    bytes value = 2;
+}

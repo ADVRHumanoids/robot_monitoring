@@ -31,6 +31,7 @@ find_package(Qt6 COMPONENTS
     Widgets
     QuickControls2
     ShaderTools
+    Protobuf
 #    3DRender
 #    3DCore
     Quick3D
@@ -66,10 +67,31 @@ target_link_libraries(next_ui
           Qt${QT_VERSION_MAJOR}::WebSockets
           Qt${QT_VERSION_MAJOR}::QuickControls2
           Qt${QT_VERSION_MAJOR}::Widgets
+          Qt${QT_VERSION_MAJOR}::Protobuf
           mesh_geometry
 #          Qt${QT_VERSION_MAJOR}::3DRender
 #          Qt${QT_VERSION_MAJOR}::3DCore
       )
+
+# proto
+add_subdirectory(Protobuf)
+
+# ws receiver
+#add_library(WebsocketReceiver STATIC websocket_receiver.cpp)
+qt_add_qml_module(WebsocketReceiver
+    URI xbot2_gui.common
+    VERSION 1.0
+    SOURCES
+        websocket_receiver.cpp
+)
+target_link_libraries(WebsocketReceiver PRIVATE
+    PUBLIC protobuf_messages
+            Qt${QT_VERSION_MAJOR}::Core
+            Qt${QT_VERSION_MAJOR}::Quick
+            Qt${QT_VERSION_MAJOR}::WebSockets
+            Qt${QT_VERSION_MAJOR}::Protobuf)
+
+
 
 
 # video support
@@ -86,7 +108,7 @@ target_link_libraries(VideoStream PRIVATE
             Qt${QT_VERSION_MAJOR}::QuickControls2
             Qt${QT_VERSION_MAJOR}::Widgets)
 
-target_link_libraries(next_ui PRIVATE VideoStream)
+target_link_libraries(next_ui PRIVATE   WebsocketReceiver VideoStream)
 
 qt_add_shaders(next_ui "next_ui-shaders"
     BATCHABLE # Without this it fails

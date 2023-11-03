@@ -1,0 +1,11 @@
+
+syntax = "proto3";
+
+package xbot2_gui.msgs.joint_states;
+
+message JointStates {
+    repeated string name = 1;
+    repeated float motor_position = 2;
+    repeated float motor_velocity = 3;
+    repeated float effort = 4;
+}

@@ -1,16 +1,16 @@
-[submodule "client/Video/theora_cmake/external/theora"] 
-  path = client/Video/theora_cmake/external/theora
+[submodule "xbot2_gui/Video/theora_cmake/external/theora"] 
+  path = xbot2_gui/Video/theora_cmake/external/theora
   url = https://github.com/xiph/theora.git
   
-[submodule "client/Video/theora_cmake/external/ogg"] 
-  path = client/Video/theora_cmake/external/ogg
+[submodule "xbot2_gui/Video/theora_cmake/external/ogg"] 
+  path = xbot2_gui/Video/theora_cmake/external/ogg
   url = https://github.com/xiph/ogg.git
-[submodule "client/RobotModel/external/URDF_Parser"]
-	path = client/RobotModel/external/URDF_Parser
+[submodule "xbot2_gui/RobotModel/external/URDF_Parser"]
+	path = xbot2_gui/RobotModel/external/URDF_Parser
 	url = git@github.com:ADVRHumanoids/URDF_Parser.git
-[submodule "client/RobotModel/external/eigen"]
-	path = client/RobotModel/external/eigen
+[submodule "xbot2_gui/RobotModel/external/eigen"]
+	path = xbot2_gui/RobotModel/external/eigen
 	url = https://gitlab.com/libeigen/eigen.git
-[submodule "client/RobotModel/external/rbdl-orb"]
-	path = client/RobotModel/external/rbdl-orb
+[submodule "xbot2_gui/RobotModel/external/rbdl-orb"]
+	path = clxbot2_guiient/RobotModel/external/rbdl-orb
 	url = https://github.com/ORB-HD/rbdl-orb.git

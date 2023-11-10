@@ -13,17 +13,32 @@ Item {
     Card1 {
         id: card
         anchors.centerIn: parent
-//        width: 400
+        width: 400
         name: 'Prova Prova'
-        frontItem: Rectangle {
-            height: 200
-            width: 200
+        frontItem: Column {
+            id: col
+            spacing: 10
+            Repeater {
+                Rectangle {
+                    required property int index
+                    height: 100
+                    width: card.availableContentWidth
+                    color: 'red'
+                    Text {
+                        text: parent.index
+                        anchors.centerIn: parent
+                    }
+                }
+                model: 10
+            }
         }
     }
 
-    DebugRectangle {
-        target: card
-    }
+
+//    DebugRectangle {
+//        name: 'acci'
+//        target: card
+//    }
 
 }
 

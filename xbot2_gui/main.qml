@@ -25,6 +25,12 @@ ApplicationWindow {
         id: pagesModel
 
         PageItem {
+            name: "Playground"
+            page: "/qt/qml/TestThings/Playground.qml"
+            active: true
+        }
+
+        PageItem {
             name: "Home"
             iconText: CommonProperties.fontAwesome.home
             iconFont: CommonProperties.fontAwesome.solid
@@ -56,11 +62,7 @@ ApplicationWindow {
             active: true
         }
 
-        PageItem {
-            name: "Playground"
-            page: "/qt/qml/TestThings/Playground.qml"
-            active: true
-        }
+
 
         PageItem {
             name: "Concert"

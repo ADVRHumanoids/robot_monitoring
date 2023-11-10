@@ -16,6 +16,7 @@ qt_add_qml_module(xbot2_gui_common
     DoubleSpinBox.qml
     LabeledProgressBar.qml
     MaterialResponsiveGrid.qml
+    MultiColumnLayout.qml
     MultiColumnPage.qml
     MultiMouseArea.qml
     SectionHeader.qml

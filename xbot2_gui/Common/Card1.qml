@@ -7,7 +7,7 @@ import Common
 
 Item {
 
-    id: root
+
 
     // public
 
@@ -22,6 +22,8 @@ Item {
     property alias nameFont: titleLabel.font
 
     property int contentHeight: 300
+
+    property alias availableContentWidth: frontScroll.availableWidth
 
     property alias availableContentHeight: frontScroll.availableHeight
 
@@ -45,20 +47,12 @@ Item {
 
     signal applyConfiguration()
 
-    Timer {
-        running: true
-        interval: 1000
-        repeat: true
-        onTriggered: {
-            console.log(toolBtnRow.implicitWidth)
-        }
-    }
-
 
     // private
+    id: root
 
     Component.onCompleted: {
-        frontItem.parent = flip.frontSide.contentItemWrapper
+        frontItem.parent = frontScrollContent
         backItem.parent = flip.backSide.contentItemWrapper
     }
 
@@ -108,39 +102,39 @@ Item {
 
                 id: frontColumn
                 width: parent.width
+                spacing: root.margins
 
                 // row with tool buttons
                 RowLayout {
 
                     id: toolBtnRow
 
-                    width: parent.width
+                    anchors {
+                        left: parent.left
+                        right: parent.right
+                        margins: root.margins
+                    }
 
-                    spacing: root.margins
-
-                    //                    layoutDirection: Qt.RightToLeft
+                    spacing: 0
 
                     // banner
                     Label {
                         id: titleLabel
-                        //width: parent.width
                         text: root.name
                         font.pixelSize: CommonProperties.font.h2
                         height: implicitHeight + 2*root.margins
                         verticalAlignment: Text.AlignVCenter
                     }
 
+                    // filler
                     Item {
                         implicitHeight: 1
                         implicitWidth: 1
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        DebugRectangle {
-                            target: parent
-                            border.color: 'green'
-                        }
                     }
 
+                    // configuration button
                     SmallToolButton {
                         id: configureBtn
 
@@ -156,6 +150,7 @@ Item {
                         }
                     }
 
+                    // expand/collpse button
                     SmallToolButton {
                         id: showHideBtn
                         Layout.alignment: Qt.AlignVCenter
@@ -170,13 +165,9 @@ Item {
 
                 }
 
-
-
                 Item {
 
                     id: frontItemWrapper
-
-                    default property alias content: frontScroll.contentData
 
                     anchors {
                         left: parent.left
@@ -185,10 +176,12 @@ Item {
                     }
 
                     height: root.collapsed ? 0 : root.contentHeight
+                    implicitWidth: frontScroll.implicitWidth
 
                     Behavior on height {
                         NumberAnimation {
-                            duration: 1000
+                            duration: 333
+                            easing.type: Easing.OutQuad
                         }
                     }
 
@@ -197,12 +190,16 @@ Item {
                         anchors.fill: parent
                         contentWidth: availableWidth
                         clip: true
+
+                        Item {
+                            id: frontScrollContent
+                            width: parent.availableWidth
+                            implicitHeight: childrenRect.height
+
+                        }
                     }
-
                 }
-
             }
-
         }
 
         property Item backSide: Rectangle {
@@ -230,7 +227,7 @@ Item {
             Label {
                 id: titleLabelBack
                 text: root.name
-                font.pixelSize: CommonProperties.font.h3
+                font.pixelSize: CommonProperties.font.h2
                 anchors {
                     top: parent.top
                     left: parent.left

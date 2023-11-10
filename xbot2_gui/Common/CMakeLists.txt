@@ -10,6 +10,7 @@ qt_add_qml_module(xbot2_gui_common
     QML_FILES
     AspectRatio.qml
     Card.qml
+    Card1.qml
     CommonProperties.qml
     DebugRectangle.qml
     DoubleSpinBox.qml

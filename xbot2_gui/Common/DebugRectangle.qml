@@ -15,7 +15,8 @@ Rectangle {
 
     Label {
         text: `[${name}] ${target.width} x ${target.height} (${target.implicitWidth} x ${target.implicitHeight})`
-        anchors.centerIn: parent
+        anchors.bottom: parent.top
+        anchors.margins: 4
         onTextChanged: console.log(text)
         color: parent.border.color
         z: 10

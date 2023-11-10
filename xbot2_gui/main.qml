@@ -58,7 +58,7 @@ ApplicationWindow {
 
         PageItem {
             name: "Playground"
-            page: "TestThings/Playground.qml"
+            page: "/qt/qml/TestThings/Playground.qml"
             active: true
         }
 
@@ -202,17 +202,17 @@ ApplicationWindow {
 
     // a timer to periodically try connection
     // with server
-    Timer {
-        id: reconnectTimer
-        interval: 1000
-        running: !client.active
-        repeat: true
+//    Timer {
+//        id: reconnectTimer
+//        interval: 1000
+//        running: !client.active
+//        repeat: true
 
-        onTriggered: {
-            client.active = true
-        }
+//        onTriggered: {
+//            client.active = true
+//        }
 
-    }
+//    }
 
     onWidthChanged: {
         responsiveNav()

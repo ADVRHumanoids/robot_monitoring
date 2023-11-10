@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Controls
 
+import Common
+
 ToolButton {
-    width: implicitWidth - 25
+
 }

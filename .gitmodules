@@ -12,5 +12,5 @@
 	path = xbot2_gui/RobotModel/external/eigen
 	url = https://gitlab.com/libeigen/eigen.git
 [submodule "xbot2_gui/RobotModel/external/rbdl-orb"]
-	path = clxbot2_guiient/RobotModel/external/rbdl-orb
+	path = xbot2_gui/RobotModel/external/rbdl-orb
 	url = https://github.com/ORB-HD/rbdl-orb.git

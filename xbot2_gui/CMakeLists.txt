@@ -26,7 +26,7 @@ find_package(Qt6 COMPONENTS
     Widgets
     QuickControls2
     ShaderTools
-    Protobuf
+#    Protobuf
 #    3DRender
 #    3DCore
     Quick3D
@@ -61,7 +61,7 @@ target_link_libraries(xbot2_gui
           Qt${QT_VERSION_MAJOR}::WebSockets
           Qt${QT_VERSION_MAJOR}::QuickControls2
           Qt${QT_VERSION_MAJOR}::Widgets
-          Qt${QT_VERSION_MAJOR}::Protobuf
+#          Qt${QT_VERSION_MAJOR}::Protobuf
           mesh_geometry
 #          Qt${QT_VERSION_MAJOR}::3DRender
 #          Qt${QT_VERSION_MAJOR}::3DCore
@@ -78,6 +78,8 @@ add_subdirectory(LivePlot)
 add_subdirectory(Menu)
 
 add_subdirectory(Protobuf)
+
+add_subdirectory(TestThings)
 
 
 # ws receiver
@@ -97,7 +99,8 @@ add_library(VideoStream STATIC
     Video/videostreampainter.cpp
     Menu/CMakeLists.txt
     Home/CMakeLists.txt
-    LivePlot/CMakeLists.txt)
+    LivePlot/CMakeLists.txt
+    TestThings/CMakeLists.txt)
 
 target_link_libraries(VideoStream PRIVATE
     PUBLIC theora::theora

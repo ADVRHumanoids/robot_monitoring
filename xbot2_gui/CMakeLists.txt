@@ -26,6 +26,7 @@ find_package(Qt6 COMPONENTS
     Widgets
     QuickControls2
     ShaderTools
+    Core5Compat
 #    Protobuf
 #    3DRender
 #    3DCore
@@ -61,6 +62,7 @@ target_link_libraries(xbot2_gui
           Qt${QT_VERSION_MAJOR}::WebSockets
           Qt${QT_VERSION_MAJOR}::QuickControls2
           Qt${QT_VERSION_MAJOR}::Widgets
+          Qt${QT_VERSION_MAJOR}::Core5Compat
 #          Qt${QT_VERSION_MAJOR}::Protobuf
           mesh_geometry
 #          Qt${QT_VERSION_MAJOR}::3DRender
@@ -70,6 +72,8 @@ target_link_libraries(xbot2_gui
 add_subdirectory(Common)
 
 add_subdirectory(Font)
+
+add_subdirectory(ExpandableBottomBar)
 
 add_subdirectory(Home)
 
@@ -100,7 +104,8 @@ add_library(VideoStream STATIC
     Menu/CMakeLists.txt
     Home/CMakeLists.txt
     LivePlot/CMakeLists.txt
-    TestThings/CMakeLists.txt)
+    TestThings/CMakeLists.txt
+    ExpandableBottomBar/CMakeLists.txt)
 
 target_link_libraries(VideoStream PRIVATE
     PUBLIC theora::theora

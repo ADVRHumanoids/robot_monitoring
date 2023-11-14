@@ -1,61 +1,40 @@
 import QtQuick
 import QtQuick.Controls
+import Qt5Compat.GraphicalEffects
 
-Rectangle {
-
+TabBar {
     id: root
-    color: "blue"
-
-    property var model: []
-    property int currentIndex: 0
-
-    signal hamburgerClicked()
-
-    height: row.implicitHeight + 20
-
-    Hamburger {
-        id: ham
-        anchors {
-            right: parent.right
-            verticalCenter: parent.verticalCenter
-            margins: 6
-        }
-
-        height: parent.height - 20
-        width: height*1.2
-
-        onClicked: {
-            hamburgerClicked()
-        }
+    // Relying on the left/right padding to center teh content, so do not include it in the implicit
+    // size.
+    implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset, contentWidth)
+    implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset, contentHeight)
+    spacing: 10
+    topPadding: (height - contentHeight) / 2
+    leftPadding: (width - contentWidth) / 2
+    rightPadding: (width - contentWidth) / 2
+    bottomPadding: (height - contentHeight) / 2
+    palette {
+        base: "white"
+    }
+    contentItem: ListView {
+        model: root.contentModel
+        currentIndex: root.currentIndex
+        spacing: root.spacing
+        orientation: Qt.Horizontal
+        boundsBehavior: Flickable.StopAtBounds
+        flickableDirection: Flickable.HorizontalFlick
+        snapMode: ListView.SnapToItem
+        highlightMoveDuration: 0
+        highlightRangeMode: ListView.ApplyRange
+        preferredHighlightBegin: 0
+        preferredHighlightEnd: width
+        clip: true
     }
 
-    Row {
-
-        id: row
-        spacing: 16
-        anchors.centerIn: parent
-
-        Component.onCompleted: {
-            for(let i = 0; i < model.children.length; i++) {
-                let obj = model.children[i]
-                let icon = iconComponent.createObject(row, {'name': obj.name, 'index': i})
-            }
-        }
-
-        Component {
-            id: iconComponent
-            NavIcon {
-                property int index: -1
-                width: ham.width
-                isSelected: currentIndex === index
-
-                onClicked: {
-                    currentIndex = index
-                }
-            }
-        }
+    background: Rectangle {
+        implicitWidth: 400
+        implicitHeight: 80
+        color: root.palette.base
+        radius: 12
     }
-
-
-
 }

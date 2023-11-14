@@ -79,43 +79,53 @@ ApplicationWindow {
         z: 1
         model: pagesModel
 
+        visible: mainWindow.height < mainWindow.width
+
+        menuWidth: 300
+        railWidth: implicitRailWidth
+
         onCurrentIndexChanged: {
             pagesStack.currentIndex = currentIndex
         }
 
     }
 
-    NavBar {
+    NavBarWrapper {
+
+        visible: mainWindow.height > mainWindow.width
+
         id: navBar
         width: parent.width
         height: 50
         model: pagesModel
-        color: nav.color
-
-        onHamburgerClicked: {
-            nav.open()
-        }
 
         onCurrentIndexChanged: {
             pagesStack.currentIndex = currentIndex
         }
+
+        anchors {
+            left: parent.left
+            right: parent.right
+            bottom: parent.bottom
+            margins: 50
+        }
     }
 
     function responsiveNav() {
-        if(mainWindow.width > mainWindow.height) {
-            // landscape
-            navBar.y = mainWindow.height
-            navBar.visible = false
-            nav.railWidth = nav.implicitRailWidth
-            nav.menuWidth = 300
-        }
-        else {
-            // portrait
-            navBar.y = mainWindow.height - navBar.height
-            navBar.visible = true
-            nav.railWidth = 0
-            nav.menuWidth = mainWindow.width
-        }
+//        if(mainWindow.width > mainWindow.height) {
+//            // landscape
+//            navBar.y = mainWindow.height
+//            navBar.visible = false
+//            nav.railWidth = nav.implicitRailWidth
+//            nav.menuWidth = 300
+//        }
+//        else {
+//            // portrait
+//            navBar.y = mainWindow.height - navBar.height
+//            navBar.visible = true
+//            nav.railWidth = 0
+//            nav.menuWidth = mainWindow.width
+//        }
     }
 
 

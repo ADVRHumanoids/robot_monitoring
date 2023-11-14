@@ -30,20 +30,11 @@ TabBar {
         preferredHighlightEnd: width
         clip: true
     }
+
     background: Rectangle {
         implicitWidth: 400
         implicitHeight: 80
         color: root.palette.base
         radius: 12
-        opacity: 0.5
-
-        RectangularGlow {
-            z: -1
-            anchors.fill: parent
-            glowRadius: 8
-            color: "#80000000"
-            cornerRadius: parent.radius + glowRadius
-            cached: true
-        }
     }
 }

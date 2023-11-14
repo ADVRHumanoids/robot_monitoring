@@ -6,9 +6,11 @@ qt_add_qml_module(xbot2_gui_menu
     QML_FILES
     Hamburger.qml
     NavBar.qml
+    NavBarWrapper.qml
     NavDrawer.qml
     NavIcon.qml
     RailMenu.qml
+    NavButton.qml
 )
 
 target_link_libraries(xbot2_gui PRIVATE xbot2_gui_menuplugin)

@@ -3,7 +3,7 @@ import QtQuick
 Item {
     property url page: ''
     property string name: ''
-    property string iconText: name[0]
+    property string iconText: '\ue1bd'
     property font iconFont: Qt.application.font
     property bool active: false
 }

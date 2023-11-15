@@ -21,7 +21,7 @@ Item {
 
     property alias nameFont: titleLabel.font
 
-    property int contentHeight: 300
+    property int maxContentHeight: 100000
 
     property alias availableContentWidth: frontScroll.availableWidth
 
@@ -175,7 +175,7 @@ Item {
                         margins: root.margins
                     }
 
-                    height: root.collapsed ? 0 : root.contentHeight
+                    height: root.collapsed ? 0 : Math.min(frontScroll.implicitHeight, root.maxContentHeight)
                     implicitWidth: frontScroll.implicitWidth
 
                     Behavior on height {
@@ -189,12 +189,14 @@ Item {
                         id: frontScroll
                         anchors.fill: parent
                         contentWidth: availableWidth
+                        contentHeight: frontScrollContent.height
                         clip: true
+                        bottomPadding: 10
 
                         Item {
                             id: frontScrollContent
-                            width: parent.availableWidth
-                            implicitHeight: childrenRect.height
+                            width: frontScroll.availableWidth
+                            height: childrenRect.height
 
                         }
                     }

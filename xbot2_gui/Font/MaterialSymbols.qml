@@ -8,16 +8,6 @@ QtObject {
 
     property font font: filled ? filledFont.font : emptyFont.font
 
-    property string hamburger: '\ue5d2'
-    property string home: '\ue88a'
-    property string settings: '\ue8b8'
-    property string joystick: '\uf5ee'
-    property string controller: '\uf135'
-    property string play: '\ue037'
-    property string stop: '\ue047'
-    property string plot: '\ue667'
-    property string terminal: '\ueb8e'
-    property string playground: '\uea52'
 
     //
     id: root

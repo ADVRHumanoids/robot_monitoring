@@ -20,14 +20,15 @@ Item {
 
     property list<int> _colHeight
 
-    ScrollView {
+    Item {
 
         objectName: 'MCL_IGNORE'
 
         id: scroll
         anchors.fill: parent
-        contentWidth: availableWidth
-        contentHeight: row.height
+
+        implicitHeight: row.implicitHeight
+        implicitWidth: row.implicitWidth
 
         Item {
             id: contentOverlay
@@ -35,6 +36,7 @@ Item {
             z: 10
 
             onChildrenChanged: {
+                console.log(`children changed -> ${children.length}`)
                 Qt.callLater(root.computeLayout)
             }
         }
@@ -43,7 +45,7 @@ Item {
 
             id: row
             spacing: root.rowSpacing
-            width: scroll.contentWidth
+            width: scroll.width
 
             Repeater {
 
@@ -100,6 +102,8 @@ Item {
 
             let item = contentData[i]
 
+            console.log(`lay out object ${item.objectName}`)
+
             if(item.objectName === "MCL_IGNORE") {
                 continue
             }
@@ -107,7 +111,6 @@ Item {
             if(item instanceof Repeater) {
                 continue
             }
-
 
             let colSpan = item.columnSpan === undefined ? 1 : item.columnSpan
 
@@ -124,6 +127,8 @@ Item {
                 let col = colRepeater.itemAt(c)
                 let pl = col.createPlaceholder(item)
                 placeholders.push(pl)
+
+                console.log(`pl height = ${pl.height}`)
             }
 
             let pl0 = placeholders[0]

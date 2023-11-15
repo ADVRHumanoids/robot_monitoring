@@ -41,6 +41,7 @@ Item {
         id: row
         anchors.fill: visible ? parent : undefined
         visible: layout.expanded
+        spacing: CommonProperties.geom.margins
 
         Repeater {
 
@@ -56,6 +57,7 @@ Item {
 
                 Layout.fillWidth:  true
                 Layout.fillHeight: true
+                Layout.preferredWidth: 1
 
                 Pane {
 

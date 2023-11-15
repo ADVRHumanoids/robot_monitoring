@@ -4,39 +4,44 @@ import QtQuick.Controls
 
 import Common
 import Main
+import Font
 
 import "Launcher.js" as Logic
 
-MultiColumnPage {
+MultiPaneResponsiveLayout {
 
     id: root
 
     property ClientEndpoint client
 
-    columnItems: [leftItem, rightItem]
-    mobileBreakpoint: leftGrid.brSmall
 
-    property Item leftItem: ScrollView {
+    ScrollView {
+
+        property string iconText: 'Launcher'
+        property string iconChar: MaterialSymbolNames.launcher
 
         id: leftScroll
-        objectName: 'Plugin/Process'
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-        Layout.preferredWidth: 1
+//        objectName: 'Plugin/Process'
+//        Layout.fillWidth: true
+//        Layout.fillHeight: true
+//        Layout.preferredWidth: 1
 
         contentHeight: leftGrid.height
         contentWidth: availableWidth
 
-        GridLayout {
+        MultiColumnLayout {
 
             id: leftGrid
             width: leftScroll.contentWidth
+//            height: 1000
 
             columns: 3
 
             SectionHeader {
 
-                Layout.columnSpan: parent.columns
+                objectName: 'sechdr'
+
+                property int columnSpan: leftGrid.columns
 
                 text: 'Process launcher'
 
@@ -56,11 +61,12 @@ MultiColumnPage {
                 id: processRepeater
 
                 ProcessCard {
-                    property var columnSpan: [4, 4, 4, 3]
 
                     processName: modelData.name
                     processState: modelData.status
                     processConfig: modelData.cmdline
+
+                    objectName: `pcard_${processName}`
 
                     onStart: Logic.processCmd(processName, 'start', processOptions)
                     onStop: Logic.processCmd(processName, 'stop', {})
@@ -71,43 +77,50 @@ MultiColumnPage {
 
             SectionHeader {
 
-                Layout.columnSpan: parent.columns
+                property int columnSpan: leftGrid.columns
 
                 text: 'Plugin launcher'
 
                 Button {
                     text: 'Refresh'
-                    onClicked: Logic.requestPluginUpdate(pluginRepeater)
+                    onClicked: {
+                        Logic.requestPluginUpdate(pluginRepeater)
+                    }
                 }
             }
 
-            Repeater {
+//            Repeater {
 
-                id: pluginRepeater
+//                id: pluginRepeater
 
-                PluginCard {
-                    property var columnSpan: [4, 4, 4, 3]
-                    pluginName: modelData
-                    onStart: Logic.pluginCmd(pluginName, 'start')
-                    onStop: Logic.pluginCmd(pluginName, 'stop')
-                    onAbort: Logic.pluginCmd(pluginName, 'abort')
-                }
+//                PluginCard {
+//                    pluginName: modelData
+//                    onStart: Logic.pluginCmd(pluginName, 'start')
+//                    onStop: Logic.pluginCmd(pluginName, 'stop')
+//                    onAbort: Logic.pluginCmd(pluginName, 'abort')
+//                }
 
-            }
+//            }
         }
     }
 
 
 
-    property Item rightItem: LauncherConsoleItem {
+    LauncherConsoleItem {
+
+        id: consoleItem
+
+        property string iconText: 'Console'
+        property string iconChar: MaterialSymbolNames.log
+
         objectName: 'Console'
         Layout.fillWidth: true
         Layout.fillHeight: true
         Layout.preferredWidth: 1
     }
 
-    Component.onCompleted: Logic.construct(processRepeater,
-                                           pluginRepeater,
-                                           rightItem.mainConsole)
+//    Component.onCompleted: Logic.construct(processRepeater,
+//                                           pluginRepeater,
+//                                           consoleItem.mainConsole)
 
 }

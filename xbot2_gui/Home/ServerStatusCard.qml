@@ -7,7 +7,7 @@ import Main
 import Common
 
 
-Card {
+Card1 {
 
     property ClientEndpoint client
     property alias msgText: msgText
@@ -55,6 +55,7 @@ Card {
         anchors.fill: parent
         columns: 2
         columnSpacing: CommonProperties.geom.spacing
+        rowSpacing: CommonProperties.geom.spacing
 
         Label {
             Layout.columnSpan: 2

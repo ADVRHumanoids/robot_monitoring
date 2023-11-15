@@ -1,10 +1,15 @@
 qt_add_library(xbot2_gui_font STATIC)
 
+set_source_files_properties(MaterialSymbolNames.qml PROPERTIES
+    QT_QML_SINGLETON_TYPE TRUE
+)
+
 qt_add_qml_module(xbot2_gui_font
     URI Font
     VERSION 1.0
     QML_FILES
     MaterialSymbols.qml
+    MaterialSymbolNames.qml
 )
 
 qt_add_resources(xbot2_gui_font "app_fonts"

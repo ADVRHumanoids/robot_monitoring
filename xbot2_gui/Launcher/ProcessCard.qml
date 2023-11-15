@@ -19,6 +19,8 @@ Item {
     signal stop()
     signal kill()
 
+    height: card.height
+
 
     // private
 

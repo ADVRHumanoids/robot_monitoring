@@ -48,7 +48,7 @@ ApplicationWindow {
         PageItem {
             name: "Playground"
             page: "/qt/qml/TestThings/Playground.qml"
-            iconText: syms.playground
+            iconText: MaterialSymbolNames.playground
             iconFont: syms.font.family
             active: true
         }
@@ -56,15 +56,15 @@ ApplicationWindow {
         PageItem {
             name: "Home"
             page: "/qt/qml/Home/HelloScreen.qml"
-            iconText: syms.home
+            iconText: MaterialSymbolNames.home
             iconFont: syms.font.family
             active: true
         }
 
         PageItem {
-            name: "Launcher"
+            name: "Process"
             page: "/qt/qml/Launcher/Launcher.qml"
-            iconText: syms.terminal
+            iconText: MaterialSymbolNames.terminal
             iconFont: syms.font.family
             active: client.active
         }
@@ -72,7 +72,7 @@ ApplicationWindow {
         PageItem {
             name: "Monitoring"
             page: "Monitoring/Monitoring.qml"
-            iconText: syms.plot
+            iconText: MaterialSymbolNames.plot
             iconFont: syms.font.family
             active: client.isFinalized
         }
@@ -80,7 +80,7 @@ ApplicationWindow {
         PageItem {
             name: "Joy"
             page: "Joy/Joy.qml"
-            iconText: syms.joystick
+            iconText: MaterialSymbolNames.joystick
             iconFont: syms.font.family
             active: client.active
         }

@@ -13,6 +13,8 @@ MultiPaneResponsiveLayout {
     property ClientEndpoint client
 
 
+
+
     Repeater {
         model: 3
         Rectangle {
@@ -25,9 +27,32 @@ MultiPaneResponsiveLayout {
 //            width: 100
 //            implicitWidth: 100
 //            implicitHeight: 100
+
+
+
         }
     }
 
+
+    ScrollView {
+
+        id: scroll
+        contentWidth: availableWidth
+
+        Card1 {
+
+            width: scroll.availableWidth
+
+            frontItem: Rectangle {
+
+                width: parent.width
+                height: 500
+
+            }
+
+        }
+
+    }
 
 
 

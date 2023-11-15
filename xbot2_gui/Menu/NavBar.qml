@@ -53,7 +53,7 @@ TabBar {
     background: Rectangle {
         implicitWidth: 400
         implicitHeight: 60
-        color: root.palette.base
+        color: root.palette.window
         radius: 12
 
     }

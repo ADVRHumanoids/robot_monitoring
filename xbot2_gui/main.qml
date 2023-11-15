@@ -19,6 +19,8 @@ ApplicationWindow {
     palette {
         active {
             highlight: Material.primary
+            buttonText: Material.foreground
+            text: Material.foreground
             accent: Material.accent
             window: Material.background
         }
@@ -30,22 +32,9 @@ ApplicationWindow {
 
     property var items: Object()
 
-    Binding {
-        target: CommonProperties.geom
-        property: 'compactLayout'
-        value: mainWindow.width < 600
-    }
-
-    Binding {
-        target: CommonProperties.geom
-        property: 'mediumLayout'
-        value: mainWindow.width < 840 && mainWindow.width >= 600
-    }
-
-    Binding {
-        target: CommonProperties.geom
-        property: 'expandedLayout'
-        value: mainWindow.width >= 840
+    LayoutClassHelper {
+        id: layout
+        targetWidth: mainWindow.width
     }
 
     // this model contains all main pages
@@ -126,7 +115,7 @@ ApplicationWindow {
         z: 1
         model: pagesModel
 
-        visible: CommonProperties.geom.expandedLayout
+        visible: layout.expanded
 
         onCurrentIndexChanged: {
             pagesStack.currentIndex = currentIndex
@@ -143,7 +132,7 @@ ApplicationWindow {
 
         opacity: 0.8
 
-        visible: !CommonProperties.geom.expandedLayout
+        visible: !layout.expanded
 
         id: navBar
         model: pagesModel

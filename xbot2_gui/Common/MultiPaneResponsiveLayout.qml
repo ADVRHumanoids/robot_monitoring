@@ -10,6 +10,11 @@ Item {
     //
     id: root
 
+    LayoutClassHelper {
+        id: layout
+        targetWidth: root.width
+    }
+
     default property alias items: container.data
 
     property list<Item> columnItems
@@ -19,15 +24,13 @@ Item {
     }
 
     Component.onCompleted: {
+        // push items that are not repeaters to columnItems
         let tmp = []
-        let i = 0
         for(let c of items) {
             if(c instanceof Repeater) {
                 continue
             }
-            console.log(`pushed item ${i}/${items.length} ${c}`)
             tmp.push(c)
-            i += 1
         }
         columnItems = tmp
 
@@ -37,7 +40,7 @@ Item {
 
         id: row
         anchors.fill: visible ? parent : undefined
-        visible: CommonProperties.geom.expandedLayout
+        visible: layout.expanded
 
         Repeater {
 
@@ -109,7 +112,6 @@ Item {
         }
 
         onCurrentIndexChanged: {
-            console.log('nav bar index -> ' + nav.currentIndex)
             swipe.setCurrentIndex(nav.currentIndex)
         }
 
@@ -130,7 +132,6 @@ Item {
         }
 
         onCurrentIndexChanged: {
-            console.log('swipe index -> ' + swipe.currentIndex)
             nav.setCurrentIndex(swipe.currentIndex)
         }
 

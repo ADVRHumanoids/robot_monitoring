@@ -22,6 +22,10 @@ Item {
         property int mobileBreakpoint: 576
         property int cardRadius: 4
         property int spacing: 16
+        property int margins: compactLayout ? 16 : 24
+        property bool compactLayout: false
+        property bool mediumLayout: false
+        property bool expandedLayout: false
     }
 
     property Item font: Item {

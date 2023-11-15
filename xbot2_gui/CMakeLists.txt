@@ -79,6 +79,8 @@ add_subdirectory(Home)
 
 add_subdirectory(LivePlot)
 
+add_subdirectory(Launcher)
+
 add_subdirectory(Menu)
 
 add_subdirectory(Protobuf)
@@ -105,7 +107,8 @@ add_library(VideoStream STATIC
     Home/CMakeLists.txt
     LivePlot/CMakeLists.txt
     TestThings/CMakeLists.txt
-    ExpandableBottomBar/CMakeLists.txt)
+    ExpandableBottomBar/CMakeLists.txt
+    Launcher/CMakeLists.txt)
 
 target_link_libraries(VideoStream PRIVATE
     PUBLIC theora::theora

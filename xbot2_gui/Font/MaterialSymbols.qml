@@ -17,6 +17,7 @@ QtObject {
     property string stop: '\ue047'
     property string plot: '\ue667'
     property string terminal: '\ueb8e'
+    property string playground: '\uea52'
 
     //
     id: root

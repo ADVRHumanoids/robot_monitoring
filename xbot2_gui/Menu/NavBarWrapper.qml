@@ -12,8 +12,8 @@ NavBar {
 
     property Component barButtonComponent: Component {
         NavButton {
-            checkedDisplayMode: AbstractButton.TextUnderIcon
-            uncheckedDisplayMode: AbstractButton.TextUnderIcon
+            checkedDisplayMode: AbstractButton.TextBesideIcon
+            uncheckedDisplayMode: AbstractButton.IconOnly
         }
     }
 

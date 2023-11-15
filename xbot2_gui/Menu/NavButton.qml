@@ -10,6 +10,7 @@ TabButton {
     required property string iconChar
     property int checkedDisplayMode: TabButton.TextBesideIcon
     property int uncheckedDisplayMode: TabButton.IconOnly
+    property int textFixedWidth: -1
 
     //
     id: root
@@ -22,12 +23,17 @@ TabButton {
     bottomPadding: 10
     spacing: 10
     clip: true
-    icon.color: checked ? palette.highlightedText : palette.buttonText
+    icon.color: checked ? palette.active.highlightedText : palette.active.buttonText
     font.bold: checked
+    font.pointSize: Qt.application.font.pointSize * 0.85
 
-    palette {
-        base: CommonProperties.colors.primary
+    MouseArea {
+        id: mouseArea
+        anchors.fill: parent
+        hoverEnabled: true
+        acceptedButtons: Qt.NoButton
     }
+
     contentItem: Item {
         implicitWidth: visibleItem.implicitWidth
         implicitHeight: visibleItem.implicitHeight
@@ -43,7 +49,7 @@ TabButton {
                 anchors.verticalCenter: parent === undefined ? undefined : parent.verticalCenter
             }
             LayoutItemProxy {
-                target: label
+                target: labelWrapper
                 anchors.verticalCenter: parent === undefined ? undefined : parent.verticalCenter
             }
         }
@@ -57,7 +63,7 @@ TabButton {
                 anchors.horizontalCenter: parent === undefined ? undefined : parent.horizontalCenter
             }
             LayoutItemProxy {
-                target: label
+                target: labelWrapper
                 anchors.horizontalCenter: parent === undefined ? undefined : parent.horizontalCenter
             }
         }
@@ -83,23 +89,36 @@ TabButton {
 
         }
 
-        Label {
-            id: label
-            text: root.text
-            font: root.font
-            color: root.checked ? root.palette.highlightedText : root.palette.buttonText
-            visible: root.display !== TabButton.IconOnly
+        Item {
+            id: labelWrapper
+            implicitHeight: label.implicitHeight
+            implicitWidth: root.textFixedWidth > 0 ? root.textFixedWidth : label.implicitWidth
+
+            Label {
+                id: label
+                text: root.text
+                font: root.font
+                color: root.icon.color
+                visible: root.display !== TabButton.IconOnly
+                anchors.centerIn: parent
+            }
+
         }
     }
+
     background: Item {
-        implicitWidth: 30
-        implicitHeight: 30
+//        implicitWidth: 30
+//        implicitHeight: 30
 
         Rectangle {
             anchors.fill: parent
-            color: root.palette.highlight
+            color: root.palette.active.highlight
             radius: parent.height * 0.6
-            visible: root.checked
+            opacity: root.checked ? 1 : (mouseArea.containsMouse ? 0.2 : 0)
+//            visible: root.checked || mouseArea.containsMouse
+            Behavior on opacity {
+                NumberAnimation {}
+            }
         }
     }
 

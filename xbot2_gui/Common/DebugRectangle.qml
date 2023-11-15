@@ -17,7 +17,7 @@ Rectangle {
         text: `[${name}] ${target.width} x ${target.height} (${target.implicitWidth} x ${target.implicitHeight})`
         anchors.bottom: parent.top
         anchors.margins: 4
-        onTextChanged: console.log(text)
+        onTextChanged: (text) => console.log(text)
         color: parent.border.color
         z: 10
     }

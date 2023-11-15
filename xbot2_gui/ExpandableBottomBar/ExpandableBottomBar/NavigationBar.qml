@@ -13,9 +13,6 @@ TabBar {
     leftPadding: (width - contentWidth) / 2
     rightPadding: (width - contentWidth) / 2
     bottomPadding: (height - contentHeight) / 2
-    palette {
-        base: "white"
-    }
     contentItem: ListView {
         model: root.contentModel
         currentIndex: root.currentIndex
@@ -34,7 +31,7 @@ TabBar {
     background: Rectangle {
         implicitWidth: 400
         implicitHeight: 80
-        color: root.palette.base
+        color: root.palette.active.base
         radius: 12
     }
 }

@@ -5,6 +5,7 @@ import QtQuick.Controls
 
 import Common
 import Menu
+import Font
 
 ApplicationWindow {
 
@@ -15,7 +16,37 @@ ApplicationWindow {
     title: "Xbot2 Robot GUI"
 //    visibility: Window.FullScreen
 
+    palette {
+        active {
+            highlight: Material.primary
+            accent: Material.accent
+            window: Material.background
+        }
+    }
+
+    MaterialSymbols {
+        id: syms
+    }
+
     property var items: Object()
+
+    Binding {
+        target: CommonProperties.geom
+        property: 'compactLayout'
+        value: mainWindow.width < 600
+    }
+
+    Binding {
+        target: CommonProperties.geom
+        property: 'mediumLayout'
+        value: mainWindow.width < 840 && mainWindow.width >= 600
+    }
+
+    Binding {
+        target: CommonProperties.geom
+        property: 'expandedLayout'
+        value: mainWindow.width >= 840
+    }
 
     // this model contains all main pages
     // (i) hello page (select server address)
@@ -24,35 +55,44 @@ ApplicationWindow {
 
         id: pagesModel
 
+
         PageItem {
             name: "Playground"
             page: "/qt/qml/TestThings/Playground.qml"
+            iconText: syms.playground
+            iconFont: syms.font.family
             active: true
         }
 
         PageItem {
             name: "Home"
-            iconText: CommonProperties.fontAwesome.home
-            iconFont: CommonProperties.fontAwesome.solid
             page: "/qt/qml/Home/HelloScreen.qml"
+            iconText: syms.home
+            iconFont: syms.font.family
             active: true
         }
 
         PageItem {
             name: "Launcher"
-            page: "Launcher/Launcher.qml"
+            page: "/qt/qml/Launcher/Launcher.qml"
+            iconText: syms.terminal
+            iconFont: syms.font.family
             active: client.active
         }
 
         PageItem {
             name: "Monitoring"
             page: "Monitoring/Monitoring.qml"
+            iconText: syms.plot
+            iconFont: syms.font.family
             active: client.isFinalized
         }
 
         PageItem {
             name: "Joy"
             page: "Joy/Joy.qml"
+            iconText: syms.joystick
+            iconFont: syms.font.family
             active: client.active
         }
 
@@ -61,7 +101,6 @@ ApplicationWindow {
             page: "Viewer3D/Viewer3D.qml"
             active: true
         }
-
 
 
         PageItem {
@@ -73,61 +112,56 @@ ApplicationWindow {
     }
 
 
-    NavDrawer {
+    NavRailWrapper {
         id: nav
-        anchors.fill: parent
+        anchors {
+            left: parent.left
+            top: parent.top
+            bottom: parent.bottom
+            margins: 8
+        }
+
+        width: 80
+
         z: 1
         model: pagesModel
 
-        visible: mainWindow.height < mainWindow.width
-
-        menuWidth: 300
-        railWidth: implicitRailWidth
+        visible: CommonProperties.geom.expandedLayout
 
         onCurrentIndexChanged: {
             pagesStack.currentIndex = currentIndex
+            navBar.currentIndex = currentIndex
         }
+
 
     }
 
+
     NavBarWrapper {
 
-        visible: mainWindow.height > mainWindow.width
+        z: 1
+
+        opacity: 0.8
+
+        visible: !CommonProperties.geom.expandedLayout
 
         id: navBar
-        width: parent.width
-        height: 50
         model: pagesModel
 
         onCurrentIndexChanged: {
             pagesStack.currentIndex = currentIndex
+            nav.currentIndex = currentIndex
         }
 
         anchors {
             left: parent.left
             right: parent.right
             bottom: parent.bottom
-            margins: 50
+            margins: 8
+            leftMargin: CommonProperties.geom.margins
+            rightMargin: CommonProperties.geom.margins
         }
     }
-
-    function responsiveNav() {
-//        if(mainWindow.width > mainWindow.height) {
-//            // landscape
-//            navBar.y = mainWindow.height
-//            navBar.visible = false
-//            nav.railWidth = nav.implicitRailWidth
-//            nav.menuWidth = 300
-//        }
-//        else {
-//            // portrait
-//            navBar.y = mainWindow.height - navBar.height
-//            navBar.visible = true
-//            nav.railWidth = 0
-//            nav.menuWidth = mainWindow.width
-//        }
-    }
-
 
     // stack with all main pages, as defined
     // in the pagesModel element
@@ -138,10 +172,16 @@ ApplicationWindow {
         anchors {
             right: parent.right
             top: parent.top
-            bottom: navBar.top
+            bottom: navBar.visible ? navBar.top : parent.bottom
+            left: nav.visible ? nav.right : parent.left
+            margins: 8
+            leftMargin: CommonProperties.geom.margins
+            rightMargin: CommonProperties.geom.margins
         }
 
-        width: mainWindow.width - nav.railWidth
+        clip: true
+
+//        width: mainWindow.width - nav.railWidth
 
         currentIndex: nav.currentIndex
 
@@ -194,6 +234,8 @@ ApplicationWindow {
                         pagesStackRepeater.reloadAll()
                     }
                 }
+
+
             }
         }
     }
@@ -226,15 +268,4 @@ ApplicationWindow {
 
 //    }
 
-    onWidthChanged: {
-        responsiveNav()
-    }
-
-    onHeightChanged: {
-        responsiveNav()
-    }
-
-    Component.onCompleted: {
-        responsiveNav()
-    }
 }

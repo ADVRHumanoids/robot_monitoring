@@ -3,8 +3,8 @@ import QtQuick.Layouts
 import QtQuick.Controls
 
 import Common
-import ".."
-import "../Common"
+import Main
+
 import "Launcher.js" as Logic
 
 MultiColumnPage {

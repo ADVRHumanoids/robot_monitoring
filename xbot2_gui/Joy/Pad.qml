@@ -11,6 +11,7 @@ Item {
     property real joyY: 0
     property alias joyPressed: mouseArea.containsPress
     property bool active
+    property alias backgroundColor: area.color
 
     //
     id: root
@@ -33,6 +34,11 @@ Item {
         id: area
         anchors.fill: parent
         color: Qt.rgba(1, 1, 1, 0.2)
+        border {
+            color: Qt.rgba(1, 1, 1, 0.2)
+            width: 1
+        }
+
         radius: 12
 
         MultiMouseArea {

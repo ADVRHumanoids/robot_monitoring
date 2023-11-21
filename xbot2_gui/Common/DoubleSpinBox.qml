@@ -8,7 +8,7 @@ Item {
     property real from: 0.0
     property real to: 1.0
     property real stepSize: 0.1
-    property real value: from + spinbox.value / 100.0 * _range
+    property real value: _range / 2.0
     property int decimals: 1
 
     property real _range: to - from
@@ -21,8 +21,12 @@ Item {
 
         from: 0
         to: 100
-        value: 50
+        value: Math.round((root.value - root.from)/root._range*100)
         stepSize: (root.stepSize / root._range)*100
+
+        onValueChanged: {
+            root.value =  root.from + spinbox.value / 100.0 * root._range
+        }
 
         validator: DoubleValidator {
             bottom: root.from

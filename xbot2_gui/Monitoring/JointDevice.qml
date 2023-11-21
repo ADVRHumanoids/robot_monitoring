@@ -5,7 +5,7 @@ import QtQuick.Layouts
 import "../Common"
 import Common
 
-Card {
+Card1 {
 
     property bool jointActive: false
     property real filterCutoff: 0.0

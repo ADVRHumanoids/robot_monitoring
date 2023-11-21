@@ -27,12 +27,14 @@ TabButton {
     icon.color: checked ? palette.active.highlightedText : palette.active.buttonText
     font.bold: checked
     font.pointSize: Qt.application.font.pointSize * 0.85
+    opacity: enabled ? 1 : 0.5
 
     MouseArea {
         id: mouseArea
         anchors.fill: parent
         hoverEnabled: true
         acceptedButtons: Qt.NoButton
+        enabled: parent.enabled
     }
 
     contentItem: Item {

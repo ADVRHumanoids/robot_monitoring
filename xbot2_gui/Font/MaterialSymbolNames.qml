@@ -22,4 +22,15 @@ Item {
     property string launcher: '\ueb9b'
     property string box3d: '\uf720'
     property string analytics: '\uef3e'
+    property string arrowBack: '\ue5e0'
+    property string arrowForward: '\ue5e1'
+    property string tableChart: '\uf6ef'
+
+    property FontLoader filledFont: FontLoader {
+        source: `/Font/materialsymbols/MaterialSymbolsOutlined[opsz,wght,FILL,GRAD@20,200,1,200].otf`
+    }
+
+    property FontLoader emptyFont: FontLoader {
+        source: `/Font/materialsymbols/MaterialSymbolsOutlined[opsz,wght,FILL,GRAD@20,200,0,200].otf`
+    }
 }

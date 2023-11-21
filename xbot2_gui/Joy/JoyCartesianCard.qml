@@ -10,23 +10,30 @@ import "../Video/VideoStream.js" as VideoStream
 
 Card1 {
 
-    name: 'Joy Setup'
+    name: ikRunning ? `Current task:  <i>${currentTask}</i>` :
+                      'No active task'
     property alias currentTask: taskCombo.currentText
-    property alias linXOnly: linXCheck.checked
-    property real maxSpeed: maxSpeedLinearSpinBox.value
     property bool ikRunning: false
     property alias videoStream: videoStreamCombo.currentText
 
     // private
     id: root
     configurable: false
+    collapsed: true
 
-    toolButtons: [
-        Label {
-            text: ikRunning ? `Current task:  <i>${currentTask}</i>` :
-                               'IK is not running'
-        },
+    frontItem: GridLayout {
+
+        id: grid
+
+        anchors.fill: parent
+
+        columns: 3
+
+        columnSpacing: CommonProperties.geom.margins
+
         Button {
+            Layout.columnSpan: 3
+            Layout.fillWidth: true
             text: 'Refresh'
             onReleased: {
                 Logic.updateTaskNames(taskCombo)
@@ -36,17 +43,6 @@ Card1 {
                                     })
             }
         }
-    ]
-
-    frontItem: GridLayout {
-
-        id: grid
-
-        enabled: ikRunning
-
-        anchors.fill: parent
-
-        columns: 3
 
         Label {
             text: 'Tasks'
@@ -87,24 +83,6 @@ Card1 {
                     Logic.enableTask(taskCombo.currentText, callback)
                 }
             }
-        }
-
-
-
-        Label {
-            text: 'Max speed (linear)'
-        }
-
-        DoubleSpinBox {
-            id: maxSpeedLinearSpinBox
-            from: 0.0
-            to: 2.0
-        }
-
-        CheckBox {
-            id: linXCheck
-            text: 'Linear X Only'
-            checked: false
         }
 
         Label {

@@ -65,7 +65,7 @@ Item {
             let obj = model.children[i]
             if(obj instanceof Repeater) continue
             let btn = barButtonComponent.createObject(activePositioner,
-                                                      {'text': obj.name, 'iconChar': obj.iconText, 'index': i})
+                                                      {'text': obj.name, 'iconChar': obj.iconText, 'index': i, 'enabled': Qt.binding(() => { return true || obj.active })})
             buttonItems.push(btn)
         }
     }

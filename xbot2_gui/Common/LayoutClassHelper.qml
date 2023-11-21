@@ -11,9 +11,10 @@ Item {
         Compact, Medium, Expanded
     }
 
-    property int _layoutClass: (targetWidth < 600) ?
-                                  (LayoutClassHelper.Class.Compact ? (targetWidth < 840) : LayoutClassHelper.Class.Medium) :
-                                  LayoutClassHelper.Class.Expanded
+    property int _layoutClass: targetWidth < 600 ?
+                                  LayoutClassHelper.Class.Compact :
+                                   (targetWidth < 840 ? LayoutClassHelper.Class.Medium :
+                                  LayoutClassHelper.Class.Expanded)
 
     property int layoutClass
     property bool compact: false

@@ -60,6 +60,7 @@ function onProcMessageReceived(procRepeater, consoleItem, msg) {
 
                 if(msg.stderr.length > 0) {
                     consoleItem.appendText('<font color="red">' + prefix+msg.stderr + '</>')
+                    root.numErrors += 1
                 }
             }
 
@@ -95,6 +96,9 @@ function onPluginMessageReceived(pluginRepeater, msg) {
         let pluginMsg = msg[singlePlugin.pluginName]
         singlePlugin.pluginPeriod = pluginMsg.expected_period
         singlePlugin.pluginCpuTime = pluginMsg.run_time
+        if(singlePlugin.pluginState !== pluginMsg.state) {
+            root.numErrors += 1
+        }
         singlePlugin.pluginState = pluginMsg.state
     }
 }

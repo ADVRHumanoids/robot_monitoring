@@ -1,4 +1,4 @@
-.import "../sharedData.js" as SharedData
+.import "/qt/qml/Main/sharedData.js" as SharedData
 
 function handleFault(jName, faultCode) {
     barPlot.setStatus(jName, faultCode === "" ? true : false)

@@ -13,7 +13,7 @@ MultiPaneResponsiveLayout {
     id: root
 
     property ClientEndpoint client
-
+    property int numErrors: 0
 
 
 

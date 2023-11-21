@@ -66,7 +66,7 @@ ApplicationWindow {
             page: "/qt/qml/Launcher/Launcher.qml"
             iconText: MaterialSymbolNames.terminal
             iconFont: syms.font.family
-            active: client.active
+            active: client.isConnected
         }
 
         PageItem {
@@ -82,21 +82,29 @@ ApplicationWindow {
             page: "/qt/qml/Joy/Joy.qml"
             iconText: MaterialSymbolNames.joystick
             iconFont: syms.font.family
-            active: client.active
+            active: client.isConnected
         }
 
         PageItem {
-            name: "Viewer"
-            page: "Viewer3D/Viewer3D.qml"
-            active: true
+            name: "Plot"
+            page: "/qt/qml/LivePlot/Plot.qml"
+            iconText: MaterialSymbolNames.tableChart
+            iconFont: syms.font.family
+            active: client.isConnected
         }
 
+//        PageItem {
+//            name: "Viewer"
+//            page: "Viewer3D/Viewer3D.qml"
+//            active: true
+//        }
 
-        PageItem {
-            name: "Concert"
-            page: "TestThings/ConcertGuidedDrilling.qml"
-            active: true
-        }
+
+//        PageItem {
+//            name: "Concert"
+//            page: "TestThings/ConcertGuidedDrilling.qml"
+//            active: true
+//        }
 
     }
 
@@ -180,6 +188,7 @@ ApplicationWindow {
 
         onCurrentIndexChanged: {
             itemAt(currentIndex).item.numErrors = 0
+            nav.setBadgeNumber(currentIndex, 0)
         }
 
         // load all pages in the model
@@ -209,7 +218,7 @@ ApplicationWindow {
                 Layout.fillHeight: true
                 Layout.fillWidth: true
 
-                active: pagesStack.currentIndex === index
+                active: pagesStack.currentIndex === index || modelData.name === 'Home'
 
                 onLoaded: {
                     items[modelData.name.toLowerCase()] = item
@@ -233,7 +242,12 @@ ApplicationWindow {
                     }
 
                     function onNumErrorsChanged() {
-                        nav.setBadgeNumber(index, stackPageLoader.item.numErrors)
+                        if(index !== pagesStack.currentIndex) {
+                            nav.setBadgeNumber(index, stackPageLoader.item.numErrors)
+                        }
+                        else {
+                            item.numErrors = 0
+                        }
                     }
                 }
 

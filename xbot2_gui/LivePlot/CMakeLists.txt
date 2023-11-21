@@ -6,6 +6,7 @@ qt_add_qml_module(xbot2_gui_liveplot
     QML_FILES
     Plotter.qml
     PlotterLegend.qml
+    Plot.qml
 )
 
 target_link_libraries(xbot2_gui PRIVATE xbot2_gui_liveplotplugin)

@@ -73,7 +73,8 @@ function barPlotMin(){
             SharedData.qmin,
             SharedData.vmax.map(x => -x),
             SharedData.vmax.map(x => -x),
-            SharedData.taumax.map(x => -x)]
+            SharedData.taumax.map(x => -x),
+            Array(SharedData.jointNames.length).fill(20)]
 }
 
 function barPlotMax(){
@@ -81,5 +82,6 @@ function barPlotMax(){
             SharedData.qmax,
             SharedData.vmax,
             SharedData.vmax,
-            SharedData.taumax]
+            SharedData.taumax,
+            Array(SharedData.jointNames.length).fill(70)]
 }

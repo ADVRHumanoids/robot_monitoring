@@ -8,6 +8,8 @@ import Main
 import Monitoring.BarPlot
 import Monitoring.SingleJointState
 
+import "Monitoring.js" as Logic
+
 MultiPaneResponsiveLayout {
 
     property ClientEndpoint client
@@ -18,67 +20,94 @@ MultiPaneResponsiveLayout {
     onBeforeLayoutChange: loader.active = false
     onAfterLayoutChange: loader.active = true
 
-    ScrollView {
+    Item {
 
-        property string iconText: 'Telemetry'
-        property string iconChar: MaterialSymbolNames.analytics
-
-        id: scroll1
+        id: leftRoot
         width: parent.width
-        contentWidth: availableWidth
-
 
         Column {
 
-            width: scroll1.availableWidth
+            width: parent.width
             spacing: 16
 
-            Card1 {
-
-                property int columnSize: 2
+            JointDevice {
+                id: jointDevice
                 width: parent.width
-                name: barPlotCombo.currentText
-                configurable: false
-
-                toolButtons: [
-                    ComboBox {
-                        id: barPlotCombo
-                        model: barPlot.fieldNames
-                        width: implicitWidth
-                        wheelEnabled: true
-                    }
-
-                ]
-
-                frontItem: BarPlotStack {
-                    id: barPlot
-                    width: parent.width
-                    currentIndex: barPlotCombo.currentIndex
-
-                    onJointClicked: jointName => {
-                                        jointState.selectJoint(jointName)
-                                        jointCommand.selectJoint(jointName)
-                                    }
-                }
+                collapsed: true
+                onSetSafetyState: Logic.setSafetyState(ok)
+                onSetFilterActive: Logic.setFilterActive(ok)
+                onSetFilterCutoff: Logic.setFilterProfile(profile)
             }
 
-            Card1 {
+            ScrollView {
 
-                property int columnSize: 1
-                Layout.minimumWidth: implicitWidth
+                property string iconText: 'Telemetry'
+                property string iconChar: MaterialSymbolNames.analytics
+
+                id: scroll1
 
                 width: parent.width
-                configurable: false
-                name: 'Joint <i>' + jointState.jointNames[jointState.currentIndex] + '</i>'
+                height: leftRoot.height - jointDevice.height - parent.spacing - parent.topPadding - parent.bottomPadding
+                contentWidth: availableWidth
 
-                frontItem: SingleJointStateStack {
-                    id: jointState
-                    width: parent.width
 
-                    onPlotAdded: (jName, fieldName) => {
-                                     Logic.addJointStateSeries(livePlot, jName, fieldName)
-                                     livePlotCard.hidden = false
-                                 }
+                Column {
+
+                    width: scroll1.availableWidth
+                    spacing: 16
+
+
+
+                    Card1 {
+
+                        property int columnSize: 2
+                        width: parent.width
+                        name: barPlotCombo.currentText
+                        configurable: false
+
+                        toolButtons: [
+                            ComboBox {
+                                id: barPlotCombo
+                                model: barPlot.fieldNames
+                                width: implicitWidth
+                                wheelEnabled: true
+                            }
+
+                        ]
+
+                        frontItem: BarPlotStack {
+                            id: barPlot
+                            width: parent.width
+                            currentIndex: barPlotCombo.currentIndex
+
+                            onJointClicked: jointName => {
+                                                jointState.selectJoint(jointName)
+                                                jointCommand.selectJoint(jointName)
+                                            }
+                        }
+                    }
+
+                    Card1 {
+
+                        property int columnSize: 1
+                        Layout.minimumWidth: implicitWidth
+
+                        width: parent.width
+                        configurable: false
+                        name: 'Joint <i>' + jointState.jointNames[jointState.currentIndex] + '</i>'
+
+                        frontItem: SingleJointStateStack {
+                            id: jointState
+                            width: parent.width
+
+                            onPlotAdded: (jName, fieldName) => {
+                                             Logic.addJointStateSeries(livePlot, jName, fieldName)
+                                             livePlotCard.hidden = false
+                                         }
+
+                        }
+
+                    }
 
                 }
 

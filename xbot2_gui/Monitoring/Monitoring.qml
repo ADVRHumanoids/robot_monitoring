@@ -1,206 +1,141 @@
 import QtQuick
-import QtQuick.Layouts
 import QtQuick.Controls
+import QtQuick.Layouts
 
-import ".."
-import "../Common"
-import "../LivePlot"
-import "BarPlot"
-import "SingleJointState"
+import Font
+import Common
+import Main
+import Monitoring.BarPlot
+import Monitoring.SingleJointState
 
-import "Monitoring.js" as Logic
-
-MultiColumnPage {
+MultiPaneResponsiveLayout {
 
     property ClientEndpoint client
-
-    columnItems: [leftItem, rightItem]
+    property Item robotViewer: loader.item
 
     id: root
 
-    property Item leftItem: Item {
+    onBeforeLayoutChange: loader.active = false
+    onAfterLayoutChange: loader.active = true
 
-        objectName: 'Global'
+    ScrollView {
 
-        Layout.fillWidth: true
-        Layout.fillHeight: true
+        property string iconText: 'Telemetry'
+        property string iconChar: MaterialSymbolNames.analytics
 
-        ScrollView {
+        id: scroll1
+        width: parent.width
+        contentWidth: availableWidth
 
-            id: leftScroll
 
-            anchors.fill: parent
+        Column {
 
-            contentWidth: leftCol.width
-            contentHeight: leftCol.height
+            width: scroll1.availableWidth
+            spacing: 16
 
-            ColumnLayout {
+            Card1 {
 
-                id: leftCol
-                width: leftScroll.availableWidth
+                property int columnSize: 2
+                width: parent.width
+                name: barPlotCombo.currentText
+                configurable: false
 
-                Card {
-
-                    id: livePlotCard
-                    name: 'Live plot'
-                    hidden: true
-
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: hidden ?
-                                                implicitHeight :
-                                                root.height - 2*margins
-
-                    toolButtons: [
-                        SmallToolButton {
-                            text: '\uf021'
-                            font.family: CommonProperties.fontAwesome.solid.family
-                            onClicked: livePlot.resetView()
-                        }
-
-                    ]
-
-                    frontItem: Plotter {
-                        id: livePlot
-                        anchors.fill: parent
-                        property real initialTime: -1.0
+                toolButtons: [
+                    ComboBox {
+                        id: barPlotCombo
+                        model: barPlot.fieldNames
+                        width: implicitWidth
+                        wheelEnabled: true
                     }
 
+                ]
 
-                    backItem: Item {
-                        anchors.fill: parent
-                        implicitHeight: heightSpin.implicitHeight
-                        SpinBox {
-                            id: heightSpin
-                            from: 0
-                            to: 1000
-                            value: 300
-                            editable: true
-                            stepSize: 50
-                        }
-                    }
-                }
-
-
-                Card {
-                    id: viewer3dCard
-                    name: '3D Viewer'
-                    hidden: true
-
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: hidden ?
-                                                implicitHeight :
-                                                root.height - 2*margins
-
-                    frontItem: RobotModelViewer {
-                        id: robotViewer
-                        anchors.fill: parent
-                        client: root.client
-                        backgroundColor: 'transparent'
-                    }
-                }
-
-
-                Card {
-
-                    name: barPlotCombo.currentText
-                    configurable: false
+                frontItem: BarPlotStack {
+                    id: barPlot
                     width: parent.width
+                    currentIndex: barPlotCombo.currentIndex
 
-                    toolButtons: [
-                        ComboBox {
-                            id: barPlotCombo
-                            model: barPlot.fieldNames
-                            width: implicitWidth
-                            wheelEnabled: true
-                        }
-
-                    ]
-
-                    frontItem: BarPlotStack {
-                        id: barPlot
-                        width: parent.width
-                        currentIndex: barPlotCombo.currentIndex
-
-                        onJointClicked: jointName => {
-                                            jointState.selectJoint(jointName)
-                                        }
-                    }
-                }
-
-
-                Item {
-                    Layout.fillHeight: true
+                    onJointClicked: jointName => {
+                                        jointState.selectJoint(jointName)
+                                        jointCommand.selectJoint(jointName)
+                                    }
                 }
             }
-        }
 
-    }
+            Card1 {
 
-    property Item rightItem: ScrollView {
+                property int columnSize: 1
+                Layout.minimumWidth: implicitWidth
 
-        objectName: 'Safety / Joint State'
-
-        id: rightScroll
-        Layout.fillHeight: true
-
-        ColumnLayout {
-
-            width: rightScroll.availableWidth
-
-            JointDevice {
-                id: jointDevice
-                Layout.fillWidth: true
-                hidden: true
-
-                onSetSafetyState: (ok) => Logic.setSafetyState(ok)
-                onSetFilterActive: (active) => Logic.setFilterActive(active)
-                onSetFilterCutoff: (profile) => Logic.setFilterProfile(profile)
-            }
-
-            JointCommandCard {
-                id: cmdCard
-                Layout.fillWidth: true
-                robotCmd: robotViewer.robotCmd
-                client: root.client
-                hidden: true
-
-                onResetCmd: robotViewer.resetCmd()
-            }
-
-            Card {
-
-                Layout.fillWidth: true
+                width: parent.width
                 configurable: false
                 name: 'Joint <i>' + jointState.jointNames[jointState.currentIndex] + '</i>'
 
                 frontItem: SingleJointStateStack {
                     id: jointState
-                    anchors.fill: parent
+                    width: parent.width
 
                     onPlotAdded: (jName, fieldName) => {
                                      Logic.addJointStateSeries(livePlot, jName, fieldName)
                                      livePlotCard.hidden = false
                                  }
+
                 }
 
-            }
-
-            Item {
-                Layout.fillHeight: true
             }
 
         }
 
     }
 
-    property alias jointDevice: jointDevice
-    property alias barPlot: barPlot
-    property alias livePlot: livePlot
 
-    Component.onCompleted: {
-        Logic.construct()
+    ColumnLayout {
+
+        property string iconText: 'Control'
+        property string iconChar: MaterialSymbolNames.box3d
+
+        anchors.fill: parent
+
+        Loader {
+            id: loader
+            width: parent.width
+
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.preferredHeight: 200
+
+            sourceComponent: Component {
+                RobotModelViewer {
+                    id: robotViewer
+                    implicitHeight: 200
+                    implicitWidth: 200
+
+                    client: root.client
+                    backgroundColor: 'transparent'
+                }
+            }
+
+        }
+
+        JointCommandCard {
+            id: jointCommand
+            Layout.fillWidth: true
+            client: root.client
+            robotCmd: loader.item.robotCmd
+            onResetCmd: robotViewer.resetCmd()
+        }
+
     }
 
-
+    Connections {
+        target: client
+        function onJointStateReceived(js) {
+            barPlot.setJointStateMessage(js)
+            jointState.setJointStateMessage(js)
+            robotViewer.updateRobotState(js,
+                                         robotViewer.robotState,
+                                         'linkPos')
+        }
+    }
 
 }

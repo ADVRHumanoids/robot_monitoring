@@ -3,8 +3,8 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import QtCore
 
-import ".."
-import "../Video"
+import Main
+import Video
 import "../Video/VideoStream.js" as VideoStream
 import "Joy.js" as Joy
 import Common
@@ -14,84 +14,40 @@ Item {
     property ClientEndpoint client
 
     JoyCartesianCard {
+
         id: setupCard
+
         anchors {
             left: parent.left
             right: parent.right
             top: parent.top
             margins: CommonProperties.geom.spacing
         }
+
+        onVideoStreamChanged: {
+            VideoStream.setStream(videoStream, video)
+        }
+
+        backgroundColor: Qt.rgba(0, 0, 0, 0.5)
     }
 
-    GridLayout {
+    VideoStream {
 
-        anchors{
-            left: parent.left
-            right: parent.right
-            top: setupCard.bottom
-            bottom: parent.bottom
-            margins: CommonProperties.geom.spacing
-        }
-        columns: width > height ? 2 : 1
-        columnSpacing: 16
-        rowSpacing: 16
+        id: video
 
-        Repeater {
+        z: -1
 
-            model: 2
+        anchors.fill: parent
 
-            VideoStreamCard {
-
-                id: video
-
-                Layout.fillHeight: !hidden
-                Layout.fillWidth: true
-                Layout.preferredWidth: 1
-
-                Component.onCompleted: VideoStream.refreshNames(video)
-
-                onUpdateAvailableStreamIds: VideoStream.refreshNames(video)
-
-                onStreamIdChanged: {
-                    VideoStream.setStream(streamId, video)
-                    streamName = streamId
-                }
-
-                property bool _constructed: false
-
-                onAvailableStreamIdsChanged: {
-                    if(!_constructed) {
-                        console.log(`setting idx = ${settings.streamIndex}`)
-                        currentIndex = settings.streamIndex
-                        streamName = settings.streamName
-                        _constructed = true
-                    }
-                }
-
-                Connections {
-                    target: client
-                    function onTheoraPacketReceived(msg) {
-                        if(msg.stream_name === streamId) {
-                            video.setTheoraPacket(msg)
-                        }
-                    }
-                }
-
-                Settings {
-                    id: settings
-                    category: 'videoStreamCard' + index
-                    property int streamIndex: 0
-                    property string streamName: 'Stream Name'
-                }
-
-                Component.onDestruction: {
-                    console.log(`saving settings ` + index)
-                    settings.streamIndex = video.currentIndex
-                    settings.streamName = video.streamName
-                    settings.sync()
+        Connections {
+            target: client
+            function onTheoraPacketReceived(msg) {
+                if(msg.stream_name === setupCard.videoStream) {
+                    video.setTheoraPacket(msg)
                 }
             }
         }
+
     }
 
     property var vref: [0, 0, 0, 0, 0, 0]
@@ -110,9 +66,7 @@ Item {
 
         side: Math.min(200, parent.width/2 - 64)
 
-        opacity: 0.7
-
-        onJoystickMoved: (x, y) => {
+        onJoystickMoved: function (x, y) {
             console.log(`${x} ${y}`)
             vref[0] = y*maxLinearV
             vref[1] = -x*maxLinearV
@@ -122,6 +76,7 @@ Item {
     }
 
     Pad  {
+
         anchors {
             right: parent.right
             bottom: parent.bottom
@@ -132,9 +87,7 @@ Item {
 
         side: Math.min(200, parent.width/2 - 64)
 
-        opacity: 0.7
-
-        onJoystickMoved: (x, y) => {
+        onJoystickMoved: function(x, y) {
             console.log(`${x} ${y}`)
             vref[5] = -x*maxAngularV
             Joy.sendVref(currentTask, vref)

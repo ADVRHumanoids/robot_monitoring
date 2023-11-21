@@ -21,23 +21,24 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt6 COMPONENTS
     Core
+    Gui
     Quick
     WebSockets
     Widgets
     QuickControls2
     ShaderTools
     Core5Compat
-#    Protobuf
-#    3DRender
-#    3DCore
+    Protobuf
+    #    3DRender
+    #    3DCore
     Quick3D
     REQUIRED)
 
 qt_standard_project_setup(REQUIRES 6.6)
 
 set(PROJECT_SOURCES
-        main.cpp
-        qml.qrc
+    main.cpp
+    qml.qrc
 )
 
 qt_add_executable(xbot2_gui main.cpp)
@@ -46,28 +47,29 @@ qt_add_qml_module(xbot2_gui
     VERSION 1.0
     URI Main
     QML_FILES
-        main.qml
-        PageItem.qml
-        ClientEndpoint.qml
-        ClientEndpoint.js
-        sharedData.js
+    main.qml
+    PageItem.qml
+    ClientEndpoint.qml
+    ClientEndpoint.js
+    sharedData.js
 )
 
 target_compile_definitions(xbot2_gui
-  PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
+    PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
 
 target_link_libraries(xbot2_gui
-  PRIVATE Qt${QT_VERSION_MAJOR}::Core
-          Qt${QT_VERSION_MAJOR}::Quick
-          Qt${QT_VERSION_MAJOR}::WebSockets
-          Qt${QT_VERSION_MAJOR}::QuickControls2
-          Qt${QT_VERSION_MAJOR}::Widgets
-          Qt${QT_VERSION_MAJOR}::Core5Compat
-#          Qt${QT_VERSION_MAJOR}::Protobuf
-          mesh_geometry
-#          Qt${QT_VERSION_MAJOR}::3DRender
-#          Qt${QT_VERSION_MAJOR}::3DCore
-      )
+    PRIVATE
+    Qt6::Core
+    Qt6::Quick
+    Qt6::WebSockets
+    Qt6::QuickControls2
+    Qt6::Widgets
+    Qt6::Core5Compat
+    Qt6::Protobuf
+    mesh_geometry
+    #          Qt${QT_VERSION_MAJOR}::3DRender
+    #          Qt${QT_VERSION_MAJOR}::3DCore
+)
 
 add_subdirectory(Common)
 
@@ -83,9 +85,17 @@ add_subdirectory(Launcher)
 
 add_subdirectory(Menu)
 
+add_subdirectory(Monitoring)
+
 add_subdirectory(Protobuf)
 
 add_subdirectory(TestThings)
+
+add_subdirectory(Joy)
+
+add_subdirectory(Video)
+
+add_subdirectory(Viewer3D)
 
 
 # ws receiver
@@ -97,37 +107,6 @@ add_subdirectory(TestThings)
 #        websocket_receiver.cpp
 #)
 
-
-# video support
-add_subdirectory(Video/theora_cmake)
-
-add_library(VideoStream STATIC
-    Video/videostreampainter.cpp
-    Menu/CMakeLists.txt
-    Home/CMakeLists.txt
-    LivePlot/CMakeLists.txt
-    TestThings/CMakeLists.txt
-    ExpandableBottomBar/CMakeLists.txt
-    Launcher/CMakeLists.txt)
-
-target_link_libraries(VideoStream PRIVATE
-    PUBLIC theora::theora
-            Qt${QT_VERSION_MAJOR}::Core
-            Qt${QT_VERSION_MAJOR}::Quick
-            Qt${QT_VERSION_MAJOR}::WebSockets
-            Qt${QT_VERSION_MAJOR}::QuickControls2
-            Qt${QT_VERSION_MAJOR}::Widgets)
-
-target_link_libraries(xbot2_gui PRIVATE  VideoStream)
-
-qt_add_shaders(xbot2_gui "xbot2_gui-shaders"
-    BATCHABLE # Without this it fails
-    PREFIX
-        "/"
-    FILES
-        "Video/yuv2rgb.vert"
-        "Video/yuv2rgb.frag"
-)
 
 # robot model
 add_subdirectory(RobotModel/)

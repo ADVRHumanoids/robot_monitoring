@@ -1,18 +1,11 @@
 
 
-function construct(procRepeater, pluginRepeater, consoleItem) {
+function construct(procRepeater, pluginRepeater) {
 
     requestProcessUpdate(procRepeater)
 
-    client.procMessageReceived.connect(
-                (msg) => onProcMessageReceived(procRepeater, consoleItem, msg)
-                )
-
     requestPluginUpdate(pluginRepeater)
 
-    client.pluginStatMessageReceived.connect(
-                (msg) => onPluginMessageReceived(pluginRepeater, msg)
-                )
 }
 
 

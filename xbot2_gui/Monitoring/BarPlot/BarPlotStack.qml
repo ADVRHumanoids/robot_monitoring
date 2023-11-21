@@ -3,7 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 
 import "BarPlot.js" as Logic
-import "../../sharedData.js" as SharedData
+import "/qt/qml/Main/sharedData.js" as SharedData
 
 Item {
 

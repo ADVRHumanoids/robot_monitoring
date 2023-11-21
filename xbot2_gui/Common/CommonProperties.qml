@@ -11,7 +11,7 @@ Item {
         property color accent: Material.accentColor
         property color ok: Material.color(Material.Green, Material.Shade900)
         property color warn: Material.color(Material.Yellow, Material.Shade900)
-        property color err: Material.color(Material.Red, Material.Shade900)
+        property color err: Material.color(Material.Red, Material.Shade300)
         property color primaryText: Material.primaryTextColor
         property color secondaryText: Material.secondaryTextColor
         property color cardBackground: Qt.rgba(1, 1, 1, 0.075)
@@ -33,6 +33,34 @@ Item {
         property int h2: 20
         property int h3: 16
         property int h4: 14
+    }
+
+    property Item notifications: Item {
+
+        function info(txt, name = 'ui') {
+            newInfo(txt, name)
+        }
+
+        function warning(txt, name = 'ui') {
+            newWarning(txt, name)
+        }
+
+        function error(txt, name = 'ui') {
+            newError(txt, name)
+        }
+
+        function message(txt, name = 'ui', severity = 0) {
+            if(severity === 0) newInfo(txt, name)
+            else if(severity === 1) newWarning(txt, name)
+            else if(severity === 2) newError(txt, name)
+        }
+
+        signal newInfo(string txt, string name)
+
+        signal newWarning(string txt, string name)
+
+        signal newError(string txt, string name)
+
     }
 
     property Item fontAwesome: Item {

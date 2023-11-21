@@ -14,7 +14,7 @@ ApplicationWindow {
     height: 720
     visible: true
     title: "Xbot2 Robot GUI"
-//    visibility: Window.FullScreen
+    //    visibility: Window.FullScreen
 
     palette {
         active {
@@ -71,7 +71,7 @@ ApplicationWindow {
 
         PageItem {
             name: "Monitoring"
-            page: "Monitoring/Monitoring.qml"
+            page: "/qt/qml/Monitoring/Monitoring.qml"
             iconText: MaterialSymbolNames.plot
             iconFont: syms.font.family
             active: client.isFinalized
@@ -79,7 +79,7 @@ ApplicationWindow {
 
         PageItem {
             name: "Joy"
-            page: "Joy/Joy.qml"
+            page: "/qt/qml/Joy/Joy.qml"
             iconText: MaterialSymbolNames.joystick
             iconFont: syms.font.family
             active: client.active
@@ -102,7 +102,9 @@ ApplicationWindow {
 
 
     NavRailWrapper {
+
         id: nav
+
         anchors {
             left: parent.left
             top: parent.top
@@ -126,16 +128,18 @@ ApplicationWindow {
     }
 
 
-    NavBarWrapper {
+    NavRailWrapper {
 
-        z: 1
-
-        opacity: 0.8
+        id: navBar
 
         visible: !layout.expanded
 
-        id: navBar
         model: pagesModel
+
+        orientation: Qt.Horizontal
+
+        uncheckedDisplayMode: AbstractButton.IconOnly
+        checkedDisplayMode: AbstractButton.TextBesideIcon
 
         onCurrentIndexChanged: {
             pagesStack.currentIndex = currentIndex
@@ -170,9 +174,13 @@ ApplicationWindow {
 
         clip: true
 
-//        width: mainWindow.width - nav.railWidth
+        //        width: mainWindow.width - nav.railWidth
 
         currentIndex: nav.currentIndex
+
+        onCurrentIndexChanged: {
+            itemAt(currentIndex).item.numErrors = 0
+        }
 
         // load all pages in the model
         Repeater {
@@ -218,9 +226,14 @@ ApplicationWindow {
                 Connections {
                     target: stackPageLoader.item
                     ignoreUnknownSignals: true
+
                     function onRestartUi() {
                         console.log('onRestartUi: calling pagesStackRepeater.reloadAll()')
                         pagesStackRepeater.reloadAll()
+                    }
+
+                    function onNumErrorsChanged() {
+                        nav.setBadgeNumber(index, stackPageLoader.item.numErrors)
                     }
                 }
 
@@ -229,32 +242,95 @@ ApplicationWindow {
         }
     }
 
+
+    NotificationPopup {
+
+        id: notificationPopup
+        property bool showPopup: false
+
+        opacity: 0.8
+
+        width: layout.compact ? pagesStack.width : 600
+        height: Math.min(implicitHeight, mainWindow.height/2)
+
+
+
+        anchors.horizontalCenter: parent.horizontalCenter
+        y: showPopup ? mainWindow.height - height - 24 : mainWindow.height
+
+        Behavior on y {
+            SequentialAnimation {
+                NumberAnimation {
+                    easing.type: Easing.OutQuad
+                }
+                ScriptAction {
+                    script: {
+                        if(!notificationPopup.showPopup) {
+                            notificationPopup.clear()
+                        }
+                    }
+                }
+            }
+        }
+
+        onShowPopupChanged: {
+            if(showPopup) hideTimer.running = true
+        }
+
+        Timer {
+            id: hideTimer
+            interval: 3000
+            onTriggered: {
+                parent.showPopup = false
+            }
+        }
+
+
+        onDismissRequested: {
+            showPopup = false
+        }
+
+        Connections {
+            target: CommonProperties.notifications
+
+            function onNewWarning(txt, name) {
+                notificationPopup.addMsg(txt, name, 1)
+                notificationPopup.showPopup = true
+                hideTimer.restart()
+            }
+
+            function onNewError(txt, name) {
+                notificationPopup.addMsg(txt, name, 2)
+                notificationPopup.showPopup = true
+                hideTimer.restart()
+            }
+        }
+
+    }
+
     // the object handling communication with the backend (server)
     ClientEndpoint {
         id: client
-        onError: function (msg) {
-            items.home.setError(msg)
-        }
-        onConnected: function (msg) {
-            items.home.setConnected(msg)
-        }
-        onFinalized: {
-            print('finalized!')
+
+        onObjectReceived: function(obj) {
+            if(obj.type === 'server_log') {
+                CommonProperties.notifications.message(obj.txt, 'webserver', obj.severity)
+            }
         }
     }
 
     // a timer to periodically try connection
     // with server
-//    Timer {
-//        id: reconnectTimer
-//        interval: 1000
-//        running: !client.active
-//        repeat: true
+    //    Timer {
+    //        id: reconnectTimer
+    //        interval: 1000
+    //        running: !client.active
+    //        repeat: true
 
-//        onTriggered: {
-//            client.active = true
-//        }
+    //        onTriggered: {
+    //            client.active = true
+    //        }
 
-//    }
+    //    }
 
 }

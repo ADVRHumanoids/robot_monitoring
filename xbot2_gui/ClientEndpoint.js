@@ -1,8 +1,30 @@
+.import Common 1.0 as Common
+
+let error = Common.CommonProperties.notifications.error
+let info = Common.CommonProperties.notifications.info
+
+function notifyStatus(verb, url, xhr) {
+
+    let statusText = xhr.statusText
+
+    if(xhr.status === 0) {
+        statusText = 'Server not found'
+    }
+
+    if(xhr.status < 200 || xhr.status >= 300) {
+        error(`${verb} ${url} failed: ${statusText} (${xhr.status})`, 'http')
+        return false
+    }
+    else {
+        info(`${verb} ${url} succeeded (${xhr.status})`, 'http')
+        return true
+    }
+}
+
+
 function httpRequestRaw(verb, url, body, callback) {
 
     var xhr = new XMLHttpRequest();
-
-
 
     xhr.onreadystatechange = function()
     {
@@ -11,11 +33,15 @@ function httpRequestRaw(verb, url, body, callback) {
         }
         else if(xhr.readyState === XMLHttpRequest.DONE)
         {
+            if(!notifyStatus(verb, url, xhr))
+            {
+                return;
+            }
+
             if(callback !== undefined)
             {
                 callback(xhr.response)
             }
-
         }
     }
 
@@ -37,14 +63,18 @@ function httpRequest(verb, url, body, callback) {
         }
         else if(xhr.readyState === XMLHttpRequest.DONE)
         {
+            if(!notifyStatus(verb, url, xhr))
+            {
+                return;
+            }
+
             try {
                 var object = JSON.parse(xhr.responseText.toString());
             }
             catch(err) {
-                console.log(verb + ' ' + url + ': failed to parse message: ' + xhr.responseText.toString())
+                error(verb + ' ' + url + ': failed to parse message: ' + xhr.responseText.toString())
                 return;
             }
-
 
             if(callback !== undefined)
             {
@@ -66,16 +96,32 @@ function httpRequestAsync(verb, url, body) {
             (resolve, reject) =>
             {
                 let xhr = new XMLHttpRequest();
+
                 xhr.open(verb, url);
+
                 xhr.onload = () => {
-                    if (xhr.status >= 200 && xhr.status < 300) {
-                        var object = JSON.parse(xhr.responseText.toString());
-                        resolve(object);
-                    } else {
+
+                    if(!notifyStatus(verb, url, xhr))
+                    {
                         reject(xhr.statusText);
                     }
-                };
-                xhr.onerror = () => reject(xhr.statusText);
+
+                    try {
+                        var object = JSON.parse(xhr.responseText.toString());
+                        resolve(object);
+                    }
+                    catch(err) {
+                        error(verb + ' ' + url + ': failed to parse message: ' + xhr.responseText.toString())
+                        reject(verb + ' ' + url + ': failed to parse message: ' + xhr.responseText.toString())
+                    }
+
+                }
+
+                xhr.onerror = () => {
+                    notifyStatus(verb, url, xhr);
+                    reject(xhr.statusText);
+                }
+
                 xhr.send(body);
             });
 

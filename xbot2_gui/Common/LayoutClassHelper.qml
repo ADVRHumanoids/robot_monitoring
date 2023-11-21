@@ -4,8 +4,34 @@ Item {
 
     required property int targetWidth
 
-    property bool compact: targetWidth < 600
-    property bool medium: targetWidth < 840 && !compact
-    property bool expanded: !compact && !medium
+    signal beforeLayoutChange()
+    signal afterLayoutChange()
+
+    enum Class {
+        Compact, Medium, Expanded
+    }
+
+    property int _layoutClass: (targetWidth < 600) ?
+                                  (LayoutClassHelper.Class.Compact ? (targetWidth < 840) : LayoutClassHelper.Class.Medium) :
+                                  LayoutClassHelper.Class.Expanded
+
+    property int layoutClass
+    property bool compact: false
+    property bool medium: false
+    property bool expanded: false
+
+    property bool _compact: targetWidth < 600
+    property bool _medium: targetWidth < 840 && !compact
+    property bool _expanded: !compact && !medium
+
+    on_LayoutClassChanged: {
+        beforeLayoutChange()
+        compact = _layoutClass === LayoutClassHelper.Class.Compact
+        medium = _layoutClass === LayoutClassHelper.Class.Medium
+        expanded = _layoutClass === LayoutClassHelper.Class.Expanded
+        Qt.callLater(afterLayoutChange)
+    }
+
+
 
 }

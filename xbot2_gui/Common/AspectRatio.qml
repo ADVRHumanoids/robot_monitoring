@@ -14,8 +14,7 @@ Item {
 
     Rectangle {
         id: inner
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.top: parent.top
+        anchors.centerIn: parent
         width: root._ar < root.aspectRatio ? parent.width : parent.height*root.aspectRatio
         height: root._ar < root.aspectRatio ? parent.width/root.aspectRatio : parent.height
 

@@ -15,7 +15,7 @@ function setStream (stream_name, video) {
                      )
 }
 
-function refreshNames(video) {
+function refreshNames(video = undefined, cb = undefined) {
     client.doRequest('GET', '/video/get_names', {},
                      function(msg) {
 
@@ -24,7 +24,13 @@ function refreshNames(video) {
                              return;
                          }
 
-                         video.availableStreamIds = msg.topics
+                         if(cb === undefined) {
+                             video.availableStreamIds = msg.topics
+                         }
+                         else {
+                             cb(msg.topics)
+                         }
+
 
                      }
                      )

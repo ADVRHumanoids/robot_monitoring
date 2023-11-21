@@ -9,7 +9,7 @@ Item {
 
     property string fillColor: "green"
     property string strokeColor: "red"
-    property bool antialiasing: true
+    antialiasing: true
     property int strokeWidth: -1
 
     TriangleItem {

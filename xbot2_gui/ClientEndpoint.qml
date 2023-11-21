@@ -2,6 +2,7 @@ import QtQuick
 import QtWebSockets
 import QtCore
 
+import Common
 import "ClientEndpoint.js" as Client
 import "sharedData.js" as SharedData
 
@@ -18,6 +19,9 @@ Item
 
     // alias for the underlying websocket's active property
     property alias active: socket.active
+
+    //
+    property bool isConnected: false
 
     // bool flag to indicate if we managed to receive all the
     // info about the running system (urdf data, plugin names, etc)
@@ -140,18 +144,20 @@ Item
         onStatusChanged: {
             print("status changed [url = " + url + "]")
             if (socket.status === WebSocket.Error) {
-                console.log("Error: " + socket.errorString)
+                CommonProperties.notifications.error('Error: ' + socket.errorString, 'webclient')
                 error(socket.errorString)
                 active = false
+                isConnected = false
                 root.isFinalized = false
             } else if (socket.status === WebSocket.Open) {
-                console.log("Server connected")
+                CommonProperties.notifications.info('Server connected', 'webclient')
                 connected('Server connected')
+                isConnected = true
                 root.bytesRecv = 0
                 root.bytesSent = 0
             } else if (socket.status === WebSocket.Closed) {
-                console.log("Socket closed")
-                error('Socket closed')
+                CommonProperties.notifications.error('Socket closed', 'webclient')
+                isConnected = false
                 active = false
                 root.isFinalized = false
             }
@@ -187,7 +193,7 @@ Item
         id: fetchInfoTimer
         interval: 1000
         repeat: true
-        running: !parent.isFinalized && socket.active
+        running: !root.isFinalized && root.isConnected
         triggeredOnStart: true
         property int _nattempt: 0
 

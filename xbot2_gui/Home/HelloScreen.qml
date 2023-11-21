@@ -13,7 +13,44 @@ MultiPaneResponsiveLayout {
 
     property ClientEndpoint client: undefined
 
+    Connections {
+
+        target: client
+
+        function onError(msg) {
+            root.setError(msg)
+        }
+
+        function onConnected(msg) {
+            root.setConnected(msg)
+        }
+
+        function onFinalized() {
+            print('finalized!')
+        }
+    }
+
+    Connections {
+
+        target: CommonProperties.notifications
+
+        function onNewInfo(txt, name) {
+            notiPopup.addMsg(txt, name)
+        }
+
+        function onNewWarning(txt, name) {
+            notiPopup.addMsg(txt, name, 1)
+            root.numErrors += 1
+        }
+
+        function onNewError(txt, name) {
+            notiPopup.addMsg(txt, name, 2)
+            root.numErrors += 1
+        }
+    }
+
     property int numEvents: 0
+    property int numErrors: 0
 
     signal restartUi()
 
@@ -61,42 +98,43 @@ MultiPaneResponsiveLayout {
         }
     }
 
-    ScrollView {
+    ColumnLayout {
 
-        property string iconText: 'Server log'
+        property string iconText: 'Log'
         property string iconChar: MaterialSymbolNames.log
 
-        id: textScroll
-        contentWidth: availableWidth
-        contentHeight: consoleText.height
+        id: textCol
+        spacing: CommonProperties.geom.spacing
 
-        Column {
+        SectionHeader {
+            text: parent.iconText
+            Layout.fillWidth: true
+        }
 
-            spacing: CommonProperties.geom.spacing
+        Row {
 
-            SectionHeader {
-                text: 'Server Output'
+            CheckBox {
+                id: verbosityCheck
+                text: 'Verbose'
+                checked: true
             }
 
-            TextArea {
-
-                id: consoleText
-
-                width: textScroll.contentWidth
-                color: "white"
-                readOnly: true
-
-                placeholderText: "Console output"
-                wrapMode: TextEdit.Wrap
-
-                textFormat: TextEdit.RichText
-
-                font.pixelSize: 14
+            CheckBox {
+                id: autoscrollCheck
+                text: 'Autoscroll'
+                checked: true
             }
 
         }
 
-
+        NotificationPopup {
+            id: notiPopup
+            verbosity: verbosityCheck.checked ? 0 : 1
+            autoscroll: autoscrollCheck.checked
+            Layout.fillHeight: true
+            Layout.fillWidth: true
+            onDismissRequested: clear()
+        }
 
     }
 

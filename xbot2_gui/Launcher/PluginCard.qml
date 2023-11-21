@@ -30,7 +30,7 @@ Item {
 
     height: card.height
 
-    Card {
+    Card1 {
 
         id: card
 
@@ -40,7 +40,7 @@ Item {
         nameFont.bold: root.pluginRunning
         nameFont.pixelSize: CommonProperties.font.h3
 
-        hidden: true
+        collapsed: true
         configurable: false
 
         backgroundColor: root.pluginRunning ?

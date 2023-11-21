@@ -33,6 +33,10 @@ too_much_print:
   name: too_much_print
   machine: alaurenzi@localhost
 
+cartesian:
+  type: cartesian
+  cmd_vel_topics:
+   - cazzi
   
 #ecat_master_process:
 #  type: process_handler

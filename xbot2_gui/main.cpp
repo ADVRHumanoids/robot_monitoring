@@ -38,10 +38,10 @@ public:
 int main(int argc, char *argv[])
 {
 
-    QDirIterator it(":", QDirIterator::Subdirectories);
-    while (it.hasNext()) {
-        qDebug() << it.next();
-    }
+//    QDirIterator it(":", QDirIterator::Subdirectories);
+//    while (it.hasNext()) {
+//        qDebug() << it.next();
+//    }
 
     // verbose output
     //    qputenv("QSG_INFO", "1");
@@ -73,10 +73,8 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("appData", &appdata);
 
-    qmlRegisterType<VideoStreamPainter>("xbot2_gui.Video", 1, 0, "VideoStreamPainter");
     qmlRegisterType<RobotModel>("xbot2_gui.RobotModel", 1, 0, "RobotModel");
     qmlRegisterType<MeshGeometry>("xbot2_gui.MeshGeometry", 1, 0, "MeshGeometry");
-//    qmlRegisterSingletonType(QUrl("qrc:/Common/CommonProperties.qml"), "Common", 1, 0, "CommonProperties");
 
     const QUrl url(QStringLiteral("qrc:/qt/qml/Main/main.qml"));
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,

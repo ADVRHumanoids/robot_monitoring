@@ -38,7 +38,7 @@ class ProcessHandler:
         self.srv.schedule_task(self.proc_output_broadcaster(self.proc, stream_type='stdout'))
         self.srv.schedule_task(self.proc_output_broadcaster(self.proc, stream_type='stderr'))
         self.srv.add_route('GET', f'/process/get_list',
-                           ProcessHandler.process_get_list_handler, f'process_get_list_handler')
+                           self.process_get_list_handler, f'process_get_list_handler')
         self.srv.add_route('PUT', f'/process/{self.name}/command/{{command}}',
                            self.process_command_handler, f'process_{self.name}_cmd_handler')
         self.srv.add_route('GET', f'/process/{self.name}/state',
@@ -47,8 +47,8 @@ class ProcessHandler:
         # if running, attach
         self.srv.schedule_task(self.proc.attach())
 
-    
-    async def process_get_list_handler(request):
+    @utils.handle_exceptions
+    async def process_get_list_handler(self, request):
         
         # screen session data
         proc_data = list()
@@ -68,19 +68,21 @@ class ProcessHandler:
         cmd = request.match_info.get('command', None)
 
         res = dict()
-        res['success'] = True
+        res['success'] = False
+        res['message'] = 'unknown failure'
 
         if cmd == 'start':
             body = await request.text()
             body = json.loads(body)
-            await self.proc.start(options=body.get('options', {}))
+            res['success'] = await self.proc.start(options=body.get('options', {}))
         elif cmd == 'stop':
-            await self.proc.stop()
+            res['success'] = await self.proc.stop()
         elif cmd == 'kill':
-            await self.proc.kill()
+            res['success'] = await self.proc.kill()
         else:
-            res['success'] = False
             res['message'] = f'{cmd} command not supported'
+        if not res['success']:
+            await self.srv.log(f'process_command_handler {cmd} failed ({self.name}): {res["message"]}', sev=2)
 
         return web.Response(text=json.dumps(res))
 

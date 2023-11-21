@@ -91,7 +91,7 @@ Card1 {
         Button {
             Layout.alignment: Qt.AlignHCenter
             Layout.columnSpan: 2
-            text: 'Apply'
+            text: 'Connect'
             onClicked: {
                 root.updateServerUrl()
             }

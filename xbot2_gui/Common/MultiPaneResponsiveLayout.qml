@@ -7,12 +7,18 @@ import Menu
 
 Item {
 
+    signal beforeLayoutChange()
+    signal afterLayoutChange()
+
     //
     id: root
 
     LayoutClassHelper {
         id: layout
         targetWidth: root.width
+
+        onBeforeLayoutChange: root.beforeLayoutChange()
+        onAfterLayoutChange: root.afterLayoutChange()
     }
 
     default property alias items: container.data
@@ -27,6 +33,9 @@ Item {
         // push items that are not repeaters to columnItems
         let tmp = []
         for(let c of items) {
+            if(!c.visible) {
+                continue
+            }
             if(c instanceof Repeater) {
                 continue
             }
@@ -57,7 +66,11 @@ Item {
 
                 Layout.fillWidth:  true
                 Layout.fillHeight: true
-                Layout.preferredWidth: 1
+                Layout.preferredWidth: proxy.target.columnSize === undefined ?
+                                           1 : proxy.target.columnSize
+//                Layout.minimumWidth: proxy.Layout.minimumWidth
+
+
 
                 Pane {
 
@@ -65,7 +78,7 @@ Item {
                     anchors.fill: parent
 
                     LayoutItemProxy {
-
+                        id: proxy
                         target: root.columnItems[rowItem.index]
                         width: rowPane.availableWidth
                         height: rowPane.availableHeight
@@ -86,9 +99,11 @@ Item {
     }
 
 
-    NavBar {
+    NavRailWrapper {
 
         id: nav
+
+        orientation: Qt.Horizontal
 
         anchors {
             top: visible ? parent.top : undefined
@@ -98,26 +113,32 @@ Item {
 
         visible: !row.visible
 
-        Repeater {
+        model: modelItem
 
-            model: root.columnItems.length
+        Item {
 
-            NavButton {
-                required property int index
-                iconChar: root.columnItems[index].iconChar === undefined ? '\ue574' :  root.columnItems[index].iconChar
-                text: root.columnItems[index].iconText
-                checkedDisplayMode: AbstractButton.TextUnderIcon
-                uncheckedDisplayMode: AbstractButton.TextUnderIcon
-                checked: nav.currentIndex === index
-//                onClicked: nav.currentIndex = index
+            id: modelItem
+
+            Repeater {
+
+                model: root.columnItems.length
+
+                Item {
+                    required property int index
+                    property string name: root.columnItems[index].iconText
+                    property string iconText: root.columnItems[index].iconChar
+                }
             }
         }
+
+
 
         onCurrentIndexChanged: {
             swipe.setCurrentIndex(nav.currentIndex)
         }
 
     }
+
 
     SwipeView {
 
@@ -134,7 +155,7 @@ Item {
         }
 
         onCurrentIndexChanged: {
-            nav.setCurrentIndex(swipe.currentIndex)
+            nav.currentIndex = swipe.currentIndex
         }
 
         Repeater {

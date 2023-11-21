@@ -3,16 +3,19 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import QtCore
 
-import "../Common"
+import Common
 import "Joy.js" as Logic
+import "../Video/VideoStream.js" as VideoStream
 
-Card {
+
+Card1 {
 
     name: 'Joy Setup'
     property alias currentTask: taskCombo.currentText
     property alias linXOnly: linXCheck.checked
     property real maxSpeed: maxSpeedLinearSpinBox.value
     property bool ikRunning: false
+    property alias videoStream: videoStreamCombo.currentText
 
     // private
     id: root
@@ -103,6 +106,26 @@ Card {
             text: 'Linear X Only'
             checked: false
         }
+
+        Label {
+            text: 'Video stream'
+        }
+
+        ComboBox {
+            id: videoStreamCombo
+            Layout.fillWidth: true
+        }
+
+        Button {
+
+            text: 'Refresh'
+            onClicked: {
+                VideoStream.refreshNames(undefined,
+                                         (topics) => {
+                                             videoStreamCombo.model = topics
+                                         })
+            }
+        }
     }
 
     Settings {
@@ -111,15 +134,19 @@ Card {
         property string currentTask
     }
 
-    Timer {
-        repeat: true
-        interval: 5000
-        onTriggered: Logic.updateTaskNames(taskCombo)
-        Component.onCompleted: start()
-    }
+//    Timer {
+//        repeat: true
+//        interval: 5000
+//        onTriggered: Logic.updateTaskNames(taskCombo)
+//        Component.onCompleted: start()
+//    }
 
     Component.onCompleted: {
         Logic.updateTaskNames(taskCombo)
+        VideoStream.refreshNames(undefined,
+                                 (topics) => {
+                                     videoStreamCombo.model = topics
+                                 })
     }
 
     Component.onDestruction: {

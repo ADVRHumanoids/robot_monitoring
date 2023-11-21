@@ -20,4 +20,6 @@ Item {
     property string vitals: '\ue650'
     property string log: '\uef42'
     property string launcher: '\ueb9b'
+    property string box3d: '\uf720'
+    property string analytics: '\uef3e'
 }

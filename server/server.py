@@ -27,6 +27,9 @@ class ServerBase:
 
     def schedule_task(self, task):
         raise NotImplementedError
+    
+    async def log(self, txt, sev=0):
+        raise NotImplementedError
 
 
 class Xbot2WebServer(ServerBase):
@@ -85,6 +88,19 @@ class Xbot2WebServer(ServerBase):
                 pass
             except BaseException as e:
                 print(f'error: {e}')
+
+
+    async def log(self, txt, sev=0):
+        
+        msg = {
+            'type': 'server_log',
+            'txt': txt,
+            'severity': sev
+        }
+
+        print(txt)
+
+        await self.ws_send_to_all(json.dumps(msg))
 
     
     def run_server(self, static='.', host='0.0.0.0', port=8080):
@@ -166,7 +182,7 @@ class Xbot2WebServer(ServerBase):
 
         # add new connection
         self.ws_clients.add(ws)
-        print(f'new client connected (total is {len(self.ws_clients)})')
+        await self.log(f'new client connected (total is {len(self.ws_clients)})')
 
         # start receiver task
         await self.websocket_receiver(ws)

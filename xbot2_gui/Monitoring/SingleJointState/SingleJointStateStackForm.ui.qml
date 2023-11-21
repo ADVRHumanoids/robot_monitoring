@@ -1,7 +1,9 @@
-import QtQuick 2.4
-import QtQuick.Controls 2.12
-import QtQuick.Layouts 1.12
-import "../../sharedData.js" as SharedData
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+
+import "/qt/qml/Main/sharedData.js" as SharedData
+
 Item {
 
     property alias stack: stack
@@ -16,6 +18,10 @@ Item {
         id: stack
         anchors.fill: parent
         currentIndex: root.currentIndex
+
+        onImplicitHeightChanged: {
+            console.log(`diocanissimo ${implicitHeight}`)
+        }
 
         Repeater {
 

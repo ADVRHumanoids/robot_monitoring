@@ -58,7 +58,16 @@ Item {
 
     implicitWidth: flip.implicitWidth
     implicitHeight: flip.implicitHeight
+
     height: flip.height
+    clip: true
+
+    Behavior on height {
+        NumberAnimation {
+            duration: 333
+            easing.type: Easing.OutQuad
+        }
+    }
 
     Flipable {
 
@@ -68,7 +77,7 @@ Item {
         implicitHeight: root.flipped ? backSide.implicitHeight : frontSide.implicitHeight
 
         width: parent.width
-        height: frontSide.height
+        height: root.flipped ? backSide.height : frontSide.height
 
         // front side is rendered as a rectangle whose content is layed out in a column
         // with header (card title and tool buttons) and content (item)
@@ -88,12 +97,12 @@ Item {
             Component.onCompleted: {
                 for(let i = 0; i < root.toolButtons.length; i++) {
                     let tb = root.toolButtons[i]
-                    tb.parent = toolBtnRow
+                    tb.parent = toolBtnRowInner
                     try {
                         tb.font.pixelSize = CommonProperties.font.h3
                     }
                     catch(error) { }
-                    tb.anchors.verticalCenter = toolBtnRow.verticalCenter
+                    //                    tb.anchors.verticalCenter = toolBtnRow.verticalCenter
                 }
             }
 
@@ -122,16 +131,14 @@ Item {
                         id: titleLabel
                         text: root.name
                         font.pixelSize: CommonProperties.font.h2
-                        height: implicitHeight + 2*root.margins
                         verticalAlignment: Text.AlignVCenter
+                        Layout.fillWidth: true
+                        wrapMode: Text.Wrap
                     }
 
-                    // filler
-                    Item {
-                        implicitHeight: 1
-                        implicitWidth: 1
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
+                    RowLayout {
+                        id: toolBtnRowInner
+                        Layout.alignment: Qt.AlignVCenter
                     }
 
                     // configuration button
@@ -178,12 +185,7 @@ Item {
                     height: root.collapsed ? 0 : Math.min(frontScroll.implicitHeight, root.maxContentHeight)
                     implicitWidth: frontScroll.implicitWidth
 
-                    Behavior on height {
-                        NumberAnimation {
-                            duration: 333
-                            easing.type: Easing.OutQuad
-                        }
-                    }
+
 
                     ScrollView {
                         id: frontScroll
@@ -196,87 +198,82 @@ Item {
                         Item {
                             id: frontScrollContent
                             width: frontScroll.availableWidth
-                            height: childrenRect.height
-
+                            height: children.length > 0 ? children[0].height : 0
                         }
                     }
                 }
             }
         }
 
-        property Item backSide: Rectangle {
+        property Item backSide: Control {
 
             property alias contentItemWrapper: backItemWrapper
 
             width: flip.width
-            height: flip.height
-            color: root.backgroundColor
-            radius: CommonProperties.geom.cardRadius
+            height: titleLabelBack.height + backItemWrapper.height + cfgOkBtn.height + 2*root.margins
 
-            implicitWidth: 2*root.margins +
-                           Math.max(contentItemWrapper.implicitWidth,
-                                    titleLabelBack.implicitWidth,
-                                    cfgCancelBtn.implicitWidth +
-                                    cfgOkBtn.implicitWidth +
-                                    root.margins
-                                    )
 
-            implicitHeight: 4*root.margins +
-                            titleLabelBack.implicitHeight +
-                            contentItemWrapper.implicitHeight +
-                            cfgCancelBtn.implicitHeight
+            implicitWidth: backColumn.implicitWidth
 
-            Label {
-                id: titleLabelBack
-                text: root.name
-                font.pixelSize: CommonProperties.font.h2
-                anchors {
-                    top: parent.top
-                    left: parent.left
-                    margins: root.margins
-                }
+            implicitHeight: backColumn.implicitHeight
+
+            background: Rectangle {
+                color: root.backgroundColor
+                radius: CommonProperties.geom.cardRadius
             }
 
-            Item {
-                id: backItemWrapper
-                implicitWidth: children[0].implicitWidth
-                implicitHeight: children[0].implicitHeight
-                width: parent.width - 2*root.margins
-                height: parent.height - 4*root.margins - titleLabelBack.height - cfgOkBtn.height
-                clip: true
-                anchors {
-                    top: titleLabelBack.bottom
-                    left: parent.left
-                    margins: root.margins
-                }
-            }
+            padding: root.margins
 
-            Button {
-                id: cfgOkBtn
-                anchors {
-                    top: backItemWrapper.bottom
-                    left: parent.left
-                    margins: root.margins
+            contentItem: Column {
+
+                id: backColumn
+
+                width: parent.width
+
+
+                Label {
+                    id: titleLabelBack
+                    text: root.name
+                    font.pixelSize: CommonProperties.font.h2
                 }
 
-                text: 'Ok'
-                onReleased: {
-                    root.flipped = false
-                    root.applyConfiguration()
+                Item {
+                    width: parent.width
+                    height: root.margins
                 }
-            }
 
-            Button {
-                id: cfgCancelBtn
-                anchors {
-                    top: backItemWrapper.bottom
-                    left: cfgOkBtn.right
-                    margins: root.margins
+                Item {
+                    id: backItemWrapper
+                    implicitWidth: children[0].implicitWidth
+                    implicitHeight: children[0].implicitHeight
+                    width: parent.width
+                    height:  children.length > 0 ? children[0].height : 0
+                    clip: true
                 }
-                text: 'Cancel'
-                onReleased: {
-                    root.flipped = false
+
+                Row {
+
+                    spacing: root.margins
+
+                    Button {
+                        id: cfgOkBtn
+                        text: 'Ok'
+                        onReleased: {
+                            root.flipped = false
+                            root.applyConfiguration()
+                        }
+                    }
+
+                    Button {
+                        id: cfgCancelBtn
+                        text: 'Cancel'
+                        onReleased: {
+                            root.flipped = false
+                        }
+                    }
+
                 }
+
             }
 
         }

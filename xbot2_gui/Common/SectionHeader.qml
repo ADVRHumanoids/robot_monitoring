@@ -13,10 +13,7 @@ RowLayout {
         id: title
         text: 'Title'
         font.pixelSize: CommonProperties.font.h1
-    }
-
-    Item {
         Layout.fillWidth: true
+        wrapMode: Text.Wrap
     }
-
 }

@@ -2,8 +2,8 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 
-import xbot2_gui.Video
-import "../Common"
+import Video
+import Common
 
 Item {
 

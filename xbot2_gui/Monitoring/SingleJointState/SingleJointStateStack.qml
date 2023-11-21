@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 
-import "../../sharedData.js" as SharedData
+import "/qt/qml/Main/sharedData.js" as SharedData
 
 SingleJointStateStackForm {
 

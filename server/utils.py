@@ -43,11 +43,11 @@ async def to_thread(func, *args, **kwargs):
 def handle_exceptions(func):
 
     @functools.wraps(func)
-    async def async_wrapper(*args, **kwargs):
+    async def async_wrapper(self, *args, **kwargs):
         try:
-            return await func(*args, **kwargs)
+            return await func(self, *args, **kwargs)
         except BaseException as e:
-            print(f'[{func.__name__}] exception occurred: {e}')
+            await self.srv.log(f'[{func.__name__}] exception occurred: {e}', sev=2)
             traceback.print_exc()
             return web.Response(text=json.dumps({
                     'success': False, 

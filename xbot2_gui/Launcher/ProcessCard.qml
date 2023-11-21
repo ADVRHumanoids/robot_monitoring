@@ -27,7 +27,7 @@ Item {
     id: root
     Layout.maximumHeight: card.Layout.maximumHeight
 
-    Card {
+    Card1 {
 
         id: card
 
@@ -36,7 +36,7 @@ Item {
         name: root.processName
         nameFont.pixelSize: CommonProperties.font.h3
 
-        hidden: true
+        collapsed: true
 
         backgroundColor: root.processRunning ?
                              CommonProperties.colors.ok :
@@ -66,7 +66,6 @@ Item {
         }
 
         backItem: ConfigurePanel {
-            height: 400
             id: configPanel
             enabled: !root.processRunning
             anchors.fill: parent

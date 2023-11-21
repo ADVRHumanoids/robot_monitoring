@@ -9,7 +9,7 @@ add_library(ogglib::ogglib ALIAS ogg)
 set(THEORA_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/theora/include)
 file(GLOB THEORA_SRC_FILES external/theora/lib/*.c)
 
-message(STATUS "****${THEORA_INCLUDE_DIR}")
+message(STATUS "****THEORA_INCLUDE_DIR=${THEORA_INCLUDE_DIR}")
 include_directories(${THEORA_INCLUDE_DIR})
 
 add_library(theora STATIC

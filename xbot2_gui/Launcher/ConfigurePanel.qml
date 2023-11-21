@@ -8,7 +8,6 @@ import "ConfigurePanel.js" as Logic
 import "../TestThings"
 
 Item {
-
     // public
 
     property var description: Object()

@@ -12,9 +12,9 @@ import QtQuick.Scene2D
 import QtQuick.Scene3D
 
 
-import "../Viewer3D"
-import ".."
-import "../sharedData.js" as SharedData
+import Viewer3D
+import Main
+import "/qt/qml/Main/sharedData.js" as SharedData
 import "RobotModelViewer.js" as Logic
 
 Viewer3D {

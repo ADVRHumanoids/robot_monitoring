@@ -3,10 +3,9 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import Common
-import "../Common"
-import ".."
-import "../Viewer3D"
-import "../sharedData.js" as SharedData
+import Main
+import Viewer3D
+import "/qt/qml/Main/sharedData.js" as SharedData
 
 import "JointCommand.js" as Logic
 
@@ -15,12 +14,16 @@ Card {
     property ClientEndpoint client
     property RobotModelNode robotCmd
     signal resetCmd()
+    function selectJoint(jname) {
+        nameCombo.currentIndex = nameCombo.find(jname)
+    }
 
 
     // private
     id: root
     name: 'Joint Command'
     configurable: false
+
 
     frontItem: GridLayout {
 

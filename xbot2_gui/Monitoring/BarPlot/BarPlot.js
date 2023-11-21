@@ -1,4 +1,4 @@
-.import "../../sharedData.js" as SharedData
+.import "/qt/qml/Main/sharedData.js" as SharedData
 .import "../SingleJointState/data.js" as SjsData
 
 // base value

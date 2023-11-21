@@ -35,10 +35,10 @@ void RobotModel::setUrdf(QString urdf, bool is_floating_base)
     i = std::make_unique<Impl>(urdf.toStdString(), is_floating_base);
 
     i->jointNames = i->getJointNames();
-    jointNamesChanged(jointNames());
+    emit jointNamesChanged(jointNames());
 
     i->ndof = i->getJointNames().size();
-    ndofChanged(ndof());
+    emit ndofChanged(ndof());
 
     emit modelChanged();
 }

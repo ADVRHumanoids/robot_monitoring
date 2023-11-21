@@ -11,6 +11,7 @@ TabButton {
     property int checkedDisplayMode: TabButton.TextBesideIcon
     property int uncheckedDisplayMode: TabButton.IconOnly
     property int textFixedWidth: -1
+    property alias badgeNum: badge.num
 
     //
     id: root
@@ -82,9 +83,28 @@ TabButton {
             font.family: materialSymbols.font.family
             font.pointSize: root.icon.height
             padding: -10
+
             MaterialSymbols {
                 id: materialSymbols
                 filled: root.checked
+            }
+
+            Rectangle {
+                id: badge
+                property int num: 0
+                color: 'red'
+                visible: num > 0
+                width: Math.max(badgeLabel.width, badgeLabel.height)
+                height: badgeLabel.height
+                radius: height/2
+                x: parent.width - width/2
+                y: -height/2
+                Label {
+                    id: badgeLabel
+                    text: badge.num < 99 ? badge.num : '99+'
+                    anchors.centerIn: parent
+                    padding: 3
+                }
             }
 
         }
@@ -92,7 +112,7 @@ TabButton {
         Item {
             id: labelWrapper
             implicitHeight: label.implicitHeight
-            implicitWidth: root.textFixedWidth > 0 ? root.textFixedWidth : label.implicitWidth
+            implicitWidth: (root.textFixedWidth > 0 && root.display === AbstractButton.TextUnderIcon) ? root.textFixedWidth : label.implicitWidth
 
             Label {
                 id: label
@@ -120,6 +140,8 @@ TabButton {
                 NumberAnimation {}
             }
         }
+
+
     }
 
     Behavior on width {

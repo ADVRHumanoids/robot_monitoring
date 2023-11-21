@@ -15,6 +15,8 @@ MultiPaneResponsiveLayout {
     property ClientEndpoint client
 
 
+
+
     ScrollView {
 
         property string iconText: 'Launcher'
@@ -35,7 +37,7 @@ MultiPaneResponsiveLayout {
             width: leftScroll.contentWidth
 //            height: 1000
 
-            columns: 3
+            columns: 2
 
             SectionHeader {
 
@@ -75,6 +77,14 @@ MultiPaneResponsiveLayout {
 
             }
 
+            Item {
+
+                // spacer
+                property int columnSpan: leftGrid.columns
+
+                height: 16
+            }
+
             SectionHeader {
 
                 property int columnSpan: leftGrid.columns
@@ -89,18 +99,18 @@ MultiPaneResponsiveLayout {
                 }
             }
 
-//            Repeater {
+            Repeater {
 
-//                id: pluginRepeater
+                id: pluginRepeater
 
-//                PluginCard {
-//                    pluginName: modelData
-//                    onStart: Logic.pluginCmd(pluginName, 'start')
-//                    onStop: Logic.pluginCmd(pluginName, 'stop')
-//                    onAbort: Logic.pluginCmd(pluginName, 'abort')
-//                }
+                PluginCard {
+                    pluginName: modelData
+                    onStart: Logic.pluginCmd(pluginName, 'start')
+                    onStop: Logic.pluginCmd(pluginName, 'stop')
+                    onAbort: Logic.pluginCmd(pluginName, 'abort')
+                }
 
-//            }
+            }
         }
     }
 
@@ -119,8 +129,21 @@ MultiPaneResponsiveLayout {
         Layout.preferredWidth: 1
     }
 
-//    Component.onCompleted: Logic.construct(processRepeater,
-//                                           pluginRepeater,
-//                                           consoleItem.mainConsole)
+    Component.onCompleted: Logic.construct(processRepeater,
+                                           pluginRepeater)
+
+    Connections {
+
+        target: root.client
+
+        function onProcMessageReceived(msg) {
+            Logic.onProcMessageReceived(processRepeater, consoleItem.mainConsole, msg)
+        }
+
+        function onPluginStatMessageReceived(msg) {
+            Logic.onPluginMessageReceived(pluginRepeater, msg)
+        }
+
+    }
 
 }

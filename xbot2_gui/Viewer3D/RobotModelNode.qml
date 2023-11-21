@@ -8,7 +8,7 @@ import QtQuick.Scene2D
 import QtQuick.Scene3D
 
 import xbot2_gui.RobotModel
-import ".."
+import Main
 import "RobotModelNode.js" as Logic
 
 Node {

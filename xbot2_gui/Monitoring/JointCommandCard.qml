@@ -22,7 +22,7 @@ Card {
     // private
     id: root
     name: 'Joint Command'
-    configurable: false
+    configurable: true
 
 
     frontItem: GridLayout {
@@ -89,7 +89,8 @@ Card {
                 else {
                     running = true
                     Logic.sendCommand(nameCombo.currentText,
-                                      slider.value)
+                                      slider.value,
+                                      trjTimeSpin.value)
                 }
             }
         }
@@ -107,5 +108,26 @@ Card {
         Item {
             Layout.fillHeight: true
         }
+    }
+
+    backItem: Control {
+
+        contentItem: Column {
+
+            spacing: 6
+
+            Label {
+                text: 'Trajectory time'
+            }
+
+            DoubleSpinBox {
+                id: trjTimeSpin
+                from: 1.0
+                to: 10.0
+                stepSize: 1.0
+                value: 5.0
+            }
+        }
+
     }
 }

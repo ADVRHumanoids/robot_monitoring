@@ -41,6 +41,7 @@ Item {
             property string text
             property int index
             property alias badgeNum: btn.badgeNum
+            property alias iconSource: btn.icon.source
 
             NavButton {
                 id: btn
@@ -65,7 +66,13 @@ Item {
             let obj = model.children[i]
             if(obj instanceof Repeater) continue
             let btn = barButtonComponent.createObject(activePositioner,
-                                                      {'text': obj.name, 'iconChar': obj.iconText, 'index': i, 'enabled': Qt.binding(() => { return true || obj.active })})
+                                                      {
+                                                          'text': obj.name,
+                                                          'iconChar': obj.iconText,
+                                                          'index': i,
+                                                          'iconSource': obj.iconSource,
+                                                          'enabled': Qt.binding(() => { return true || obj.active })
+                                                      })
             buttonItems.push(btn)
         }
     }

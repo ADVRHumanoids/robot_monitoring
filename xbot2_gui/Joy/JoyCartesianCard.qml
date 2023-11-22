@@ -34,7 +34,7 @@ Card1 {
         Button {
             Layout.columnSpan: 3
             Layout.fillWidth: true
-            text: 'Refresh'
+            text: 'Refresh tasks'
             onReleased: {
                 Logic.updateTaskNames(taskCombo)
                 Logic.taskIsEnabled(taskCombo.currentText,
@@ -60,7 +60,8 @@ Card1 {
                                     })
             }
             onModelChanged: {
-                currentIndex = indexOfValue(settings.currentTask)
+                console.log(`model ${model}`)
+                currentIndex = 0
             }
         }
 
@@ -92,6 +93,9 @@ Card1 {
         ComboBox {
             id: videoStreamCombo
             Layout.fillWidth: true
+            onModelChanged: {
+                if(count > 0) currentIndex = 0
+            }
         }
 
         Button {

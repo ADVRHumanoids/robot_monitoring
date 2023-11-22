@@ -4,6 +4,7 @@
 #include <QtQuickControls2/QQuickStyle>
 #include <QFont>
 #include <QtWidgets/QApplication>
+#include <QtWebView/QtWebView>
 
 #include <QtQml/qqmlregistration.h>
 
@@ -27,6 +28,13 @@ public:
     Q_PROPERTY(int port MEMBER port);
     Q_INVOKABLE void updateUi();
     Q_INVOKABLE uint64_t getTimeNs() const;
+    Q_INVOKABLE static QUrl fromUserInput(const QString& userInput)
+    {
+        if (userInput.isEmpty())
+            return QUrl::fromUserInput("about:blank");
+        const QUrl result = QUrl::fromUserInput(userInput);
+        return result.isValid() ? result : QUrl::fromUserInput("about:blank");
+    }
 
 public:
     QString hostname { "localhost" }; // "10.240.23.38" };
@@ -61,6 +69,7 @@ int main(int argc, char *argv[])
     appdata.hostname = QString::fromStdString(location["hostname"].as<std::string>());
     appdata.port = std::stoi(location["port"].as<std::string>());
 #endif
+    QtWebView::initialize();
     QApplication app(argc, argv);
     auto font = app.font();
     font.setPixelSize(12);

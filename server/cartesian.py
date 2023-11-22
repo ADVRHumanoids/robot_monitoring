@@ -52,6 +52,8 @@ class CartesianHandler:
             res.names.append(tname)
             res.types.append('SimpleTopic')
 
+        print('DIODIOD', res.names, res.types)
+
         return web.Response(text=json.dumps(
             {
                 'success': True, 

@@ -25,6 +25,9 @@ Item {
     property string arrowBack: '\ue5e0'
     property string arrowForward: '\ue5e1'
     property string tableChart: '\uf6ef'
+    property string gauge: '\ue9e4'
+    property string replay: '\ue042'
+    property string tools: '\uf10b'
 
     property FontLoader filledFont: FontLoader {
         source: `/Font/materialsymbols/MaterialSymbolsOutlined[opsz,wght,FILL,GRAD@20,200,1,200].otf`
@@ -32,5 +35,9 @@ Item {
 
     property FontLoader emptyFont: FontLoader {
         source: `/Font/materialsymbols/MaterialSymbolsOutlined[opsz,wght,FILL,GRAD@20,200,0,200].otf`
+    }
+
+    property FontLoader emptyFont400: FontLoader {
+        source: `/Font/materialsymbols/MaterialSymbolsOutlined[opsz,wght,FILL,GRAD@20,400,0,200].otf`
     }
 }

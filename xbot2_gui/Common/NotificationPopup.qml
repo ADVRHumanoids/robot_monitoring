@@ -50,10 +50,17 @@ Control {
 
     property Component delegate: Component {
         TextArea {
+
+            MouseArea {
+                anchors.fill: parent
+                enabled: false
+            }
+
             placeholderText: name
             width: view.width
             wrapMode: Text.WrapAnywhere
             readOnly: true
+            textFormat: TextEdit.RichText
             text: txt
             visible: level >= root.verbosity
             color: levelToColor[level]

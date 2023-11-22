@@ -19,6 +19,14 @@ qt_add_resources(xbot2_gui_font "app_fonts"
     "fontawesome-free-6.3.0-desktop/otfs/Font Awesome 6 Free-Solid-900.subset.otf"
     "materialsymbols/MaterialSymbolsOutlined[opsz,wght,FILL,GRAD@20,200,1,200].otf"
     "materialsymbols/MaterialSymbolsOutlined[opsz,wght,FILL,GRAD@20,200,0,200].otf"
+    "materialsymbols/MaterialSymbolsOutlined[opsz,wght,FILL,GRAD@20,400,0,200].otf"
+)
+
+qt_add_resources(xbot2_gui_font "app_icons"
+    PREFIX "Icons/"
+    FILES
+    icons/alberobotics.png
+    icons/alberobotics100x100.png
 )
 
 target_link_libraries(xbot2_gui PRIVATE xbot2_gui_fontplugin)

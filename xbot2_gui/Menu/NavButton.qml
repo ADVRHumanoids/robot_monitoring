@@ -24,7 +24,7 @@ TabButton {
     bottomPadding: 10
     spacing: 10
     clip: true
-    icon.color: checked ? palette.active.highlightedText : palette.active.buttonText
+    icon.color: checked ? palette.highlightedText : palette.buttonText
     font.bold: checked
     font.pointSize: Qt.application.font.pointSize * 0.85
     opacity: enabled ? 1 : 0.5
@@ -77,36 +77,55 @@ TabButton {
             target: img
         }
 
-        Text {
+        Item {
             id: img
-            text: root.iconChar
             visible: root.display !== TabButton.TextOnly
-            color: root.icon.color
-            font.family: materialSymbols.font.family
-            font.pointSize: root.icon.height
-            padding: -10
 
-            MaterialSymbols {
-                id: materialSymbols
-                filled: root.checked
+            implicitHeight: imgTxt.visible ? imgTxt.implicitHeight : imgPng.height
+            implicitWidth: imgTxt.visible ? imgTxt.implicitWidth : imgPng.width
+            height: imgTxt.visible ? imgTxt.height : imgPng.height
+            width: imgTxt.visible ? imgTxt.width : imgPng.width
+
+            Text {
+                id: imgTxt
+                text: root.iconChar
+                color: root.icon.color
+                font.family: materialSymbols.font.family
+                font.pointSize: root.icon.height
+                padding: -10
+                visible: !imgPng.visible
+
+                MaterialSymbols {
+                    id: materialSymbols
+                    filled: root.checked
+                }
+
+                Rectangle {
+                    id: badge
+                    property int num: 0
+                    color: 'red'
+                    visible: num > 0
+                    width: Math.max(badgeLabel.width, badgeLabel.height)
+                    height: badgeLabel.height
+                    radius: height/2
+                    x: parent.width - width/2
+                    y: -height/2
+                    Label {
+                        id: badgeLabel
+                        text: badge.num < 99 ? badge.num : '99+'
+                        anchors.centerIn: parent
+                        padding: 2
+                    }
+                }
             }
 
-            Rectangle {
-                id: badge
-                property int num: 0
-                color: 'red'
-                visible: num > 0
-                width: Math.max(badgeLabel.width, badgeLabel.height)
-                height: badgeLabel.height
-                radius: height/2
-                x: parent.width - width/2
-                y: -height/2
-                Label {
-                    id: badgeLabel
-                    text: badge.num < 99 ? badge.num : '99+'
-                    anchors.centerIn: parent
-                    padding: 3
-                }
+            Image {
+                id: imgPng
+                visible: root.icon.source !== Qt.url('')
+                source: root.icon.source
+                height: root.icon.height*1.2
+                width: root.icon.height*1.2
+                antialiasing: true
             }
 
         }
@@ -129,15 +148,15 @@ TabButton {
     }
 
     background: Item {
-//        implicitWidth: 30
-//        implicitHeight: 30
+        //        implicitWidth: 30
+        //        implicitHeight: 30
 
         Rectangle {
             anchors.fill: parent
             color: root.palette.active.highlight
             radius: parent.height * 0.6
             opacity: root.checked ? 1 : (mouseArea.containsMouse ? 0.2 : 0)
-//            visible: root.checked || mouseArea.containsMouse
+            //            visible: root.checked || mouseArea.containsMouse
             Behavior on opacity {
                 NumberAnimation {}
             }

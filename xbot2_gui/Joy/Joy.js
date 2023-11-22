@@ -93,8 +93,8 @@ function taskIsEnabled(task_name, callback) {
 function updateTaskNames(taskCombo) {
     client.doRequest('GET', '/cartesian/get_task_list', '',
                      function(response) {
+
                          if(!response.success) {
-                             console.log('/cartesian/get_task_list FAILED (no ik running)')
                              ikRunning = false
                              return
                          }
@@ -103,6 +103,7 @@ function updateTaskNames(taskCombo) {
 
                          var cartesianTaskNames = []
                          for(let i = 0; i < response.names.length; i++) {
+                             console.log(`got task ${response.types[i]} ${response.names[i]}`)
                              if(response.types[i] === "Cartesian") {
                                  cartesianTaskNames.push(response.names[i])
                              }

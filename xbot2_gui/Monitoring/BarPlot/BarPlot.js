@@ -52,8 +52,14 @@ function setJointStateMessage(msg)
 {
     for(var i = 0; i < jointNames.length; i++)
     {
-        container.itemAt(i).bar.value = msg[fieldName][i]
-        container.itemAt(i).bar.valueRef = msg[fieldNameRef][i]
+        let bar = container.itemAt(i).bar
+        bar.value = msg[fieldName][i]
+        if(fieldNameRef !== '') {
+            bar.valueRef = msg[fieldNameRef][i]
+        }
+        else {
+            bar.refMarker.visible = false
+        }
     }
 }
 
@@ -66,6 +72,7 @@ var refName = ['posRef',
                'velRef',
                'velRef',
                'torRef',
+               ''
         ]
 
 function barPlotMin(){

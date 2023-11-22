@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtWebView
 
 import Common
 import Main
@@ -10,6 +11,7 @@ import Menu
 import Joy
 
 Item {
+
 
     Timer {
         running: true

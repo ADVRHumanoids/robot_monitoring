@@ -16,7 +16,7 @@ MultiPaneResponsiveLayout {
     property Item robotViewer: loader.item
 
     id: root
-
+    property Item livePlot: CommonProperties.globalLivePlot
     onBeforeLayoutChange: loader.active = false
     onAfterLayoutChange: loader.active = true
 
@@ -100,10 +100,9 @@ MultiPaneResponsiveLayout {
                             id: jointState
                             width: parent.width
 
-                            onPlotAdded: (jName, fieldName) => {
-                                             Logic.addJointStateSeries(livePlot, jName, fieldName)
-                                             livePlotCard.hidden = false
-                                         }
+                            onPlotAdded: function(jName, fieldName) {
+                                Logic.addJointStateSeries(livePlot, jName, fieldName)
+                            }
 
                         }
 
@@ -133,7 +132,7 @@ MultiPaneResponsiveLayout {
             Layout.fillHeight: true
             Layout.preferredHeight: 200
 
-            sourceComponent: Component {
+            sourceComponent:
                 RobotModelViewer {
                     id: robotViewer
                     implicitHeight: 200
@@ -142,7 +141,7 @@ MultiPaneResponsiveLayout {
                     client: root.client
                     backgroundColor: 'transparent'
                 }
-            }
+
 
         }
 
@@ -157,13 +156,15 @@ MultiPaneResponsiveLayout {
     }
 
     Connections {
+
         target: client
+
         function onJointStateReceived(js) {
-            barPlot.setJointStateMessage(js)
-            jointState.setJointStateMessage(js)
-            robotViewer.updateRobotState(js,
-                                         robotViewer.robotState,
-                                         'linkPos')
+            Logic.jsCallback(js)
+        }
+
+        function onObjectReceived(obj) {
+            Logic.objCallback(obj)
         }
     }
 

@@ -14,11 +14,12 @@ ApplicationWindow {
     height: 720
     visible: true
     title: "Xbot2 Robot GUI"
-    //    visibility: Window.FullScreen
+    visibility: Qt.platform.os == "android" ? Window.FullScreen : Window.AutomaticVisibility
 
     palette {
         active {
             highlight: Material.primary
+            highlightedText: Material.foreground
             buttonText: Material.foreground
             text: Material.foreground
             accent: Material.accent
@@ -44,15 +45,6 @@ ApplicationWindow {
 
         id: pagesModel
 
-
-        PageItem {
-            name: "Playground"
-            page: "/qt/qml/TestThings/Playground.qml"
-            iconText: MaterialSymbolNames.playground
-            iconFont: syms.font.family
-            active: true
-        }
-
         PageItem {
             name: "Home"
             page: "/qt/qml/Home/HelloScreen.qml"
@@ -72,7 +64,7 @@ ApplicationWindow {
         PageItem {
             name: "Monitoring"
             page: "/qt/qml/Monitoring/Monitoring.qml"
-            iconText: MaterialSymbolNames.plot
+            iconText: MaterialSymbolNames.gauge
             iconFont: syms.font.family
             active: client.isFinalized
         }
@@ -91,6 +83,29 @@ ApplicationWindow {
             iconText: MaterialSymbolNames.tableChart
             iconFont: syms.font.family
             active: client.isConnected
+        }
+
+//        PageItem {
+//            name: "Playground"
+//            page: "/qt/qml/TestThings/Playground.qml"
+//            iconText: MaterialSymbolNames.playground
+//            iconFont: syms.font.family
+//            active: true
+//        }
+
+        PageItem {
+            name: "Builder"
+            page: "/qt/qml/TestThings/Linfa.qml"
+            iconText: MaterialSymbolNames.tools
+            iconFont: syms.font.family
+            active: true
+        }
+
+        PageItem {
+            name: "Linfa"
+            page: "/qt/qml/TestThings/Linfa.qml"
+            iconSource: '/Icons/icons/alberobotics100x100.png'
+            active: true
         }
 
 //        PageItem {
@@ -180,15 +195,12 @@ ApplicationWindow {
             rightMargin: CommonProperties.geom.margins
         }
 
-        clip: true
-
-        //        width: mainWindow.width - nav.railWidth
-
         currentIndex: nav.currentIndex
 
         onCurrentIndexChanged: {
             itemAt(currentIndex).item.numErrors = 0
             nav.setBadgeNumber(currentIndex, 0)
+            itemAt(currentIndex).item.pageSelected()
         }
 
         // load all pages in the model
@@ -222,6 +234,7 @@ ApplicationWindow {
 
                 onLoaded: {
                     items[modelData.name.toLowerCase()] = item
+                    item.pageName = modelData.name
                     active = true
                     pageName = modelData.name
                 }
@@ -261,8 +274,6 @@ ApplicationWindow {
 
         id: notificationPopup
         property bool showPopup: false
-
-        opacity: 0.8
 
         width: layout.compact ? pagesStack.width : 600
         height: Math.min(implicitHeight, mainWindow.height/2)

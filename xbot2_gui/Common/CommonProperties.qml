@@ -38,14 +38,17 @@ Item {
     property Item notifications: Item {
 
         function info(txt, name = 'ui') {
+            console.log(`[info][${name}] ${txt}`)
             newInfo(txt, name)
         }
 
         function warning(txt, name = 'ui') {
+            console.log(`[warning][${name}] ${txt}`)
             newWarning(txt, name)
         }
 
         function error(txt, name = 'ui') {
+            console.log(`[error][${name}] ${txt}`)
             newError(txt, name)
         }
 

@@ -21,6 +21,17 @@ function notifyStatus(verb, url, xhr) {
     }
 }
 
+function notifyResponseStatus(verb, url, res) {
+    if('success' in res) {
+        if(res.success) {
+            info(`${verb} ${url} answered: <b>${res.message || 'no message'}</b>`, 'http')
+        }
+        else {
+            error(`${verb} ${url} answered: <b>${res.message || 'no message'}</b>`, 'http')
+        }
+    }
+}
+
 
 function httpRequestRaw(verb, url, body, callback) {
 
@@ -69,7 +80,8 @@ function httpRequest(verb, url, body, callback) {
             }
 
             try {
-                var object = JSON.parse(xhr.responseText.toString());
+                var object = JSON.parse(xhr.responseText.toString())
+                notifyResponseStatus(verb, url, object)
             }
             catch(err) {
                 error(verb + ' ' + url + ': failed to parse message: ' + xhr.responseText.toString())
@@ -108,6 +120,7 @@ function httpRequestAsync(verb, url, body) {
 
                     try {
                         var object = JSON.parse(xhr.responseText.toString());
+                        notifyResponseStatus(verb, url, object)
                         resolve(object);
                     }
                     catch(err) {

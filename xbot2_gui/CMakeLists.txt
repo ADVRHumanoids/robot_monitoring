@@ -10,14 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Check https://doc.qt.io/qt/deployment-android.html for more information.
 # They need to be set before the find_package(...) calls below.
 
-#if(ANDROID)
-#    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
-#    if (ANDROID_ABI STREQUAL "armeabi-v7a")
-#        set(ANDROID_EXTRA_LIBS
-#            ${CMAKE_CURRENT_SOURCE_DIR}/path/to/libcrypto.so
-#            ${CMAKE_CURRENT_SOURCE_DIR}/path/to/libssl.so)
-#    endif()
-#endif()
+
 
 find_package(Qt6 COMPONENTS
     Core
@@ -28,6 +21,7 @@ find_package(Qt6 COMPONENTS
     QuickControls2
     ShaderTools
     Core5Compat
+    WebView
     Protobuf
     #    3DRender
     #    3DCore
@@ -43,6 +37,9 @@ set(PROJECT_SOURCES
 
 qt_add_executable(xbot2_gui main.cpp)
 
+set_property(TARGET xbot2_gui APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/android)
+
+
 qt_add_qml_module(xbot2_gui
     VERSION 1.0
     URI Main
@@ -52,6 +49,7 @@ qt_add_qml_module(xbot2_gui
     ClientEndpoint.qml
     ClientEndpoint.js
     sharedData.js
+
 )
 
 target_compile_definitions(xbot2_gui
@@ -62,6 +60,7 @@ target_link_libraries(xbot2_gui
     Qt6::Core
     Qt6::Quick
     Qt6::WebSockets
+    Qt6::WebView
     Qt6::QuickControls2
     Qt6::Widgets
     Qt6::Core5Compat

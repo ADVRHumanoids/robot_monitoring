@@ -288,10 +288,12 @@ Item {
         }
 
         onSeriesAdded: function(series) {
+            console.log(`++chart has ${count} elems`)
             plotterLegend.addSeries(series)
         }
 
         onSeriesRemoved: function(series) {
+            console.log(`--chart has ${count} elems`)
             delete currSeries[series.name]
             plotterLegend.removeSeries(series)
         }

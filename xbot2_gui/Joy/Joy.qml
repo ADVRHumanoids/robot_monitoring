@@ -204,7 +204,7 @@ Item {
         verticalOnly: !chkY.checked
         horizontalOnly: !chkX.checked
 
-        side: 250
+        side: 200
 
         backgroundColor: 'transparent'
 
@@ -223,7 +223,7 @@ Item {
 
         horizontalOnly: true
 
-        side: 250
+        side: 200
 
         backgroundColor: 'transparent'
 

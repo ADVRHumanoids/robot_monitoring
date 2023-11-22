@@ -1,4 +1,5 @@
 .import "/qt/qml/Main/sharedData.js" as SharedData
+.import Common 1.0 as Common
 
 function handleFault(jName, faultCode) {
     barPlot.setStatus(jName, faultCode === "" ? true : false)
@@ -8,10 +9,10 @@ function handleFault(jName, faultCode) {
 function jsCallback(js) {
     barPlot.setJointStateMessage(js)
     jointState.setJointStateMessage(js)
+    addJointStatePoint(livePlot, js)
     robotViewer.updateRobotState(js,
                                  robotViewer.robotState,
                                  'linkPos')
-    addJointStatePoint(livePlot, js)
 }
 
 
@@ -43,9 +44,16 @@ function destroy() {
 
 function addJointStateSeries(livePlot, jName, fieldName) {
 
+    if(livePlot === null) {
+        let error = Common.CommonProperties.notifications.error
+        error('Live plot unavailable: open the "Plot" panel', 'Plot')
+        return
+    }
+
     let seriesName = jName + '/' + fieldName
 
     let props = Object()
+    props.type = 'joint_state'
     props.jIndex = 0
     props.jName = jName
     props.fieldName = fieldName
@@ -56,11 +64,20 @@ function addJointStateSeries(livePlot, jName, fieldName) {
 
 function addJointStatePoint(livePlot, msg) {
 
+    if(livePlot === null) {
+        return
+    }
+
     // iterate over current series
     for(let [seriesName, seriesData] of Object.entries(livePlot.currSeries)) {
 
         // get series properties
         let props = seriesData.properties
+
+        // is it a joint series?
+        if(props.type !== 'joint_state') {
+            return
+        }
 
         // recompute jIndex if needed
         if(msg.name[props.jIndex] !== props.jName) {

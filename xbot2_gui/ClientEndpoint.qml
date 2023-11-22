@@ -142,7 +142,7 @@ Item
         }
 
         onStatusChanged: {
-            print("status changed [url = " + url + "]")
+            print(`status changed [url ${url}]: ${socket.status}`)
             if (socket.status === WebSocket.Error) {
                 CommonProperties.notifications.error('Error: ' + socket.errorString, 'webclient')
                 error(socket.errorString)
@@ -207,7 +207,7 @@ Item
 
     Timer {
         id: pingTimer
-        running: socket.active
+        running: socket.isConnected
         repeat: true
         interval: 300
 

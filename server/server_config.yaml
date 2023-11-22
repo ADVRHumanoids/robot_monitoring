@@ -24,12 +24,12 @@ xbot2_process:
 ik:
   type: process_handler
   name: ik
-  cmd: roslaunch concert_cartesio concert.launch xbot:=true gui:=false
+  cmd: ros1; roslaunch concert_cartesio concert.launch xbot:=true gui:=false
   machine: alaurenzi@localhost
 
 too_much_print:
   type: process_handler
-  cmd: python3 -c \"while True:print('ABC')\"
+  cmd: \" sleep 5; echo cazzi; sleep 5 \"
   name: too_much_print
   machine: alaurenzi@localhost
 

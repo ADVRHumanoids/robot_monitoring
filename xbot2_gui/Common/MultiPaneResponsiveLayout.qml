@@ -64,10 +64,11 @@ Item {
                 implicitHeight: rowPane.implicitHeight
                 implicitWidth: rowPane.implicitWidth
 
-                Layout.fillWidth:  true
+                Layout.fillWidth:  proxy.target.small === undefined ?
+                                       true : !proxy.target.small
                 Layout.fillHeight: true
-                Layout.preferredWidth: proxy.target.columnSize === undefined ?
-                                           1 : proxy.target.columnSize
+//                Layout.preferredWidth: proxy.target.columnSize === undefined ?
+//                                           1 : proxy.target.columnSize
 //                Layout.minimumWidth: proxy.Layout.minimumWidth
 
 

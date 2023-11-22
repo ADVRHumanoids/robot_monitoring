@@ -89,30 +89,7 @@ Item {
 
     }
 
-    property Item materialSymbols: Item {
-
-        id: materialSymbols
-
-        readonly property FontLoader materialSymbols20_200_1_200: FontLoader {
-            source: "/Font/materialsymbols/MaterialSymbolsOutlined[opsz,wght,FILL,GRAD@20,200,1,200].otf"
-        }
-
-        readonly property FontLoader materialSymbols20_200_0_200: FontLoader {
-            source: "/Font/materialsymbols/MaterialSymbolsOutlined[opsz,wght,FILL,GRAD@20,200,0,200].otf"
-        }
-
-        property alias material_20_200_filled_200: materialSymbols.materialSymbols20_200_1_200.font
-        property alias material_20_200_empty_200: materialSymbols.materialSymbols20_200_0_200.font
-
-        property string hamburger: '\ue5d2'
-        property string home: '\ue88a'
-        property string settings: '\ue8b8'
-        property string play: '\uf04b'
-        property string stop: '\uf04d'
-        property string halt: '\uf256'
-        property string gamepad: '\uf11b'
-
-    }
+    property Item globalLivePlot
 
 
 }

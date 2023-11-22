@@ -1,10 +1,14 @@
-import QtQuick 2.0
+import QtQuick
 import QtQuick.Controls
+import QtCharts
 
 Item {
 
+    property ChartView chart
+
     id: root
     implicitHeight: grid.implicitHeight
+    implicitWidth: grid.implicitWidth
 
     signal hideSeries(string name, bool hide)
     signal highlightSeries(string name, bool highlight)
@@ -26,6 +30,18 @@ Item {
             }
         }
         legendModel.remove(idxToRemove, 1)
+    }
+
+    onHideSeries: function(seriesName, hidden) {
+        chart.series(seriesName).visible = !hidden
+    }
+
+    onHighlightSeries: function(seriesName, highlighted) {
+        chart.series(seriesName).width = 2 * (highlighted ? 2 : 1)
+    }
+
+    onRemoveSeriesRequested: function(seriesName) {
+        chart.removeSeries(chart.series(seriesName))
     }
 
     property int maxItemWidth: 0

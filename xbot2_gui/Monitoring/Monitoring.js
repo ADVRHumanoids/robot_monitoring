@@ -8,10 +8,10 @@ function handleFault(jName, faultCode) {
 function jsCallback(js) {
     barPlot.setJointStateMessage(js)
     jointState.setJointStateMessage(js)
-    addJointStatePoint(livePlot, js)
     robotViewer.updateRobotState(js,
                                  robotViewer.robotState,
                                  'linkPos')
+    addJointStatePoint(livePlot, js)
 }
 
 

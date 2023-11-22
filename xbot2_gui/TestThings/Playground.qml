@@ -9,60 +9,32 @@ import Font
 import Menu
 import Joy
 
+Item {
 
-ScrollView {
+    Timer {
+        running: true
+        interval: 16
+        repeat: true
+        property int t: 0
+        property var series
 
-    id: scroll
-    contentHeight: mcl.height
+        onTriggered: {
 
-    MultiColumnLayout {
-        id: mcl
-        width: scroll.availableWidth
-        columns: 3
-
-        Repeater {
-
-            model: 10
-
-            Rectangle {
-
-                required property int index
-
-                property int columnSpan: index === 5 ? 3 : 1
-
-                height: 100
-
-                border {
-                    color: 'red'
-                    width: 2
-                }
-
-                Behavior on height {
-                    NumberAnimation{}
-                }
-
-                TapHandler {
-                    onTapped: {
-                        parent.height += 50
-                    }
-                }
-
-                Label {
-                    anchors.centerIn: parent
-                    text: parent.index
-                    color: 'red'
-                }
-
+            if(CommonProperties.globalLivePlot === null)
+            {
+                return
             }
 
+            if(t === 0) {
+                series = CommonProperties.globalLivePlot.addSeries('test', Object())
+            }
+
+            t += interval
+
+            CommonProperties.globalLivePlot.addPoint(series, t/1000, Math.sin(t/1000.))
+
         }
-
-
-
-
     }
-
-
 
 }
 

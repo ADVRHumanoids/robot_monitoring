@@ -7,12 +7,16 @@ import Common
 Item {
 
     // public
+    property Item plotterLegend
+
+    property alias chartView: chart
+
     property string axisLeftTitle: ''
 
     property string axisRightTitle: ''
 
     function addSeries(seriesName, seriesProps, useSecondaryValueAxis) {
-        _addSeries(seriesName, seriesProps, useSecondaryValueAxis)
+        return  _addSeries(seriesName, seriesProps, useSecondaryValueAxis)
     }
 
     function addPoint(seriesData, t, val) {
@@ -51,8 +55,8 @@ Item {
     // private
     id: root
 
-    implicitWidth: column.implicitWidth
-    implicitHeight: column.implicitHeight
+    implicitWidth: 400
+    implicitHeight: 300
 
     property real currTime: 0
 
@@ -93,7 +97,10 @@ Item {
             axisValue: axisValue,
             properties: seriesProps
         }
+
+        return currSeries[seriesName]
     }
+
 
     function removeSeries(seriesName) {
         chart.removeSeries(chart.series(seriesName))
@@ -101,223 +108,200 @@ Item {
     }
 
 
+    ChartView {
 
-    ColumnLayout {
-        id: column
+        id: chart
         anchors.fill: parent
+        legend.visible: false
+        antialiasing: true
+        backgroundColor: Qt.rgba(1, 1, 1, 0.1)
 
-        PlotterLegend {
-            id: plotterLegend
-            Layout.fillWidth: true
+        property bool autoscale: true
+        property bool autoscroll: true
 
-            onHideSeries: function(seriesName, hidden) {
-                chart.series(seriesName).visible = !hidden
+        function centredZoom(scale, center) {
+
+            chart.autoscale = false
+            chart.autoscroll = false
+            axisTime.min = axisTime.min
+            axisTime.max = axisTime.max
+
+            let zoomRect = Qt.rect(chart.plotArea.x + (scale.x - 1)*center.x,
+                                   chart.plotArea.y + (scale.y - 1)*center.y,
+                                   chart.plotArea.width/scale.x,
+                                   chart.plotArea.height/scale.y)
+
+            chart.zoomIn(zoomRect)
+        }
+
+        onAutoscrollChanged: {
+            if(autoscroll) {
+                axisTime.min = Qt.binding(function(){ return Math.max(currTime - timeSpan, 0) })
+                axisTime.max = Qt.binding(function(){ return currTime })
             }
-
-            onHighlightSeries: function(seriesName, highlighted) {
-                chart.series(seriesName).width = 2 * (highlighted ? 2 : 1)
-            }
-
-            onRemoveSeriesRequested: function(seriesName) {
-                chart.removeSeries(chart.series(seriesName))
+            else {
+                axisTime.min = axisTime.min
+                axisTime.max = axisTime.max
             }
         }
 
-        ChartView {
+        Rectangle {
 
-            id: chart
-            Layout.fillHeight: true
-            Layout.fillWidth: true
-            legend.visible: false
-            antialiasing: true
-            backgroundColor: Qt.rgba(1, 1, 1, 0.1)
+            function setSignedWidth(new_width) {
 
-            property bool autoscale: true
-            property bool autoscroll: true
-
-            function centredZoom(scale, center) {
-
-                chart.autoscale = false
-                chart.autoscroll = false
-                axisTime.min = axisTime.min
-                axisTime.max = axisTime.max
-
-                let zoomRect = Qt.rect(chart.plotArea.x + (scale.x - 1)*center.x,
-                                       chart.plotArea.y + (scale.y - 1)*center.y,
-                                       chart.plotArea.width/scale.x,
-                                       chart.plotArea.height/scale.y)
-
-                chart.zoomIn(zoomRect)
-            }
-
-            onAutoscrollChanged: {
-                if(autoscroll) {
-                    axisTime.min = Qt.binding(function(){ return Math.max(currTime - timeSpan, 0) })
-                    axisTime.max = Qt.binding(function(){ return currTime })
+                if(new_width > 0) {
+                    width = new_width
+                    xScale = 1
                 }
                 else {
-                    axisTime.min = axisTime.min
-                    axisTime.max = axisTime.max
+                    width = -new_width
+                    xScale = -1
                 }
             }
 
-            Rectangle {
+            function setSignedHeight(new_height) {
 
-                function setSignedWidth(new_width) {
-
-                    if(new_width > 0) {
-                        width = new_width
-                        xScale = 1
-                    }
-                    else {
-                        width = -new_width
-                        xScale = -1
-                    }
+                if(new_height > 0) {
+                    height = new_height
+                    yScale = 1
                 }
-
-                function setSignedHeight(new_height) {
-
-                    if(new_height > 0) {
-                        height = new_height
-                        yScale = 1
-                    }
-                    else {
-                        height = -new_height
-                        yScale = -1
-                    }
+                else {
+                    height = -new_height
+                    yScale = -1
                 }
-
-                id: rubberBand
-                color: Qt.rgba(0.8, 0.8, 0.9, 0.2)
-                border.color: Qt.rgba(0.8, 0.8, 0.9, 1.0)
-                border.width: 1
-                visible: false
-                transform: Scale {
-                    xScale: rubberBand.xScale
-                    yScale: rubberBand.yScale
-                }
-                property real xScale: 1.0
-                property real yScale: 1.0
             }
 
-            MouseArea {
+            id: rubberBand
+            color: Qt.rgba(0.8, 0.8, 0.9, 0.2)
+            border.color: Qt.rgba(0.8, 0.8, 0.9, 1.0)
+            border.width: 1
+            visible: false
+            transform: Scale {
+                xScale: rubberBand.xScale
+                yScale: rubberBand.yScale
+            }
+            property real xScale: 1.0
+            property real yScale: 1.0
+        }
 
-                id: mouseArea
-                anchors.fill: parent
-                preventStealing: true
-                acceptedButtons: Qt.LeftButton | Qt.RightButton
+        MouseArea {
 
-                onWheel: function (wheel) {
+            id: mouseArea
+            anchors.fill: parent
+            preventStealing: true
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
 
-                    let scale = wheel.angleDelta.y > 0 ? 6/5 : 5/6
-                    let scaleXy = Qt.point(scale, scale)
+            onWheel: function (wheel) {
 
-                    let center = Qt.point(wheel.x - chart.plotArea.x,
-                                          wheel.y - chart.plotArea.y)
-                    chart.centredZoom(scaleXy, center)
+                let scale = wheel.angleDelta.y > 0 ? 6/5 : 5/6
+                let scaleXy = Qt.point(scale, scale)
+
+                let center = Qt.point(wheel.x - chart.plotArea.x,
+                                      wheel.y - chart.plotArea.y)
+                chart.centredZoom(scaleXy, center)
+            }
+
+            property point lastPos
+
+            onPressed: function(mouse){
+                if(mouse.button === Qt.LeftButton)
+                {
+                    lastPos.x = mouse.x
+                    lastPos.y = mouse.y
+                    chart.autoscale = false
+                    chart.autoscroll = false
                 }
-
-                property point lastPos
-
-                onPressed: function(mouse){
-                    if(mouse.button === Qt.LeftButton)
-                    {
-                        lastPos.x = mouse.x
-                        lastPos.y = mouse.y
-                        chart.autoscale = false
-                        chart.autoscroll = false
-                    }
-                    else if(mouse.button === Qt.RightButton)
-                    {
-                        rubberBand.x = mouseX
-                        rubberBand.y = mouseY
-                        rubberBand.visible = true
-                    }
+                else if(mouse.button === Qt.RightButton)
+                {
+                    rubberBand.x = mouseX
+                    rubberBand.y = mouseY
+                    rubberBand.visible = true
                 }
+            }
 
-                onMouseXChanged: {
-                    if(rubberBand.visible)
-                    {
-                        rubberBand.setSignedWidth(mouseX - rubberBand.x)
-                    }
+            onMouseXChanged: {
+                if(rubberBand.visible)
+                {
+                    rubberBand.setSignedWidth(mouseX - rubberBand.x)
+                }
+                else
+                {
+                    if(mouseX > lastPos.x)
+                        chart.scrollLeft(mouseX - lastPos.x)
                     else
-                    {
-                         if(mouseX > lastPos.x)
-                            chart.scrollLeft(mouseX - lastPos.x)
-                        else
-                            chart.scrollRight(-mouseX + lastPos.x)
-                        lastPos.x = mouseX
-                    }
+                        chart.scrollRight(-mouseX + lastPos.x)
+                    lastPos.x = mouseX
                 }
+            }
 
-                onMouseYChanged: {
-                    if(rubberBand.visible)
-                    {
-                        rubberBand.setSignedHeight(mouseY - rubberBand.y)
-                    }
+            onMouseYChanged: {
+                if(rubberBand.visible)
+                {
+                    rubberBand.setSignedHeight(mouseY - rubberBand.y)
+                }
+                else
+                {
+                    if(mouseY > lastPos.Y)
+                        chart.scrollUp(mouseY - lastPos.y)
                     else
-                    {
-                        if(mouseY > lastPos.Y)
-                            chart.scrollUp(mouseY - lastPos.y)
-                        else
-                            chart.scrollDown(-mouseY + lastPos.y)
-                        lastPos.y = mouseY
-                    }
-                }
-
-                onReleased: {
-
-                    if(rubberBand.visible) {
-                        chart.autoscale = false
-                        chart.autoscroll = false
-                        chart.zoomIn(Qt.rect(rubberBand.x,
-                                             rubberBand.y,
-                                             rubberBand.width,
-                                             rubberBand.height));
-                        rubberBand.visible = false
-                    }
+                        chart.scrollDown(-mouseY + lastPos.y)
+                    lastPos.y = mouseY
                 }
             }
 
-            ValuesAxis {
-                id: axisTime
-                max: currTime
-                min: Math.max(currTime - timeSpan, 0)
-                titleText: "<font color='white'>time [s]</font>"
-                labelsColor: CommonProperties.colors.primaryText
-            }
+            onReleased: {
 
-            ValuesAxis {
-                id: axisValueLeft
-                min: -1
-                max: 1
-                titleText: `<font color='white'>${root.axisLeftTitle}</font>`
-                labelsColor: CommonProperties.colors.primaryText
+                if(rubberBand.visible) {
+                    chart.autoscale = false
+                    chart.autoscroll = false
+                    chart.zoomIn(Qt.rect(rubberBand.x,
+                                         rubberBand.y,
+                                         rubberBand.width,
+                                         rubberBand.height));
+                    rubberBand.visible = false
+                }
             }
+        }
 
-            ValuesAxis {
-                id: axisValueRight
-                min: -1
-                max: 1
-                titleText: `<font color='white'>${root.axisRightTitle}</font>`
-                labelsColor: CommonProperties.colors.primaryText
-            }
+        ValuesAxis {
+            id: axisTime
+            max: currTime
+            min: Math.max(currTime - timeSpan, 0)
+            titleText: "<font color='white'>time [s]</font>"
+            labelsColor: CommonProperties.colors.primaryText
+        }
 
-            onSeriesAdded: function(series) {
-                plotterLegend.addSeries(series)
-            }
+        ValuesAxis {
+            id: axisValueLeft
+            min: -1
+            max: 1
+            titleText: `<font color='white'>${root.axisLeftTitle}</font>`
+            labelsColor: CommonProperties.colors.primaryText
+        }
 
-            onSeriesRemoved: function(series) {
-                delete currSeries[series.name]
-                plotterLegend.removeSeries(series)
-            }
+        ValuesAxis {
+            id: axisValueRight
+            min: -1
+            max: 1
+            titleText: `<font color='white'>${root.axisRightTitle}</font>`
+            labelsColor: CommonProperties.colors.primaryText
+        }
 
-            Component.onCompleted: {
-                removeAllSeries()
-            }
+        onSeriesAdded: function(series) {
+            plotterLegend.addSeries(series)
+        }
 
+        onSeriesRemoved: function(series) {
+            delete currSeries[series.name]
+            plotterLegend.removeSeries(series)
+        }
+
+        Component.onCompleted: {
+            removeAllSeries()
         }
 
     }
+
+
 
 }

@@ -2,6 +2,8 @@ import QtQuick
 
 Item {
 
+    visible: false
+
     required property int targetWidth
 
     signal beforeLayoutChange()

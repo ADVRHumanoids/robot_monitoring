@@ -10,6 +10,6 @@ docker run --rm \
  -v $PWD/build_output:/home/user/build_output \
  travis_build_image bash /home/user/build.bash
 
-chown -R $USER build_output
+sudo chown -R $USER build_output
 
 zip -r build_output/xbot2_gui_client.zip build_output/xbot2_gui_client

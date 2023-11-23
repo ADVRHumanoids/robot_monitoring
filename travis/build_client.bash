@@ -1,6 +1,6 @@
 mkdir build_output
 
-docker run --rm \
+docker run --rm  -u $(id -u) \
  -v $PWD:/home/user/robot_monitoring \
  -v $PWD/build_output:/home/user/build_output \
  -v $PWD/travis/docker/build.bash:/home/user/build.bash \

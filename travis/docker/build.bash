@@ -1,4 +1,7 @@
-#test 
+# get ownership over home content
+echo user | sudo -S chown -R user /home/user
+
+# test 
 set -e
 touch /home/user/build_output/BUILD_IN_PROGRESS
 

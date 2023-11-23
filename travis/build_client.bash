@@ -1,8 +1,8 @@
 mkdir build_output
 
-rm -rf travis/docker/context && mkdir travis/docker/context
+rm -rf travis/docker/context && mkdir -p travis/docker/context/robot_monitoring
 
-cp -r $PWD travis/docker/context/robot_monitoring
+cp -r * travis/docker/context/robot_monitoring
 
 docker build travis/docker -t travis_build_image
 

@@ -7,7 +7,7 @@
   url = https://github.com/xiph/ogg.git
 [submodule "xbot2_gui/RobotModel/external/URDF_Parser"]
 	path = xbot2_gui/RobotModel/external/URDF_Parser
-	url = git@github.com:ADVRHumanoids/URDF_Parser.git
+	url = https://github.com/ADVRHumanoids/URDF_Parser.git
 [submodule "xbot2_gui/RobotModel/external/eigen"]
 	path = xbot2_gui/RobotModel/external/eigen
 	url = https://gitlab.com/libeigen/eigen.git

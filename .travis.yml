@@ -30,8 +30,9 @@ before_script:
 
 script: 
   - set -e
-  - bash travis/build_client.bash
+  - bash travis/build_client.bash  # build client for android and x86
+  - ls build_output -la
   - cd server 
-  - sudo python3 -m build
+  - sudo python3 -m build  # build wheel
   - if [ -z $TRAVIS_TAG ]; then echo "Not a tag build, will not upload to pypi"; else twine upload -u __token__ -p $PYPI_TOKEN dist/*; fi
 

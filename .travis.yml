@@ -2,6 +2,8 @@ os: linux
 
 language: python
 
+python: 3.8
+
 services:
   - docker
 
@@ -23,6 +25,8 @@ notifications:
     on_failure: always
 
 before_script:
+  - id -u 
+  - id -g
   - echo "Travis tag is $TRAVIS_TAG"
   - sudo apt update && sudo apt install python3-pip python3-setuptools cmake patchelf python3-venv
   - sudo pip3 install -U setuptools urllib3 requests  # tentative fix for RequestsDependencyWarning: urllib3 (1.26.8) or chardet (3.0.4) doesn't match a supported version!
@@ -36,3 +40,13 @@ script:
   - sudo python3 -m build  # build wheel
   - if [ -z $TRAVIS_TAG ]; then echo "Not a tag build, will not upload to pypi"; else twine upload -u __token__ -p $PYPI_TOKEN dist/*; fi
 
+deploy:
+  provider: releases
+  user: $GH_USERNAME
+  password: $GH_TOKEN
+  file:
+    - "FILE 1"
+    - "FILE 2"
+  skip_cleanup: true
+  on:
+    tags: true

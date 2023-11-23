@@ -1,0 +1,16 @@
+set(Qt6Core_DIR @Qt6Core_DIR@)
+set(CMAKE_INSTALL_PREFIX @CMAKE_INSTALL_PREFIX@)
+set(Qt6_ROOT "${Qt6Core_DIR}/../../..")
+
+# copy opengl renderer
+execute_process(COMMAND bash "-c" "mkdir -p ${CMAKE_INSTALL_PREFIX}/plugins/renderers")
+execute_process(COMMAND bash "-c" "cp ${Qt6_ROOT}/plugins/renderers/libopenglrenderer.so ${CMAKE_INSTALL_PREFIX}/plugins/renderers")
+
+# copy resources for webengine
+execute_process(COMMAND bash "-c" "mkdir -p ${CMAKE_INSTALL_PREFIX}/resources")
+execute_process(COMMAND bash "-c" "cp -r ${Qt6_ROOT}/resources/* ${CMAKE_INSTALL_PREFIX}/resources")
+
+# copy webengine process
+execute_process(COMMAND bash "-c" "cp ${Qt6_ROOT}/libexec/QtWebEngineProcess ${CMAKE_INSTALL_PREFIX}/bin")
+
+

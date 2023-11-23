@@ -14,7 +14,7 @@ ApplicationWindow {
     height: 720
     visible: true
     title: "Xbot2 Robot GUI"
-    visibility: Qt.platform.os == "android" ? Window.FullScreen : Window.AutomaticVisibility
+    visibility: Qt.platform.os === "android" ? Window.FullScreen : Window.AutomaticVisibility
 
     palette {
         active {
@@ -85,13 +85,13 @@ ApplicationWindow {
             active: client.isConnected
         }
 
-//        PageItem {
-//            name: "Playground"
-//            page: "/qt/qml/TestThings/Playground.qml"
-//            iconText: MaterialSymbolNames.playground
-//            iconFont: syms.font.family
-//            active: true
-//        }
+        PageItem {
+            name: "Playground"
+            page: "/qt/qml/TestThings/Playground.qml"
+            iconText: MaterialSymbolNames.playground
+            iconFont: syms.font.family
+            active: true
+        }
 
         PageItem {
             name: "Builder"
@@ -198,9 +198,16 @@ ApplicationWindow {
         currentIndex: nav.currentIndex
 
         onCurrentIndexChanged: {
-            itemAt(currentIndex).item.numErrors = 0
+
             nav.setBadgeNumber(currentIndex, 0)
-            itemAt(currentIndex).item.pageSelected()
+
+            try {
+                itemAt(currentIndex).item.numErrors = 0
+            }catch(err){}
+
+            try {
+                itemAt(currentIndex).item.pageSelected()
+            }catch(err){}
         }
 
         // load all pages in the model
@@ -233,9 +240,9 @@ ApplicationWindow {
                 active: pagesStack.currentIndex === index || modelData.name === 'Home'
 
                 onLoaded: {
+                    active = true
                     items[modelData.name.toLowerCase()] = item
                     item.pageName = modelData.name
-                    active = true
                     pageName = modelData.name
                 }
 

@@ -36,11 +36,11 @@ Item {
         backgroundColor: Qt.rgba(0, 0, 0, 0.5)
     }
 
-    Column {
+    Pane {
+
+        padding: 8
 
         id: toolCol
-
-        spacing: 3
 
         anchors {
             right: setupCard.right
@@ -48,42 +48,61 @@ Item {
             topMargin: CommonProperties.geom.spacing
         }
 
-        Label {
-            text: ' max speed'
-            font.pointSize: 10
+        background: Rectangle {
+            color: Qt.lighter(palette.window)
+            opacity: 0.4
+            radius: 4
         }
 
-        DoubleSpinBox {
-            id: maxSpeedLinearSpinBox
-            from: 0.0
-            to: 2.0
-            value: 0.2
-        }
+        contentItem: Column {
 
-        Item {
-            width: parent.width
-            height: 6
-        }
 
-        Label {
-            text: ' enabled directions'
-            font.pointSize: 10
-        }
+            spacing: 3
 
-        Row {
-            CheckBox {
-                id: chkX
-                text: 'X'
-                checked: true
+
+
+            Label {
+                text: ' max speed'
+                font.pointSize: 10
             }
-            CheckBox {
-                id: chkY
-                text: 'Y'
-                checked: true
+
+            DoubleSpinBox {
+                id: maxSpeedLinearSpinBox
+                from: 0.0
+                to: 2.0
+                value: 0.2
             }
+
+            Item {
+                width: parent.width
+                height: 6
+            }
+
+            Label {
+                text: ' enabled directions'
+                font.pointSize: 10
+            }
+
+            Row {
+                topPadding: -6
+                bottomPadding: -6
+                CheckBox {
+                    id: chkX
+                    text: 'X'
+                    checked: true
+                }
+                CheckBox {
+                    id: chkY
+                    text: 'Y'
+                    checked: true
+                }
+            }
+
         }
 
     }
+
+
 
 
 

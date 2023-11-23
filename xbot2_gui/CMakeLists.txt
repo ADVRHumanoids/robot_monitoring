@@ -1,18 +1,12 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.20)
 project(xbot2_gui)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# QtCreator supports the following variables for Android, which are identical to qmake Android variables.
-# Check https://doc.qt.io/qt/deployment-android.html for more information.
-# They need to be set before the find_package(...) calls below.
-
-
-
 find_package(Qt6 COMPONENTS
+    Qml
     Core
     Gui
     Quick
@@ -23,22 +17,16 @@ find_package(Qt6 COMPONENTS
     Core5Compat
     WebView
     Protobuf
-    #    3DRender
-    #    3DCore
     Quick3D
     REQUIRED)
 
 qt_standard_project_setup(REQUIRES 6.6)
 
-set(PROJECT_SOURCES
-    main.cpp
-    qml.qrc
-)
 
+## ui main
 qt_add_executable(xbot2_gui main.cpp)
 
 set_property(TARGET xbot2_gui APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/android)
-
 
 qt_add_qml_module(xbot2_gui
     VERSION 1.0
@@ -56,7 +44,7 @@ target_compile_definitions(xbot2_gui
     PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
 
 target_link_libraries(xbot2_gui
-    PRIVATE
+    PUBLIC
     Qt6::Core
     Qt6::Quick
     Qt6::WebSockets
@@ -66,9 +54,15 @@ target_link_libraries(xbot2_gui
     Qt6::Core5Compat
     Qt6::Protobuf
     mesh_geometry
-    #          Qt${QT_VERSION_MAJOR}::3DRender
-    #          Qt${QT_VERSION_MAJOR}::3DCore
 )
+
+
+## version information
+target_compile_definitions(xbot2_gui PRIVATE -DXBOT2_GUI_VERSION_MAJOR=${robot_monitoring_VERSION_MAJOR})
+target_compile_definitions(xbot2_gui PRIVATE -DXBOT2_GUI_VERSION_MINOR=${robot_monitoring_VERSION_MAJOR})
+target_compile_definitions(xbot2_gui PRIVATE -DXBOT2_GUI_VERSION_PATCH=${robot_monitoring_VERSION_PATCH})
+
+## add modules
 
 add_subdirectory(Common)
 
@@ -117,3 +111,37 @@ add_library(mesh_geometry STATIC
     ViewerQuick3D/meshgeometry.cpp)
 
 target_link_libraries(mesh_geometry PUBLIC Qt${QT_VERSION_MAJOR}::Quick3D)
+
+# deploy
+if(NOT ANDROID)
+
+    set(QT_ENABLE_VERBOSE_DEPLOYMENT TRUE)
+
+    # Install the executable into "${CMAKE_INSTALL_PREFIX}/bin".
+    install(TARGETS xbot2_gui
+        BUNDLE  DESTINATION .
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
+
+    # Generate the deployment script for the target MyApp.
+    qt_generate_deploy_qml_app_script(
+        TARGET xbot2_gui
+        OUTPUT_SCRIPT deploy_script
+        NO_UNSUPPORTED_PLATFORM_ERROR
+    )
+
+    # Call the deployment script on "cmake --install".
+    install(SCRIPT ${deploy_script})
+
+    # Hack! Add missing files
+    configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/HackDeployMissingFiles.cmake.in
+        ${CMAKE_CURRENT_BINARY_DIR}/cmake/HackDeployMissingFiles.cmake
+        @ONLY
+    )
+
+    install(SCRIPT ${CMAKE_CURRENT_BINARY_DIR}/cmake/HackDeployMissingFiles.cmake)
+
+endif()
+

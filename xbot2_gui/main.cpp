@@ -16,14 +16,19 @@
 #include <emscripten/val.h>
 #endif
 
-Q_IMPORT_QML_PLUGIN(CommonPlugin)
-
 class AppData : public QObject
 {
     Q_OBJECT
 
 public:
 
+    AppData(QObject * parent = nullptr):
+        QObject(parent)
+    {
+        version = {XBOT2_GUI_VERSION_MAJOR, XBOT2_GUI_VERSION_MINOR, XBOT2_GUI_VERSION_PATCH};
+    }
+
+    Q_PROPERTY(QList<int> version MEMBER version);
     Q_PROPERTY(QString hostname MEMBER hostname);
     Q_PROPERTY(int port MEMBER port);
     Q_INVOKABLE void updateUi();
@@ -39,6 +44,7 @@ public:
 public:
     QString hostname { "localhost" }; // "10.240.23.38" };
     int port { 8080 };
+    QList<int> version;
 
 
 };

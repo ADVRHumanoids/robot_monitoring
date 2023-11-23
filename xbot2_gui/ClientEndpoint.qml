@@ -109,7 +109,13 @@ Item
             if(obj.type === "joint_states")
             {
                 SharedData.latestJointState = obj
+
                 jointStateReceived(obj)
+
+                if(!isFinalized)
+                {
+                    doRequest("GET", "/joint_states/info", "", (response) => {root.onInfoReceived(response)})
+                }
             }
             else if(obj.type === "proc")
             {
@@ -186,24 +192,6 @@ Item
         finalized()
     }
 
-    // if websocket connection is up and running,
-    // and we did not manage to finalize yet,
-    // retry every 1 sec
-    Timer {
-        id: fetchInfoTimer
-        interval: 1000
-        repeat: true
-        running: !root.isFinalized && root.isConnected
-        triggeredOnStart: true
-        property int _nattempt: 0
-
-        onTriggered: {
-            parent.connected("[" + _nattempt + "] connected to " + socket.url + ", requesting configuration..")
-            doRequestAsync("GET", "/joint_states/info", "")
-                .then((response) => {root.onInfoReceived(response)})
-            _nattempt++
-        }
-    }
 
     Timer {
         id: pingTimer

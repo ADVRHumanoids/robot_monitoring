@@ -12,6 +12,12 @@ import Joy
 
 Item {
 
+    Rectangle {
+        height: 100
+        width: 100
+        anchors.centerIn: parent
+    }
+
 
     Timer {
         running: true
@@ -22,12 +28,13 @@ Item {
 
         onTriggered: {
 
-            if(CommonProperties.globalLivePlot === null)
+            if(CommonProperties.globalLivePlot == null)
             {
                 return
             }
 
             if(t === 0) {
+                console.log('created')
                 series = CommonProperties.globalLivePlot.addSeries('test', Object())
             }
 

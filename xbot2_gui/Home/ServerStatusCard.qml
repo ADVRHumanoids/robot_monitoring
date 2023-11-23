@@ -98,6 +98,17 @@ Card1 {
         }
 
         Label {
+            text: "Server version"
+        }
+        TextArea {
+            id: versionText
+            Layout.fillWidth: true
+            text: '--'
+            readOnly: true
+            wrapMode: TextEdit.Wrap
+        }
+
+        Label {
             text: "Status"
         }
         TextArea {
@@ -136,6 +147,19 @@ Card1 {
             Layout.fillWidth: true
             text: client.srvRtt.toFixed(1)
             readOnly: true
+        }
+    }
+
+    Connections {
+        target: client
+        onIsConnectedChanged: {
+            if(client.isConnected) {
+                client.doRequestAsync('GET', '/version', '')
+                .then((res) => {
+                          versionText.text = res.version
+                      })
+                .catch((err) => {})
+            }
         }
     }
 }

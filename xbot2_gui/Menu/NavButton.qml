@@ -18,10 +18,10 @@ TabButton {
     width: implicitWidth
     height: implicitHeight
     display: checked ? checkedDisplayMode : uncheckedDisplayMode
-    topPadding: 10
-    leftPadding: 14
-    rightPadding: 14
-    bottomPadding: 10
+    topPadding: 1 //10
+    leftPadding: 8 // 14
+    rightPadding: 8 // 14
+    bottomPadding: 1 //10
     spacing: 10
     clip: true
     icon.color: checked ? palette.highlightedText : palette.buttonText
@@ -60,7 +60,7 @@ TabButton {
         Column {
             id: col
             visible: root.display === TabButton.TextUnderIcon
-            spacing: root.spacing * 0.5
+            spacing: 1
             LayoutItemProxy {
                 target: img
                 anchors.horizontalCenter: parent === undefined ? undefined : parent.horizontalCenter
@@ -92,7 +92,7 @@ TabButton {
                 color: root.icon.color
                 font.family: materialSymbols.font.family
                 font.pointSize: root.icon.height
-                padding: -10
+                padding: 0
                 visible: !imgPng.visible
 
                 MaterialSymbols {
@@ -108,8 +108,8 @@ TabButton {
                     width: Math.max(badgeLabel.width, badgeLabel.height)
                     height: badgeLabel.height
                     radius: height/2
-                    x: parent.width - width/2
-                    y: -height/2
+                    x: parent.width - width
+                    y: 0
                     Label {
                         id: badgeLabel
                         text: badge.num < 99 ? badge.num : '99+'
@@ -117,15 +117,25 @@ TabButton {
                         padding: 2
                     }
                 }
+
             }
 
-            Image {
+            Item {
                 id: imgPng
+                height: imgTxt.height * 0.9
+                width: imgTxt.width * 0.9
                 visible: root.icon.source !== Qt.url('')
-                source: root.icon.source
-                height: root.icon.height*1.2
-                width: root.icon.height*1.2
-                antialiasing: true
+                Image {
+                    anchors.centerIn: parent
+                    source: root.icon.source
+                    height: parent.height
+                    width: parent.height
+                    antialiasing: true
+                    smooth: true
+//                    DebugRectangle {
+//                        target: parent
+//                    }
+                }
             }
 
         }

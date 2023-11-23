@@ -1,0 +1,1 @@
+Temporary solution: change version in both CMakeLists.txt and server/setup.cfg

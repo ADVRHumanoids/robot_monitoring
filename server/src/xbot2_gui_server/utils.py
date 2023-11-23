@@ -47,7 +47,6 @@ def handle_exceptions(func):
         try:
             return await func(self, *args, **kwargs)
         except BaseException as e:
-            await self.srv.log(f'[{func.__name__}] exception occurred: {e}', sev=2)
             traceback.print_exc()
             return web.Response(text=json.dumps({
                     'success': False, 

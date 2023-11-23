@@ -36,6 +36,7 @@ class JointStateHandler:
         self.srv.schedule_task(self.run())
         self.srv.add_route('GET', '/joint_states/info', self.get_joint_info_handler, 'get_joint_info')
         self.srv.add_route('GET', '/joint_states/urdf', self.get_urdf_handler, 'get_urdf')
+        self.srv.add_route('GET', '/joint_states/connected', self.robot_connected_handler, 'get_connected')
         self.srv.add_route('PUT', '/joint_command/goto/{joint_name}', self.command_handler, 'command')
         self.srv.add_route('POST', '/joint_command/goto/stop', self.stop_handler, 'stop')
         
@@ -62,6 +63,16 @@ class JointStateHandler:
         urdf = rospy.get_param('xbotcore/robot_description', default='')
         return web.Response(text=json.dumps({'urdf': urdf}))
     
+
+    @utils.handle_exceptions
+    async def robot_connected_handler(self, request: web.Request):
+        self.msg = None
+        for _ in range(10):
+            if self.msg is not None:
+                return web.Response(text=json.dumps({'response': True}))
+            await asyncio.sleep(0.1)
+        return web.Response(text=json.dumps({'response': False}))
+        
 
     @utils.handle_exceptions
     async def get_joint_info_handler(self, request: web.Request):

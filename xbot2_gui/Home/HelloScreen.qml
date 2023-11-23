@@ -86,7 +86,7 @@ MultiPaneResponsiveLayout {
             spacing: CommonProperties.geom.spacing
 
             SectionHeader {
-                text: 'XBot2 GUI'
+                text: `XBot2 GUI ${appData.version.join('.')}`
             }
 
             ServerStatusCard {

@@ -80,6 +80,7 @@ MultiPaneResponsiveLayout {
 
     Component.onCompleted: {
         CommonProperties.globalLivePlot = livePlot
+        console.log('NOOOOOOOOOOOOOO')
     }
 
 }

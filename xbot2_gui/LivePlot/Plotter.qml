@@ -45,6 +45,8 @@ Item {
         axisValueRight.max = 1
         chart.autoscale = true
         chart.autoscroll = true
+
+        chart.enabled = !chart.enabled
     }
 
     property real timeSpan: 10

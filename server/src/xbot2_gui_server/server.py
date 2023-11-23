@@ -4,6 +4,11 @@ from typing import List
 from aiohttp import web
 import tempfile
 import json
+import os
+from configparser import ConfigParser
+from pathlib import Path
+from pkg_resources import get_distribution
+
 #import ssl
 
 #ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
@@ -53,6 +58,7 @@ class Xbot2WebServer(ServerBase):
         routes = [
             ('GET', '/', self.root_handler, 'root'),
             ('GET', '/ws', self.websocket_handler, 'websocket'),
+            ('GET', '/version', self.version_handler, 'version'),
         ]
 
         for route in routes:
@@ -209,3 +215,23 @@ class Xbot2WebServer(ServerBase):
     async def handle_ping_msg(self, msg, ws):
         if msg['type'] == 'ping':
             await self.ws_send_to_all(json.dumps(msg))
+
+
+    async def version_handler(self, req: web.Request):
+        config = ConfigParser()
+        src_path = Path(os.path.abspath(__file__)).parent.parent
+        root_path = src_path.parent
+        cfg_path = os.path.join(root_path, 'setup.cfg')
+        config.read(cfg_path)
+        try:
+            version = f"xbot2_gui_server {config['metadata']['version']}"
+        except KeyError:
+            version = get_distribution('hhcm-forest')
+
+        return web.Response(text=json.dumps(
+            {
+                'success': True,
+                'message': 'got version',
+                'version': version
+            }
+        ))

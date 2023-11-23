@@ -144,6 +144,8 @@ Item {
 
         visible: nav.visible
 
+        clip: true
+
         anchors {
             topMargin: 6
             top: visible ? nav.bottom : undefined

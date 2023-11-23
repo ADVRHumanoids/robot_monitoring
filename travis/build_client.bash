@@ -1,9 +1,15 @@
 mkdir build_output
 
+rm -rf travis/docker/context && mkdir travis/docker/context
+
+cp -r $PWD travis/docker/context/robot_monitoring
+
+docker build travis/docker -t travis_build_image
+
 docker run --rm  -u $(id -u) \
- -v $PWD:/home/user/robot_monitoring \
  -v $PWD/build_output:/home/user/build_output \
- -v $PWD/travis/docker/build.bash:/home/user/build.bash \
- arturolaurenzi/qt6dev:latest bash /home/user/build.bash
+ travis_build_image bash /home/user/build.bash
+
+chmod -R user build_output
 
 zip -r build_output/xbot2_gui_client.zip build_output/xbot2_gui_client

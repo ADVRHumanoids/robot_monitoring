@@ -1,5 +1,4 @@
-# get ownership over home content
-echo user | sudo -S chown -R user /home/user
+echo user | sudo -S chown user /home/user/build_output
 
 # test 
 set -e

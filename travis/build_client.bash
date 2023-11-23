@@ -12,4 +12,4 @@ docker run --rm \
 
 sudo chown -R $USER build_output
 
-zip -r build_output/xbot2_gui_client.zip build_output/xbot2_gui_client
+zip -r build_output/xbot2_gui_client_x86_64.zip build_output/xbot2_gui_client_x86_64

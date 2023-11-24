@@ -23,6 +23,8 @@ Item {
 
     property int maxContentHeight: 100000
 
+    property int bannerHeight: -1
+
     property alias availableContentWidth: frontScroll.availableWidth
 
     property alias availableContentHeight: frontScroll.availableHeight
@@ -117,6 +119,8 @@ Item {
                 RowLayout {
 
                     id: toolBtnRow
+
+                    height: root.bannerHeight > 0 ? root.bannerHeight : implicitHeight
 
                     anchors {
                         left: parent.left

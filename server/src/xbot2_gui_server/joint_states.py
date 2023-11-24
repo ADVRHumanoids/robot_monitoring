@@ -7,6 +7,7 @@ import base64
 
 import rospy 
 from xbot_msgs.msg import JointState, Fault, JointCommand
+from std_msgs.msg import Float32
 from urdf_parser_py import urdf as urdf_parser
 
 from .server import ServerBase
@@ -46,6 +47,12 @@ class JointStateHandler:
         self.msg = None
         self.last_js_msg = None
         self.fault = None
+
+        # vbatt iload
+        self.vbatt_sub = rospy.Subscriber('xbotcore/vbatt', Float32, self.on_vbatt_recv, queue_size=1)
+        self.iload_sub = rospy.Subscriber('xbotcore/iload', Float32, self.on_iload_recv, queue_size=1)
+        self.vbatt = 0
+        self.iload = 0
 
         # command publisher
         self.cmd_pub = rospy.Publisher('xbotcore/command', JointCommand, queue_size=1)
@@ -144,6 +151,8 @@ class JointStateHandler:
             
             # convert to dict
             js_msg_to_send = JointStateHandler.js_msg_to_dict(self.msg)
+            js_msg_to_send['vbatt'] = self.vbatt
+            js_msg_to_send['iload'] = self.iload
 
             # serialize msg to json
             js_str = json.dumps(js_msg_to_send)
@@ -247,6 +256,14 @@ class JointStateHandler:
 
     def on_fault_recv(self, msg):
         self.fault = msg
+
+
+    def on_vbatt_recv(self, msg):
+        self.vbatt = msg.data
+
+
+    def on_iload_recv(self, msg):
+        self.iload = msg.data
 
 
     def js_msg_to_dict(msg: JointState):

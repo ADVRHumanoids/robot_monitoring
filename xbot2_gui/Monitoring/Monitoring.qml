@@ -20,6 +20,13 @@ MultiPaneResponsiveLayout {
     property Item livePlot: CommonProperties.globalLivePlot
     onBeforeLayoutChange: loader.active = false
     onAfterLayoutChange: loader.active = true
+    property real vbatt
+    property real iload
+
+    LayoutClassHelper {
+        id: lay
+        targetWidth: root.width
+    }
 
     Item {
 
@@ -34,13 +41,64 @@ MultiPaneResponsiveLayout {
             width: parent.width
             spacing: 16
 
-            JointDevice {
-                id: jointDevice
+            GridLayout {
+
                 width: parent.width
-                collapsed: true
-                onSetSafetyState: Logic.setSafetyState(ok)
-                onSetFilterActive: Logic.setFilterActive(ok)
-                onSetFilterCutoff: Logic.setFilterProfile(profile)
+
+                rows: lay.compact ? -1 : 1
+                columns: lay.compact ? 1 : -1
+
+                rowSpacing: 8
+                columnSpacing: 8
+
+                JointDevice {
+                    id: jointDevice
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 1
+                    Layout.preferredHeight: height
+                    bannerHeight: batt.height
+                    collapsed: true
+                    onSetSafetyState: Logic.setSafetyState(ok)
+                    onSetFilterActive: Logic.setFilterActive(ok)
+                    onSetFilterCutoff: Logic.setFilterProfile(profile)
+                }
+
+
+
+                Control {
+                    id: batt
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 1
+                    Layout.alignment: Qt.AlignTop
+
+                    padding: 10
+
+                    background: Rectangle {
+                        color: CommonProperties.colors.cardBackground
+                        radius: CommonProperties.geom.cardRadius
+                    }
+
+                    contentItem: RowLayout {
+                        spacing: 16
+                        TextField {
+                            Layout.fillWidth: true
+                            placeholderText: 'vbatt'
+                            text: root.vbatt.toFixed(1) + ' V'
+                            font.pixelSize: CommonProperties.font.h3
+                            readOnly: true
+                        }
+                        TextField {
+                            Layout.fillWidth: true
+                            placeholderText: 'iload'
+                            text: root.iload.toFixed(1) + ' A'
+                            font.pixelSize: CommonProperties.font.h3
+                            readOnly: true
+                        }
+                    }
+
+
+                }
+
             }
 
             ScrollView {
@@ -72,6 +130,7 @@ MultiPaneResponsiveLayout {
                         toolButtons: [
                             ComboBox {
                                 id: barPlotCombo
+                                Layout.fillWidth: true
                                 model: barPlot.fieldNames
                                 width: implicitWidth
                                 wheelEnabled: true
@@ -131,6 +190,8 @@ MultiPaneResponsiveLayout {
         Loader {
             id: loader
             width: parent.width
+            asynchronous: true
+            visible: status == Loader.Ready
 
             Layout.fillWidth: true
             Layout.fillHeight: true

@@ -7,6 +7,8 @@ function handleFault(jName, faultCode) {
     jointState.setFaultCode(jName, faultCode)
 }
 
+let vbattThresholds = [47.5, 46, 45, 44, 43, 42, 41, 40]
+
 function jsCallback(js) {
     barPlot.setJointStateMessage(js)
     jointState.setJointStateMessage(js)
@@ -14,6 +16,17 @@ function jsCallback(js) {
     robotViewer.updateRobotState(js,
                                  robotViewer.robotState,
                                  'linkPos')
+
+    for(let vth of vbattThresholds) {
+        if(vbatt >= vth && js.vbatt < vth) {
+            error(`low battery voltage V_batt =  ${js.vbatt} V`, 'PMS')
+            break;
+        }
+    }
+
+
+    vbatt = js.vbatt
+    iload = js.iload
 }
 
 

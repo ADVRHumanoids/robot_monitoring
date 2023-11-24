@@ -23,10 +23,6 @@ MultiPaneResponsiveLayout {
         property string iconChar: MaterialSymbolNames.launcher
 
         id: leftScroll
-//        objectName: 'Plugin/Process'
-//        Layout.fillWidth: true
-//        Layout.fillHeight: true
-//        Layout.preferredWidth: 1
 
         contentHeight: leftGrid.height
         contentWidth: availableWidth
@@ -35,7 +31,6 @@ MultiPaneResponsiveLayout {
 
             id: leftGrid
             width: leftScroll.contentWidth
-//            height: 1000
 
             columns: 2
 

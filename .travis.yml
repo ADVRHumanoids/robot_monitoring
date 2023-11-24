@@ -37,8 +37,8 @@ script:
   - set -e
   - bash travis/build_client.bash  # build client for android and x86
   - ls build_output -la
-  - zipalign -p 4 build_output/xbot2_gui_client_android_arm64_v8a.apk build_output/xbot2_gui_client_android_arm64_v8a.apk
-  - echo $KEYSTORE_PWD | apksigner sign --ks-key-alias app --ks my.keystore build_output/xbot2_gui_client_android_arm64_v8a.apk
+  - zipalign -p 4 build_output/xbot2_gui_client_android_arm64_v8a.apk build_output/xbot2_gui_client_android_arm64_v8a_signed.apk
+  - echo $KEYSTORE_PWD | apksigner sign --ks-key-alias app --ks my.keystore build_output/xbot2_gui_client_android_arm64_v8a_signed.apk
   - cd server 
   - sudo python3 -m build  # build wheel
   - if [ -z $TRAVIS_TAG ]; then echo "Not a tag build, will not upload to pypi"; else twine upload -u __token__ -p $PYPI_TOKEN dist/*; fi
@@ -48,7 +48,7 @@ deploy:
   user: $GH_USERNAME
   password: $GH_TOKEN
   file:
-    - build_output/xbot2_gui_client_android_arm64_v8a.apk
+    - build_output/xbot2_gui_client_android_arm64_v8a_signed.apk
     - build_output/xbot2_gui_client_x86_64.zip
   skip_cleanup: true
   on:

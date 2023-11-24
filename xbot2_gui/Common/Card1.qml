@@ -160,6 +160,7 @@ Item {
                     // expand/collpse button
                     SmallToolButton {
                         id: showHideBtn
+                        visible: root.collapsable
                         Layout.alignment: Qt.AlignVCenter
                         text: root.collapsed ? '\uf078' : '\uf077'
                         font.family: CommonProperties.fontAwesome.solid.family

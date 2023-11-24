@@ -89,7 +89,8 @@ class ProcessHandler:
             proc_data.append ({
                 'name': p.name,
                 'status': 'Unknown',
-                'cmdline': p.cmdline
+                'cmdline': p.cmdline,
+                'machine': p.hostname
             })
 
         return web.Response(text=json.dumps(proc_data))

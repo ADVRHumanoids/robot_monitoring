@@ -50,6 +50,22 @@ Card1 {
         }
     }
 
+    Timer {
+        id: delayedConnect
+        interval: 1000
+        onTriggered: root.updateServerUrl()
+    }
+
+    toolButtons: [
+        Button {
+            text: 'Reset'
+            onClicked: {
+                client.doRequest('POST', '/restart', '')
+                delayedConnect.restart()
+            }
+        }
+    ]
+
     frontItem: GridLayout {
         id: formLayout
         anchors.fill: parent
@@ -106,6 +122,7 @@ Card1 {
             text: '--'
             readOnly: true
             wrapMode: TextEdit.Wrap
+            enabled: client.isConnected
         }
 
         Label {
@@ -117,6 +134,7 @@ Card1 {
             text: ''
             readOnly: true
             wrapMode: TextEdit.Wrap
+            enabled: client.isConnected
         }
 
         Label {
@@ -127,6 +145,7 @@ Card1 {
             Layout.fillWidth: true
             text: statsTimer.rxKbps.toFixed(1)
             readOnly: true
+            enabled: client.isConnected
         }
 
         Label {
@@ -137,6 +156,7 @@ Card1 {
             Layout.fillWidth: true
             text: statsTimer.txKbps.toFixed(1)
             readOnly: true
+            enabled: client.isConnected
         }
 
         Label {
@@ -147,6 +167,7 @@ Card1 {
             Layout.fillWidth: true
             text: client.srvRtt.toFixed(1)
             readOnly: true
+            enabled: client.isConnected
         }
     }
 

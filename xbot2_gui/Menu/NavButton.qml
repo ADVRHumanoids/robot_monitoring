@@ -19,8 +19,8 @@ TabButton {
     height: implicitHeight
     display: checked ? checkedDisplayMode : uncheckedDisplayMode
     topPadding: 1 //10
-    leftPadding: 8 // 14
-    rightPadding: 8 // 14
+    leftPadding: display === AbstractButton.IconOnly ? 1 : 14 // 14
+    rightPadding: display === AbstractButton.IconOnly ? 1 : 14 // 14
     bottomPadding: 1 //10
     spacing: 10
     clip: true
@@ -81,9 +81,9 @@ TabButton {
             id: img
             visible: root.display !== TabButton.TextOnly
 
-            implicitHeight: imgTxt.visible ? imgTxt.implicitHeight : imgPng.height
+            implicitHeight: imgTxt.visible ? imgTxt.implicitHeight - 6 : imgPng.height
             implicitWidth: imgTxt.visible ? imgTxt.implicitWidth : imgPng.width
-            height: imgTxt.visible ? imgTxt.height : imgPng.height
+            height: imgTxt.visible ? imgTxt.height - 10 : imgPng.height
             width: imgTxt.visible ? imgTxt.width : imgPng.width
 
             Text {

@@ -8,6 +8,10 @@ import os
 from configparser import ConfigParser
 from pathlib import Path
 from pkg_resources import get_distribution
+import os
+import sys
+import psutil
+import logging
 
 #import ssl
 
@@ -59,6 +63,7 @@ class Xbot2WebServer(ServerBase):
             ('GET', '/', self.root_handler, 'root'),
             ('GET', '/ws', self.websocket_handler, 'websocket'),
             ('GET', '/version', self.version_handler, 'version'),
+            ('POST', '/restart', self.restart_program, 'restart'),
         ]
 
         for route in routes:
@@ -235,3 +240,20 @@ class Xbot2WebServer(ServerBase):
                 'version': version
             }
         ))
+
+
+    async def restart_program(self, req):
+        """
+        Restarts the current program, with file objects and descriptors
+        cleanup
+        """
+
+        try:
+            p = psutil.Process(os.getpid())
+            for handler in p.get_open_files() + p.connections():
+                os.close(handler.fd)
+        except Exception as e:
+            logging.error(e)
+
+        python = sys.executable
+        os.execl(python, python, *sys.argv)

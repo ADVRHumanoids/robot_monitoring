@@ -116,16 +116,20 @@ Item {
                 width: parent.width
 
                 TextField {
+                    id: urlField
                     placeholderText: 'url'
                     inputMethodHints: Qt.ImhUrlCharactersOnly | Qt.ImhPreferLowercase
                     text: web.url
-                    onAccepted: web.url = appData.fromUserInput(text)
+                    onAccepted: web.url = webUrl
                     Layout.fillWidth: true
+                    property url webUrl: appData.fromUserInput(text)
                 }
 
                 Button {
-                    text: 'Reload'
-                    onClicked: web.reload()
+                    text: web.url === urlField.webUrl ? 'Reload' : 'Go'
+                    onClicked: {
+                        text === 'Reload' ? web.reload() : web.url = urlField.webUrl
+                    }
                 }
             }
 

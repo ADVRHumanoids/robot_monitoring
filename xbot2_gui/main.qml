@@ -25,6 +25,17 @@ ApplicationWindow {
             accent: Material.accent
             window: Material.background
         }
+        inactive{
+            highlight: Material.primary
+            highlightedText: Material.foreground
+            buttonText: Material.foreground
+            text: Material.foreground
+            accent: Material.accent
+            window: Material.background
+        }
+        disabled {
+            window: Qt.lighter(Material.background)
+        }
     }
 
     MaterialSymbols {
@@ -66,7 +77,7 @@ ApplicationWindow {
             page: "/qt/qml/Monitoring/Monitoring.qml"
             iconText: MaterialSymbolNames.gauge
             iconFont: syms.font.family
-            active: client.isFinalized
+            active: client.robotConnected
         }
 
         PageItem {
@@ -74,7 +85,7 @@ ApplicationWindow {
             page: "/qt/qml/Joy/Joy.qml"
             iconText: MaterialSymbolNames.joystick
             iconFont: syms.font.family
-            active: client.isConnected
+            active: client.robotConnected
         }
 
         PageItem {
@@ -85,13 +96,13 @@ ApplicationWindow {
             active: client.isConnected
         }
 
-        PageItem {
-            name: "Playground"
-            page: "/qt/qml/TestThings/Playground.qml"
-            iconText: MaterialSymbolNames.playground
-            iconFont: syms.font.family
-            active: true
-        }
+        // PageItem {
+        //     name: "Playground"
+        //     page: "/qt/qml/TestThings/Playground.qml"
+        //     iconText: MaterialSymbolNames.playground
+        //     iconFont: syms.font.family
+        //     active: true
+        // }
 
         PageItem {
             name: "Builder"

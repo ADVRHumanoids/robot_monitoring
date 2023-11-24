@@ -111,7 +111,7 @@ Item {
             right: visible ? parent.right : undefined
         }
 
-        visible: !row.visible
+        visible: !row.visible && root.columnItems.length > 1
 
         model: modelItem
 
@@ -142,13 +142,13 @@ Item {
 
         id: swipe
 
-        visible: nav.visible
+        visible: !row.visible
 
         clip: true
 
         anchors {
             topMargin: 6
-            top: visible ? nav.bottom : undefined
+            top: visible ? (nav.visible ? nav.bottom : parent.top) : undefined
             left: visible ? parent.left : undefined
             right: visible ? parent.right : undefined
             bottom: visible ? parent.bottom : undefined

@@ -25,10 +25,11 @@ notifications:
     on_failure: always
 
 before_script:
+  - openssl aes-256-cbc -K $encrypted_c72c54c8443e_key -iv $encrypted_c72c54c8443e_iv -in my.keystore.enc -out my.keystore -d
   - id -u 
   - id -g
   - echo "Travis tag is $TRAVIS_TAG"
-  - sudo apt update && sudo apt install python3-pip python3-setuptools cmake patchelf python3-venv
+  - sudo apt update && sudo apt install python3-pip python3-setuptools cmake patchelf python3-venv zipalign apksigner
   - sudo pip3 install -U setuptools urllib3 requests  # tentative fix for RequestsDependencyWarning: urllib3 (1.26.8) or chardet (3.0.4) doesn't match a supported version!
   - sudo pip3 install build twine
 
@@ -36,6 +37,8 @@ script:
   - set -e
   - bash travis/build_client.bash  # build client for android and x86
   - ls build_output -la
+  - zipalign -p 4 build_output/xbot2_gui_client_android_arm64_v8a.apk build_output/xbot2_gui_client_android_arm64_v8a.apk
+  - echo $KEYSTORE_PWD | apksigner sign --ks-key-alias app --ks my.keystore build_output/xbot2_gui_client_android_arm64_v8a.apk
   - cd server 
   - sudo python3 -m build  # build wheel
   - if [ -z $TRAVIS_TAG ]; then echo "Not a tag build, will not upload to pypi"; else twine upload -u __token__ -p $PYPI_TOKEN dist/*; fi
@@ -45,8 +48,8 @@ deploy:
   user: $GH_USERNAME
   password: $GH_TOKEN
   file:
-    - "FILE 1"
-    - "FILE 2"
+    - build_output/xbot2_gui_client_android_arm64_v8a.apk
+    - build_output/xbot2_gui_client_x86_64.zip
   skip_cleanup: true
   on:
     tags: true

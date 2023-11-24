@@ -1,5 +1,6 @@
 .import "/qt/qml/Main/sharedData.js" as SharedData
 .import Common 1.0 as Common
+let error = Common.CommonProperties.notifications.error
 
 function handleFault(jName, faultCode) {
     barPlot.setStatus(jName, faultCode === "" ? true : false)
@@ -19,9 +20,17 @@ function jsCallback(js) {
 function objCallback(obj) {
 
     if(obj.type === 'joint_device_info') {
+
         jointDevice.filterActive = obj.filter_active
+
         jointDevice.filterCutoff = obj.filter_cutoff_hz
+
+        if(jointDevice.jointActive && !obj.joint_active) {
+            error('Safety triggered', 'robot')
+        }
+
         jointDevice.jointActive = obj.joint_active
+
     }
     else if(obj.type === 'joint_fault') {
         console.log(JSON.stringify(obj))
@@ -45,7 +54,6 @@ function destroy() {
 function addJointStateSeries(livePlot, jName, fieldName) {
 
     if(livePlot === null) {
-        let error = Common.CommonProperties.notifications.error
         error('Live plot unavailable: open the "Plot" panel', 'Plot')
         return
     }

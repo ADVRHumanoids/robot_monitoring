@@ -38,6 +38,43 @@ Item {
         currTime = t
     }
 
+    function rebuild() {
+        _rebuilding = true
+        for(let i = 0; i < chart.count; i++) {
+
+            // save points, type, name
+            let series = chart.series(i)
+            console.log(series, series.name)
+
+            let points = Array(series.count)
+            for(var k = 0; k < series.count; k++) {
+                points[k] = series.at(k)
+            }
+            let type = series.type
+            let name = series.name
+
+            // remove
+            chart.removeSeries(series)
+
+            // create
+            series = chart.createSeries(type,
+                                        name);
+            series.useOpenGL = true
+            series.antialiasing = false
+            series.axisX = axisTime
+            series.axisY = axisValueLeft
+
+            // fill with saved points
+            for(let k = 0; k < points.length; k++) {
+                series.append(points[k].x, points[k].y)
+            }
+
+            // update seriesdata
+            currSeries[name].series = series
+        }
+        _rebuilding = false
+    }
+
     function resetView() {
         axisValueLeft.min = -1
         axisValueLeft.max = 1
@@ -45,8 +82,6 @@ Item {
         axisValueRight.max = 1
         chart.autoscale = true
         chart.autoscroll = true
-
-        chart.enabled = !chart.enabled
     }
 
     property real timeSpan: 10
@@ -60,6 +95,7 @@ Item {
     implicitWidth: 400
     implicitHeight: 300
 
+    property bool _rebuilding: false
     property real currTime: 0
 
 
@@ -296,7 +332,9 @@ Item {
 
         onSeriesRemoved: function(series) {
             console.log(`--chart has ${count} elems`)
-            delete currSeries[series.name]
+            if(!root._rebuilding) {
+                delete currSeries[series.name]
+            }
             plotterLegend.removeSeries(series)
         }
 

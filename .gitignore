@@ -4,3 +4,4 @@ build_output/
 server/dist/
 server/build/
 xbot2_gui_server.egg-info/
+travis/docker/context

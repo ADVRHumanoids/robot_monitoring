@@ -50,7 +50,7 @@ def handle_exceptions(func):
             traceback.print_exc()
             return web.Response(text=json.dumps({
                     'success': False, 
-                    'message': str(e),
+                    'message': f'{e.__class__.__name__} {e}',
                     }))
 
     return async_wrapper

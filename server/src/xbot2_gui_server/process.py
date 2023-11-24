@@ -37,8 +37,10 @@ class ProcessHandler:
         self.srv.schedule_task(self.run())
         self.srv.schedule_task(self.proc_output_broadcaster(self.proc, stream_type='stdout'))
         self.srv.schedule_task(self.proc_output_broadcaster(self.proc, stream_type='stderr'))
-        self.srv.add_route('GET', f'/process/get_list',
+        self.srv.add_route('GET', f'/process/get_list', 
                            self.process_get_list_handler, f'process_get_list_handler')
+        self.srv.add_route('POST', f'/process/custom_command',
+                           self.process_custom_command_handler, f'process_custom_command_handler')
         self.srv.add_route('PUT', f'/process/{self.name}/command/{{command}}',
                            self.process_command_handler, f'process_{self.name}_cmd_handler')
         self.srv.add_route('GET', f'/process/{self.name}/state',
@@ -46,6 +48,37 @@ class ProcessHandler:
 
         # if running, attach
         self.srv.schedule_task(self.proc.attach())
+
+
+    @utils.handle_exceptions
+    async def process_custom_command_handler(self, request):
+        
+        body = await request.text()
+        body = json.loads(body)
+        
+        cmd = body['command']
+        machine = body['machine']
+        timeout = float(body['timeout'])
+
+        res = dict()
+        res['success'] = False
+        res['message'] = 'unknown failure'
+        
+        try:
+            fut = Process.execute_command(machine=machine, cmd=cmd)
+            ret, stdout, stderr = await asyncio.wait_for(fut=fut, timeout=timeout)
+            res['success'] = True 
+            res['message'] = f'command "{cmd}" returned {ret}'
+            res['retcode'] = ret
+            res['stdout'] = stdout.decode()
+            res['stderr'] = stderr.decode()
+        except asyncio.exceptions.TimeoutError:
+            res['message'] = f'timeout = {timeout} s expired'
+        
+        return web.Response(text=json.dumps(res))
+        
+
+
 
     @utils.handle_exceptions
     async def process_get_list_handler(self, request):

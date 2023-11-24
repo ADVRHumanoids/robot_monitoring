@@ -1,7 +1,8 @@
-import QtQuick 2.4
-import QtQuick.Controls 2.15
+import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 
+import Common
 import "data.js" as Data
 
 SingleJointStateForm {
@@ -53,7 +54,13 @@ SingleJointStateForm {
     }
 
     function setFaultCode(faultCode) {
+
         let faultValue = fieldValueMap['fault']
+
+        if(faultValue.text !== faultCode || !faultValue.alert) {
+            CommonProperties.notifications.error(`${jName} FAULT ${faultCode}`)
+        }
+
         faultValue.setText(faultCode)
         faultValue.alert = true
     }

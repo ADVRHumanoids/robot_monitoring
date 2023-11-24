@@ -6,6 +6,12 @@ import Common
 
 MultiPaneResponsiveLayout {
 
+    signal pageSelected()
+
+    onPageSelected: livePlot.rebuild()
+
+    onAfterLayoutChange: livePlot.rebuild()
+
     LayoutClassHelper {
         id: lay
         targetWidth: parent.width
@@ -59,6 +65,12 @@ MultiPaneResponsiveLayout {
                     Button {
                         text: 'Reset'
                         onClicked: livePlot.resetView()
+                    }
+
+                    Button {
+                        text: 'Rebuild'
+                        onClicked: livePlot.rebuild()
+                        visible: false
                     }
 
                     Label {

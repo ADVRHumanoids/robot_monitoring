@@ -34,6 +34,9 @@ Item
     // triggered upon reception of a new joint state msg
     signal jointStateReceived(var js)
 
+    // receiving joint states
+    property bool robotConnected: false
+
     // triggered on socket error
     signal error(var msg)
 
@@ -108,6 +111,10 @@ Item
 
             if(obj.type === "joint_states")
             {
+                robotConnected = true
+
+                robotConnectedTimer.restart()
+
                 SharedData.latestJointState = obj
 
                 jointStateReceived(obj)
@@ -195,7 +202,7 @@ Item
 
     Timer {
         id: pingTimer
-        running: socket.isConnected
+        running: root.isConnected
         repeat: true
         interval: 300
 
@@ -204,6 +211,14 @@ Item
             msg.type = 'ping'
             msg.cli_time_ns = appData.getTimeNs()
             sendTextMessage(JSON.stringify(msg))
+        }
+    }
+
+    Timer {
+        id: robotConnectedTimer
+        interval: 1000
+        onTriggered: {
+            root.robotConnected = false
         }
     }
 

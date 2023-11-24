@@ -1,6 +1,6 @@
-import QtQuick 2.4
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.11
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 import Common
 
 Label {
@@ -25,7 +25,7 @@ Label {
 
     text: ' ' + _value.toFixed(2)
     font.bold: alert
-    color: alert ? 'red' : CommonProperties.colors.primaryText
+    color: alert ? 'red' : palette.text
     opacity: 0.5
 
     verticalAlignment: Text.AlignVCenter
@@ -43,6 +43,7 @@ Label {
         id: timer
         interval: 500
         onTriggered: {
+            alert = false
             root.opacity = 0.5
         }
     }

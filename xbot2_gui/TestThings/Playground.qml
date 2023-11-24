@@ -12,14 +12,17 @@ import Joy
 
 Item {
 
-    Rectangle {
+    Button {
         height: 100
         width: 100
+        text: 'Create'
         anchors.centerIn: parent
+        onClicked: timer.series = CommonProperties.globalLivePlot.addSeries('test', Object())
     }
 
 
     Timer {
+        id: timer
         running: true
         interval: 16
         repeat: true
@@ -31,11 +34,6 @@ Item {
             if(CommonProperties.globalLivePlot == null)
             {
                 return
-            }
-
-            if(t === 0) {
-                console.log('created')
-                series = CommonProperties.globalLivePlot.addSeries('test', Object())
             }
 
             t += interval

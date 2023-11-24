@@ -28,6 +28,7 @@ Item {
     property string gauge: '\ue9e4'
     property string replay: '\ue042'
     property string tools: '\uf10b'
+    property string barchart: '\ue26b'
 
     property FontLoader filledFont: FontLoader {
         source: `/Font/materialsymbols/MaterialSymbolsOutlined[opsz,wght,FILL,GRAD@20,200,1,200].otf`
@@ -38,6 +39,6 @@ Item {
     }
 
     property FontLoader emptyFont400: FontLoader {
-        source: `/Font/materialsymbols/MaterialSymbolsOutlined[opsz,wght,FILL,GRAD@20,400,0,200].otf`
+        source: `/Font/materialsymbols/MaterialSymbolsOutlined[opsz,wght,FILL,GRAD@20,200,0,200].otf`
     }
 }

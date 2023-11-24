@@ -14,6 +14,7 @@ MultiPaneResponsiveLayout {
 
     property ClientEndpoint client
     property Item robotViewer: loader.item
+    enabled: client.robotConnected
 
     id: root
     property Item livePlot: CommonProperties.globalLivePlot
@@ -21,6 +22,9 @@ MultiPaneResponsiveLayout {
     onAfterLayoutChange: loader.active = true
 
     Item {
+
+        property string iconText: 'Telemetry'
+        property string iconChar: MaterialSymbolNames.barchart
 
         id: leftRoot
         width: parent.width
@@ -151,6 +155,7 @@ MultiPaneResponsiveLayout {
             client: root.client
             robotCmd: loader.item.robotCmd
             onResetCmd: robotViewer.resetCmd()
+            enabled: jointDevice.jointActive
         }
 
     }

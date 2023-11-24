@@ -13,6 +13,35 @@ class Process:
         self.hostname = machine
         self.cmdline = dict()
         asyncio.get_event_loop().create_task(self._keep_ssh_session_running())
+
+    
+    async def execute_command(machine, cmd):
+        
+        proc  = await asyncio.create_subprocess_exec('/usr/bin/ssh',
+                    '-tt', 
+                    machine,
+                    f'bash -ic "{cmd}"',
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE)
+        
+        stdin = proc._noop()
+        
+        if proc.stdout is not None:
+            stdout = proc._read_stream(1)
+        else:
+            stdout = proc._noop()
+        
+        if proc.stderr is not None:
+            stderr = proc._read_stream(2)
+        else:
+            stderr = proc._noop()
+        
+        stdin, stdout, stderr = await asyncio.tasks.gather(stdin, stdout, stderr)
+        
+        ret = await proc.wait()
+        
+        return ret, stdout, stderr
+        
         
 
     async def attach(self):
@@ -223,31 +252,35 @@ class Process:
     
     async def _screen_session_running(self, name):
 
-        def print(string):
-            pass #builtins.print(string)
+        lock = asyncio.Lock()
+        
+        async with lock:
 
-        # make sure we have our ssh sesssion
-        if self.ssh_session is None:
-            builtins.print(f'{self.name} ssh session offline')
-            return False
+            def print(string):
+                pass #builtins.print(string)
 
-        # consume stdout
-        read_coro =  self.ssh_session.stdout.read(4096)
-        try:
-            await asyncio.wait_for(read_coro, timeout=0.1)
-        except:
-            pass
-        
-        # send command
-        print(f'issue tmux has-session -t {self.name} over ssh..')
-        self.ssh_session.stdin.write(f'tmux has-session -t {self.name} 1>/dev/null 2>/dev/null;\necho $?\n'.encode())
-        await self.ssh_session.stdin.drain()
-        print('..done')
-        
-        line = (await self.ssh_session.stdout.readline()).decode().strip()
-        print(f'got line "{line}"')
-        
-        return line == '0'
+            # make sure we have our ssh sesssion
+            if self.ssh_session is None:
+                builtins.print(f'{self.name} ssh session offline')
+                return False
+
+            # consume stdout
+            read_coro =  self.ssh_session.stdout.read(4096)
+            try:
+                await asyncio.wait_for(read_coro, timeout=0.1)
+            except:
+                pass
+            
+            # send command
+            print(f'issue tmux has-session -t {self.name} over ssh..')
+            self.ssh_session.stdin.write(f'tmux has-session -t {self.name} 1>/dev/null 2>/dev/null;\necho $?\n'.encode())
+            await self.ssh_session.stdin.drain()
+            print('..done')
+            
+            line = (await self.ssh_session.stdout.readline()).decode().strip()
+            print(f'got line "{line}"')
+            
+            return line == '0'
 
 
     def _parse_options(self, options):

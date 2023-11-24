@@ -154,7 +154,7 @@ class JointStateHandler:
             # # experimental proto based
             # pbjs = joint_states_pb2.JointStates()
             # pbjs.motor_position.extend(self.msg.motor_position)
-            # self.msg = None
+            self.msg = None
 
             # pb_msg = {
             #     'type': 'pb',

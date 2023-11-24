@@ -71,7 +71,7 @@ Item {
                                                           'iconChar': obj.iconText,
                                                           'index': i,
                                                           'iconSource': obj.iconSource,
-                                                          'enabled': Qt.binding(() => { return true || obj.active })
+                                                          'enabled': Qt.binding(() => { return obj.active })
                                                       })
             buttonItems.push(btn)
         }

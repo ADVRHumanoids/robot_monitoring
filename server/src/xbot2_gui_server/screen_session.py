@@ -18,7 +18,7 @@ class Process:
     async def execute_command(machine, cmd):
         
         proc  = await asyncio.create_subprocess_exec('/usr/bin/ssh',
-                    '-tt', 
+                    # '-tt', 
                     machine,
                     f'bash -ic "{cmd}"',
                     stdout=asyncio.subprocess.PIPE,

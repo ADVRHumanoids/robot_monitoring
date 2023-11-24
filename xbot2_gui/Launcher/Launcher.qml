@@ -77,6 +77,12 @@ MultiPaneResponsiveLayout {
 
             }
 
+            CustoCommand {
+                id: customCmd
+                pageItem: root
+                onSubmitCommand: Logic.customCommand(machine, command, timeout)
+            }
+
             Item {
 
                 // spacer

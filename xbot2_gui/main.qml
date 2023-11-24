@@ -81,19 +81,19 @@ ApplicationWindow {
         }
 
         PageItem {
-            name: "Joy"
-            page: "/qt/qml/Joy/Joy.qml"
-            iconText: MaterialSymbolNames.joystick
-            iconFont: syms.font.family
-            active: client.robotConnected
-        }
-
-        PageItem {
             name: "Plot"
             page: "/qt/qml/LivePlot/Plot.qml"
             iconText: MaterialSymbolNames.tableChart
             iconFont: syms.font.family
             active: client.isConnected
+        }
+
+        PageItem {
+            name: "Joy"
+            page: "/qt/qml/Joy/Joy.qml"
+            iconText: MaterialSymbolNames.joystick
+            iconFont: syms.font.family
+            active: client.robotConnected
         }
 
         // PageItem {

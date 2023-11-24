@@ -7,7 +7,9 @@ fi
 set -e
 
 # auth
-echo $GH_TOKEN | gh auth login -p https --with-token 
+TMPTOKEN=$GH_TOKEN
+unset GH_TOKEN
+echo $TMPTOKEN | gh auth login -p https --with-token 
 
 # create release
 gh release create $TRAVIS_TAG \

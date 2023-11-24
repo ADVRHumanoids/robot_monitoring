@@ -194,7 +194,7 @@ Item {
                         contentWidth: availableWidth
                         contentHeight: frontScrollContent.height
                         clip: true
-                        bottomPadding: 10
+                        bottomPadding: frontScrollContent.children.length > 0 ? 10 : 0
 
                         Item {
                             id: frontScrollContent

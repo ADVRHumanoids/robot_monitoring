@@ -13,13 +13,32 @@ function requestProcessUpdate(procRepeater) {
 
     // update process cards when available
     let onProcessListReceived = function (msg) {
-        // SharedData.processInfo = msg
+
         procRepeater.model = msg
+
+        for(let item of msg) {
+            customCmd.availableMachines.push(item.machine)
+        }
     }
 
     client.doRequest('GET', '/process/get_list', '', onProcessListReceived)
 }
 
+
+function customCommand(machine, command, timeout) {
+    client.doRequestAsync('POST', '/process/custom_command',
+                          JSON.stringify(
+                              {
+                                  'machine': machine,
+                                  'command': command,
+                                  'timeout': timeout
+                              })
+                          )
+    .then((res) => {
+              customCmd.setResult(res.retcode, res.stdout, res.stderr)
+          })
+    .onerror((err) => {})
+}
 
 function processCmd(name, cmd, opt) {
 

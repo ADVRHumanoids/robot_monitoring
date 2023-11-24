@@ -29,27 +29,22 @@ before_script:
   - id -u 
   - id -g
   - echo "Travis tag is $TRAVIS_TAG"
-  - sudo apt update && sudo apt install python3-pip python3-setuptools cmake patchelf python3-venv zipalign apksigner
-  - sudo pip3 install -U setuptools urllib3 requests  # tentative fix for RequestsDependencyWarning: urllib3 (1.26.8) or chardet (3.0.4) doesn't match a supported version!
-  - sudo pip3 install build twine
+  - bash travis/install_dependencies.bash
 
 script: 
   - set -e
-  - bash travis/build_client.bash  # build client for android and x86
-  - ls build_output -la
-  - zipalign -p 4 build_output/xbot2_gui_client_android_arm64_v8a.apk build_output/xbot2_gui_client_android_arm64_v8a_signed.apk
-  - echo $KEYSTORE_PWD | apksigner sign --ks-key-alias app --ks my.keystore build_output/xbot2_gui_client_android_arm64_v8a_signed.apk
-  - cd server 
-  - sudo python3 -m build  # build wheel
-  - if [ -z $TRAVIS_TAG ]; then echo "Not a tag build, will not upload to pypi"; else twine upload -u __token__ -p $PYPI_TOKEN dist/*; fi
+  - bash travis/build_client.bash 
+  - bash travis/build_and_deploy_server.bash
+  - bash travis/deploy_client.bash
+  - set +e
 
-deploy:
-  provider: releases
-  user: $GH_USERNAME
-  password: $GH_TOKEN
-  file:
-    - build_output/xbot2_gui_client_android_arm64_v8a_signed.apk
-    - build_output/xbot2_gui_client_x86_64.zip
-  skip_cleanup: true
-  on:
-    tags: true
+# deploy:
+#   provider: releases
+#   user: $GH_USERNAME
+#   password: $GH_TOKEN
+#   file:
+#     - build_output/xbot2_gui_client_android_arm64_v8a_signed.apk
+#     - build_output/xbot2_gui_client_x86_64.zip
+#   skip_cleanup: true
+#   on:
+#     tags: true

@@ -35,6 +35,7 @@ ApplicationWindow {
         }
         disabled {
             window: Qt.lighter(Material.background)
+            buttonText: Material.foreground
         }
     }
 

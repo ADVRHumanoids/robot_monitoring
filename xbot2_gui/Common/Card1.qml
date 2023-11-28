@@ -101,7 +101,7 @@ Item {
                     let tb = root.toolButtons[i]
                     tb.parent = toolBtnRowInner
                     try {
-                        tb.font.pixelSize = CommonProperties.font.h3
+//                        tb.font.pixelSize = CommonProperties.font.h3
                     }
                     catch(error) { }
                     //                    tb.anchors.verticalCenter = toolBtnRow.verticalCenter
@@ -138,6 +138,10 @@ Item {
                         verticalAlignment: Text.AlignVCenter
                         Layout.fillWidth: true
                         wrapMode: Text.Wrap
+                    }
+
+                    Item {
+                        Layout.minimumWidth: 6
                     }
 
                     RowLayout {

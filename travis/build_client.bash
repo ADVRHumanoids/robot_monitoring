@@ -19,8 +19,9 @@ docker run --rm \
 sudo chown -R $USER build_output
 
 # compress linux app
-zip -r build_output/xbot2_gui_client_x86_64.zip build_output/xbot2_gui_client_x86_64
+cd build_output
+zip -r xbot2_gui_client_x86_64.zip xbot2_gui_client_x86_64
 
 # sign apk
-zipalign -p 4 build_output/xbot2_gui_client_android_arm64_v8a.apk build_output/xbot2_gui_client_android_arm64_v8a_signed.apk
-echo $KEYSTORE_PWD | apksigner sign --ks-key-alias app --ks my.keystore build_output/xbot2_gui_client_android_arm64_v8a_signed.apk
+zipalign -p 4 xbot2_gui_client_android_arm64_v8a.apk xbot2_gui_client_android_arm64_v8a_signed.apk
+echo $KEYSTORE_PWD | apksigner sign --ks-key-alias app --ks ../my.keystore xbot2_gui_client_android_arm64_v8a_signed.apk

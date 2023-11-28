@@ -16,7 +16,7 @@ ApplicationWindow {
     title: "Xbot2 Robot GUI"
     visibility: Qt.platform.os === "android" ? Window.FullScreen : Window.AutomaticVisibility
 
-    property bool dbg: true
+    property bool dbg: false
 
     palette {
         active {

@@ -1,4 +1,4 @@
 cmake_minimum_required(VERSION 3.16)
-project(robot_monitoring VERSION 2.2.9)
+project(robot_monitoring VERSION 2.2.10)
 
 add_subdirectory(xbot2_gui)

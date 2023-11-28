@@ -59,8 +59,6 @@ Item {
             onReleased: {
                 outer.animatePosChange = true
                 root.active = false
-//                outer.x = (area.width - outer.width) / 2
-//                outer.y = (area.height - outer.height) / 2
                 returnAnimation.restart()
                 joystickMoved(0, 0)
             }
@@ -210,7 +208,7 @@ Item {
         }
 
         // Fire the signal to indicate the joystick has moved
-        angle = Math.atan2(mouseArea.signal_y, mouseArea.signal_x)
+        angle = Math.atan2(-mouseArea.mcy, mouseArea.mcx)
 
         if(mouseArea.fingerInBounds && mouseArea.containsPress) {
             joystickMoved(

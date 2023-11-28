@@ -16,9 +16,13 @@ function requestProcessUpdate(procRepeater) {
 
         procRepeater.model = msg
 
+        let availableMachines = []
+
         for(let item of msg) {
-            customCmd.availableMachines.push(item.machine)
+            availableMachines.push(item.machine)
         }
+
+        customCmd.availableMachines = [... new Set(availableMachines)]
     }
 
     client.doRequest('GET', '/process/get_list', '', onProcessListReceived)
@@ -37,7 +41,7 @@ function customCommand(machine, command, timeout) {
     .then((res) => {
               customCmd.setResult(res.retcode, res.stdout, res.stderr)
           })
-    .onerror((err) => {})
+    .catch((err) => {})
 }
 
 function processCmd(name, cmd, opt) {

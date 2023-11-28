@@ -16,6 +16,8 @@ ApplicationWindow {
     title: "Xbot2 Robot GUI"
     visibility: Qt.platform.os === "android" ? Window.FullScreen : Window.AutomaticVisibility
 
+    property bool dbg: true
+
     palette {
         active {
             highlight: Material.primary
@@ -37,6 +39,10 @@ ApplicationWindow {
             window: Qt.lighter(Material.background)
             buttonText: Material.foreground
         }
+    }
+
+    Component.onCompleted: {
+        console.log(`palette.disabled.buttonText ${palette.disabled.buttonText.a}`)
     }
 
     MaterialSymbols {
@@ -70,7 +76,7 @@ ApplicationWindow {
             page: "/qt/qml/Launcher/Launcher.qml"
             iconText: MaterialSymbolNames.terminal
             iconFont: syms.font.family
-            active: client.isConnected
+            active: client.isConnected || mainWindow.dbg
         }
 
         PageItem {
@@ -78,7 +84,7 @@ ApplicationWindow {
             page: "/qt/qml/Monitoring/Monitoring.qml"
             iconText: MaterialSymbolNames.gauge
             iconFont: syms.font.family
-            active: client.robotConnected
+            active: client.robotConnected || mainWindow.dbg
         }
 
         PageItem {
@@ -86,7 +92,7 @@ ApplicationWindow {
             page: "/qt/qml/LivePlot/Plot.qml"
             iconText: MaterialSymbolNames.tableChart
             iconFont: syms.font.family
-            active: client.isConnected
+            active: client.isConnected || mainWindow.dbg
         }
 
         PageItem {
@@ -94,7 +100,7 @@ ApplicationWindow {
             page: "/qt/qml/Joy/Joy.qml"
             iconText: MaterialSymbolNames.joystick
             iconFont: syms.font.family
-            active: client.robotConnected
+            active: client.robotConnected || mainWindow.dbg
         }
 
         // PageItem {

@@ -53,7 +53,7 @@ Control {
 
             MouseArea {
                 anchors.fill: parent
-                enabled: false
+                z: 1
             }
 
             placeholderText: name

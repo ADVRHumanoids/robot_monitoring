@@ -229,9 +229,9 @@ class Xbot2WebServer(ServerBase):
         cfg_path = os.path.join(root_path, 'setup.cfg')
         config.read(cfg_path)
         try:
-            version = f"xbot2_gui_server {config['metadata']['version']}"
+            version = f"xbot2-gui-server {config['metadata']['version']}"
         except KeyError:
-            version = get_distribution('hhcm-forest')
+            version = str(get_distribution('xbot2-gui-server'))
 
         return web.Response(text=json.dumps(
             {

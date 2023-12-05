@@ -1,12 +1,13 @@
 import asyncio
 from aiohttp import web
 import json
-
+import functools
 import base64
+import math
 
 
 import rospy 
-from xbot_msgs.msg import JointState, Fault, JointCommand
+from xbot_msgs.msg import JointState, Fault, JointCommand, CustomState
 from std_msgs.msg import Float32
 from urdf_parser_py import urdf as urdf_parser
 
@@ -54,6 +55,19 @@ class JointStateHandler:
         self.vbatt = 0
         self.iload = 0
 
+        # aux
+        self.aux_map = dict()
+        self.aux_subs = []
+        for tname, ttype in rospy.get_published_topics():
+            tname: str = tname
+            if ttype == 'xbot_msgs/CustomState' and 'aux/' in tname:
+                aux_type_name = 'aux/' + tname[tname.find('aux/')+4:]
+                self.aux_map[aux_type_name] = list()
+                cb = functools.partial(self.on_aux_recv, aux=self.aux_map[aux_type_name])
+                sub = rospy.Subscriber(tname, CustomState, cb, queue_size=10)
+                self.aux_subs.append(sub)
+                    
+
         # command publisher
         self.cmd_pub = rospy.Publisher('xbotcore/command', JointCommand, queue_size=1)
         self.cmd_busy = False
@@ -62,6 +76,18 @@ class JointStateHandler:
 
         # config
         self.rate = config.get('rate', 60.0)
+
+    
+    def on_aux_recv(self, msg: CustomState, aux: list):
+        
+        if len(aux) != len(msg.value):
+            aux.clear()
+            aux.extend(msg.value)
+            return 
+
+        for i in range(len(msg.value)):
+            if not math.isnan(msg.value[i]):
+                aux[i] = msg.value[i]
 
     
     @utils.handle_exceptions
@@ -88,7 +114,7 @@ class JointStateHandler:
 
         if self.last_js_msg is not None:
             # convert to dict
-            js_msg = JointStateHandler.js_msg_to_dict(self.last_js_msg)
+            js_msg = self.js_msg_to_dict(self.last_js_msg)
             joint_info['message'] = 'ok'
             joint_info['success'] = True
 
@@ -150,12 +176,13 @@ class JointStateHandler:
                 continue
             
             # convert to dict
-            js_msg_to_send = JointStateHandler.js_msg_to_dict(self.msg)
+            js_msg_to_send = self.js_msg_to_dict(self.msg)
             js_msg_to_send['vbatt'] = self.vbatt
             js_msg_to_send['iload'] = self.iload
 
             # serialize msg to json
-            js_str = json.dumps(js_msg_to_send)
+            js_str = json.dumps(js_msg_to_send)      
+            print(js_str)    
 
             # send to all connected clients
             await self.srv.ws_send_to_all(js_str)
@@ -164,6 +191,8 @@ class JointStateHandler:
             # pbjs = joint_states_pb2.JointStates()
             # pbjs.motor_position.extend(self.msg.motor_position)
             self.msg = None
+            for v in self.aux_map.values():
+                v.clear()
 
             # pb_msg = {
             #     'type': 'pb',
@@ -266,7 +295,7 @@ class JointStateHandler:
         self.iload = msg.data
 
 
-    def js_msg_to_dict(msg: JointState):
+    def js_msg_to_dict(self, msg: JointState):
         js_msg_dict = dict()
         js_msg_dict['type'] = 'joint_states'
         js_msg_dict['name'] = msg.name
@@ -283,4 +312,9 @@ class JointStateHandler:
         js_msg_dict['k'] = msg.stiffness
         js_msg_dict['d'] = msg.damping
         js_msg_dict['stamp'] = msg.header.stamp.to_sec()
+        js_msg_dict['aux_types'] = []
+        for k, v in self.aux_map.items():
+            if len(v) > 0:
+                js_msg_dict[k] = v
+                js_msg_dict['aux_types'].append(k)
         return js_msg_dict

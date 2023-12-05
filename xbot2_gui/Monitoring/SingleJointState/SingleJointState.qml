@@ -9,6 +9,9 @@ SingleJointStateForm {
 
     id: singleJointState
 
+    property list<string> auxFieldNames
+    property string selectedAux
+
     property var labelComponent: Component {
         Label {
 
@@ -17,7 +20,11 @@ SingleJointStateForm {
 
     property var auxSelectorComponent: Component {
         AuxSelector {
+            model: singleJointState.auxFieldNames
             Layout.fillHeight: true
+            onCurrentTextChanged: {
+                singleJointState.selectedAux = currentText
+            }
         }
     }
 

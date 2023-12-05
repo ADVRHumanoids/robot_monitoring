@@ -1,9 +1,8 @@
-import QtQuick 2.4
-import QtQuick.Controls 2.15
+import QtQuick
+import QtQuick.Controls
 
 ComboBox {
-    displayText: "Select joint"
-    editable: true
+    editable: false
     model: ['iq_out_fb', 'iq_ref_fb', 'rtt']
     topPadding: 0
     bottomPadding: 0

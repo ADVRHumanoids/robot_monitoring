@@ -114,6 +114,11 @@ function setJointStateMessage(msg)
         if(fName in msg)
         {
             fValue.setValue(msg[fName][jIndex])
+            continue
+        }
+
+        if(fName === 'aux' && selectedAux in msg) {
+            fValue.setValue(msg[selectedAux][jIndex])
         }
     }
 }

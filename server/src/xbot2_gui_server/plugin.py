@@ -2,7 +2,6 @@ import asyncio
 from aiohttp import web
 import json
 
-import rospy
 from std_srvs.srv import SetBool
 from xbot_msgs.srv import GetPluginList
 from xbot_msgs.msg import Statistics2
@@ -10,11 +9,14 @@ from xbot_msgs.msg import Statistics2
 from .server import ServerBase
 from . import utils
 
+# ros handle
+from . import ros_utils
+ros_handle : ros_utils.RosWrapper = ros_utils.ros_handle
 
 class PluginHandler:
 
     def __init__(self, srv: ServerBase, config=dict()) -> None:
-
+        
         # config
         self.rate = config.get('rate', 10.0)
 
@@ -25,7 +27,10 @@ class PluginHandler:
         self.srv.add_route('GET', '/plugin/get_list', self.plugin_get_list_handler, 'plugin_get_list')
 
         # subscribe to plugin statistics
-        self.pstat_sub = rospy.Subscriber('xbotcore/statistics', Statistics2, self.on_pstat_recv, queue_size=1)
+        self.pstat_sub = ros_handle.create_subscription(Statistics2, 
+                                                        'xbotcore/statistics', 
+                                                        self.on_pstat_recv, 
+                                                        queue_size=1)
         self.msg = dict()
 
     
@@ -43,9 +48,10 @@ class PluginHandler:
             res['success'] = False
             return web.Response(text=json.dumps(res))
 
-        switch = rospy.ServiceProxy(f'xbotcore/{plugin_name}/switch', service_class=SetBool)
-
-        await utils.to_thread(switch, command == 'start')
+        req_data = command == 'start'
+        
+        switch = ros_handle.create_client(SetBool, f'xbotcore/{plugin_name}/switch')
+        await ros_handle.call(switch, timeout_sec=1.0, data=req_data)
 
         return web.Response(text=json.dumps({'success': True, 'message': f'{command} success'}))
 
@@ -53,8 +59,8 @@ class PluginHandler:
     @utils.handle_exceptions
     async def plugin_get_list_handler(self, request):
 
-        get_plugin_list = rospy.ServiceProxy('xbotcore/get_plugin_list', service_class=GetPluginList)
-        plugin_list = await utils.to_thread(get_plugin_list)
+        get_plugin_list = ros_handle.create_client(GetPluginList, 'xbotcore/get_plugin_list')
+        plugin_list = await ros_handle.call(get_plugin_list, timeout_sec=1.0)
 
         return web.Response(text=json.dumps({
             'success': True, 

@@ -2,8 +2,12 @@ import asyncio
 from aiohttp import web
 import json
 import base64
+import functools
 
-import rospy
+# ros handle
+from . import ros_utils
+ros_handle : ros_utils.RosWrapper = ros_utils.ros_handle
+
 from theora_image_transport.msg import Packet as TheoraPacket
 
 from .server import ServerBase
@@ -17,7 +21,7 @@ class TheoraVideoHandler:
         # save server object, register our handlers
         self.srv = srv
         self.srv.add_route('GET', '/video/get_names', self.get_names_handler, 'video_get_names')
-        self.srv.add_route('PUT', '/video/set_stream', self.set_stream_handler, 'video_set_stream')
+        self.srv.add_route('PUT', '/video/set_stream/{stream_name}', self.set_stream_handler, 'video_set_stream')
 
         # queue for th packets
         self.th_pkt_queue = asyncio.Queue(maxsize=0)
@@ -36,14 +40,15 @@ class TheoraVideoHandler:
     async def get_names_handler(self, request):
 
         # get topic names from ros master
-        topic_name_type_list = await utils.to_thread(rospy.get_published_topics)
+        topic_name_type_list = ros_handle.get_topic_names_and_types()
+        print(topic_name_type_list)
 
         # filter those with theora type and nice name
         vs_topics = list()
-        for tname, ttype in topic_name_type_list:
+        for tname, ttypes in topic_name_type_list:
             if 'image_raw' not in tname:
                 continue
-            if ttype == 'theora_image_transport/Packet':
+            if 'theora_image_transport/msg/Packet' in ttypes or 'theora_image_transport/Packet' == ttypes:
                 vs_topics.append(tname)
         
         # return
@@ -57,9 +62,7 @@ class TheoraVideoHandler:
     @utils.handle_exceptions
     async def set_stream_handler(self, request):
 
-        body = await request.text()
-        body = json.loads(body)
-        stream_name = body['stream_name']
+        stream_name = command = request.match_info.get('stream_name', '')
 
         if len(stream_name) == 0:
             return
@@ -77,8 +80,10 @@ class TheoraVideoHandler:
         
         print(f'requested stream {stream_name}, registering subscriber and waiting for headers..')
 
-        img_sub = rospy.Subscriber(stream_name, 
-            TheoraPacket, self.on_th_pkt_recv, self.img_data[stream_name], queue_size=20, tcp_nodelay=True)
+        on_th_pkt_recv = functools.partial(self.on_th_pkt_recv, stream_data=self.img_data[stream_name])
+
+        img_sub = ros_handle.create_subscription(TheoraPacket, stream_name, 
+            on_th_pkt_recv, queue_size=20, latch=True)
 
         self.img_data[stream_name][1] = img_sub
 

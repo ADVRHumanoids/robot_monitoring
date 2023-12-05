@@ -6,32 +6,36 @@ from .server import Xbot2WebServer
 import yaml
 import sys
 import importlib
-import rospy
 import logging
+
+from . import ros_utils
 
 def main():
 
-    print('starting server, initializing rospy..')
-
-    # init rospy node
-    rospy.init_node('xbot2_gui_server', disable_signals=True)
+    ros_utils.ros_handle = ros_utils.RosWrapper()
 
     logging.basicConfig(level=logging.INFO, force=True)
     
     # load config
-    cfgpath = sys.argv[1]
-    cfg = yaml.safe_load(open(cfgpath, 'r').read())
+    if len(sys.argv) > 1:
+        cfgpath = sys.argv[1]
+        cfg = yaml.safe_load(open(cfgpath, 'r').read())
+    else:
+        cfg = dict()
 
     # create server
     srv = Xbot2WebServer()
 
+    # spin ros callbacks
+    srv.schedule_task(ros_utils.ros_handle.spin_node())
+
     # load default extensions
     extensions = []
 
-    # wasm ui
-    from .webui import WebUiHandler
-    ext = WebUiHandler(srv, cfg.get('webui', {}))
-    extensions.append(ext)
+    # # wasm ui
+    # from .webui import WebUiHandler
+    # ext = WebUiHandler(srv, cfg.get('webui', {}))
+    # extensions.append(ext)
 
     # joint states
     from .joint_states import JointStateHandler
@@ -53,13 +57,16 @@ def main():
     ext = TheoraVideoHandler(srv, cfg.get('theora_video', {}))
     extensions.append(ext)
 
-    # cartesian
-    from .cartesian import CartesianHandler
-    ext = CartesianHandler(srv, cfg.get('cartesian', {}))
-    extensions.append(ext)
+    # # cartesian
+    # from .cartesian import CartesianHandler
+    # ext = CartesianHandler(srv, cfg.get('cartesian', {}))
+    # extensions.append(ext)
 
     # process
     from .process import ProcessHandler
+    ext = ProcessHandler(srv)
+    extensions.append(ext)
+
     for extname, extcfg in cfg.items():
         if extcfg['type'] == 'process_handler':
             print(f'found process handler {extname}')
@@ -71,10 +78,10 @@ def main():
     ext = VisualHandler(srv, cfg.get('visual', {}))
     extensions.append(ext)
 
-    # concert
-    from .concert import ConcertHandler
-    ext = ConcertHandler(srv, cfg.get('concert', {}))
-    extensions.append(ext)
+    # # concert
+    # from .concert import ConcertHandler
+    # ext = ConcertHandler(srv, cfg.get('concert', {}))
+    # extensions.append(ext)
 
     # run server
     srv.run_server()

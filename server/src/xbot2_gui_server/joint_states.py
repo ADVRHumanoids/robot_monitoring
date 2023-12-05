@@ -2,12 +2,12 @@ import asyncio
 from aiohttp import web
 import json
 
-import base64
+# ros handle
+from . import ros_utils
+ros_handle : ros_utils.RosWrapper = ros_utils.ros_handle
 
-
-import rospy 
 from xbot_msgs.msg import JointState, Fault, JointCommand
-from std_msgs.msg import Float32
+from std_msgs.msg import Float32, String
 from urdf_parser_py import urdf as urdf_parser
 
 from .server import ServerBase
@@ -42,20 +42,20 @@ class JointStateHandler:
         self.srv.add_route('POST', '/joint_command/goto/stop', self.stop_handler, 'stop')
         
         # joint state subscriber
-        self.js_sub = rospy.Subscriber('xbotcore/joint_states', JointState, self.on_js_recv, queue_size=1)
-        self.fault_sub = rospy.Subscriber('xbotcore/fault', Fault, self.on_fault_recv, queue_size=20)
+        self.js_sub = ros_handle.create_subscription(JointState, 'xbotcore/joint_states', self.on_js_recv, queue_size=1)
+        self.fault_sub = ros_handle.create_subscription(Fault, 'xbotcore/fault', self.on_fault_recv, queue_size=20)
         self.msg = None
         self.last_js_msg = None
         self.fault = None
 
         # vbatt iload
-        self.vbatt_sub = rospy.Subscriber('xbotcore/vbatt', Float32, self.on_vbatt_recv, queue_size=1)
-        self.iload_sub = rospy.Subscriber('xbotcore/iload', Float32, self.on_iload_recv, queue_size=1)
+        self.vbatt_sub = ros_handle.create_subscription(Float32, 'xbotcore/vbatt', self.on_vbatt_recv, queue_size=1)
+        self.iload_sub = ros_handle.create_subscription(Float32, 'xbotcore/iload', self.on_iload_recv, queue_size=1)
         self.vbatt = 0
         self.iload = 0
 
         # command publisher
-        self.cmd_pub = rospy.Publisher('xbotcore/command', JointCommand, queue_size=1)
+        self.cmd_pub = ros_handle.create_publisher(JointCommand, 'xbotcore/command', queue_size=1)
         self.cmd_busy = False
         self.cmd_guard = JointStateHandler.CommandGuard(self.command_acquire, self.command_release)
         self.cmd_should_stop = True
@@ -63,11 +63,11 @@ class JointStateHandler:
         # config
         self.rate = config.get('rate', 60.0)
 
-    
+
     @utils.handle_exceptions
     async def get_urdf_handler(self, request: web.Request):
         print('retrieving robot description..')
-        urdf = rospy.get_param('xbotcore/robot_description', default='')
+        urdf = ros_handle.get_urdf()
         return web.Response(text=json.dumps({'urdf': urdf}))
     
 
@@ -103,8 +103,8 @@ class JointStateHandler:
 
         # get urdf
         print('retrieving robot description..')
-        urdf = rospy.get_param('xbotcore/robot_description', default='')
-        if len(urdf) == 0:
+        urdf = ros_handle.get_urdf()
+        if urdf is None:
             joint_info['message'] = 'unable to get robot description'
             joint_info['success'] = False
             return web.Response(text=json.dumps(joint_info))
@@ -203,7 +203,7 @@ class JointStateHandler:
             trj_time = float(req.rel_url.query['time'])
             joint_name = req.match_info['joint_name']
 
-            time = rospy.Time.now()
+            time = ros_handle.now()
             t0 = time
             dt = 0.01
             jidx = self.last_js_msg.name.index(joint_name)
@@ -223,7 +223,7 @@ class JointStateHandler:
                 msg.position = [qref]
                 self.cmd_pub.publish(msg)
                 await asyncio.sleep(dt)
-                time = rospy.Time.now()
+                time = ros_handle.now()
 
             if self.cmd_should_stop:
                 print('trj stopped!')
@@ -268,8 +268,7 @@ class JointStateHandler:
 
     def js_msg_to_dict(msg: JointState):
         js_msg_dict = dict()
-        js_msg_dict['type'] = 'joint_states'
-        js_msg_dict['name'] = msg.name
+        
         js_msg_dict['posRef'] = msg.position_reference
         js_msg_dict['motPos'] = msg.motor_position
         js_msg_dict['linkPos'] = msg.link_position
@@ -282,5 +281,10 @@ class JointStateHandler:
         js_msg_dict['driverTemp'] = msg.temperature_driver
         js_msg_dict['k'] = msg.stiffness
         js_msg_dict['d'] = msg.damping
-        js_msg_dict['stamp'] = msg.header.stamp.to_sec()
+        for k, v in js_msg_dict.items():
+            js_msg_dict[k] = list(v)
+
+        js_msg_dict['type'] = 'joint_states'
+        js_msg_dict['name'] = msg.name
+        js_msg_dict['stamp'] = ros_handle.timestamp_to_sec(msg.header.stamp)
         return js_msg_dict

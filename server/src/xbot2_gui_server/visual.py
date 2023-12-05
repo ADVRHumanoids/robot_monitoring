@@ -2,14 +2,15 @@ import asyncio
 from aiohttp import web
 import json
 
-import rospy
 from urdf_parser_py import urdf as urdf_parser
-import tf
 from scipy.spatial.transform import Rotation as R
 
 from .server import ServerBase
 from . import utils
 
+# ros handle
+from . import ros_utils
+ros_handle : ros_utils.RosWrapper = ros_utils.ros_handle
 
 class VisualHandler:
 
@@ -38,7 +39,7 @@ class VisualHandler:
     async def visual_get_mesh_handler(self, request):
         
         uri = request.match_info['uri']
-        path = utils.resolve_ros_uri(uri)
+        path = ros_utils.resolve_ros_uri(uri)
         print('URI/PATH: ', uri, path)
         return web.FileResponse(path)
 
@@ -47,7 +48,7 @@ class VisualHandler:
     async def visual_get_mesh_entities(self, request):
         
         # parse urdf
-        urdf = rospy.get_param('xbotcore/robot_description')
+        urdf = ros_handle.get_urdf()
         model = urdf_parser.Robot.from_xml_string(urdf)
 
         # get list of visuals
@@ -96,7 +97,7 @@ class VisualHandler:
         tfl = tf.TransformListener()
 
         # parse urdf
-        urdf = rospy.get_param('xbotcore/robot_description')
+        urdf = ros_handle.get_urdf()
         model = urdf_parser.Robot.from_xml_string(urdf)
         root = 'base_link'
 

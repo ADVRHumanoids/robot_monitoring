@@ -121,7 +121,6 @@ Item
 
                 if(!isFinalized)
                 {
-                    doRequest("GET", "/joint_states/info", "", (response) => {root.onInfoReceived(response)})
                 }
             }
             else if(obj.type === "proc")
@@ -212,6 +211,14 @@ Item
             msg.cli_time_ns = appData.getTimeNs()
             sendTextMessage(JSON.stringify(msg))
         }
+    }
+
+    Timer {
+        id: jointInfoTimer
+        interval: 1000
+        running: root.isConnected && !root.isFinalized
+        repeat: true
+        onTriggered: doRequest("GET", "/joint_states/info", "", (response) => {root.onInfoReceived(response)})
     }
 
     Timer {

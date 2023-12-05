@@ -14,7 +14,7 @@ find_package(Qt6 COMPONENTS
     Widgets
     QuickControls2
     ShaderTools
-    Core5Compat
+    #Core5Compat
     WebView
     Protobuf
     Quick3D
@@ -51,7 +51,7 @@ target_link_libraries(xbot2_gui
     Qt6::WebView
     Qt6::QuickControls2
     Qt6::Widgets
-    Qt6::Core5Compat
+    #Qt6::Core5Compat
     Qt6::Protobuf
     mesh_geometry
 )

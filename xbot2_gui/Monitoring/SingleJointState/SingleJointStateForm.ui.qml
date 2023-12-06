@@ -14,10 +14,6 @@ Item {
         columns: 3
         anchors.fill: parent
         rowSpacing: 0
-
-        onImplicitHeightChanged: {
-            console.log(`diocane ${implicitHeight}`)
-        }
     }
 }
 

@@ -16,6 +16,9 @@ function jsCallback(js) {
     robotViewer.updateRobotState(js,
                                  robotViewer.robotState,
                                  'linkPos')
+    for(let aux of js.aux_types) {
+        barPlot.addAuxType(aux)
+    }
 
     for(let vth of vbattThresholds) {
         if(vbatt >= vth && js.vbatt < vth) {

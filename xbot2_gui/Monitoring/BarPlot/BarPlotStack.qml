@@ -7,7 +7,7 @@ import "/qt/qml/Main/sharedData.js" as SharedData
 
 Item {
 
-    property var fieldNames: Logic.barPlotFields.map(f => Logic.shortToLongName[f])
+    property list<string> fieldNames
 
     property alias currentIndex: stack.currentIndex
 
@@ -26,6 +26,28 @@ Item {
             if(loader.active) {
                 loader.item.setStatus(statusOk)
             }
+        }
+    }
+
+    function addAuxType(aux) {
+        if(fieldNames.indexOf(aux) < 0) {
+
+            console.log(`new aux type ${aux}`)
+
+            fieldNames.push(aux)
+            fieldNamesChanged()
+
+            let model = container.model
+
+            model.push(
+                        {
+                            'fieldName': aux,
+                            'refName': '',
+                            'min': Array(SharedData.jointNames.length).fill(-50),
+                            'max': Array(SharedData.jointNames.length).fill(50),
+                        })
+
+            container.model = model
         }
     }
 
@@ -50,7 +72,7 @@ Item {
         Repeater {
 
             id: container
-            model: Logic.barPlotFields.length
+            model: fieldNames.length
 
             Loader {
 
@@ -60,10 +82,10 @@ Item {
                 onLoaded: {
                     active = true
                     item.jointNames = SharedData.jointNames
-                    item.min = Logic.barPlotMin()[index]
-                    item.max = Logic.barPlotMax()[index]
-                    item.fieldName = Logic.barPlotFields[index]
-                    item.fieldNameRef = Logic.refName[index]
+                    item.min = modelData.min
+                    item.max = modelData.max
+                    item.fieldName = modelData.fieldName
+                    item.fieldNameRef = modelData.refName
                     item.setJointStateMessage(SharedData.latestJointState)
                     item.setStatus(root.statusOk)
                 }
@@ -90,6 +112,10 @@ Item {
     Component.onCompleted: {
         statusOk = Array(SharedData.jointNames.length)
         statusOk.fill(true)
+        container.model = Logic.barPlotDefaultModel
+        for(let item of container.model) {
+            root.fieldNames.push(Logic.getLongName(item.fieldName))
+        }
     }
 
 }

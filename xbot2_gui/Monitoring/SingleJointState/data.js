@@ -41,7 +41,7 @@ var skipPlotBtn = [
             'fault'
         ]
 
-function buildValuePlot (fieldName, container) {
+function buildValuePlot (fieldName, plotCallback, container) {
 
     var valueObj = valueComponent.createObject(container)
 
@@ -56,9 +56,7 @@ function buildValuePlot (fieldName, container) {
 
     var plotBtnObj = plotBtnComponent.createObject(container)
 
-    plotBtnObj.released.connect( function() {
-        singleJointState.plotAdded(jName, fieldName)
-    })
+    plotBtnObj.released.connect(plotCallback)
 
     plotBtnMap[fieldName] = plotBtnObj
 
@@ -79,18 +77,28 @@ function buildFields (container) {
         else if(fieldNames[i] === 'aux')
         {
             var auxObj = auxSelectorComponent.createObject(container)
-            var valueObj = buildValuePlot(fieldNames[i], container)
+
+            let plotCallback = function() {
+                singleJointState.plotAdded(jName, auxObj.currentText)
+            }
+
+            var valueObj = buildValuePlot(fieldNames[i], plotCallback, container)
+
             auxObj.implicitHeight = valueObj.implicitHeight
 
         }
 
         else
         {
+            let plotCallback = function() {
+                singleJointState.plotAdded(jName, fieldName)
+            }
+
             labelComponent.createObject(
                         container,
                         {text: shortToLongName[fieldNames[i]]})
 
-            buildValuePlot(fieldNames[i], container)
+            buildValuePlot(fieldNames[i], plotCallback, container)
         }
 
     }

@@ -19,10 +19,6 @@ Item {
         anchors.fill: parent
         currentIndex: root.currentIndex
 
-        onImplicitHeightChanged: {
-            console.log(`diocanissimo ${implicitHeight}`)
-        }
-
         Repeater {
 
             id: repeater

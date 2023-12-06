@@ -23,6 +23,7 @@ Item {
         to: 100
         value: Math.round((root.value - root.from)/root._range*100)
         stepSize: (root.stepSize / root._range)*100
+        editable: true
 
         onValueChanged: {
             root.value =  root.from + spinbox.value / 100.0 * root._range

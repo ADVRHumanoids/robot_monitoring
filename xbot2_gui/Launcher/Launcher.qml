@@ -32,7 +32,7 @@ MultiPaneResponsiveLayout {
             id: leftGrid
             width: leftScroll.contentWidth
 
-            columns: 2
+            columns: root.layoutHelper.compact ? 1 : 2
 
             SectionHeader {
 

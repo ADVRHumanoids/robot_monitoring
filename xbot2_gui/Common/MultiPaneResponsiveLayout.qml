@@ -10,6 +10,8 @@ Item {
     signal beforeLayoutChange()
     signal afterLayoutChange()
 
+    property alias layoutHelper: layout
+
     //
     id: root
 

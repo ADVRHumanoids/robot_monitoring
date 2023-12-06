@@ -49,6 +49,12 @@ class JointStateHandler:
         self.last_js_msg = None
         self.fault = None
 
+        # temperatures
+        self.mot_temp = None
+        self.dri_temp = None
+        self.mot_temp_sub = rospy.Subscriber('xbotcore/temperature_motor', CustomState, self.on_mot_temp_recv, queue_size=1)
+        self.dri_temp_sub = rospy.Subscriber('xbotcore/temperature_driver', CustomState, self.on_dri_temp_recv, queue_size=1)
+
         # vbatt iload
         self.vbatt_sub = rospy.Subscriber('xbotcore/vbatt', Float32, self.on_vbatt_recv, queue_size=1)
         self.iload_sub = rospy.Subscriber('xbotcore/iload', Float32, self.on_iload_recv, queue_size=1)
@@ -295,6 +301,14 @@ class JointStateHandler:
         self.iload = msg.data
 
 
+    def on_mot_temp_recv(self, msg):
+        self.mot_temp = msg
+
+
+    def on_dri_temp_recv(self, msg):
+        self.dri_temp = msg
+
+
     def js_msg_to_dict(self, msg: JointState):
         js_msg_dict = dict()
         js_msg_dict['type'] = 'joint_states'
@@ -307,14 +321,14 @@ class JointStateHandler:
         js_msg_dict['velRef'] = msg.velocity_reference
         js_msg_dict['motVel'] = msg.motor_velocity
         js_msg_dict['linkVel'] = msg.link_velocity
-        js_msg_dict['motorTemp'] = msg.temperature_motor
-        js_msg_dict['driverTemp'] = msg.temperature_driver
+        js_msg_dict['motorTemp'] = msg.temperature_motor if self.mot_temp is None else self.mot_temp
+        js_msg_dict['driverTemp'] = msg.temperature_driver if self.dri_temp is None else self.dri_temp
         js_msg_dict['k'] = msg.stiffness
         js_msg_dict['d'] = msg.damping
         js_msg_dict['stamp'] = msg.header.stamp.to_sec()
         js_msg_dict['aux_types'] = []
         for k, v in self.aux_map.items():
             if len(v) > 0:
-                js_msg_dict[k] = v
+                js_msg_dict[k] = [None if math.isnan(vi) else vi for vi in v]
                 js_msg_dict['aux_types'].append(k)
         return js_msg_dict

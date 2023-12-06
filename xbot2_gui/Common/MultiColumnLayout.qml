@@ -177,7 +177,7 @@ Item {
     }
 
     onColumnsChanged: {
-        computeLayout()
+        Qt.callLater(computeLayout)
     }
 
 

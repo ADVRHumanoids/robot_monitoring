@@ -6,6 +6,10 @@ set(Qt6_ROOT "${Qt6Core_DIR}/../../..")
 execute_process(COMMAND bash "-c" "mkdir -p ${CMAKE_INSTALL_PREFIX}/plugins/renderers")
 execute_process(COMMAND bash "-c" "cp ${Qt6_ROOT}/plugins/renderers/libopenglrenderer.so ${CMAKE_INSTALL_PREFIX}/plugins/renderers")
 
+# copy geometry loaders
+execute_process(COMMAND bash "-c" "mkdir -p ${CMAKE_INSTALL_PREFIX}/plugins/geometryloaders")
+execute_process(COMMAND bash "-c" "cp ${Qt6_ROOT}/plugins/geometryloaders/*.so ${CMAKE_INSTALL_PREFIX}/plugins/geometryloaders")
+
 # copy resources for webengine
 execute_process(COMMAND bash "-c" "mkdir -p ${CMAKE_INSTALL_PREFIX}/resources")
 execute_process(COMMAND bash "-c" "cp -r ${Qt6_ROOT}/resources/* ${CMAKE_INSTALL_PREFIX}/resources")

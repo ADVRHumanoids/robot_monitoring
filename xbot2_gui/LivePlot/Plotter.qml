@@ -34,6 +34,11 @@ Item {
             axisValue.min = val - (axisValue.max - axisValue.min)*0.1
         }
 
+        // remove old samples to avoid out of memory
+        if(seriesData.series.count > 110000) {
+            seriesData.series.removePoints(0, 10000)
+        }
+
         // save current time for autoscroll
         currTime = t
     }

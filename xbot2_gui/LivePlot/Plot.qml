@@ -81,7 +81,7 @@ MultiPaneResponsiveLayout {
                     DoubleSpinBox {
                         id: rangeSpin
                         from: 0
-                        to: 100
+                        to: 1000
                         stepSize: 1
                         value: 10
                     }
@@ -92,7 +92,6 @@ MultiPaneResponsiveLayout {
 
     Component.onCompleted: {
         CommonProperties.globalLivePlot = livePlot
-        console.log('NOOOOOOOOOOOOOO')
     }
 
 }

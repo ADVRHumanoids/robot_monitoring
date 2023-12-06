@@ -59,7 +59,7 @@ target_link_libraries(xbot2_gui
 
 ## version information
 target_compile_definitions(xbot2_gui PRIVATE -DXBOT2_GUI_VERSION_MAJOR=${robot_monitoring_VERSION_MAJOR})
-target_compile_definitions(xbot2_gui PRIVATE -DXBOT2_GUI_VERSION_MINOR=${robot_monitoring_VERSION_MAJOR})
+target_compile_definitions(xbot2_gui PRIVATE -DXBOT2_GUI_VERSION_MINOR=${robot_monitoring_VERSION_MINOR})
 target_compile_definitions(xbot2_gui PRIVATE -DXBOT2_GUI_VERSION_PATCH=${robot_monitoring_VERSION_PATCH})
 
 ## add modules

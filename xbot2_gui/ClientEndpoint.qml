@@ -121,6 +121,7 @@ Item
 
                 if(!isFinalized)
                 {
+                    jointInfoTimer.start()
                 }
             }
             else if(obj.type === "proc")
@@ -217,7 +218,7 @@ Item
         id: jointInfoTimer
         interval: 1000
         running: root.isConnected && !root.isFinalized
-        repeat: true
+        repeat: false
         onTriggered: doRequest("GET", "/joint_states/info", "", (response) => {root.onInfoReceived(response)})
     }
 

@@ -12,6 +12,7 @@ TabButton {
     property int uncheckedDisplayMode: TabButton.IconOnly
     property int textFixedWidth: -1
     property alias badgeNum: badge.num
+    property real sizeFactor: 1.0
 
     //
     id: root
@@ -91,7 +92,7 @@ TabButton {
                 text: root.iconChar
                 color: root.icon.color
                 font.family: materialSymbols.font.family
-                font.pointSize: root.icon.height
+                font.pointSize: root.icon.height * root.sizeFactor
                 padding: 0
                 visible: !imgPng.visible
 

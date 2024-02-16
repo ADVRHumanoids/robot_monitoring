@@ -42,6 +42,7 @@ Item {
             property int index
             property alias badgeNum: btn.badgeNum
             property alias iconSource: btn.icon.source
+            property alias sizeFactor: btn.sizeFactor
 
             NavButton {
                 id: btn
@@ -57,10 +58,15 @@ Item {
         }
     }
 
-    Component.onCompleted: {
+    function construct() {
+
         if(model === undefined) {
             return
         }
+
+        activePositioner.children = []
+
+        buttonItems = []
 
         for(let i = 0; i < model.children.length; i++) {
             let obj = model.children[i]
@@ -71,11 +77,19 @@ Item {
                                                           'iconChar': obj.iconText,
                                                           'index': i,
                                                           'iconSource': obj.iconSource,
+                                                          'sizeFactor': obj.sizeFactor,
                                                           'enabled': Qt.binding(() => { return obj.active })
                                                       })
             buttonItems.push(btn)
         }
+
     }
+
+    Component.onCompleted: {
+        construct()
+    }
+
+    onModelChanged: construct()
 
     Flickable {
         id: vScroll

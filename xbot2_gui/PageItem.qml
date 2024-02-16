@@ -7,4 +7,5 @@ Item {
     property font iconFont: Qt.application.font
     property bool active: false
     property url iconSource
+    property real sizeFactor: 1.0
 }

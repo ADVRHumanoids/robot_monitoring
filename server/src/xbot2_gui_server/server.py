@@ -90,6 +90,10 @@ class Xbot2WebServer(ServerBase):
         if clients is None:
             clients = self.ws_clients
 
+        if len(clients) > 0 and isinstance(msg, dict):
+            msg = json.dumps(msg)
+
+
         # iterate over sockets (one per client)
         for ws in clients:
             

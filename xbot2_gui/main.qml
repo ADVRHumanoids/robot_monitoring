@@ -260,6 +260,12 @@ ApplicationWindow {
                 onLoaded: {
                     active = true
                     items[modelData.name.toLowerCase()] = item
+
+                    try {
+                        item.pageSelected()
+                    }
+                    catch(err){}
+
                     item.pageName = modelData.name
                     pageName = modelData.name
                 }

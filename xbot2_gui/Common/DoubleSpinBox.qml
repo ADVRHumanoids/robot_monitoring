@@ -19,6 +19,8 @@ Item {
     SpinBox {
         id: spinbox
 
+        anchors.fill: parent
+
         from: 0
         to: 100
         value: Math.round((root.value - root.from)/root._range*100)

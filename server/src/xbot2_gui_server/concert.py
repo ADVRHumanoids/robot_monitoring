@@ -40,6 +40,10 @@ class ConcertHandler:
                            self.enable_arm_handler,
                            'concert_enable_arm')
         
+        self.srv.add_route('POST', '/concert/gcomp_switch',
+                           self.gcomp_switch,
+                           'concert_gcomp_switch')
+        
         # subscribers
         self.markers_queue = asyncio.Queue()
         self.markers_sub = rospy.Subscriber(config['blob_array_topic'], BlobArray, self.blob_array_recv, queue_size=1)
@@ -73,7 +77,7 @@ class ConcertHandler:
 
             await asyncio.sleep(1./self.rate)
 
-
+    @utils.handle_exceptions
     async def enable_arm_handler(self, req):
 
         active = utils.str2bool(req.rel_url.query['active'])
@@ -93,16 +97,38 @@ class ConcertHandler:
                 'message': res.message
             }
             ))
+    
+    
+    @utils.handle_exceptions
+    async def gcomp_switch(self, req):
+
+        active = utils.str2bool(req.rel_url.query['active'])
+
+        gcomp_switch = rospy.ServiceProxy('/cartesio/gcomp_switch', SetBool)
+
+        print('[gcomp_switch] waiting for server...')
+        ok = await utils.to_thread(gcomp_switch.wait_for_service, timeout=rospy.Duration(3.0))
+       
+        res = await utils.to_thread(gcomp_switch, active)
+
+        return web.Response(text=json.dumps(
+            {
+                'success': res.success,
+                'message': res.message,
+            }))
+
 
     @utils.handle_exceptions
     async def do_drill_handler(self, req):
 
         blob_id = req.rel_url.query['blob_id']
+        blob_depth = float(req.rel_url.query['blob_depth'])
+        drill_velocity = float(req.rel_url.query['drill_velocity'])
 
         client = actionlib.SimpleActionClient('/auto_drill_node/auto_drill', AutoDrillAction)
         
         print('[auto_drill] waiting for server...')
-        ok = await utils.to_thread(client.wait_for_server, timeout=rospy.Duration(1.0))
+        ok = await utils.to_thread(client.wait_for_server, timeout=rospy.Duration(3.0))
         print(ok)
 
         if not ok:
@@ -115,9 +141,13 @@ class ConcertHandler:
         # goal
         goal = AutoDrillGoal()
         goal.blob_id = blob_id
-        goal.approach_velocity = 0.1
+        goal.approach_velocity = 0.01
         goal.pre_approach_distance = 0.40
         goal.force_threshold = 20.0
+        goal.blob_depth = blob_depth
+        goal.drill_velocity = drill_velocity
+
+        print(goal)
         
         # fb callback
         fb_last: AutoDrillFeedback = None

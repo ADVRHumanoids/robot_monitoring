@@ -64,6 +64,8 @@ target_compile_definitions(xbot2_gui PRIVATE -DXBOT2_GUI_VERSION_PATCH=${robot_m
 
 ## add modules
 
+add_subdirectory(Concert)
+
 add_subdirectory(Common)
 
 add_subdirectory(Font)

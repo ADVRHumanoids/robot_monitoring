@@ -126,18 +126,14 @@ ApplicationWindow {
             active: true
         }
 
-//        PageItem {
-//            name: "Viewer"
-//            page: "Viewer3D/Viewer3D.qml"
-//            active: true
-//        }
-
-
-//        PageItem {
-//            name: "Concert"
-//            page: "TestThings/ConcertGuidedDrilling.qml"
-//            active: true
-//        }
+        PageItem {
+            name: "Drill Task"
+            page: "/qt/qml/Concert/Drilling.qml"
+            iconText: MaterialSymbolNames.drill
+            iconFont: syms.font.family
+            active: true
+            sizeFactor: 1.2
+        }
 
     }
 
@@ -258,7 +254,9 @@ ApplicationWindow {
                 active: pagesStack.currentIndex === index || modelData.name === 'Home'
 
                 onLoaded: {
+
                     active = true
+
                     items[modelData.name.toLowerCase()] = item
 
                     try {
@@ -267,7 +265,9 @@ ApplicationWindow {
                     catch(err){}
 
                     item.pageName = modelData.name
+
                     pageName = modelData.name
+
                 }
 
                 Component.onCompleted: {

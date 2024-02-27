@@ -7,7 +7,7 @@ function handleFault(jName, faultCode) {
     jointState.setFaultCode(jName, faultCode)
 }
 
-let vbattThresholds = [47.5, 46, 45, 44, 43, 42, 41, 40]
+let vbattThresholds = [49.5, 47.5, 45.5, 43.5]
 
 function jsCallback(js) {
     barPlot.setJointStateMessage(js)

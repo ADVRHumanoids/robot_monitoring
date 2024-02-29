@@ -7,6 +7,7 @@ import os
 from typing import List
 
 from concert_launcher import executor as exe
+from concert_launcher import remote
 
 from .server import ServerBase
 from . import utils
@@ -21,7 +22,7 @@ class Launcher:
         
         self.cfg = yaml.safe_load(open(config['launcher_config'], 'r'))
 
-        self.rate = 10
+        self.rate = 3.333
         
         self.srv = srv
 
@@ -32,8 +33,8 @@ class Launcher:
         self.srv.add_route('GET', f'/process/get_list', 
                            self.process_get_list_handler, f'process_launcher_get_list_handler')
         
-        # self.srv.add_route('POST', f'/process/custom_command',
-        #                    self.process_custom_command_handler, f'process_custom_command_handler')
+        self.srv.add_route('POST', f'/process/custom_command',
+                           self.process_custom_command_handler, f'process_custom_command_handler')
         
         self.srv.add_route('PUT', f'/process/{{name}}/command/{{command}}',
                            self.process_command_handler, f'process_launcher_cmd_handler')
@@ -102,6 +103,7 @@ class Launcher:
                 body = json.loads(body)
                 user_params, user_variants = self.parse_start_options(process=process, 
                                                                       options=body['options'])
+            user_params.update({'roslaunch': 'roslaunch'})
             res['success'] = await self.start(process=process, 
                                               user_params=user_params, 
                                               user_variants=user_variants)
@@ -115,6 +117,39 @@ class Launcher:
             await self.srv.log(f'process_command_handler {cmd} failed ({self.name}): {res["message"]}', sev=2)
 
         return web.Response(text=json.dumps(res))
+    
+
+    @utils.handle_exceptions
+    async def process_custom_command_handler(self, request):
+        
+        body = await request.text()
+        body = json.loads(body)
+        
+        cmd = body['command']
+        machine = body['machine']
+        if machine == 'local':
+            ssh = None
+        else:
+            ssh = exe.connection_map[machine]
+        timeout = float(body['timeout'])
+
+        res = dict()
+        res['success'] = False
+        res['message'] = 'unknown failure'
+        
+        try:
+            fut = remote.run_cmd(ssh, cmd, interactive=True, throw_on_failure=False)
+            ret, stdout, stderr = await asyncio.wait_for(fut=fut, timeout=timeout)
+            res['success'] = True 
+            res['message'] = f'command "{cmd}" returned {ret}'
+            res['retcode'] = ret
+            res['stdout'] = stdout
+            res['stderr'] = stderr
+        except asyncio.exceptions.TimeoutError:
+            res['message'] = f'timeout = {timeout} s expired'
+        
+        return web.Response(text=json.dumps(res))
+        
 
 
     async def run(self):
@@ -225,8 +260,6 @@ class Launcher:
 
         user_params = {}
         user_variants = []
-
-        print(options)
 
         vars = self.get_process_variants(proc=process)
     

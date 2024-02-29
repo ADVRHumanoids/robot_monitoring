@@ -76,7 +76,7 @@ MultiPaneResponsiveLayout {
                 id: customCmd
                 pageItem: root
                 onSubmitCommand: Logic.customCommand(machine, command, timeout)
-                visible: false
+                visible: true
             }
 
             Item {

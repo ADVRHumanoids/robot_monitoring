@@ -108,6 +108,8 @@ Control {
                 text: 'Z'
                 checked: false
                 onCheckedChanged: chkX.checked = chkX.checked && !checked
+                enabled: motionTarget === 'Arm'
+                onEnabledChanged: checked = checked && enabled
             }
         }
 

@@ -40,6 +40,7 @@ Control {
         }
 
         SpinBox {
+            Layout.fillWidth: true
             id: depthSpin
             value: 5
             from: 0
@@ -56,6 +57,7 @@ Control {
         }
 
         SpinBox {
+            Layout.fillWidth: true
             id: drillSpeedSpin
             value: 5
             from: 0

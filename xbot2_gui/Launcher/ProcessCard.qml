@@ -10,6 +10,7 @@ Item {
     // public
 
     property bool processRunning: processState === 'Running'
+    property bool processKilled: processState === 'Killed'
     property string processState: 'Stopped'
     property string processName: 'ProcessName'
     property alias processConfig: configPanel.description
@@ -40,7 +41,7 @@ Item {
 
         backgroundColor: root.processRunning ?
                              CommonProperties.colors.ok :
-                             defaultBackground
+                             (root.processKilled ? CommonProperties.colors.errR : defaultBackground)
 
         toolButtons: [
             SmallToolButton {
@@ -52,7 +53,7 @@ Item {
         ]
 
         frontItem: GridLayout {
-            anchors.fill: parent
+            // anchors.fill: parent
             columns: 2
             height: implicitHeight
             Button {

@@ -18,11 +18,16 @@ function requestProcessUpdate(procRepeater) {
 
         let availableMachines = []
 
+        let processNames = []
+
         for(let item of msg) {
             availableMachines.push(item.machine)
+            processNames.push(item.name)
         }
 
         customCmd.availableMachines = [... new Set(availableMachines)]
+
+        consoleItem.processNames = processNames
     }
 
     client.doRequest('GET', '/process/get_list', '', onProcessListReceived)
@@ -78,11 +83,11 @@ function onProcMessageReceived(procRepeater, consoleItem, msg) {
             {
                 let prefix = '[' + item_i.processName + '] '
                 if(msg.stdout.length > 0) {
-                    consoleItem.appendText(prefix+msg.stdout)
+                    consoleItem.appendText(item_i.processName, prefix+msg.stdout)
                 }
 
                 if(msg.stderr.length > 0) {
-                    consoleItem.appendText('<font color="red">' + prefix+msg.stderr + '</>')
+                    consoleItem.appendText(item_i.processName, '<font color="red">' + prefix+msg.stderr + '</>')
                     root.numErrors += 1
                 }
             }

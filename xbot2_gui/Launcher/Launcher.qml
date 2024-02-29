@@ -76,6 +76,7 @@ MultiPaneResponsiveLayout {
                 id: customCmd
                 pageItem: root
                 onSubmitCommand: Logic.customCommand(machine, command, timeout)
+                visible: false
             }
 
             Item {
@@ -128,6 +129,8 @@ MultiPaneResponsiveLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
         Layout.preferredWidth: 1
+        Layout.preferredHeight: 1
+
     }
 
     Component.onCompleted: Logic.construct(processRepeater,
@@ -138,7 +141,7 @@ MultiPaneResponsiveLayout {
         target: root.client
 
         function onProcMessageReceived(msg) {
-            Logic.onProcMessageReceived(processRepeater, consoleItem.mainConsole, msg)
+            Logic.onProcMessageReceived(processRepeater, consoleItem, msg)
         }
 
         function onPluginStatMessageReceived(msg) {

@@ -178,8 +178,6 @@ class Launcher:
                 'stderr': '',
             }
 
-            print(msg)
-
             msg_str = json.dumps(msg)
 
             await self.srv.ws_send_to_all(msg_str)
@@ -194,7 +192,7 @@ class Launcher:
 
     async def status(self):
 
-        status = await exe.status(process=None, cfg=self.cfg)
+        status = await exe.status(process=None, cfg=self.cfg, print_to_stdout=False)
 
         # translate to proc -> (pid, dead, status)
         proc_status = {}
@@ -227,8 +225,12 @@ class Launcher:
 
         user_params = {}
         user_variants = []
+
+        print(options)
+
+        vars = self.get_process_variants(proc=process)
     
-        for k, v in options:
+        for k, v in options.items():
             if vars[k]['type'] == 'combo' and v != 'Default':
                 user_variants.append(v)
             elif v:

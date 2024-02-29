@@ -41,7 +41,7 @@ Item {
 
         backgroundColor: root.processRunning ?
                              CommonProperties.colors.ok :
-                             (root.processKilled ? CommonProperties.colors.errR : defaultBackground)
+                             (root.processKilled ? CommonProperties.colors.err : defaultBackground)
 
         toolButtons: [
             SmallToolButton {

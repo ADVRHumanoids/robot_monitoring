@@ -3,6 +3,7 @@ from aiohttp import web
 import json, yaml
 import re
 import logging
+import time
 import os
 from typing import List
 
@@ -41,6 +42,11 @@ class Launcher:
         
         self.srv.add_route('GET', f'/process/{{name}}/state',
                            self.process_state_handler, f'process_launcher_state_handler')
+        
+        self.proc_stdout_bytes = 0
+        self.proc_stdout_prev_time = 0
+        self.proc_stdout_max_kbps = 1000
+        self.proc_stdout_enabled = True
 
     @utils.handle_exceptions
     async def process_get_list_handler(self, request):
@@ -214,6 +220,24 @@ class Launcher:
             }
 
             msg_str = json.dumps(msg)
+
+            # throttle logic
+            if time.time() - self.proc_stdout_prev_time > 1.0:
+                self.proc_stdout_prev_time = time.time()
+                self.proc_stdout_bytes = 0
+                self.proc_stdout_enabled = True
+            
+            # compute msg size over a 1 sec window
+            self.proc_stdout_bytes += len(l) + 80  # note: 80 bytes to account for json overhead
+
+            # too much data: send once, then skip for the rest of the window duration
+            if self.proc_stdout_bytes*8*1000 > self.proc_stdout_max_kbps:  # kbps -> Bps
+                if self.proc_stdout_enabled:
+                    msg['stdout'] = f'[launcher] process exceeding max output bandwith (max_bw = {self.proc_stdout_max_kbps}) over a 1 sec window'
+                    msg_str = json.dumps(msg)
+                    self.proc_stdout_enabled = False
+                else:
+                    return
 
             await self.srv.ws_send_to_all(msg_str)
 

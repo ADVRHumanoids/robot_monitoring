@@ -24,6 +24,7 @@ def main():
 
     # create server
     srv = Xbot2WebServer()
+    srv.cfgpath = cfg
 
     # load default extensions
     extensions = []
@@ -58,13 +59,13 @@ def main():
     ext = CartesianHandler(srv, cfg.get('cartesian', {}))
     extensions.append(ext)
 
-    # process
-    from .process import ProcessHandler
-    for extname, extcfg in cfg.items():
-        if extcfg['type'] == 'process_handler':
-            print(f'found process handler {extname}')
-            ext = ProcessHandler(srv, extcfg)
-            extensions.append(ext)
+    # # process
+    # from .process import ProcessHandler
+    # for extname, extcfg in cfg.items():
+    #     if extcfg['type'] == 'process_handler':
+    #         print(f'found process handler {extname}')
+    #         ext = ProcessHandler(srv, extcfg)
+    #         extensions.append(ext)
     
     # visual
     from .visual import VisualHandler
@@ -74,6 +75,11 @@ def main():
     # concert
     from .concert import ConcertHandler
     ext = ConcertHandler(srv, cfg.get('concert', {}))
+    extensions.append(ext)
+
+    # launcher
+    from .launcher import Launcher
+    ext = Launcher(srv, cfg.get('launcher', {}))
     extensions.append(ext)
 
     # run server

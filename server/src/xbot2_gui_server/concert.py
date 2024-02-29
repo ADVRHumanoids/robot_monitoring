@@ -36,6 +36,10 @@ class ConcertHandler:
                            self.do_drill_handler,
                            'concert_do_drill')
         
+        self.srv.add_route('POST', '/concert/abort_drill',
+                           self.abort_drill_handler,
+                           'concert_abort_drill')
+        
         self.srv.add_route('POST', '/concert/enable_arm',
                            self.enable_arm_handler,
                            'concert_enable_arm')
@@ -48,6 +52,9 @@ class ConcertHandler:
         self.markers_queue = asyncio.Queue()
         self.markers_sub = rospy.Subscriber(config['blob_array_topic'], BlobArray, self.blob_array_recv, queue_size=1)
         self.last_recv_marker : BlobArray = None
+
+        # drill action client
+        self.autodrill_client = None
 
     
     def blob_array_recv(self, msg: BlobArray):
@@ -126,6 +133,7 @@ class ConcertHandler:
         drill_velocity = float(req.rel_url.query['drill_velocity'])
 
         client = actionlib.SimpleActionClient('/auto_drill_node/auto_drill', AutoDrillAction)
+        self.autodrill_client = client
         
         print('[auto_drill] waiting for server...')
         ok = await utils.to_thread(client.wait_for_server, timeout=rospy.Duration(3.0))
@@ -173,6 +181,8 @@ class ConcertHandler:
                 break
 
             await asyncio.sleep(0.1)
+
+        self.autodrill_client = None
                 
         client.wait_for_result()
 
@@ -182,6 +192,25 @@ class ConcertHandler:
             {
                 'success': res.success,
                 'message': res.message,
+            }))
+    
+
+    @utils.handle_exceptions
+    async def abort_drill_handler(self, req):
+
+        if self.autodrill_client is None:
+            return web.Response(text=json.dumps(
+            {
+                'success': False,
+                'message': 'action is not active',
+            }))
+        
+        self.autodrill_client.cancel_all_goals()
+
+        return web.Response(text=json.dumps(
+            {
+                'success': True,
+                'message': 'cancel done',
             }))
 
 

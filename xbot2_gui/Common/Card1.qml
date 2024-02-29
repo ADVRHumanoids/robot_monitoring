@@ -25,9 +25,9 @@ Item {
 
     property int bannerHeight: -1
 
-    property alias availableContentWidth: frontScroll.availableWidth
+    // property alias availableContentWidth: frontScroll.availableWidth
 
-    property alias availableContentHeight: frontScroll.availableHeight
+    // property alias availableContentHeight: frontScroll.availableHeight
 
     property bool flipped: false
 
@@ -54,7 +54,7 @@ Item {
     id: root
 
     Component.onCompleted: {
-        frontItem.parent = frontScrollContent
+        frontItem.parent = flip.frontSide.contentItemWrapper
         backItem.parent = flip.backSide.contentItemWrapper
     }
 
@@ -63,6 +63,8 @@ Item {
 
     height: flip.height
     clip: true
+
+    property bool _collapsed_before_flip: true
 
     Behavior on height {
         NumberAnimation {
@@ -85,7 +87,7 @@ Item {
         // with header (card title and tool buttons) and content (item)
         property Item frontSide: Rectangle {
 
-            property alias contentItemWrapper: frontScroll
+            property alias contentItemWrapper: frontContentWrapper
 
             id: frontSideRoot
             width: flip.width
@@ -100,11 +102,6 @@ Item {
                 for(let i = 0; i < root.toolButtons.length; i++) {
                     let tb = root.toolButtons[i]
                     tb.parent = toolBtnRowInner
-                    try {
-//                        tb.font.pixelSize = CommonProperties.font.h3
-                    }
-                    catch(error) { }
-                    //                    tb.anchors.verticalCenter = toolBtnRow.verticalCenter
                 }
             }
 
@@ -161,6 +158,7 @@ Item {
 
                         onClicked: {
                             root.flipped = true
+                            _collapsed_before_flip = root.collapsed
                             root.collapsed = false
                         }
                     }
@@ -191,25 +189,19 @@ Item {
                         margins: root.margins
                     }
 
-                    height: root.collapsed ? 0 : Math.min(frontScroll.implicitHeight, root.maxContentHeight)
-                    implicitWidth: frontScroll.implicitWidth
+                    height: root.collapsed ? 0 : (frontContentWrapper.height + root.margins)
 
+                    implicitHeight: frontContentWrapper.implicitHeight
 
+                    clip: true
 
-                    ScrollView {
-                        id: frontScroll
-                        anchors.fill: parent
-                        contentWidth: availableWidth
-                        contentHeight: frontScrollContent.height
-                        clip: true
-                        bottomPadding: frontScrollContent.children.length > 0 ? 10 : 0
-
-                        Item {
-                            id: frontScrollContent
-                            width: frontScroll.availableWidth
-                            height: children.length > 0 ? children[0].height : 0
-                        }
+                    Item {
+                        id: frontContentWrapper
+                        width: parent.width
+                        height: children.length > 0 ? children[0].height : 0
+                        implicitHeight: children.length > 0 ? children[0].implicitHeight : 0
                     }
+
                 }
             }
         }
@@ -269,6 +261,7 @@ Item {
                         text: 'Ok'
                         onReleased: {
                             root.flipped = false
+                            root.collapsed = root._collapsed_before_flip
                             root.applyConfiguration()
                         }
                     }
@@ -278,6 +271,7 @@ Item {
                         text: 'Cancel'
                         onReleased: {
                             root.flipped = false
+                            root.collapsed = root._collapsed_before_flip
                         }
                     }
 

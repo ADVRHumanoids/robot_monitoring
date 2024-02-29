@@ -14,6 +14,16 @@ function doDlillale(blob_id, depth, drill_velocity) {
     .catch((err) => {})
 }
 
+function abortDlillale() {
+    return client.doRequestAsync('POST',
+                          `/concert/abort_drill`, '')
+    .then((res) => {
+              console.log(res.message)
+
+          })
+    .catch((err) => {})
+}
+
 function enableArmControl(active) {
     return client.doRequestAsync('POST',
                           `/concert/enable_arm?active=${active}`, '')

@@ -35,7 +35,7 @@ Control {
         }
 
         Label {
-            text: ' select depth (mm)'
+            text: ' select depth (cm)'
             font.pointSize: 10
         }
 
@@ -75,8 +75,8 @@ Control {
 
             onActivated: {
                 Logic.enableArmControl(false)
-                .then( (res) => Logic.doDlillale(blobIdCombo.currentText, depthSpin.value*0.001, drillSpeedSpin.value*0.001) )
-                checked = false
+                .then( (res) => Logic.doDlillale(blobIdCombo.currentText, depthSpin.value*0.01, drillSpeedSpin.value*0.001) )
+                progress = 0
 
             }
         }

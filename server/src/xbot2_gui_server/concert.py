@@ -149,9 +149,9 @@ class ConcertHandler:
         # goal
         goal = AutoDrillGoal()
         goal.blob_id = blob_id
-        goal.approach_velocity = 0.01
-        goal.pre_approach_distance = 0.40
-        goal.force_threshold = 20.0
+        goal.approach_velocity = 0.03
+        goal.pre_approach_distance = 0.30
+        goal.force_threshold = 40.0
         goal.blob_depth = blob_depth
         goal.drill_velocity = drill_velocity
 

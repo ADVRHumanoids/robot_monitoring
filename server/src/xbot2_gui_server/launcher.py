@@ -66,7 +66,8 @@ class Launcher:
                 'name': p,
                 'status': status[p],
                 'cmdline': variants,
-                'machine': self.cfg[p].get('machine', 'local')
+                'machine': self.cfg[p].get('machine', 'local'),
+                'visible': self.cfg[p].get('show_ui', True)
             })
 
         return web.Response(text=json.dumps(proc_data))

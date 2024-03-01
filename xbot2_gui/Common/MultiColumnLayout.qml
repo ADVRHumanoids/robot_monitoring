@@ -93,6 +93,10 @@ Item {
                 continue
             }
 
+            if(!item.visible) {
+                continue
+            }
+
             let colSpan = item.columnSpan === undefined ? 1 : item.columnSpan
 
             if(currentColIdx + colSpan > root.columns) {

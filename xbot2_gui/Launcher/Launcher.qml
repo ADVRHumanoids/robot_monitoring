@@ -59,6 +59,8 @@ MultiPaneResponsiveLayout {
 
                 ProcessCard {
 
+                    visible: modelData.visible
+
                     processName: modelData.name
                     processState: modelData.status
                     processConfig: modelData.cmdline

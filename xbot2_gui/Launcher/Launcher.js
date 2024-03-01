@@ -20,14 +20,24 @@ function requestProcessUpdate(procRepeater) {
 
         let processNames = []
 
+        let hiddenProcessNames = []
+
         for(let item of msg) {
             availableMachines.push(item.machine)
             processNames.push(item.name)
+            if(!item.visible) {
+                hiddenProcessNames.push(item.name)
+            }
         }
 
         customCmd.availableMachines = [... new Set(availableMachines)]
 
+        consoleItem.hiddenProcessNames = hiddenProcessNames
+
         consoleItem.processNames = processNames
+
+        console.log(hiddenProcessNames)
+
     }
 
     client.doRequest('GET', '/process/get_list', '', onProcessListReceived)
@@ -66,7 +76,24 @@ function processCmd(name, cmd, opt) {
 
 function onProcMessageReceived(procRepeater, consoleItem, msg) {
 
-    // look for process with name msg.name
+    // handle output
+    if(msg.content === 'output')
+    {
+        let prefix = '[' + msg.name + '] '
+
+        if(msg.stdout.length > 0) {
+            consoleItem.appendText(msg.name, prefix + msg.stdout)
+        }
+
+        if(msg.stderr.length > 0) {
+            consoleItem.appendText(msg.name, '<font color="red">' + prefix + msg.stderr + '</>')
+            root.numErrors += 1
+        }
+
+        return;
+    }
+
+    // handle status
     for(let i = 0; i < procRepeater.count; i++) {
 
         var item_i = procRepeater.itemAt(i)
@@ -77,19 +104,6 @@ function onProcMessageReceived(procRepeater, consoleItem, msg) {
             if(msg.content === 'status')
             {
                 item_i.processState = msg.status
-            }
-
-            if(msg.content === 'output')
-            {
-                let prefix = '[' + item_i.processName + '] '
-                if(msg.stdout.length > 0) {
-                    consoleItem.appendText(item_i.processName, prefix+msg.stdout)
-                }
-
-                if(msg.stderr.length > 0) {
-                    consoleItem.appendText(item_i.processName, '<font color="red">' + prefix+msg.stderr + '</>')
-                    root.numErrors += 1
-                }
             }
 
             break

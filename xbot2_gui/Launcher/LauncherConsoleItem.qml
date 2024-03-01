@@ -16,6 +16,7 @@ Item {
     }
 
     property list<string> processNames: ['proc1', 'proc2', 'proc3']
+    property list<string> hiddenProcessNames: []
 
 
     //
@@ -84,7 +85,7 @@ Item {
                 model: root.processNames
                 CheckBox {
                     text: modelData
-                    checked: true
+                    checked: root.hiddenProcessNames.indexOf(modelData) === -1
                 }
             }
         }

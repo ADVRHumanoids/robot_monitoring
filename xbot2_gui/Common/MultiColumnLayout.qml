@@ -152,6 +152,10 @@ Item {
                 continue
             }
 
+            if(!item.visible) {
+                continue
+            }
+
 
             // get item's column idx and span
             let currentColIdx = item._currentColIdx

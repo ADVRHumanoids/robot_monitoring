@@ -42,9 +42,11 @@ MultiPaneResponsiveLayout {
 
                 text: 'Process launcher'
 
-                Button {
-                    text: 'Add'
-                    enabled: false
+                CheckBox {
+                    id: showAllChk
+                    text: 'Show All'
+                    checked: false
+                    onCheckedChanged: Qt.callLater(leftGrid.computeLayout)
                 }
 
                 Button {
@@ -59,7 +61,7 @@ MultiPaneResponsiveLayout {
 
                 ProcessCard {
 
-                    visible: modelData.visible
+                    visible: showAllChk.checked || modelData.visible
 
                     processName: modelData.name
                     processState: modelData.status

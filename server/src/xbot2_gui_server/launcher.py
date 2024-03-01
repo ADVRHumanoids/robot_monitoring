@@ -232,7 +232,7 @@ class Launcher:
             self.proc_stdout_bytes += len(l) + 80  # note: 80 bytes to account for json overhead
 
             # too much data: send once, then skip for the rest of the window duration
-            if self.proc_stdout_bytes*8*1000 > self.proc_stdout_max_kbps:  # kbps -> Bps
+            if self.proc_stdout_bytes*8/1000 > self.proc_stdout_max_kbps:  # kbps -> Bps
                 if self.proc_stdout_enabled:
                     msg['stdout'] = f'[launcher] process exceeding max output bandwith (max_bw = {self.proc_stdout_max_kbps}) over a 1 sec window'
                     msg_str = json.dumps(msg)

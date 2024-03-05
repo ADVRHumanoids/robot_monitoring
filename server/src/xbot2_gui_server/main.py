@@ -3,11 +3,12 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 from .server import Xbot2WebServer
-import yaml
+import yaml, json
 import sys
 import importlib
 import rospy
 import logging
+from aiohttp import web
 
 def main():
 
@@ -86,6 +87,22 @@ def main():
     from .launcher import Launcher
     ext = Launcher(srv, cfg.get('launcher', {}))
     extensions.append(ext)
+
+    # parse requested pages
+    requested_pages = []
+    for e in extensions:
+        try:
+            requested_pages += e.requested_pages
+        except:
+            pass 
+
+    print(f'requested pages = {requested_pages}')
+
+    async def requested_pages_handler(req):
+        return web.Response(text=json.dumps({'requested_pages': requested_pages}))
+
+    # get handler
+    srv.add_route('GET', '/requested_pages', requested_pages_handler, 'requested_pages_handler')
 
     # run server
     srv.run_server()

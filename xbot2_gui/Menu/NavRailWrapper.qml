@@ -71,6 +71,7 @@ Item {
         for(let i = 0; i < model.children.length; i++) {
             let obj = model.children[i]
             if(obj instanceof Repeater) continue
+            if(!obj.visible) continue
             let btn = barButtonComponent.createObject(activePositioner,
                                                       {
                                                           'text': obj.name,

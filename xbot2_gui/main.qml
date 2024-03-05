@@ -59,6 +59,7 @@ ApplicationWindow {
     // this model contains all main pages
     // (i) hello page (select server address)
     // (ii) monitoring page
+    property list<string> requestedPages
     Item {
 
         id: pagesModel
@@ -103,6 +104,16 @@ ApplicationWindow {
             active: client.robotConnected || mainWindow.dbg
         }
 
+        PageItem {
+            name: "Horizon"
+            page: "/qt/qml/Horizon/Horizon.qml"
+            iconText: MaterialSymbolNames.walker
+            iconFont: syms.font.family
+            active: client.robotConnected || mainWindow.dbg
+            sizeFactor: 1.1
+            visible: requestedPages.indexOf(name) > -1
+        }
+
         // PageItem {
         //     name: "Playground"
         //     page: "/qt/qml/TestThings/Playground.qml"
@@ -117,6 +128,7 @@ ApplicationWindow {
             iconText: MaterialSymbolNames.tools
             iconFont: syms.font.family
             active: true
+            visible: requestedPages.indexOf(name) > -1
         }
 
         PageItem {
@@ -124,6 +136,7 @@ ApplicationWindow {
             page: "/qt/qml/TestThings/Linfa.qml"
             iconSource: '/Icons/icons/alberobotics100x100.png'
             active: true
+            visible: requestedPages.indexOf(name) > -1
         }
 
         PageItem {
@@ -133,6 +146,7 @@ ApplicationWindow {
             iconFont: syms.font.family
             active: true
             sizeFactor: 1.2
+            visible: requestedPages.indexOf(name) > -1
         }
 
     }
@@ -373,6 +387,13 @@ ApplicationWindow {
                 CommonProperties.notifications.message(obj.txt, 'webserver', obj.severity)
             }
         }
+
+        onConnected: client.doRequest('GET', '/requested_pages', '',
+                                      function(msg) {
+                                          requestedPages = msg['requested_pages']
+                                          nav.construct()
+                                          navBar.construct()
+                                      })
     }
 
     // a timer to periodically try connection

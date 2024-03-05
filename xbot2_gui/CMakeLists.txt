@@ -37,6 +37,7 @@ qt_add_qml_module(xbot2_gui
     ClientEndpoint.qml
     ClientEndpoint.js
     sharedData.js
+    QML_FILES Horizon/Horizon.js
 
 )
 
@@ -65,6 +66,8 @@ target_compile_definitions(xbot2_gui PRIVATE -DXBOT2_GUI_VERSION_PATCH=${robot_m
 ## add modules
 
 add_subdirectory(Concert)
+
+add_subdirectory(Horizon)
 
 add_subdirectory(Common)
 

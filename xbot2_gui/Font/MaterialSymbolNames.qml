@@ -30,6 +30,7 @@ Item {
     property string tools: '\uf10b'
     property string barchart: '\ue26b'
     property string drill: '\ue1e9'
+    property string walker: '\uf8d5'
 
     property FontLoader filledFont: FontLoader {
         source: `/Font/materialsymbols/MaterialSymbolsOutlined[opsz,wght,FILL,GRAD@20,200,1,200].otf`

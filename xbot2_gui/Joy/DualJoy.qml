@@ -20,6 +20,8 @@ Item {
 
     property alias rightPad: rightPad
 
+    property bool joyPressed: leftPad.joyPressed || rightPad.joyPressed
+
     signal leftPadMoved(real x, real y)
 
     signal rightPadMoved(real x, real y)

@@ -77,6 +77,11 @@ def main():
     ext = ConcertHandler(srv, cfg.get('concert', {}))
     extensions.append(ext)
 
+    # horizon
+    from .horizon import HorizonHandler
+    ext = HorizonHandler(srv, cfg.get('horizon', {}))
+    extensions.append(ext)
+
     # launcher
     from .launcher import Launcher
     ext = Launcher(srv, cfg.get('launcher', {}))

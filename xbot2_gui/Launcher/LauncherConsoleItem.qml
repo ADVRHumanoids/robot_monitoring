@@ -51,7 +51,7 @@ Item {
                 color: 'white'
             },
             ThemeColor {
-                color: 'cadetblue'
+                color: 'aquamarine'
             },
             ThemeColor {
                 color: 'yellow'

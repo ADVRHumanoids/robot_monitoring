@@ -298,15 +298,48 @@ class Launcher:
     
 
     async def start(self, process, user_params={}, user_variants=[]):
+        
+        async def on_launcher_event(proc, text):
+
+            msg = {
+                'type': 'proc',
+                'content': 'output',
+                'name': 'launcher',
+                'stdout': f'[{proc}] {text}',
+                'stderr': '',
+            }
+
+            msg_str = json.dumps(msg)
+
+            await self.srv.ws_send_to_all(msg_str)
+
+        
         return await exe.execute_process(process=process, 
                                          cfg=self.cfg,
                                          params=user_params,
-                                         variants=user_variants)
+                                         variants=user_variants,
+                                         notify_event=on_launcher_event)
     
     async def kill(self, process, graceful=True):
+
+        async def on_launcher_event(proc, text):
+
+            msg = {
+                'type': 'proc',
+                'content': 'output',
+                'name': 'launcher',
+                'stdout': f'[{proc}] {text}',
+                'stderr': '',
+            }
+
+            msg_str = json.dumps(msg)
+
+            await self.srv.ws_send_to_all(msg_str)
+
         return await exe.kill(process=process, 
                               cfg=self.cfg, 
-                              graceful=graceful)
+                              graceful=graceful,
+                              notify_event=on_launcher_event)
         
     
 

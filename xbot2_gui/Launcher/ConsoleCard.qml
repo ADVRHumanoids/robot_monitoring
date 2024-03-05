@@ -8,49 +8,61 @@ import "ConsoleCard.js" as Logic
 
 Item {
 
-    // property alias defaultHeight: card.defaultHeight
-    // property alias hidden: card.collapsed
-    property alias name: consoleText.placeholderText
-    // property alias processNames: combo.model
+    property string name
 
     property bool scrollOnOutput: true
 
     function appendText(text) {
-        Logic.appendText(text,
-                         consoleText,
-                         scrollOnOutput)
+
+        model.append({'txt': text})
+
+        if(scrollOnOutput) view.positionViewAtEnd()
     }
 
     function clearText() {
-        consoleText.text = ''
+        model.clear()
     }
 
     id: root
-    implicitHeight: consoleText.implicitHeight
-    implicitWidth: consoleText.implicitWidth
+    implicitHeight: view.implicitHeight
+    implicitWidth: view.implicitWidth
 
-    ScrollView {
+    property Component delegate: Component {
+        TextEdit {
 
-        id: textScroll
-        contentWidth: availableWidth
-        anchors.fill: parent
+            MouseArea {
+                anchors.fill: parent
+                z: 1
+            }
 
-        TextArea {
-
-            id: consoleText
-
-            color: "white"
-            readOnly: true
-            width: textScroll.availableWidth
-
-            placeholderText: "Console output"
-            wrapMode: TextEdit.Wrap
-
-            textFormat: TextEdit.RichText
-
+            // placeholderText: name
             font.pixelSize: 14
+            width: view.width
+            wrapMode: Text.WrapAnywhere
+            readOnly: true
+            textFormat: TextEdit.RichText
+            text: txt
+            // visible: level >= root.verbosity
+            color: palette.text
+            // property list<color> levelToColor: [palette.text, CommonProperties.colors.warn, CommonProperties.colors.err]
         }
+    }
 
+    ListModel {
+        id: model
+    }
+
+    ListView {
+        id: view
+        model: model
+        delegate: root.delegate
+        implicitHeight: contentHeight
+        anchors.fill: parent
+        spacing: 1
+        clip: true
+        ScrollBar.vertical: ScrollBar {
+            active: true
+        }
     }
 
 }

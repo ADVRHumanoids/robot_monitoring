@@ -1,17 +1,33 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import QtDataVisualization
 
 import "../Common"
 
 Item {
 
     function appendText(procName, text) {
-        let i = processNames.indexOf(procName)
-        consoleRepeater.itemAt(i+1).appendText(text)
-        if(!procCheckRepeater.itemAt(i).checked) {
+
+        var i = 0
+
+        if(procName === 'launcher') {
+            i = -1
+        }
+        else {
+            i = processNames.indexOf(procName)
+        }
+
+        let color = theme.baseColors[(i+1) % theme.baseColors.length].color
+
+        text = `<font color="${color}">` + text + '</font>'
+
+        consoleRepeater.itemAt(i+2).appendText(text)
+
+        if(i >= 0 && !procCheckRepeater.itemAt(i).checked) {
             return
         }
+
         consoleRepeater.itemAt(0).appendText(text)
     }
 
@@ -25,6 +41,36 @@ Item {
     implicitWidth: card.implicitWidth
 
     implicitHeight: card.implicitHeight
+
+    // https://doc.qt.io/qt-6/qml-color.html
+    Theme3D {
+        id: theme
+        type: Q3DTheme.ThemeUserDefined
+        baseColors: [
+            ThemeColor {
+                color: 'white'
+            },
+            ThemeColor {
+                color: 'cadetblue'
+            },
+            ThemeColor {
+                color: 'yellow'
+            },
+            ThemeColor {
+                color: 'deeppink'
+            },
+            ThemeColor {
+                color: 'greenyellow'
+            },
+            ThemeColor {
+                color: 'lightpink'
+            },
+            ThemeColor {
+                color: 'lightseagreen'
+            }
+
+        ]
+    }
 
     Card1 {
         id: card
@@ -42,7 +88,7 @@ Item {
             Item { width: 10 },
             ComboBox {
                 id: consoleCombo
-                model: ['All'].concat(root.processNames)
+                model: ['all', 'launcher'].concat(root.processNames)
             }
         ]
 
@@ -52,7 +98,7 @@ Item {
             currentIndex: consoleCombo.currentIndex
             Repeater {
                 id: consoleRepeater
-                model: ['All'].concat(root.processNames)
+                model: ['all', 'launcher'].concat(root.processNames)
                 ConsoleCard {
                     name: modelData
                     Layout.fillWidth: true
@@ -71,7 +117,19 @@ Item {
             CheckBox {
                 text: 'Scroll on output'
                 checked: true
-                Layout.columnSpan: Math.max(1, grid.columns)
+            }
+
+            Button {
+                text: 'Clear all consoles'
+                onClicked: {
+                    for(let i = 0; i < consoleRepeater.count; i++) {
+                        consoleRepeater.itemAt(i).clearText()
+                    }
+                }
+            }
+
+            Item {
+                Layout.fillWidth: true
             }
 
             Label {

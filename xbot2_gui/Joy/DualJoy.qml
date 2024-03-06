@@ -65,7 +65,7 @@ Item {
             left: parent.left
             bottom: parent.bottom
             right: parent.right
-            top: toolCol.bottom
+            top: parent.top
             margins: 16
         }
 

@@ -248,7 +248,8 @@ class Launcher:
     async def watch_all_processes(self):
         await exe.watch(process=None, 
                         cfg=self.cfg, 
-                        printer_coro_factory=self.create_proc_printer)
+                        printer_coro_factory=self.create_proc_printer,
+                        num_lines=100)
 
     async def status(self):
 
@@ -266,13 +267,16 @@ class Launcher:
             
             # parse status into a string
             if p in proc_status.keys():
-                if proc_status[p]['dead']:
+                if proc_status[p]['run_pending']:
+                    status = 'Waiting'
+                elif proc_status[p]['kill_pending']:
+                    status = 'Killing'
+                elif proc_status[p]['dead']:
                     status = 'Stopped'
                     if proc_status[p]['exitstatus'] != 0:
                         status = 'Killed'
                 else:
                     status = 'Running'
-
             else:
                 status = 'Stopped'
 

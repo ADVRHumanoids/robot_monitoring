@@ -223,7 +223,7 @@ class Xbot2WebServer(ServerBase):
 
     async def handle_ping_msg(self, msg, ws):
         if msg['type'] == 'ping':
-            await self.ws_send_to_all(json.dumps(msg))
+            await self.ws_send_to_all(json.dumps(msg), clients=[ws])
 
 
     async def version_handler(self, req: web.Request):

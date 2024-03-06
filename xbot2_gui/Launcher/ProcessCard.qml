@@ -9,7 +9,7 @@ Item {
 
     // public
 
-    property bool processRunning: processState === 'Running'
+    property bool processRunning: processState === 'Running' || processState === 'Waiting'
     property bool processKilled: processState === 'Killed'
     property string processState: 'Stopped'
     property string processName: 'ProcessName'
@@ -22,8 +22,14 @@ Item {
 
     height: card.height
 
-
     // private
+    property var colorMap: {
+        'Running': CommonProperties.colors.ok,
+        'Stopped': card.defaultBackground,
+        'Killed': CommonProperties.colors.err,
+        'Waiting': Qt.lighter(CommonProperties.colors.ok, 3),
+        'Killing': CommonProperties.colors.warn
+    }
 
     id: root
     Layout.maximumHeight: card.Layout.maximumHeight
@@ -39,9 +45,7 @@ Item {
 
         collapsed: true
 
-        backgroundColor: root.processRunning ?
-                             CommonProperties.colors.ok :
-                             (root.processKilled ? CommonProperties.colors.err : defaultBackground)
+        backgroundColor: colorMap[processState]
 
         toolButtons: [
             SmallToolButton {

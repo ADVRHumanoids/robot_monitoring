@@ -60,14 +60,6 @@ def main():
     ext = CartesianHandler(srv, cfg.get('cartesian', {}))
     extensions.append(ext)
 
-    # # process
-    # from .process import ProcessHandler
-    # for extname, extcfg in cfg.items():
-    #     if extcfg['type'] == 'process_handler':
-    #         print(f'found process handler {extname}')
-    #         ext = ProcessHandler(srv, extcfg)
-    #         extensions.append(ext)
-    
     # visual
     from .visual import VisualHandler
     ext = VisualHandler(srv, cfg.get('visual', {}))
@@ -89,7 +81,7 @@ def main():
     extensions.append(ext)
 
     # parse requested pages
-    requested_pages = []
+    requested_pages = cfg.get('requested_pages', [])
     for e in extensions:
         try:
             requested_pages += e.requested_pages

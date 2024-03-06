@@ -54,10 +54,10 @@ Item {
                 color: 'aquamarine'
             },
             ThemeColor {
-                color: 'yellow'
+                color: 'darkkhaki'
             },
             ThemeColor {
-                color: 'deeppink'
+                color: 'mediumspringgreen'
             },
             ThemeColor {
                 color: 'greenyellow'

@@ -1,9 +1,12 @@
 import asyncio
 from aiohttp import web
 import json
+import math
+import time
 
 import rospy
 from std_srvs.srv import SetBool, Trigger
+from std_msgs.msg import Float64
 from geometry_msgs.msg import TwistStamped, Twist
 
 from .server import ServerBase
@@ -19,7 +22,7 @@ class HorizonHandler:
         self.requested_pages = ['Horizon']
 
         # config
-        self.rate = config.get('rate', 1.0)
+        self.rate = config.get('rate', 10.0)
 
         # save server object, register our handlers
         self.srv = srv
@@ -32,6 +35,8 @@ class HorizonHandler:
         
         # subscribers
         self.vref_pub = rospy.Publisher('/horizon/base_velocity/reference', Twist, queue_size=1, tcp_nodelay=True)
+        self.stats_sub = rospy.Subscriber('/horizon/solution_time', Float64, self.sol_time_callback, queue_size=1, tcp_nodelay=True)
+        self.solution_time = None
 
         # drill action client
         self.autodrill_client = None
@@ -58,6 +63,18 @@ class HorizonHandler:
 
         while True:
 
+            if self.solution_time is not None:
+
+                msg = {
+                    'type': 'horizon_status',
+                    'solution_time': self.solution_time,
+                    'stamp': time.time(),
+                }
+
+                self.solution_time = None
+
+                await self.srv.ws_send_to_all(msg)
+
             await asyncio.sleep(1./self.rate)
 
 
@@ -70,5 +87,9 @@ class HorizonHandler:
             rosmsg.angular.z = vref[5]
             self.vref_pub.publish(rosmsg)
 
+    
+    def sol_time_callback(self, msg):
+
+        self.solution_time = msg.data
 
 

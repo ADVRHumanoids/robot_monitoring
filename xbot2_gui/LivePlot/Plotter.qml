@@ -15,6 +15,8 @@ Item {
 
     property string axisRightTitle: ''
 
+    property alias interactive: mouseArea.enabled
+
     function addSeries(seriesName, seriesProps, useSecondaryValueAxis) {
         return  _addSeries(seriesName, seriesProps, useSecondaryValueAxis)
     }

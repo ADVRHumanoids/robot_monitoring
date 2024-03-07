@@ -55,7 +55,6 @@ function objCallback(obj) {
 
     }
     else if(obj.type === 'joint_fault') {
-        console.log(JSON.stringify(obj))
         let names = obj.name
         for(let i = 0; i < names.length; i++) {
             handleFault(names[i], obj.fault[i])

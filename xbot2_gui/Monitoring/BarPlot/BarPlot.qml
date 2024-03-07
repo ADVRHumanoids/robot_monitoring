@@ -16,10 +16,8 @@ Item {
     property alias container: container
     property int type: TwoSideBar.Type.Bar
 
-    function setStatus(ok) {
-        for(let idx = 0; idx < container.count; idx++) {
-            container.itemAt(idx).setStatus(ok[idx])
-        }
+    function setStatus(idx, ok) {
+        container.itemAt(idx).setStatus(ok)
     }
 
     function setJointStateMessage(js_msg) {

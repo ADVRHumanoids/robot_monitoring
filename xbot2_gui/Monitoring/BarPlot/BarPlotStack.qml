@@ -24,7 +24,7 @@ Item {
         for(let i = 0; i < container.count; i++) {
             let loader = container.itemAt(i)
             if(loader.active) {
-                loader.item.setStatus(statusOk)
+                loader.item.setStatus(idx, ok)
             }
         }
     }

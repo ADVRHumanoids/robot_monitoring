@@ -4,23 +4,21 @@ import Common
 
 Item {
 
-    property real horizonLength: 1.0
+    property int horizonLength: 40
     property int numContacts: 4
-
-    function addPhase(i, name, dur) {
-        console.log(i, name, dur)
-        let obj = phaseComponent.createObject(null, {'name': name, 'duration': dur})
-        rowRepeater.itemAt(i).add(obj, _time + horizonLength)
-        _insert_time += dur
+    property var colorMap: {
+        'stance': 'crimson',
+        'flight': 'cadetblue',
+        '--': 'grey'
     }
 
-    Timer {
-        interval: 16
-        repeat: true
-        running: true
-        onTriggered: {
-            root._time += interval * 0.001
-        }
+    function setPhaseData(timeline, idx, name, k0, duration) {
+        // console.log(`adding phase ${timeline}[${idx}] ${name} ${k0} ${duration}`)
+        rowRepeater.itemAt(timeline).setPhaseData(idx, name.substring(0, 6), k0, duration)
+    }
+
+    function setPhaseNumber(timeline, num) {
+        rowRepeater.itemAt(timeline).setPhaseNumber(num)
     }
 
     //
@@ -28,27 +26,20 @@ Item {
     implicitHeight: col.implicitHeight
     implicitWidth: col.implicitWidth
     clip: true
-    property real _time: 0
-    property real _insert_time: 0
 
-    DebugRectangle {
-        target: parent
-    }
 
     property Component phaseComponent: Rectangle {
 
-        required property string name
-        required property real duration
+        property string name: '--'
+        property int duration: 1
+        property int last_x: 0
 
         height: parent !== null ? parent.height : 0
         width: root.width / root.horizonLength * duration
-        color: 'lightgreen'
+        color: Qt.alpha(root.colorMap[name], 0.2)
         radius: 4
-
-        Text {
-            anchors.centerIn: parent
-            text: name
-        }
+        border.color: root.colorMap[name]
+        visible: false
 
     }
 
@@ -61,35 +52,39 @@ Item {
         Layout.fillHeight: true
         Layout.preferredHeight: 1
 
-        function add(object, t0) {
-            inner.children.push(object)
-            object.x = t0 / root.horizonLength * root.width
+        function setPhaseData(idx, name, k0, duration) {
+
+            if(idx >= phaseRepeater.count) {
+                phaseRepeater.model = idx + 1
+            }
+
+            let phase = phaseRepeater.itemAt(idx)
+
+            if(!phase.visible) {
+                phase.x = k0 / root.horizonLength * width
+            }
+            else {
+                let alpha = 1
+                phase.x = phase.last_x + alpha*(k0 / root.horizonLength * width - phase.last_x)
+            }
+
+            phase.last_x = phase.x
+            phase.name = name
+            phase.duration = duration
+            phase.visible = true
         }
 
-        Item {
-            id: inner
-            x: -root._time / root.horizonLength * root.width
-            height: parent.height
+        function setPhaseNumber(num) {
+            for(let i = num; i < phaseRepeater.count; i++) {
+                phaseRepeater.itemAt(i).visible = false
+            }
         }
 
-        // Row {
-        //     id: row
-        //     height: parent.height
-        //     x: root._offset
-        //     spacing: 1
-        //     add: Transition {
-        //         NumberAnimation {
-        //             from: width + 100
-        //             properties: "x"
-        //             easing.type: Easing.OutQuad
-        //         }
-        //     }
 
-        // }
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: addPhase(index, 'Cose', 0.2)
+        Repeater {
+            id: phaseRepeater
+            delegate: root.phaseComponent
+            model: 10
         }
 
     }

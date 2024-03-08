@@ -56,6 +56,12 @@ ApplicationWindow {
         targetWidth: mainWindow.width
     }
 
+    Binding {
+        target: CommonProperties.geom
+        property: 'compactLayout'
+        value: layout.compact
+    }
+
     // this model contains all main pages
     // (i) hello page (select server address)
     // (ii) monitoring page
@@ -109,7 +115,7 @@ ApplicationWindow {
             page: "/qt/qml/Horizon/Horizon.qml"
             iconText: MaterialSymbolNames.walker
             iconFont: syms.font.family
-            active: client.robotConnected || mainWindow.dbg
+            active: client.robotConnected || mainWindow.dbg || true
             sizeFactor: 1.1
             visible: requestedPages.indexOf(name) > -1
         }
@@ -146,6 +152,16 @@ ApplicationWindow {
             iconFont: syms.font.family
             active: true
             sizeFactor: 1.2
+            visible: requestedPages.indexOf(name) > -1
+        }
+
+        PageItem {
+            name: "Ecat"
+            page: "/qt/qml/Ecat/Ecat.qml"
+            iconText: MaterialSymbolNames.wrench
+            iconFont: syms.font.family
+            active: true
+            sizeFactor: 1.1
             visible: requestedPages.indexOf(name) > -1
         }
 

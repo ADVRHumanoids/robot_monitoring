@@ -73,6 +73,8 @@ add_subdirectory(Common)
 
 add_subdirectory(Font)
 
+add_subdirectory(Ecat)
+
 add_subdirectory(ExpandableBottomBar)
 
 add_subdirectory(Home)

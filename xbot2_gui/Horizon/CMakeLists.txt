@@ -6,8 +6,10 @@ qt_add_qml_module(xbot2_gui_horizon
     QML_FILES
     Horizon.qml
     Horizon.js
-    QML_FILES HorizonControl.qml
-    QML_FILES PhaseViz.qml
+    HorizonControl.qml
+    PhaseViz.qml
+    HorizonViz.qml
+    HorizonViz.js
 )
 
 target_link_libraries(xbot2_gui PRIVATE xbot2_gui_horizonplugin)

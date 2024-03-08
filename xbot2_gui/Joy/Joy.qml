@@ -225,7 +225,7 @@ Item {
 
         side: 200
 
-        backgroundColor: 'transparent'
+        backgroundColor: Qt.rgba(1, 1, 1, 0.005)
 
         onJoystickMoved: function (x, y) {
             console.log(`${x} ${y}`)
@@ -244,7 +244,7 @@ Item {
 
         side: 200
 
-        backgroundColor: 'transparent'
+        backgroundColor: leftPad.backgroundColor
 
         onJoystickMoved: function(x, y) {
             console.log(`${x} ${y}`)

@@ -41,6 +41,7 @@ Item {
             Layout.fillHeight: true
             Layout.fillWidth: true
             Layout.preferredWidth: parent.width / 2
+            Layout.maximumWidth: 400
         }
 
         Item {
@@ -53,6 +54,7 @@ Item {
             Layout.fillHeight: true
             Layout.fillWidth: true
             Layout.preferredWidth: parent.width / 2
+            Layout.maximumWidth: 400
         }
 
     }
@@ -114,9 +116,9 @@ Item {
 
         id: leftPad
 
-        side: root.padSide
+        backgroundColor: Qt.rgba(1, 1, 1, 0.005)
 
-        backgroundColor: 'transparent'
+        side: root.padSide
 
         onJoystickMoved: (x, y) => root.leftPadMoved(x, y)
 
@@ -126,9 +128,9 @@ Item {
 
         id: rightPad
 
-        side: root.padSide
+        backgroundColor: leftPad.backgroundColor
 
-        backgroundColor: 'transparent'
+        side: root.padSide
 
         onJoystickMoved: (x, y) => root.rightPadMoved(x, y)
     }

@@ -33,10 +33,9 @@ Item {
 
         id: area
         anchors.fill: parent
-        color: Qt.rgba(1, 1, 1, 0.2)
         border {
             color: Qt.rgba(1, 1, 1, 0.2)
-            width: 1
+            width: 0
         }
 
         radius: 12

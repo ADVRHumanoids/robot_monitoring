@@ -9,22 +9,20 @@ import "Horizon.js" as Logic
 
 Item {
 
+    LayoutClassHelper {
+        id: layout
+        targetWidth: parent.width
+    }
+
     property ClientEndpoint client
 
     property list<real> vref: [0, 0, 0, 0, 0, 0]
 
-    // PhaseViz {
-    //     anchors {
-    //         top: parent.top
-    //         margins: 20
-    //         horizontalCenter: parent.horizontalCenter
-    //     }
-    //     width: 300
-    //     height: 200
-    // }
 
-    Plotter {
-        id: plot
+
+    HorizonViz {
+
+        id: viz
 
         anchors {
             top: parent.top
@@ -32,38 +30,11 @@ Item {
             horizontalCenter: parent.horizontalCenter
         }
 
-        width: 400
-        height: 250
-
-        plotterLegend: plotterLegend
-
-        interactive: false
-
-        chartView.title: 'Solution Time [s]'
-        chartView.titleColor: palette.text
-        chartView.margins {
-            bottom: 6
-            left: 6
-            right: 6
-            top: 6
-        }
-
-        property var solutionTimeSeries: undefined
-
-        property real initialTime: -1
-
-
+        width: parent.width - configPane.width - 300
+        height: parent.height / 2
     }
 
-    PlotterLegend {
-        id: plotterLegend
-        chart: plot.chartView
-        anchors {
-            top: plot.bottom
-            right: plot.right
-        }
-        visible:false
-    }
+
 
     HorizonControl {
         id: configPane
@@ -77,8 +48,10 @@ Item {
 
     DualJoy {
 
+        compactLayout: layout.compact
+
         anchors {
-            top: plot.bottom
+            top: viz.bottom
             left: parent.left
             right: parent.right
             bottom: parent.bottom
@@ -118,21 +91,15 @@ Item {
 
             if(msg.type === 'horizon_status') {
 
-                if(plot.solutionTimeSeries === undefined) {
-                    plot.solutionTimeSeries = plot.addSeries('solution_time', {}, false)
-                    plot.solutionTimeSeries.axisValue.min = 0
-                    plot.solutionTimeSeries.axisValue.max = 0.1
-                }
-
-                if(plot.initialTime < 0) {
-                    plot.initialTime = msg.stamp
-                }
-
-                console.log(plot.solutionTimeSeries.series)
-
-                plot.addPoint(plot.solutionTimeSeries, msg.stamp - plot.initialTime, msg.solution_time)
+                viz.addSolutionTime(msg.stamp, msg.solution_time)
+                return
             }
 
+            if(msg.type === 'horizon_timelines') {
+
+                viz.updateGaitPattern(msg.timelines)
+                return
+            }
         }
 
     }

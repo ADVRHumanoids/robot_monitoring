@@ -8,6 +8,7 @@ import rospy
 from std_srvs.srv import SetBool, Trigger
 from std_msgs.msg import Float64
 from geometry_msgs.msg import TwistStamped, Twist
+from phase_manager.msg import Timelines, Timeline
 
 from .server import ServerBase
 from . import utils
@@ -35,11 +36,10 @@ class HorizonHandler:
         
         # subscribers
         self.vref_pub = rospy.Publisher('/horizon/base_velocity/reference', Twist, queue_size=1, tcp_nodelay=True)
-        self.stats_sub = rospy.Subscriber('/horizon/solution_time', Float64, self.sol_time_callback, queue_size=1, tcp_nodelay=True)
+        self.stats_sub = rospy.Subscriber('/mpc_solution_time', Float64, self.sol_time_callback, queue_size=1, tcp_nodelay=True)
+        self.timeline_sub = rospy.Subscriber('/phasemanager/timelines', Timelines, self.timeline_callback, queue_size=1, tcp_nodelay=True)
         self.solution_time = None
-
-        # drill action client
-        self.autodrill_client = None
+        self.timelines : Timelines = None
 
 
     @utils.handle_exceptions
@@ -75,6 +75,28 @@ class HorizonHandler:
 
                 await self.srv.ws_send_to_all(msg)
 
+            if self.timelines is not None:
+
+                timelines = {}
+
+                for tl in self.timelines.timelines:
+                    tl : Timeline = tl 
+                    tl_dict = {}
+                    tl_dict['phases'] = tl.phases
+                    tl_dict['dur'] = tl.durations
+                    tl_dict['k0'] = tl.initial_nodes
+                    timelines[tl.name] = tl_dict
+
+                msg = {
+                    'type': 'horizon_timelines',
+                    'timelines': timelines,
+                    'stamp': time.time(),
+                }
+
+                self.timelines = None
+
+                await self.srv.ws_send_to_all(msg)
+
             await asyncio.sleep(1./self.rate)
 
 
@@ -91,5 +113,10 @@ class HorizonHandler:
     def sol_time_callback(self, msg):
 
         self.solution_time = msg.data
+
+
+    def timeline_callback(self, msg):
+
+        self.timelines = msg
 
 

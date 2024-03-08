@@ -66,19 +66,36 @@ def main():
     extensions.append(ext)
 
     # concert
-    from .concert import ConcertHandler
-    ext = ConcertHandler(srv, cfg.get('concert', {}))
-    extensions.append(ext)
+    try:
+        from .concert import ConcertHandler
+        ext = ConcertHandler(srv, cfg.get('concert', {}))
+        extensions.append(ext)
+    except ModuleNotFoundError:
+        pass
+
+    # ecat
+    try:
+        from .ecat import EcatHandler
+        ext = EcatHandler(srv, cfg.get('ecat', {}))
+        extensions.append(ext)
+    except ModuleNotFoundError:
+        pass
 
     # horizon
-    from .horizon import HorizonHandler
-    ext = HorizonHandler(srv, cfg.get('horizon', {}))
-    extensions.append(ext)
+    try:
+        from .horizon import HorizonHandler
+        ext = HorizonHandler(srv, cfg.get('horizon', {}))
+        extensions.append(ext)
+    except ModuleNotFoundError:
+        pass
 
     # launcher
-    from .launcher import Launcher
-    ext = Launcher(srv, cfg.get('launcher', {}))
-    extensions.append(ext)
+    try:
+        from .launcher import Launcher
+        ext = Launcher(srv, cfg.get('launcher', {}))
+        extensions.append(ext)
+    except ModuleNotFoundError:
+        pass
 
     # parse requested pages
     requested_pages = cfg.get('requested_pages', [])

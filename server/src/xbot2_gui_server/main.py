@@ -66,28 +66,22 @@ def main():
     extensions.append(ext)
 
     # concert
-    try:
+    if 'concert' in cfg.keys():
         from .concert import ConcertHandler
         ext = ConcertHandler(srv, cfg.get('concert', {}))
         extensions.append(ext)
-    except ModuleNotFoundError:
-        pass
 
     # ecat
-    try:
+    if 'ecat' in cfg.keys():
         from .ecat import EcatHandler
         ext = EcatHandler(srv, cfg.get('ecat', {}))
         extensions.append(ext)
-    except ModuleNotFoundError:
-        pass
 
     # horizon
-    try:
+    if 'horizon' in cfg.keys():
         from .horizon import HorizonHandler
         ext = HorizonHandler(srv, cfg.get('horizon', {}))
         extensions.append(ext)
-    except ModuleNotFoundError:
-        pass
 
     # launcher
     try:

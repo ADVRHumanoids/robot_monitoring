@@ -8,7 +8,7 @@ import rospy
 from std_srvs.srv import SetBool, Trigger
 from std_msgs.msg import Float64
 from geometry_msgs.msg import TwistStamped, Twist
-from phase_manager.msg import Timelines, Timeline
+from phase_manager.msg import TimelineArray, Timeline
 
 from .server import ServerBase
 from . import utils
@@ -37,9 +37,9 @@ class HorizonHandler:
         # subscribers
         self.vref_pub = rospy.Publisher('/horizon/base_velocity/reference', Twist, queue_size=1, tcp_nodelay=True)
         self.stats_sub = rospy.Subscriber('/mpc_solution_time', Float64, self.sol_time_callback, queue_size=1, tcp_nodelay=True)
-        self.timeline_sub = rospy.Subscriber('/phasemanager/timelines', Timelines, self.timeline_callback, queue_size=1, tcp_nodelay=True)
+        self.timeline_sub = rospy.Subscriber('/phase_manager/timelines', TimelineArray, self.timeline_callback, queue_size=1, tcp_nodelay=True)
         self.solution_time = None
-        self.timelines : Timelines = None
+        self.timelines : TimelineArray = None
 
 
     @utils.handle_exceptions

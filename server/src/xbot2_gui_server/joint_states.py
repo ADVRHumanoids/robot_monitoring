@@ -64,16 +64,7 @@ class JointStateHandler:
         # aux
         self.aux_map = dict()
         self.aux_subs = []
-        for tname, ttype in rospy.get_published_topics():
-            tname: str = tname
-            if ttype == 'xbot_msgs/CustomState' and 'aux/' in tname:
-                aux_type_name = 'aux/' + tname[tname.find('aux/')+4:]
-                self.aux_map[aux_type_name] = list()
-                cb = functools.partial(self.on_aux_recv, aux=self.aux_map[aux_type_name])
-                sub = rospy.Subscriber(tname, CustomState, cb, queue_size=10)
-                self.aux_subs.append(sub)
                     
-
         # command publisher
         self.cmd_pub = rospy.Publisher('xbotcore/command', JointCommand, queue_size=1)
         self.cmd_busy = False
@@ -132,6 +123,18 @@ class JointStateHandler:
 
         joint_info['jstate'] = js_msg
         joint_info['jnames'] = js_msg['name']
+
+        # aux
+        self.aux_map = dict()
+        self.aux_subs = []
+        for tname, ttype in rospy.get_published_topics():
+            tname: str = tname
+            if ttype == 'xbot_msgs/CustomState' and 'aux/' in tname:
+                aux_type_name = 'aux/' + tname[tname.find('aux/')+4:]
+                self.aux_map[aux_type_name] = list()
+                cb = functools.partial(self.on_aux_recv, aux=self.aux_map[aux_type_name])
+                sub = rospy.Subscriber(tname, CustomState, cb, queue_size=10)
+                self.aux_subs.append(sub)
 
         # get urdf
         print('retrieving robot description..')

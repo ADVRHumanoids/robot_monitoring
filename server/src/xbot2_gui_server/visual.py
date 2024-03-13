@@ -36,7 +36,7 @@ class VisualHandler:
     
     @utils.handle_exceptions
     async def visual_get_mesh_handler(self, request):
-        
+        raise RuntimeError('mesh disabled in ERF due to bad WIFI')        
         uri = request.match_info['uri']
         path = utils.resolve_ros_uri(uri)
         print('URI/PATH: ', uri, path)

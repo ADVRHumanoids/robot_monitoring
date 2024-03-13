@@ -72,10 +72,20 @@ class JointStateHandler:
         self.cmd_should_stop = True
 
         # config
-        self.rate = config.get('rate', 60.0)
+        self.rate = config.get('rate', 1.0)
 
     
     def on_aux_recv(self, msg: CustomState, aux: list):
+
+        if len(self.js_to_aux_id) == 0 and self.last_js_msg is not None:
+            
+            for _, js_name in enumerate(self.last_js_msg.name):
+                
+                try:
+                    self.js_to_aux_id.append( msg.name.index(js_name) )
+                except ValueError:
+                    self.js_to_aux_id.append(-1)
+
         
         if len(aux) != len(msg.value):
             aux.clear()
@@ -332,6 +342,6 @@ class JointStateHandler:
         js_msg_dict['aux_types'] = []
         for k, v in self.aux_map.items():
             if len(v) > 0:
-                js_msg_dict[k] = [None if math.isnan(vi) else vi for vi in v]
+                js_msg_dict[k] = [None if ai < 0 or math.isnan(v[ai]) else v[ai] for ai in self.js_to_aux_id]
                 js_msg_dict['aux_types'].append(k)
         return js_msg_dict

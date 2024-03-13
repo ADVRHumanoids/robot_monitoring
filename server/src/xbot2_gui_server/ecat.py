@@ -8,8 +8,6 @@ import rospy
 from std_srvs.srv import SetBool, Trigger
 from ec_srvs.srv import SelectSlave
 from std_msgs.msg import Float64
-from geometry_msgs.msg import TwistStamped, Twist
-from phase_manager.msg import Timelines, Timeline
 
 from .server import ServerBase
 from . import utils
@@ -61,7 +59,7 @@ class EcatHandler:
             return web.Response(text=json.dumps(
                 {
                     'success': False,
-                    'message': f'failed to stopp motor {name}: {res.cmd_status.status}'
+                    'message': f'failed to stop motor {name}: {res.cmd_status.status}'
                 }
                 ))
 

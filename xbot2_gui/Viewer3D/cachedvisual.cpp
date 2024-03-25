@@ -85,7 +85,7 @@ void CachedVisual::cancelDownload()
 
 void CachedVisual::httpFinished()
 {
-    qInfo() << "finished!";
+    qInfo() << _file->fileName() << " download finished";
 
     // close file for writing
     _file->close();
@@ -101,11 +101,10 @@ void CachedVisual::httpFinished()
     }
     else
     {
-        qInfo() << "OK!!!!";
+        qInfo() << "ok";
     }
 
     _reply.reset();
-
 
     emit fileChanged(file());
     emit meshReady();
@@ -116,6 +115,5 @@ void CachedVisual::httpFinished()
 
 void CachedVisual::httpReadyRead()
 {
-    qInfo() << "data ready!";
     _file->write(_reply->readAll());
 }

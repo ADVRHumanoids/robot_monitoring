@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QQmlEngine>
 #include <QtNetwork>
+#include <QTemporaryFile>
 
 class CachedVisual : public QObject
 {
@@ -39,6 +40,7 @@ private:
     QNetworkAccessManager _qnam;
     QScopedPointer<QNetworkReply, QScopedPointerDeleteLater> _reply;
     std::unique_ptr<QFile> _file;
+    std::unique_ptr<QTemporaryFile> _tmpfile;
     bool _download_in_progress;
     QString _name;
 };

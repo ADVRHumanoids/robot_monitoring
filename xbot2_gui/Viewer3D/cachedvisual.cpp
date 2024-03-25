@@ -12,7 +12,10 @@ void CachedVisual::clearCache()
     qInfo() << "clearing writable location at " << path + "/meshes";
 
     QDir dir(path + "/meshes");
-    dir.removeRecursively();
+    if(!dir.removeRecursively())
+    {
+        qWarning("could not remove folder");
+    }
 }
 
 bool CachedVisual::addMesh(QString name, QString url)
@@ -36,16 +39,24 @@ bool CachedVisual::addMesh(QString name, QString url)
 
     _file = std::make_unique<QFile>(fileName);
 
-    if(_file->exists())
+    if(_file->exists() && _file->size() > 0)
     {
-        qInfo() << _file->fileName() << " exists";
+        qInfo() << _file->fileName() << " exists with size " << _file->size();
+
         emit fileChanged(file());
         emit meshReady();
         return true;
     }
+    else
+    {
+        qInfo() << _file->fileName() << " not in cache, will download from server";
+    }
+
+    // we download to a temporary file to avoid race conditions
+    _tmpfile = std::make_unique<QTemporaryFile>();
 
     // open for writing
-    if(!_file->open(QIODevice::WriteOnly))
+    if(!_tmpfile->open())
     {
         qInfo() << "unable to open file " << _file->fileName();
         return false;
@@ -78,6 +89,8 @@ void CachedVisual::cancelDownload()
 {
     _reply->abort();
 
+    _tmpfile.reset();
+
     _download_in_progress = false;
 
     _reply.reset();
@@ -87,8 +100,9 @@ void CachedVisual::httpFinished()
 {
     qInfo() << _file->fileName() << " download finished";
 
-    // close file for writing
-    _file->close();
+    // copy tmp file to final destination
+    _tmpfile->copy(_file->fileName());
+    _tmpfile.reset();
 
     // check errors
     QNetworkReply::NetworkError error = _reply->error();
@@ -115,5 +129,5 @@ void CachedVisual::httpFinished()
 
 void CachedVisual::httpReadyRead()
 {
-    _file->write(_reply->readAll());
+    _tmpfile->write(_reply->readAll());
 }

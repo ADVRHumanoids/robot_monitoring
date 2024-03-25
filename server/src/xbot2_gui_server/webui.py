@@ -23,9 +23,10 @@ class WebUiHandler:
     async def webui_serve_file(self, request):
         
         file = request.match_info['file']
-        path = join('/home/alaurenzi/code/next_ui/build-robot_monitoring-WebAssembly_Qt_6_5_0_multi_threaded-Release/client', file)
+        path = join('/home/alaurenzi/code/next_ui/build-robot_monitoring-WebAssembly_Qt_6_6_2_multi_threaded-Debug/xbot2_gui', file)
         response = web.FileResponse(path)
         response.headers['Cross-Origin-Opener-Policy'] = 'same-origin'
         response.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
+        response.headers['Cross-Origin-Resource-Policy'] = 'cross-origin'
         return response
 

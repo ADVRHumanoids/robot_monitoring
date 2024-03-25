@@ -1,5 +1,6 @@
 #include "udpsocket.h"
 #include <QHostInfo>
+#include <QEventLoop>
 
 UdpSocket::UdpSocket(QObject *parent)
     : QObject{parent}, _port(0)
@@ -41,9 +42,9 @@ void UdpSocket::setHostname(QString hostname)
 {
     if(_hostname != hostname)
     {
-        auto info = QHostInfo::fromName(hostname);
+        // auto info = QHostInfo::fromName(hostname);
         _hostname = hostname;
-        _addr = info.addresses().first();
+        _addr = QHostAddress(hostname == "localhost" ? "127.0.0.1" : hostname);
         emit hostnameChanged(hostname);
         emit addressChanged();
         qInfo() << "set udp remote hostname to " << hostname;
@@ -80,6 +81,7 @@ void UdpSocket::readyRead()
         QString decoded_data(_dg.data());
 
         emit textMessageReceived(decoded_data);
+
     }
 }
 

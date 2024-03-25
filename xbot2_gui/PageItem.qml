@@ -8,4 +8,5 @@ Item {
     property bool active: false
     property url iconSource
     property real sizeFactor: 1.0
+    property bool lazyLoad: true
 }

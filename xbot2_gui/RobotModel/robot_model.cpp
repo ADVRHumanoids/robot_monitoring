@@ -155,9 +155,9 @@ QList<QString> RobotModel::Impl::getJointNames()
 
         auto joint_name = link->parent_joint->name;
 
-        std::cout << "found joint " << i << " with name " << joint_name <<
-                     " q_index = " << _model.mJoints[i].q_index <<
-                     " DoFCount = " << _model.mJoints[i].mDoFCount << std::endl;
+        // std::cout << "found joint " << i << " with name " << joint_name <<
+        //              " q_index = " << _model.mJoints[i].q_index <<
+        //              " DoFCount = " << _model.mJoints[i].mDoFCount << std::endl;
 
         ret[_model.mJoints[i].q_index] = QString::fromStdString(joint_name);
 

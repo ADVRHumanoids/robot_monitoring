@@ -43,9 +43,18 @@ Node {
         Logic.createViewer()
     }
 
+    function clearCache() {
+        cachedVisual.clearCache()
+    }
+
 
     // private
     id: root
+
+    // dummy: just to be able to call clearCache()
+    CachedVisual {
+        id: cachedVisual
+    }
 
     NodeInstantiator {
 
@@ -54,11 +63,14 @@ Node {
         model: 0
 
         delegate: VisualEntity {
+
+            property string meshName: encodeURIComponent(modelData.filename)
+            property string meshUrl: `http://${client.hostname}:${client.port}/visual/get_mesh/${meshName}`
+            property alias cachedVisual: cachedVisual
+
             name: modelData.linkName
             type: modelData.type
-            meshSource: modelData.type === 'MESH' ?
-                            `http://${client.hostname}:${client.port}/visual/get_mesh/${encodeURIComponent(modelData.filename)}` :
-                            ''
+            meshSource: type === 'MESH' ? cachedVisual.file : ''
             cylinderLength: modelData.length || 0
             cylinderRadius: modelData.radius || 0
             scale: modelData.scale
@@ -67,6 +79,19 @@ Node {
             color: root.color
             alpha: root.alpha
             visible: root.visible
+
+            CachedVisual {
+                id: cachedVisual
+            }
+        }
+
+        onObjectAdded: function(idx, obj) {
+
+            if(obj.type !== 'MESH') {
+                return
+            }
+
+            obj.cachedVisual.addMesh(obj.meshName, obj.meshUrl)
         }
     }
 

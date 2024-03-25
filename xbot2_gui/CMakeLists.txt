@@ -14,10 +14,14 @@ find_package(Qt6 COMPONENTS
     Widgets
     QuickControls2
     ShaderTools
+    Network
     #Core5Compat
     WebView
     Protobuf
     Quick3D
+    3DCore
+    3DRender
+    3DInput
     REQUIRED)
 
 qt_standard_project_setup(REQUIRES 6.6)
@@ -36,6 +40,7 @@ qt_add_qml_module(xbot2_gui
     PageItem.qml
     ClientEndpoint.qml
     ClientEndpoint.js
+    DeserializationWorker.mjs
     sharedData.js
     QML_FILES Horizon/Horizon.js
 
@@ -54,6 +59,9 @@ target_link_libraries(xbot2_gui
     Qt6::Widgets
     #Qt6::Core5Compat
     Qt6::Protobuf
+    Qt6::3DCore
+    Qt6::3DRender
+    Qt6::3DInput
     mesh_geometry
 )
 
@@ -86,6 +94,8 @@ add_subdirectory(Launcher)
 add_subdirectory(Menu)
 
 add_subdirectory(Monitoring)
+
+add_subdirectory(Network)
 
 add_subdirectory(Protobuf)
 

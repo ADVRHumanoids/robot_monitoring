@@ -228,7 +228,6 @@ Item {
         backgroundColor: Qt.rgba(1, 1, 1, 0.005)
 
         onJoystickMoved: function (x, y) {
-            console.log(`${x} ${y}`)
             vref[0] = y*maxLinearV
             vref[1] = -x*maxLinearV
             Joy.sendVref(currentTask, vref)

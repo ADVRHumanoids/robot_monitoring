@@ -12,6 +12,10 @@ qt_add_qml_module(xbot2_gui_viewer3d
     Viewer3D.qml
     VisualEntity.js
     VisualEntity.qml
+    SOURCES
+    cachedvisual.h
+    cachedvisual.cpp
 )
 
 target_link_libraries(xbot2_gui PRIVATE xbot2_gui_viewer3dplugin)
+target_link_libraries(xbot2_gui_viewer3d PRIVATE Qt6::3DCore)

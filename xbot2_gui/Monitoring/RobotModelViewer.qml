@@ -99,10 +99,21 @@ Viewer3D {
 
         Button {
             Layout.columnSpan: 2
+            Layout.fillWidth: true
             text: 'Reload'
             onClicked: {
                 robotState.createViewer()
                 robotCmd.createViewer()
+            }
+        }
+
+        Button {
+            Layout.columnSpan: 2
+            Layout.fillWidth: true
+            text: 'Clear Cache'
+            onClicked: {
+                robotState.clearCache()
+                robotCmd.clearCache()
             }
         }
 

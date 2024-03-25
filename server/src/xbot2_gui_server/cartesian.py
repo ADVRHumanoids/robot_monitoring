@@ -4,8 +4,11 @@ import json
 
 import rospy
 from std_srvs.srv import SetBool, Trigger
-from cartesian_interface.srv import SetControlMode, SetControlModeRequest, GetTaskList, GetCartesianTaskInfo
 from geometry_msgs.msg import TwistStamped, Twist
+try:
+    from cartesian_interface.srv import SetControlMode, SetControlModeRequest, GetTaskList, GetCartesianTaskInfo
+except ModuleNotFoundError:
+    pass
 
 from .server import ServerBase
 from . import utils
@@ -45,14 +48,16 @@ class CartesianHandler:
             get_task_list = rospy.ServiceProxy('cartesian/get_task_list', GetTaskList)
             res = await utils.to_thread(get_task_list)
         except:
-            res = GetTaskList._response_class()
+            class DummyResponse:
+                def __init__(self) -> None:
+                    self.names = []
+                    self.types = []
+            res = DummyResponse()
 
          # get topic names from ros master
         for tname in self.cmd_vel_topics:
             res.names.append(tname)
             res.types.append('SimpleTopic')
-
-        print('DIODIOD', res.names, res.types)
 
         return web.Response(text=json.dumps(
             {
@@ -125,7 +130,7 @@ class CartesianHandler:
         ))
 
 
-    async def handle_ws_msg(self, msg, ws):
+    async def handle_ws_msg(self, msg, proto, ws):
         if msg['type'] == 'velocity_command':
             await self.handle_velocity_command(msg)
 

@@ -84,7 +84,7 @@ class JointDeviceHandler:
             msg_str = json.dumps(jdevinfo_msg)
 
             # send to all websocket clients
-            await self.srv.ws_send_to_all(msg_str)
+            await self.srv.udp_send_to_all(msg_str)
     
     
     def on_jdevinfo_recv(self, msg: JointDeviceInfo):

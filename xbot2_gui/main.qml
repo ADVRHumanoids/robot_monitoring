@@ -92,6 +92,7 @@ ApplicationWindow {
             iconText: MaterialSymbolNames.gauge
             iconFont: syms.font.family
             active: client.robotConnected || mainWindow.dbg
+            lazyLoad: false
         }
 
         PageItem {
@@ -281,9 +282,11 @@ ApplicationWindow {
                 Layout.fillHeight: true
                 Layout.fillWidth: true
 
-                active: pagesStack.currentIndex === index || modelData.name === 'Home'
+                active: pagesStack.currentIndex === index
 
                 onLoaded: {
+
+                    console.log(`${modelData.name} loaded`)
 
                     active = true
 
@@ -329,6 +332,20 @@ ApplicationWindow {
             }
         }
     }
+
+    // Rectangle {
+    //     color: 'red'
+    //     width: 300
+    //     height: 200
+    //     x: parent.width - width - 20
+    //     y: parent.height - height - 20
+    //     z: 10
+    //     MouseArea {
+    //         anchors.fill: parent
+    //         drag.target: parent
+    //         drag.smoothed: true
+    //     }
+    // }
 
 
     NotificationPopup {

@@ -30,22 +30,39 @@ Card1 {
     Timer {
 
         id: statsTimer
-        interval: 300
+        interval: 2000
         repeat: true
+
         property int _rxBytes: 0
         property int _txBytes: 0
+        property int _tmNum: 0
+        property int _tmDroppedNum: 0
+
         property int rxKbps: 0
         property int txKbps: 0
+        property int tmHz: 0
+        property int tmDroppedHz: 0
 
         Component.onCompleted: start()
 
         onTriggered: {
+
             let rx = client.bytesRecv - _rxBytes
-            let tx = client.bytesSent - _txBytes
             rxKbps = rx/interval*8
-            txKbps = tx/interval*8
             _rxBytes = client.bytesRecv;
+
+            let tx = client.bytesSent - _txBytes
+            txKbps = tx/interval*8
             _txBytes = client.bytesSent;
+
+            let tm = client.jsMsgRecv - _tmNum
+            tmHz = tm / interval * 1000.
+            _tmNum = client.jsMsgRecv
+
+            let tmDropped = client.jsDropped - _tmDroppedNum
+            tmDroppedHz = tmDropped / interval * 1000.
+            _tmDroppedNum = client.jsDropped
+
             root.statsUpdated()
         }
     }
@@ -125,6 +142,7 @@ Card1 {
             enabled: client.isConnected
         }
 
+
         Label {
             text: "Status"
         }
@@ -137,6 +155,19 @@ Card1 {
             enabled: client.isConnected
         }
 
+
+        Label {
+            text: "Ping (ms)"
+        }
+        TextField {
+            id: pingText
+            Layout.fillWidth: true
+            text: client.srvRtt.toFixed(1)
+            readOnly: true
+            enabled: client.isConnected
+        }
+
+
         Label {
             text: "Data RX (kbps)"
         }
@@ -147,6 +178,7 @@ Card1 {
             readOnly: true
             enabled: client.isConnected
         }
+
 
         Label {
             text: "Data TX (kbps)"
@@ -159,16 +191,18 @@ Card1 {
             enabled: client.isConnected
         }
 
+
         Label {
-            text: "Ping (ms)"
+            text: "Telemetry (Hz)"
         }
         TextField {
-            id: pingText
+            id: teleText
             Layout.fillWidth: true
-            text: client.srvRtt.toFixed(1)
+            text: `${statsTimer.tmHz.toFixed(0)}  (${statsTimer.tmDroppedHz.toFixed(0)} dropped)`
             readOnly: true
             enabled: client.isConnected
         }
+
     }
 
     Connections {

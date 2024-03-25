@@ -18,8 +18,8 @@ MultiPaneResponsiveLayout {
 
     id: root
     property Item livePlot: CommonProperties.globalLivePlot
-    onBeforeLayoutChange: loader.active = false
-    onAfterLayoutChange: loader.active = true
+    // onBeforeLayoutChange: loader.active = false
+    // onAfterLayoutChange: loader.active = true
     property real vbatt
     property real iload
 
@@ -41,6 +41,7 @@ MultiPaneResponsiveLayout {
             width: parent.width
             spacing: 16
 
+            // safety, filters, and battery
             GridLayout {
 
                 width: parent.width
@@ -95,16 +96,10 @@ MultiPaneResponsiveLayout {
                             readOnly: true
                         }
                     }
-
-
                 }
-
             }
 
             ScrollView {
-
-                property string iconText: 'Telemetry'
-                property string iconChar: MaterialSymbolNames.analytics
 
                 id: scroll1
 
@@ -112,13 +107,10 @@ MultiPaneResponsiveLayout {
                 height: leftRoot.height - jointDevice.height - parent.spacing - parent.topPadding - parent.bottomPadding
                 contentWidth: availableWidth
 
-
                 Column {
 
                     width: scroll1.availableWidth
                     spacing: 16
-
-
 
                     Card1 {
 
@@ -148,6 +140,7 @@ MultiPaneResponsiveLayout {
                                                 jointCommand.selectJoint(jointName)
                                             }
                         }
+
                     }
 
                     Card1 {
@@ -191,7 +184,8 @@ MultiPaneResponsiveLayout {
             id: loader
             width: parent.width
             asynchronous: true
-            visible: status == Loader.Ready
+            visible: status === Loader.Ready
+            active: true
 
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -206,6 +200,8 @@ MultiPaneResponsiveLayout {
                     client: root.client
                     backgroundColor: 'transparent'
                 }
+
+            onLoaded: console.log('PORCODIOSODSDSDOPASDJAIOSDJASAD')
 
 
         }

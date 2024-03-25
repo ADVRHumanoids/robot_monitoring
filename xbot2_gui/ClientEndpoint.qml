@@ -3,6 +3,7 @@ import QtWebSockets
 import QtCore
 
 import Common
+import Network
 import "ClientEndpoint.js" as Client
 import "sharedData.js" as SharedData
 
@@ -60,6 +61,8 @@ Item
     property int bytesRecv: 0
     property int bytesSent: 0
     property real srvRtt: 0
+    property int jsMsgRecv: 0
+    property int jsDropped: 0
 
 
     // method for performing an http request
@@ -91,6 +94,14 @@ Item
         }
     }
 
+    // method for sending a text message over udp
+    function sendTextMessageUdp(msg) {
+        if(udp.bound) {
+            bytesSent += msg.length
+            udp.sendTextMessage(msg)
+        }
+    }
+
 
     // private
     id: root
@@ -107,55 +118,15 @@ Item
 
             root.bytesRecv += message.length
 
-            var obj = JSON.parse(message)
+            // send to worker thread for deserialization
+            worker.sendMessage(message)
 
-            if(obj.type === "joint_states")
-            {
-                robotConnected = true
-
-                robotConnectedTimer.restart()
-
-                SharedData.latestJointState = obj
-
-                jointStateReceived(obj)
-
-                if(!isFinalized)
-                {
-                    jointInfoTimer.start()
-                }
-            }
-            else if(obj.type === "proc")
-            {
-                procMessageReceived(obj)
-            }
-            else if(obj.type === "jpeg")
-            {
-                jpegReceived(obj)
-            }
-            else if(obj.type === "theora")
-            {
-                theoraPacketReceived(obj)
-            }
-            else if(obj.type === "plugin_stats")
-            {
-                pluginStatMessageReceived(obj)
-            }
-            else if(obj.type === "heartbeat")
-            {
-                // do nothing
-            }
-            else if(obj.type === 'ping')
-            {
-                root.srvRtt = (appData.getTimeNs() - obj.cli_time_ns)*1e-6
-            }
-            else
-            {
-                objectReceived(obj)
-            }
         }
 
         onStatusChanged: {
+
             print(`status changed [url ${url}]: ${socket.status}`)
+
             if (socket.status === WebSocket.Error) {
                 CommonProperties.notifications.error('Error: ' + socket.errorString, 'webclient')
                 error(socket.errorString)
@@ -168,12 +139,34 @@ Item
                 isConnected = true
                 root.bytesRecv = 0
                 root.bytesSent = 0
+                doRequest("GET", "/udp", "", (response) => {
+                              udp.hostname = root.hostname
+                              udp.port = response.port
+                          })
             } else if (socket.status === WebSocket.Closed) {
                 CommonProperties.notifications.error('Socket closed', 'webclient')
                 isConnected = false
                 active = false
                 root.isFinalized = false
             }
+        }
+    }
+
+    // udp socket to receive unreliable data
+    UdpSocket {
+        id: udp
+        onTextMessageReceived: function (message) {
+            root.bytesRecv += message.length
+            worker.sendMessage(message)
+        }
+    }
+
+    WorkerScript {
+
+        id: worker
+        source: "DeserializationWorker.mjs"
+        onMessage: function(msg) {
+            Client.handleMessage(msg)
         }
     }
 
@@ -184,7 +177,6 @@ Item
         _nattempt++
 
         if(!msg.success) {
-            error('[' + _nattempt + '] server replied: ' + msg.message)
             return
         }
 
@@ -210,16 +202,8 @@ Item
             let msg = Object()
             msg.type = 'ping'
             msg.cli_time_ns = appData.getTimeNs()
-            sendTextMessage(JSON.stringify(msg))
+            root.sendTextMessageUdp(JSON.stringify(msg))
         }
-    }
-
-    Timer {
-        id: jointInfoTimer
-        interval: 1000
-        running: root.isConnected && !root.isFinalized
-        repeat: false
-        onTriggered: doRequest("GET", "/joint_states/info", "", (response) => {root.onInfoReceived(response)})
     }
 
     Timer {
@@ -227,6 +211,16 @@ Item
         interval: 1000
         onTriggered: {
             root.robotConnected = false
+        }
+    }
+
+    Timer  {
+        id: broadcastUdpTimer
+        interval: 1000
+        repeat: true
+        running: udp.bound
+        onTriggered: {
+            udp.sendTextMessage('udp_discovery')
         }
     }
 

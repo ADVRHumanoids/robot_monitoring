@@ -25,7 +25,7 @@ function jsCallback(js) {
         barPlot.addAuxType(aux)
     }
 
-    if(js.vbatt < vbattCurrentThreshold) {
+    if(js.vbatt > 0 && js.vbatt < vbattCurrentThreshold) {
         error(`low battery voltage V_batt =  ${js.vbatt} V`, 'PMS')
         vbattCurrentThreshold = js.vbatt - 0.5
     }

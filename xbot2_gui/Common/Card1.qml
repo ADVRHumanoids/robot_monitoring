@@ -211,7 +211,7 @@ Item {
             property alias contentItemWrapper: backItemWrapper
 
             width: flip.width
-            height: titleLabelBack.height + backItemWrapper.height + cfgOkBtn.height + 2*root.margins
+            height: backHeaderRow.height + backItemWrapper.height + cfgOkBtn.height + 2*root.margins
 
 
             implicitWidth: backColumn.implicitWidth
@@ -229,13 +229,48 @@ Item {
 
                 id: backColumn
 
-                width: parent.width
+                // width: parent.width
 
+                RowLayout {
 
-                Label {
-                    id: titleLabelBack
-                    text: root.name
-                    font.pixelSize: CommonProperties.font.h2
+                    id: backHeaderRow
+                    width: backColumn.width
+
+                    Label {
+                        id: titleLabelBack
+                        text: root.name
+                        font: titleLabel.font
+                        Layout.fillWidth: true
+
+                        DebugRectangle {
+                            target: parent
+                        }
+                    }
+
+                    SmallToolButton {
+                        Layout.alignment: Qt.AlignVCenter
+                        text: '\uf013'
+                        font.family: CommonProperties.fontAwesome.solid.family
+                        font.pixelSize: CommonProperties.font.h3
+                        onClicked: {
+
+                        }
+
+                        DebugRectangle {
+                            target: parent
+                        }
+                    }
+                    SmallToolButton {
+
+                        Layout.alignment: Qt.AlignVCenter
+                        text: '\uf013'
+                        font.family: CommonProperties.fontAwesome.solid.family
+                        font.pixelSize: CommonProperties.font.h3
+
+                        onClicked: {
+
+                        }
+                    }
                 }
 
                 Item {

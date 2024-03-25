@@ -1,4 +1,5 @@
 .import Common 1.0 as Common
+.import "sharedData.js" as SharedData
 
 let error = Common.CommonProperties.notifications.error
 let info = Common.CommonProperties.notifications.info
@@ -139,4 +140,69 @@ function httpRequestAsync(verb, url, body) {
             });
 
     return promise
+}
+
+let lastJsSeqId = -1
+
+function handleMessage(obj) {
+
+    if(obj.type === "joint_states")
+    {
+        robotConnected = true
+
+        robotConnectedTimer.restart()
+
+        obj.name = SharedData.jointNames
+
+        SharedData.latestJointState = obj
+
+        jointStateReceived(obj)
+
+        root.jsMsgRecv += 1
+
+        if(lastJsSeqId < 0) {
+            lastJsSeqId = obj.seq
+        }
+        else {
+            root.jsDropped += (obj.seq - lastJsSeqId - 1)
+            lastJsSeqId = obj.seq
+        }
+
+        if(!isFinalized)
+        {
+            client.active = true
+
+            doRequest("GET", "/joint_states/info", "", (response) => {
+                          root.onInfoReceived(response)
+                      })
+        }
+    }
+    else if(obj.type === "proc")
+    {
+        procMessageReceived(obj)
+    }
+    else if(obj.type === "jpeg")
+    {
+        jpegReceived(obj)
+    }
+    else if(obj.type === "theora")
+    {
+        theoraPacketReceived(obj)
+    }
+    else if(obj.type === "plugin_stats")
+    {
+        pluginStatMessageReceived(obj)
+    }
+    else if(obj.type === "heartbeat")
+    {
+
+    }
+    else if(obj.type === 'ping')
+    {
+        root.srvRtt = (appData.getTimeNs() - obj.cli_time_ns)*1e-6
+    }
+    else
+    {
+        objectReceived(obj)
+    }
 }

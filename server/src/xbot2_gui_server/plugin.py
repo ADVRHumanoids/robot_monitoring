@@ -45,9 +45,9 @@ class PluginHandler:
 
         switch = rospy.ServiceProxy(f'xbotcore/{plugin_name}/switch', service_class=SetBool)
 
-        await utils.to_thread(switch, command == 'start')
+        res = await utils.to_thread(switch, command == 'start')
 
-        return web.Response(text=json.dumps({'success': True, 'message': f'{command} success'}))
+        return web.Response(text=json.dumps({'success': res.success, 'message': res.message}))
 
     
     @utils.handle_exceptions
@@ -89,7 +89,7 @@ class PluginHandler:
             msg_str = json.dumps(ps_msg)
 
             # send to all websocket clients
-            await self.srv.ws_send_to_all(msg_str)
+            await self.srv.udp_send_to_all(msg_str)
     
     
     def on_pstat_recv(self, msg: Statistics2):

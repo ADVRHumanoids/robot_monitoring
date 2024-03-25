@@ -83,7 +83,7 @@ class ConcertHandler:
                     
                 self.last_recv_marker = None
 
-                await self.srv.ws_send_to_all(msg)
+                await self.srv.udp_send_to_all(msg)
 
             await asyncio.sleep(1./self.rate)
 
@@ -172,7 +172,7 @@ class ConcertHandler:
         while True:
             
             if fb_last is not None:
-                await self.srv.ws_send_to_all({
+                await self.srv.udp_send_to_all({
                     'type': 'concert_drill_progress',
                     'status': fb_last.current_phase,
                     'error_x': fb_last.servo_fb.error_x,
@@ -217,7 +217,7 @@ class ConcertHandler:
             }))
 
 
-    async def handle_ws_msg(self, msg, ws):
+    async def handle_ws_msg(self, msg, proto, ws):
         if msg['type'] == 'concert_drill_vref':
             await self.handle_velocity_command(msg)
 

@@ -30,7 +30,6 @@ Item {
     enabled: pluginState !== ''
 
     property var colorMap: {
-        'Running': CommonProperties.colors.ok,
         'Aborted': CommonProperties.colors.err,
         'Starting': Qt.lighter(CommonProperties.colors.ok, 3),
         'Stopping': CommonProperties.colors.warn,

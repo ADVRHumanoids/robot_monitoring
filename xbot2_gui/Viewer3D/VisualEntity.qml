@@ -35,11 +35,19 @@ Entity {
     Mesh {
         id: mesh
         source: ''
-        onStatusChanged: (status) => {
+        onStatusChanged: function(status) {
+            if(status === 1) {
+                // console.error(`[${name}] loading ${source}`)
+            }
+            if(status === 2) {
+                // console.error(`[${name}] ready ${source}`)
+            }
             if(status === 3) {
                 console.error(`[${name}] could not load mesh from ${source}`)
             }
         }
+
+
     }
 
     CylinderMesh {

@@ -4,6 +4,7 @@ import json
 import functools
 import base64
 import math
+import time
 
 
 import rospy 
@@ -48,6 +49,7 @@ class JointStateHandler:
         self.msg = None
         self.last_js_msg = None
         self.fault = None
+        self.js_seq = 0
 
         # temperatures
         self.mot_temp = None
@@ -73,7 +75,7 @@ class JointStateHandler:
         self.cmd_should_stop = True
 
         # config
-        self.rate = config.get('rate', 1.0)
+        self.rate = config.get('rate', 30.0)
 
     
     def on_aux_recv(self, msg: CustomState, aux: list):
@@ -111,7 +113,7 @@ class JointStateHandler:
         for _ in range(10):
             if self.msg is not None:
                 return web.Response(text=json.dumps({'response': True}))
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.01)
         return web.Response(text=json.dumps({'response': False}))
         
 
@@ -180,10 +182,16 @@ class JointStateHandler:
 
     async def run(self):
 
+        t0 = time.time()
+
         while True:
+            
+            # sync loop at given rate
+            tnow = time.time()
+            await asyncio.sleep(1./self.rate - (tnow - t0))
+            t0 = tnow
 
-            await asyncio.sleep(1./self.rate)
-
+            # broadcast fault
             if self.fault is not None:
                 fault_msg = dict()
                 fault_msg['type'] = 'joint_fault'
@@ -192,36 +200,32 @@ class JointStateHandler:
                 self.fault = None
                 await self.srv.ws_send_to_all(json.dumps(fault_msg))
 
+            # check js received
             if self.msg is None:
                 continue
             
             # convert to dict
             js_msg_to_send = self.js_msg_to_dict(self.msg)
+
+            # test: avoid sending names to save bw
+            del js_msg_to_send['name']
+
+            # add pow data and seq id
             js_msg_to_send['vbatt'] = self.vbatt
             js_msg_to_send['iload'] = self.iload
+            js_msg_to_send['seq'] = self.js_seq
+            self.js_seq += 1
 
             # serialize msg to json
             js_str = json.dumps(js_msg_to_send)      
-            #print(js_str)    
 
             # send to all connected clients
-            await self.srv.ws_send_to_all(js_str)
+            await self.srv.udp_send_to_all(js_str)
 
-            # # experimental proto based
-            # pbjs = joint_states_pb2.JointStates()
-            # pbjs.motor_position.extend(self.msg.motor_position)
+            # clear to avoid sending duplicates
             self.msg = None
             for v in self.aux_map.values():
                 v.clear()
-
-            # pb_msg = {
-            #     'type': 'pb',
-            #     'data': base64.b64encode(pbjs.SerializeToString()).decode('ascii'),
-            # }
-
-            # send to all connected clients
-            # await self.srv.ws_send_to_all(json.dumps(pb_msg))
-
 
     
     def command_acquire(self):

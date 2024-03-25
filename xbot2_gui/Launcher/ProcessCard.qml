@@ -24,7 +24,7 @@ Item {
 
     // private
     property var colorMap: {
-        'Running': CommonProperties.colors.ok,
+        'Running':  Qt.lighter(CommonProperties.colors.ok),
         'Stopped': card.defaultBackground,
         'Killed': CommonProperties.colors.err,
         'Waiting': Qt.lighter(CommonProperties.colors.ok, 3),

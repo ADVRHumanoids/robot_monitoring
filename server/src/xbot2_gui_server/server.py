@@ -1,5 +1,6 @@
 import asyncio
 import aiohttp
+import asyncudp
 from typing import List
 from aiohttp import web
 import tempfile
@@ -12,6 +13,9 @@ import os
 import sys
 import psutil
 import logging
+import time
+
+from . import utils
 
 #import ssl
 
@@ -24,6 +28,18 @@ class ServerBase:
 
     async def ws_send_to_all(self, msg, clients=None):
         raise NotImplementedError
+
+    async def udp_send_to_all(self, msg, clients=None):
+        raise NotImplementedError
+
+    async def msg_send_to_all(self, msg, proto:str, clients=None):
+        if proto == 'udp':
+            return await self.udp_send_to_all(msg, clients)
+        elif proto == 'ws':
+            return await self.ws_send_to_all(msg, clients)
+        else:
+            raise ValueError(f'unsupported protocol "{proto}"')
+
 
     def ws_clients(self) -> List[web.WebSocketResponse]:
         raise NotImplementedError
@@ -47,6 +63,7 @@ class Xbot2WebServer(ServerBase):
         
         # web app
         self.app = web.Application()
+        self.port = None
 
         # event loop
         self.loop = asyncio.get_event_loop()
@@ -58,10 +75,16 @@ class Xbot2WebServer(ServerBase):
         self.ws_callbacks = list()
         self.register_ws_coroutine(self.handle_ping_msg)
 
+        # udp local endpoint
+        self.udp : asyncudp.Socket = None
+        self.udp_clients = set()  # set of pairs (addr, port)
+        self.udp_clients_timeout = dict()
+
         # add routes
         routes = [
             ('GET', '/', self.root_handler, 'root'),
             ('GET', '/ws', self.websocket_handler, 'websocket'),
+            ('GET', '/udp', self.udp_handler, 'udp'),
             ('GET', '/version', self.version_handler, 'version'),
             ('POST', '/restart', self.restart_program, 'restart'),
         ]
@@ -118,6 +141,20 @@ class Xbot2WebServer(ServerBase):
         await self.ws_send_to_all(json.dumps(msg))
 
     
+    async def udp_send_to_all(self, msg: str, clients=None):
+
+        if self.udp is None:
+            return False
+        
+        if clients is None:
+            clients = self.udp_clients
+
+        for addr in clients:
+            self.udp.sendto(msg.encode(), addr)
+
+        return True
+
+    
     def run_server(self, static='.', host='0.0.0.0', port=8080):
         
         # serve static files
@@ -136,6 +173,12 @@ class Xbot2WebServer(ServerBase):
         # first execute server start routine
         loop.run_until_complete(self.start_http_server(runner, host, port))
 
+        # save port
+        self.port = port
+
+        # run udp receiver
+        self.schedule_task(self.udp_receiver())
+
         # then, loop forever
         loop.run_forever()
 
@@ -150,14 +193,14 @@ class Xbot2WebServer(ServerBase):
     async def heartbeat(self):
         
         """
-        broadcast periodic heartbeat
+        broadcast periodic heartbeat with server-relate lightweight data
         note: this also cleans up close websockets
         """
 
         # serialize msg to json
         msg_str = json.dumps(
             {
-                'type': 'heartbeat'
+                'type': 'heartbeat',
             }
         )
 
@@ -165,6 +208,13 @@ class Xbot2WebServer(ServerBase):
 
             # save disconnected sockets for later removal
             ws_to_remove = set()
+            udp_to_remove = set()
+
+            # check udp timeout
+            for addr, timeout in self.udp_clients_timeout.items():
+                if time.time() > timeout:
+                    print(f'removing stale udp remote {addr}')
+                    udp_to_remove.add(addr)
 
             # iterate over sockets (one per client)
             for ws in self.ws_clients:
@@ -172,15 +222,20 @@ class Xbot2WebServer(ServerBase):
                 try:
                     await ws.send_str(msg_str)  
                 except ConnectionResetError as e:
+                    print(f'removing stale ws remote')
                     ws_to_remove.add(ws)
                 except BaseException as e:
                     print(f'error: {e}')
             
             for ws in ws_to_remove:
                 self.ws_clients.remove(ws)
+
+            for addr in udp_to_remove:
+                self.udp_clients.remove(addr)
+                del self.udp_clients_timeout[addr]
             
             # periodic loop at 10 Hz
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.666)
     
 
     # root handler serves html for web app
@@ -212,7 +267,7 @@ class Xbot2WebServer(ServerBase):
                 msg = json.loads(msg.data)
                 for wcoro in self.ws_callbacks:
                     try:
-                        await wcoro(msg, ws)
+                        await wcoro(msg, 'ws', ws)
                     except BaseException as e:
                         print(f'[{wcoro.__func__.__qualname__}] error occurred: {e}')
             elif msg.type == aiohttp.WSMsgType.ERROR:
@@ -221,11 +276,89 @@ class Xbot2WebServer(ServerBase):
                 break
 
 
-    async def handle_ping_msg(self, msg, ws):
+    async def handle_ping_msg(self, msg, proto, ws):
         if msg['type'] == 'ping':
-            await self.ws_send_to_all(json.dumps(msg), clients=[ws])
+            await self.msg_send_to_all(json.dumps(msg), proto=proto, clients=[ws])
+
+    
+    async def create_udp_socket(self):
+        port = self.port + 0
+        while True:
+            try:
+                self.udp = await asyncudp.create_socket(local_addr=('0.0.0.0', port))
+                print(f'udp socket bound to port {port}')
+                return 
+            except OSError as e:
+                if e.errno == 98:  # address already in use
+                    print(f'port {port} already in use, will try a different one')
+                    port += 1  # retry
+                else:
+                    raise RuntimeError('create socket failed: ' + str(e))
 
 
+
+    @utils.handle_exceptions
+    async def udp_handler(self, req: web.Request):
+
+        addr, port = self.udp.getsockname()
+
+        return web.Response(text=json.dumps(
+            {
+                'success': True,
+                'port': port
+            }
+        ))
+    
+
+    async def udp_receiver(self):
+        
+        # bind udp socket
+        if self.udp is None:
+            await self.create_udp_socket()
+            addr, port = self.udp.getsockname()
+            await self.log(f'server opened udp endpoint at {addr}:{port}')
+
+        # receiver's infinite loop
+        while True:
+
+            try:
+                
+                # wait till message received
+                data, addr = await self.udp.recvfrom()
+
+                # decode to string
+                msg = data.decode()
+
+                # update timeout for this client
+                self.udp_clients_timeout[addr] = time.time() + 10.0
+
+                # handle udp discovery messages
+                if msg == 'udp_discovery' and addr not in self.udp_clients:
+
+                    self.udp_clients.add(addr)
+
+                    await self.log(f'added udp client at {addr}, total is {len(self.udp_clients)}')
+
+                # handle general messages
+                if msg != 'udp_discovery':
+
+                    msg = json.loads(msg)
+
+                    # invoke registered callbacks
+                    for wcoro in self.ws_callbacks:
+                        try:
+                            await wcoro(msg, 'udp', addr)
+                        except BaseException as e:
+                            print(f'[{wcoro.__func__.__qualname__}] error occurred: {e}')
+
+
+            except asyncudp.ClosedError as e:
+
+                print(e)
+
+
+
+    @utils.handle_exceptions
     async def version_handler(self, req: web.Request):
         config = ConfigParser()
         src_path = Path(os.path.abspath(__file__)).parent.parent
@@ -246,6 +379,7 @@ class Xbot2WebServer(ServerBase):
         ))
 
 
+    @utils.handle_exceptions
     async def restart_program(self, req):
         """
         Restarts the current program, with file objects and descriptors
@@ -254,7 +388,7 @@ class Xbot2WebServer(ServerBase):
 
         try:
             p = psutil.Process(os.getpid())
-            for handler in p.get_open_files() + p.connections():
+            for handler in p.open_files() + p.connections():
                 os.close(handler.fd)
         except Exception as e:
             logging.error(e)

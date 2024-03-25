@@ -25,7 +25,7 @@ def main():
 
     # create server
     srv = Xbot2WebServer()
-    srv.cfgpath = cfg
+    srv.cfgpath = cfgpath
 
     # load default extensions
     extensions = []
@@ -56,9 +56,12 @@ def main():
     extensions.append(ext)
 
     # cartesian
-    from .cartesian import CartesianHandler
-    ext = CartesianHandler(srv, cfg.get('cartesian', {}))
-    extensions.append(ext)
+    try:
+        from .cartesian import CartesianHandler
+        ext = CartesianHandler(srv, cfg.get('cartesian', {}))
+        extensions.append(ext)
+    except ModuleNotFoundError:
+        pass
 
     # visual
     from .visual import VisualHandler

@@ -1,0 +1,14 @@
+context:
+  session: arturo
+  params:
+    verbose_flag: ''
+
+roscore:
+  cmd: ros1; roscore
+
+xbot2:
+  cmd: ros1; xbot2-core --hw dummy -C $(rospack find centauro_config)/centauro_basic.yaml
+  variants:
+    verbose:
+      params:
+        verbose_flag: -V

@@ -73,7 +73,7 @@ class HorizonHandler:
 
                 self.solution_time = None
 
-                await self.srv.ws_send_to_all(msg)
+                await self.srv.udp_send_to_all(msg)
 
             if self.timelines is not None:
 
@@ -95,12 +95,12 @@ class HorizonHandler:
 
                 self.timelines = None
 
-                await self.srv.ws_send_to_all(msg)
+                await self.srv.udp_send_to_all(msg)
 
             await asyncio.sleep(1./self.rate)
 
 
-    async def handle_ws_msg(self, msg, ws):
+    async def handle_ws_msg(self, msg, proto, ws):
         if msg['type'] == 'horizon_vref':
             rosmsg = Twist()
             vref = msg['vref']

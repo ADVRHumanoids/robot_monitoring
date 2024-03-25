@@ -1,43 +1,15 @@
-xbot2_process:
-  type: process_handler
-  name: xbot2
-  rate: 1.0
-  cmd: xbot2-core
-  machine: alaurenzi@localhost
-  args:
-    - name: Verbose
-      type: check  # checkbox
-      default: true
-      arg: --verbose
-      help: Enable verbose output
-    - name: HW Type
-      type: combo  # combobox
-      default: 0
-      options: ['Default', 'HW (pos)', 'HW (imp)', 'Dummy', 'Simulation']
-      arg: ['', --hw ec_imp, --hw ec_pos, --hw dummy, --hw sim]
-      help: Select hardware type
-    - name: Config Path
-      type: text  # textfield
-      arg: --config {value}
-      help: Path to a configuration file
-    
-ik:
-  type: process_handler
-  name: ik
-  cmd: ros1; roslaunch concert_cartesio concert.launch xbot:=true gui:=false
-  machine: alaurenzi@localhost
-
-too_much_print:
-  type: process_handler
-  cmd: \" sleep 5; echo cazzi; sleep 5 \"
-  name: too_much_print
-  machine: alaurenzi@localhost
 
 cartesian:
   type: cartesian
   cmd_vel_topics:
   - /omnisteering/cmd_vel
-  
+
+launcher:
+  type: launcher
+  launcher_config: launcher_config.yaml
+
+#horizon:
+#  type: horizon  
 #ecat_master_process:
 #  type: process_handler
 #  name: ecat_master

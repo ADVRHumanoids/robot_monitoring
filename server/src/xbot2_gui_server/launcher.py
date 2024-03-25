@@ -19,7 +19,7 @@ class Launcher:
         
         launcher_cfg_path = config['launcher_config']
         if not os.path.isabs(launcher_cfg_path):
-            launcher_cfg_path = os.path.join(os.path.dirname(srv.cfgpath, launcher_cfg_path))
+            launcher_cfg_path = os.path.join(os.path.dirname(srv.cfgpath), launcher_cfg_path)
         
         self.cfg = yaml.safe_load(open(config['launcher_config'], 'r'))
 
@@ -180,7 +180,7 @@ class Launcher:
 
                 msg_str = json.dumps(msg)
 
-                await self.srv.ws_send_to_all(msg_str)
+                await self.srv.udp_send_to_all(msg_str)
 
 
     def get_process_names(self):

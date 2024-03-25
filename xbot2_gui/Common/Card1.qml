@@ -241,36 +241,32 @@ Item {
                         text: root.name
                         font: titleLabel.font
                         Layout.fillWidth: true
-
-                        DebugRectangle {
-                            target: parent
-                        }
                     }
 
-                    SmallToolButton {
-                        Layout.alignment: Qt.AlignVCenter
-                        text: '\uf013'
-                        font.family: CommonProperties.fontAwesome.solid.family
-                        font.pixelSize: CommonProperties.font.h3
-                        onClicked: {
+                    // SmallToolButton {
+                    //     Layout.alignment: Qt.AlignVCenter
+                    //     text: '\uf013'
+                    //     font.family: CommonProperties.fontAwesome.solid.family
+                    //     font.pixelSize: CommonProperties.font.h3
+                    //     onClicked: {
 
-                        }
+                    //     }
 
-                        DebugRectangle {
-                            target: parent
-                        }
-                    }
-                    SmallToolButton {
+                    //     DebugRectangle {
+                    //         target: parent
+                    //     }
+                    // }
+                    // SmallToolButton {
 
-                        Layout.alignment: Qt.AlignVCenter
-                        text: '\uf013'
-                        font.family: CommonProperties.fontAwesome.solid.family
-                        font.pixelSize: CommonProperties.font.h3
+                    //     Layout.alignment: Qt.AlignVCenter
+                    //     text: '\uf013'
+                    //     font.family: CommonProperties.fontAwesome.solid.family
+                    //     font.pixelSize: CommonProperties.font.h3
 
-                        onClicked: {
+                    //     onClicked: {
 
-                        }
-                    }
+                    //     }
+                    // }
                 }
 
                 Item {

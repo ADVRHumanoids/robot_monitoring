@@ -204,6 +204,8 @@ ApplicationWindow {
 
         model: pagesModel
 
+        sizeFactor: 1.25
+
         orientation: Qt.Horizontal
 
         uncheckedDisplayMode: AbstractButton.IconOnly

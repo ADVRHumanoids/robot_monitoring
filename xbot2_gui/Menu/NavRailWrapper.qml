@@ -20,6 +20,8 @@ Item {
 
     property list<Item> buttonItems
 
+    property real sizeFactor: 1.0
+
     function setBadgeNumber(i, num) {
         buttonItems[i].badgeNum = num
     }
@@ -78,7 +80,7 @@ Item {
                                                           'iconChar': obj.iconText,
                                                           'index': i,
                                                           'iconSource': obj.iconSource,
-                                                          'sizeFactor': obj.sizeFactor,
+                                                          'sizeFactor': (obj.sizeFactor || 1.0) * root.sizeFactor,
                                                           'enabled': Qt.binding(() => { return obj.active })
                                                       })
             buttonItems.push(btn)

@@ -13,16 +13,24 @@ find_package(Qt6 COMPONENTS
     WebSockets
     Widgets
     QuickControls2
-    ShaderTools
     Network
-    #Core5Compat
-    WebView
-    Protobuf
-    Quick3D
-    3DCore
-    3DRender
-    3DInput
+    ShaderTools
+    DataVisualization
     REQUIRED)
+
+if(NOT EMSCRIPTEN)
+
+    find_package(Qt6 COMPONENTS
+        WebView
+        Protobuf
+        Quick3D
+        3DCore
+        3DRender
+        3DInput
+        REQUIRED
+    )
+
+endif()
 
 qt_standard_project_setup(REQUIRES 6.6)
 
@@ -51,19 +59,27 @@ target_compile_definitions(xbot2_gui
 
 target_link_libraries(xbot2_gui
     PUBLIC
+    Qt6::DataVisualization
     Qt6::Core
     Qt6::Quick
     Qt6::WebSockets
-    Qt6::WebView
     Qt6::QuickControls2
     Qt6::Widgets
-    #Qt6::Core5Compat
-    Qt6::Protobuf
-    Qt6::3DCore
-    Qt6::3DRender
-    Qt6::3DInput
-    mesh_geometry
 )
+
+if(NOT EMSCRIPTEN)
+
+    target_link_libraries(xbot2_gui
+        PUBLIC
+        Qt6::Protobuf
+        Qt6::3DCore
+        Qt6::3DRender
+        Qt6::3DInput
+        Qt6::WebView
+        mesh_geometry
+    )
+
+endif()
 
 
 ## version information
@@ -97,7 +113,11 @@ add_subdirectory(Monitoring)
 
 add_subdirectory(Network)
 
-add_subdirectory(Protobuf)
+if(NOT EMSCRIPTEN)
+
+    add_subdirectory(Protobuf)
+
+endif()
 
 add_subdirectory(TestThings)
 
@@ -124,13 +144,15 @@ add_subdirectory(RobotModel/)
 target_link_libraries(xbot2_gui PRIVATE RobotModel)
 
 # quick3d
+if(NOT EMSCRIPTEN)
 add_library(mesh_geometry STATIC
     ViewerQuick3D/meshgeometry.cpp)
 
 target_link_libraries(mesh_geometry PUBLIC Qt${QT_VERSION_MAJOR}::Quick3D)
+endif()
 
 # deploy
-if(NOT ANDROID)
+if(NOT ANDROID AND NOT EMSCRIPTEN)
 
     set(QT_ENABLE_VERBOSE_DEPLOYMENT TRUE)
 

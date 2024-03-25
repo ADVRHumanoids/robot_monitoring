@@ -421,8 +421,8 @@ ApplicationWindow {
             }
         }
 
-        onConnected: client.doRequest('GET', '/requested_pages', '',
-                                      function(msg) {
+        onConnected: client.doRequestAsync('GET', '/requested_pages', '')
+                                      .then(function(msg) {
                                           requestedPages = msg['requested_pages']
                                           nav.construct()
                                           navBar.construct()

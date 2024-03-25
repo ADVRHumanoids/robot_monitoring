@@ -168,11 +168,12 @@ function handleMessage(obj) {
             lastJsSeqId = obj.seq
         }
 
-        if(!isFinalized)
+        if(isConnected && !isFinalized)
         {
             client.active = true
 
-            doRequest("GET", "/joint_states/info", "", (response) => {
+            doRequestAsync("GET", "/joint_states/info", "")
+                    .then((response) => {
                           root.onInfoReceived(response)
                       })
         }

@@ -1,6 +1,7 @@
 import QtQuick
 import QtWebSockets
 import QtCore
+import QtQml.WorkerScript
 
 import Common
 import Network
@@ -139,10 +140,11 @@ Item
                 isConnected = true
                 root.bytesRecv = 0
                 root.bytesSent = 0
-                doRequest("GET", "/udp", "", (response) => {
-                              udp.hostname = root.hostname
-                              udp.port = response.port
-                          })
+                doRequestAsync("GET", "/udp", "")
+                    .then((response) => {
+                                  udp.hostname = root.hostname
+                                  udp.port = response.port
+                              })
             } else if (socket.status === WebSocket.Closed) {
                 CommonProperties.notifications.error('Socket closed', 'webclient')
                 isConnected = false

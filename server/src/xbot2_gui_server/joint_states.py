@@ -64,6 +64,7 @@ class JointStateHandler:
         # aux
         self.aux_map = dict()
         self.aux_subs = []
+        self.js_to_aux_id = []
                     
         # command publisher
         self.cmd_pub = rospy.Publisher('xbotcore/command', JointCommand, queue_size=1)

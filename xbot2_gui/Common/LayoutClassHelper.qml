@@ -27,7 +27,7 @@ Item {
     property bool _medium: targetWidth < 840 && !compact
     property bool _expanded: !compact && !medium
 
-    on_LayoutClassChanged: {
+    function updateLayout() {
         beforeLayoutChange()
         compact = _layoutClass === LayoutClassHelper.Class.Compact
         medium = _layoutClass === LayoutClassHelper.Class.Medium
@@ -35,6 +35,12 @@ Item {
         Qt.callLater(afterLayoutChange)
     }
 
+    on_LayoutClassChanged: {
+        updateLayout()
+    }
 
+    Component.onCompleted: {
+        updateLayout()
+    }
 
 }

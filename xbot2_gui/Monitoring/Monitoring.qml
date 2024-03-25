@@ -201,9 +201,6 @@ MultiPaneResponsiveLayout {
                     backgroundColor: 'transparent'
                 }
 
-            onLoaded: console.log('PORCODIOSODSDSDOPASDJAIOSDJASAD')
-
-
         }
 
         JointCommandCard {

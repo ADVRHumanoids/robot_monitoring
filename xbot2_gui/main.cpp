@@ -4,16 +4,18 @@
 #include <QtQuickControls2/QQuickStyle>
 #include <QFont>
 #include <QtWidgets/QApplication>
-#include <QtWebView/QtWebView>
-
 #include <QtQml/qqmlregistration.h>
 
 #include "Video/videostreampainter.h"
 #include "RobotModel/robot_model.h"
-#include "ViewerQuick3D/meshgeometry.h"
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/val.h>
+#endif
+
+#ifndef __EMSCRIPTEN__
+#include <QtWebView/QtWebView>
+#include "ViewerQuick3D/meshgeometry.h"
 #endif
 
 class AppData : public QObject
@@ -70,12 +72,17 @@ int main(int argc, char *argv[])
 #endif
 
     AppData appdata;
+
 #ifdef __EMSCRIPTEN__
     emscripten::val location = emscripten::val::global("location");
     appdata.hostname = QString::fromStdString(location["hostname"].as<std::string>());
     appdata.port = std::stoi(location["port"].as<std::string>());
 #endif
+
+#ifndef __EMSCRIPTEN__
     QtWebView::initialize();
+#endif
+
     QApplication app(argc, argv);
     auto font = app.font();
     font.setPixelSize(12);
@@ -89,7 +96,9 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("appData", &appdata);
 
     qmlRegisterType<RobotModel>("xbot2_gui.RobotModel", 1, 0, "RobotModel");
+#ifndef __EMSCRIPTEN__
     qmlRegisterType<MeshGeometry>("xbot2_gui.MeshGeometry", 1, 0, "MeshGeometry");
+#endif
 
     const QUrl url(QStringLiteral("qrc:/qt/qml/Main/main.qml"));
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,

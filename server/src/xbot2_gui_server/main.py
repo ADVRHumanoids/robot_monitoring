@@ -20,8 +20,12 @@ def main():
     logging.basicConfig(level=logging.INFO, force=True)
     
     # load config
-    cfgpath = sys.argv[1]
-    cfg = yaml.safe_load(open(cfgpath, 'r').read())
+    if len(sys.argv) > 1:
+        cfgpath = sys.argv[1]
+        cfg = yaml.safe_load(open(cfgpath, 'r').read())
+    else:
+        cfgpath = __file__ 
+        cfg = dict()
 
     # create server
     srv = Xbot2WebServer()
@@ -91,6 +95,8 @@ def main():
         from .launcher import Launcher
         ext = Launcher(srv, cfg.get('launcher', {}))
         extensions.append(ext)
+    except KeyError:
+        pass
     except ModuleNotFoundError:
         pass
 

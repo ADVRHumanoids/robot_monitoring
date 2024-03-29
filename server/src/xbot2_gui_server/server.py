@@ -190,6 +190,9 @@ class Xbot2WebServer(ServerBase):
         if clients is None:
             clients = self.udp_clients
 
+        if len(clients) > 0 and isinstance(msg, dict):
+            msg = json.dumps(msg)
+
         for addr in clients:
             self.udp.sendto(msg.encode(), addr)
 

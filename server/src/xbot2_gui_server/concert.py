@@ -6,14 +6,21 @@ import rospy
 import actionlib
 import tf
 
-from concert_vision.msg import BlobArray, Blob
+try:
+    from concert_vision.msg import BlobArray, Blob
+    from concert_autonomous_drilling.msg import AutoDrillAction
+    from concert_autonomous_drilling.msg import AutoDrillGoal
+    from concert_autonomous_drilling.msg import AutoDrillFeedback
+    from concert_autonomous_drilling.msg import AutoDrillResult
+    concert_drilling_found = True
+except ModuleNotFoundError:
+    concert_drilling_found = False
+    class BlobArray:
+        pass
 
-from concert_autonomous_drilling.msg import AutoDrillAction
-from concert_autonomous_drilling.msg import AutoDrillGoal
-from concert_autonomous_drilling.msg import AutoDrillFeedback
-from concert_autonomous_drilling.msg import AutoDrillResult
 
 from std_srvs.srv import SetBool, Trigger
+from std_msgs.msg import Float64, String, Int16
 from geometry_msgs.msg import TwistStamped, Twist
 
 from .server import ServerBase
@@ -25,10 +32,11 @@ class ConcertHandler:
     def __init__(self, srv: ServerBase, config=dict()) -> None:
 
         # request ui page
-        self.requested_pages = ['Builder', 'Linfa', 'Drill Task']
+        self.requested_pages = ['Builder', 'Linfa', 'Drill Task', 'Sanding']
 
         # config
         self.rate = config.get('rate', 10.0)
+        self.sanding_tool_activated_service = config['sanding_tool_activated_service']
 
         # save server object, register our handlers
         self.srv = srv
@@ -51,10 +59,25 @@ class ConcertHandler:
                            self.gcomp_switch,
                            'concert_gcomp_switch')
         
-        # subscribers
-        self.markers_queue = asyncio.Queue()
-        self.markers_sub = rospy.Subscriber(config['blob_array_topic'], BlobArray, self.blob_array_recv, queue_size=1)
+        self.srv.add_route('POST', '/concert/sanding/start',
+                           self.sanding_start_handler,
+                           'concert_sanding_start_handler')
+        
+        self.srv.add_route('POST', '/concert/sanding/tool_started_ack',
+                           self.sanding_tool_started_ack_handler,
+                           'concert_sanding_tool_started_ack_handler')
+        
+        # drilling subscribers
+        if concert_drilling_found:
+            self.markers_sub = rospy.Subscriber(config['blob_array_topic'], BlobArray, self.blob_array_recv, queue_size=1)
+        
         self.last_recv_marker : BlobArray = None
+
+        # sanding subscribers
+        self.sanding_status = None 
+        self.sanding_progress = None
+        self.sanding_status_sub = rospy.Subscriber(config['sanding_status_topic'], String, self.sanding_status_recv)
+        self.sanding_progress_sub = rospy.Subscriber(config['sanding_progress_topic'], Int16, self.sanding_progress_recv)
 
         # drill action client
         self.autodrill_client = None
@@ -67,6 +90,20 @@ class ConcertHandler:
     async def run(self):
 
         while True:
+
+            if self.sanding_progress is not None or self.sanding_status is not None:
+
+                msg = {
+                    'type': 'concert_sanding_progress',
+                    'progress': self.sanding_progress if self.sanding_progress is not None else -1,
+                    'status': self.sanding_status if self.sanding_status is not None else '--',
+                }
+
+                self.sanding_progress = None
+                self.sanding_status = None
+
+                await self.srv.udp_send_to_all(msg)
+                
             
             if self.last_recv_marker is not None:
 
@@ -86,6 +123,7 @@ class ConcertHandler:
                 await self.srv.udp_send_to_all(msg)
 
             await asyncio.sleep(1./self.rate)
+
 
     @utils.handle_exceptions
     async def enable_arm_handler(self, req):
@@ -226,3 +264,48 @@ class ConcertHandler:
         print(msg)
 
 
+    def sanding_status_recv(self, msg: String):
+        self.sanding_status = msg.data
+
+
+    def sanding_progress_recv(self, msg: Int16):
+        self.sanding_progress = msg.data
+
+
+    @utils.handle_exceptions
+    async def sanding_start_handler(self, req: web.Request):
+
+        body = await req.json()
+
+        print(body)
+
+        rospy.set_param('/sanding/force', body['force'])
+        rospy.set_param('/sanding/length', body['xmax'] - body['xmin'])
+        rospy.set_param('/sanding/height', body['ymax'] - body['ymin'])
+        rospy.set_param('/sanding/corner_y', body['xmax'])
+        rospy.set_param('/sanding/corner_z', body['ymax'])
+
+        await asyncio.sleep(1.0)
+
+        return web.Response(text=json.dumps(
+            {
+                'success': True,
+                'message': 'sanding started',
+            }))
+
+
+    @utils.handle_exceptions
+    async def sanding_tool_started_ack_handler(self, req: web.Request):
+
+        print('drill tool has been started!!')
+
+        srv = rospy.ServiceProxy(self.sanding_tool_activated_service, 
+                                 Trigger)
+        
+        res = await utils.to_thread(srv)
+
+        return web.Response(text=json.dumps(
+            {
+                'success': res.success,
+                'message': res.message,
+            }))

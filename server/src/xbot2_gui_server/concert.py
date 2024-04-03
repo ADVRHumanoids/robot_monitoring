@@ -285,6 +285,7 @@ class ConcertHandler:
         rospy.set_param('/sanding/corner_y', -body['xmin'])
         rospy.set_param('/sanding/corner_z', body['ymax'])
         rospy.set_param('/sanding/type', body['type'])
+        rospy.set_param('/sanding/index', body['height_level'])
 
         await asyncio.sleep(1.0)
 

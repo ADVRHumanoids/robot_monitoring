@@ -63,6 +63,10 @@ class ConcertHandler:
                            self.sanding_start_handler,
                            'concert_sanding_start_handler')
         
+        self.srv.add_route('GET', '/concert/sanding/configure',
+                           self.sanding_configure_handler,
+                           'concert_sanding_configure')
+        
         self.srv.add_route('POST', '/concert/sanding/tool_started_ack',
                            self.sanding_tool_started_ack_handler,
                            'concert_sanding_tool_started_ack_handler')
@@ -270,6 +274,20 @@ class ConcertHandler:
 
     def sanding_progress_recv(self, msg: Int16):
         self.sanding_progress = msg.data
+
+
+    @utils.handle_exceptions
+    async def sanding_configure_handler(self, req: web.Request):
+
+        return web.Response(text=json.dumps(
+            {
+                'success': True,
+                'message': 'got sanding configuration',
+                'breakpoints': {
+                    '6dof-40-40': [0., 1., 2., 2.4],
+                    '6dof-60-40-40': [1., 2., 3.],
+                }
+            })) 
 
 
     @utils.handle_exceptions

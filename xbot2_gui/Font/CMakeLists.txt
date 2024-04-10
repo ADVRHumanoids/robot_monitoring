@@ -26,6 +26,7 @@ qt_add_resources(xbot2_gui_font "app_icons"
     PREFIX "Icons/"
     FILES
     icons/alberobotics.png
+    icons/brick_wall_white.png
     icons/alberobotics100x100.png
 )
 

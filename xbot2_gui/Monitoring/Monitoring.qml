@@ -152,7 +152,7 @@ MultiPaneResponsiveLayout {
                         configurable: false
                         name: 'Joint <i>' + jointState.jointNames[jointState.currentIndex] + '</i>'
 
-                        frontItem: SingleJointStateStack {
+                        frontItem: SingleJointState1 {
                             id: jointState
                             width: parent.width
 

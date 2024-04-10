@@ -103,7 +103,7 @@ Item {
                     name: modelData
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    scrollOnOutput: true
+                    scrollOnOutput: scrollOnOutputCheck.checked
                 }
             }
         }
@@ -115,6 +115,7 @@ Item {
             columns: 3
 
             CheckBox {
+                id: scrollOnOutputCheck
                 text: 'Scroll on output'
                 checked: true
             }

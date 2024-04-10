@@ -1,4 +1,4 @@
-.import QtQuick.Layouts 1.3 as L // you can't import without "as" in .JS
+.import QtQuick.Layouts as L // you can't import without "as" in .JS
 
 var fieldNames = [
             'posRef', 'motPos', 'linkPos',
@@ -69,14 +69,18 @@ function buildFields (container) {
 
     for(var i = 0; i < nFields; i++)
     {
+        let obj = undefined
+
         if(fieldNames[i] === '__sep__')
         {
-            sepComponent.createObject(container)
+            obj = sepComponent.createObject(container)
         }
 
         else if(fieldNames[i] === 'aux')
         {
             var auxObj = auxSelectorComponent.createObject(container)
+
+            obj = auxObj
 
             let plotCallback = function() {
                 singleJointState.plotAdded(jName, auxObj.currentText)
@@ -94,7 +98,7 @@ function buildFields (container) {
                 singleJointState.plotAdded(jName, fieldName)
             }
 
-            labelComponent.createObject(
+            obj = labelComponent.createObject(
                         container,
                         {text: shortToLongName[fieldNames[i]]})
 

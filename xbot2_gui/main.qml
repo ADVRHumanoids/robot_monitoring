@@ -157,6 +157,25 @@ ApplicationWindow {
         }
 
         PageItem {
+            name: "Conda"
+            page: "/qt/qml/Concert/Conda.qml"
+            iconText: MaterialSymbolNames.wrench
+            iconFont: syms.font.family
+            active: true
+            sizeFactor: 1.1
+            visible: requestedPages.indexOf(name) > -1
+        }
+
+        PageItem {
+            name: "Sanding"
+            page: "/qt/qml/Concert/Sanding.qml"
+            iconSource: '/Icons/icons/brick_wall_white.png'
+            active: true
+            sizeFactor: 1.
+            visible: requestedPages.indexOf(name) > -1
+        }
+
+        PageItem {
             name: "Ecat"
             page: "/qt/qml/Ecat/Ecat.qml"
             iconText: MaterialSymbolNames.wrench

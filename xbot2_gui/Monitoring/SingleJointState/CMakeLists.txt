@@ -13,6 +13,7 @@ qt_add_qml_module(xbot2_gui_monitoring_single_joint
     SingleJointStateStack.qml
     SingleJointStateStackForm.ui.qml
     data.js
+    SingleJointState1.qml
 )
 
 target_link_libraries(xbot2_gui PRIVATE xbot2_gui_monitoring_single_jointplugin)

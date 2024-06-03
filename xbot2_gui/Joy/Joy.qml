@@ -12,6 +12,8 @@ import Font
 
 Item {
 
+    id: root
+
     LayoutClassHelper {
         id: layout
         targetWidth: parent.width
@@ -56,10 +58,7 @@ Item {
 
         contentItem: Column {
 
-
             spacing: 3
-
-
 
             Label {
                 text: ' max speed'
@@ -71,6 +70,9 @@ Item {
                 from: 0.0
                 to: 2.0
                 value: 0.2
+                onValueModified: function(v) {
+                    maxLinearV = v
+                }
             }
 
             Item {
@@ -126,8 +128,8 @@ Item {
     }
 
     property var vref: [0, 0, 0, 0, 0, 0]
-    property alias maxLinearV: maxSpeedLinearSpinBox.value
-    property alias maxAngularV: maxSpeedLinearSpinBox.value
+    property real maxLinearV: maxSpeedLinearSpinBox.value
+    property alias maxAngularV: root.maxLinearV
     property alias currentTask: setupCard.currentTask
 
     RowLayout {
@@ -246,7 +248,6 @@ Item {
         backgroundColor: leftPad.backgroundColor
 
         onJoystickMoved: function(x, y) {
-            console.log(`${x} ${y}`)
             vref[5] = -x*maxAngularV
             Joy.sendVref(currentTask, vref)
         }

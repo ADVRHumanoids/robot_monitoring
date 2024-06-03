@@ -24,6 +24,8 @@ target_include_directories(InternalUrdfParser PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/external/boost/include
 )
 
+target_compile_options(InternalUrdfParser PUBLIC -pthread)
+
 
 # rbdl
 set(RBDL_ROOT "external/rbdl-orb")
@@ -48,6 +50,8 @@ target_include_directories(InternalRbdl PUBLIC
 
 )
 
+target_compile_options(InternalRbdl PUBLIC -pthread)
+
 target_link_libraries(InternalRbdl
     PUBLIC
     InternalUrdfParser
@@ -57,9 +61,23 @@ target_link_libraries(InternalRbdl
 
 
 # use rbdl
-
 add_library(RobotModel STATIC
     robot_model.cpp)
 
 target_link_libraries(RobotModel PRIVATE InternalRbdl PUBLIC Qt6::Core)
+
+# register qml
+add_library(xbot2_gui_robotmodel STATIC)
+
+qt_add_qml_module(xbot2_gui_robotmodel
+    URI RobotModel
+    VERSION 1.0
+    SOURCES
+    robot_model.h robot_model.cpp
+)
+
+target_link_libraries(xbot2_gui_robotmodel PUBLIC InternalRbdl)
+
+target_link_libraries(xbot2_gui PRIVATE xbot2_gui_robotmodelplugin)
+
 

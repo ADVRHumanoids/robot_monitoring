@@ -11,8 +11,8 @@ qt_add_qml_module(xbot2_gui_concert
     DrillTab.qml
     Conda.qml
     SliderModelItem.qml
-    QML_FILES Sanding.qml
-    QML_FILES Sanding.js
+    Sanding.qml
+    Sanding.js
 )
 
 target_link_libraries(xbot2_gui PRIVATE xbot2_gui_concertplugin)

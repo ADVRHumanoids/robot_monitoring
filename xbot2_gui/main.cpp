@@ -3,6 +3,7 @@
 #include <QQmlContext>
 #include <QtQuickControls2/QQuickStyle>
 #include <QFont>
+#include <QCommandLineParser>
 #include <QtWidgets/QApplication>
 #include <QtQml/qqmlregistration.h>
 
@@ -28,11 +29,17 @@ public:
         QObject(parent)
     {
         version = {XBOT2_GUI_VERSION_MAJOR, XBOT2_GUI_VERSION_MINOR, XBOT2_GUI_VERSION_PATCH};
+        versionString = QString("%1.%2.%3").arg(version[0]).arg(version[1]).arg(version[2]);
+#ifdef __EMSCRIPTEN__
+        wasm = true;
+#endif
     }
 
     Q_PROPERTY(QList<int> version MEMBER version);
     Q_PROPERTY(QString hostname MEMBER hostname);
     Q_PROPERTY(int port MEMBER port);
+    Q_PROPERTY(bool wasm MEMBER wasm);
+    Q_PROPERTY(bool portFromCmdLine MEMBER portFromCmdLine);
     Q_INVOKABLE void updateUi();
     Q_INVOKABLE uint64_t getTimeNs() const;
     Q_INVOKABLE static QUrl fromUserInput(const QString& userInput)
@@ -44,33 +51,20 @@ public:
     }
 
 public:
-    QString hostname { "localhost" }; // "10.240.23.38" };
+
+    QString hostname { "localhost" };
     int port { 8080 };
     QList<int> version;
+    QString versionString;
+    bool wasm = false;
+    bool portFromCmdLine = false;
 
 
 };
 
 int main(int argc, char *argv[])
 {
-
-//    QDirIterator it(":", QDirIterator::Subdirectories);
-//    while (it.hasNext()) {
-//        qDebug() << it.next();
-//    }
-
-    // verbose output
-    //    qputenv("QSG_INFO", "1");
-    QQuickStyle::setStyle("Material");
-    qputenv("QT_QUICK_CONTROLS_MATERIAL_THEME", "Dark");
-    qputenv("QT_QUICK_CONTROLS_MATERIAL_VARIANT", "Dense");
-    qputenv("QT3D_RENDERER", "opengl");
-
-
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-#endif
-
+    // create appdata global object
     AppData appdata;
 
 #ifdef __EMSCRIPTEN__
@@ -79,10 +73,8 @@ int main(int argc, char *argv[])
     appdata.port = std::stoi(location["port"].as<std::string>());
 #endif
 
-#ifndef __EMSCRIPTEN__
-    QtWebView::initialize();
-#endif
 
+    // set app properties
     QApplication app(argc, argv);
     auto font = app.font();
     font.setPixelSize(12);
@@ -91,15 +83,47 @@ int main(int argc, char *argv[])
     app.setOrganizationName("iit-hhcm");
     app.setOrganizationDomain("hhcm.iit");
     app.setApplicationName("XBot2 UI");
+    app.setApplicationVersion(appdata.versionString);
 
+
+    // cli
+    QCommandLineParser parser;
+    parser.addHelpOption();
+    parser.addVersionOption();
+
+    parser.addOptions({
+                       {{"p", "port"}, "Server port", "port"}
+    });
+
+    parser.process(app);
+
+    if(parser.isSet("port"))
+    {
+        appdata.port = parser.value("port").toInt();
+        appdata.portFromCmdLine = true;
+        qInfo() << "set port to " << appdata.port;
+    }
+
+    // setup environment
+
+    // verbose output
+    //    qputenv("QSG_INFO", "1");
+    QQuickStyle::setStyle("Material");
+    qputenv("QT_QUICK_CONTROLS_MATERIAL_THEME", "Dark");
+    qputenv("QT_QUICK_CONTROLS_MATERIAL_VARIANT", "Dense");
+    qputenv("QT3D_RENDERER", "opengl");
+
+#ifndef __EMSCRIPTEN__
+    // initialize internal browser
+    QtWebView::initialize();
+#endif
+
+
+    // register appdata
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("appData", &appdata);
 
-    qmlRegisterType<RobotModel>("xbot2_gui.RobotModel", 1, 0, "RobotModel");
-#ifndef __EMSCRIPTEN__
-    qmlRegisterType<MeshGeometry>("xbot2_gui.MeshGeometry", 1, 0, "MeshGeometry");
-#endif
-
+    // load main qml file
     const QUrl url(QStringLiteral("qrc:/qt/qml/Main/main.qml"));
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
                      &app, [url](QObject *obj, const QUrl &objUrl) {
@@ -108,7 +132,7 @@ int main(int argc, char *argv[])
     }, Qt::QueuedConnection);
     engine.load(url);
 
-
+    // run event loop
     return app.exec();
 }
 

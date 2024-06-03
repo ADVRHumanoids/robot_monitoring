@@ -16,6 +16,7 @@ find_package(Qt6 COMPONENTS
     Network
     ShaderTools
     DataVisualization
+    TextToSpeech
     REQUIRED)
 
 if(NOT EMSCRIPTEN)
@@ -48,10 +49,8 @@ qt_add_qml_module(xbot2_gui
     PageItem.qml
     ClientEndpoint.qml
     ClientEndpoint.js
-    DeserializationWorker.mjs
+    DeserializationWorker.js
     sharedData.js
-    QML_FILES Horizon/Horizon.js
-
 )
 
 target_compile_definitions(xbot2_gui
@@ -65,6 +64,7 @@ target_link_libraries(xbot2_gui
     Qt6::WebSockets
     Qt6::QuickControls2
     Qt6::Widgets
+    Qt6::TextToSpeech
 )
 
 if(NOT EMSCRIPTEN)
@@ -89,11 +89,13 @@ target_compile_definitions(xbot2_gui PRIVATE -DXBOT2_GUI_VERSION_PATCH=${robot_m
 
 ## add modules
 
+add_subdirectory(Audio)
+
+add_subdirectory(Common)
+
 add_subdirectory(Concert)
 
 add_subdirectory(Horizon)
-
-add_subdirectory(Common)
 
 add_subdirectory(Font)
 
@@ -140,8 +142,6 @@ add_subdirectory(Viewer3D)
 
 # robot model
 add_subdirectory(RobotModel/)
-
-target_link_libraries(xbot2_gui PRIVATE RobotModel)
 
 # quick3d
 if(NOT EMSCRIPTEN)

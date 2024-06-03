@@ -97,6 +97,11 @@ Item
 
     // method for sending a text message over udp
     function sendTextMessageUdp(msg) {
+
+        if(appData.wasm) {
+            sendTextMessage(msg)
+        }
+
         if(udp.bound) {
             bytesSent += msg.length
             udp.sendTextMessage(msg)
@@ -119,8 +124,16 @@ Item
 
             root.bytesRecv += message.length
 
-            // send to worker thread for deserialization
-            worker.sendMessage(message)
+            if(appData.wasm) {
+                // deserialize directly since workers have issues in wasm
+                Client.handleMessage(JSON.parse(message))
+            }
+            else {
+                // send to worker thread for deserialization
+                worker.sendMessage(message)
+            }
+
+
 
         }
 
@@ -129,22 +142,45 @@ Item
             print(`status changed [url ${url}]: ${socket.status}`)
 
             if (socket.status === WebSocket.Error) {
+
                 CommonProperties.notifications.error('Error: ' + socket.errorString, 'webclient')
+
                 error(socket.errorString)
+
                 active = false
+
                 isConnected = false
+
                 root.isFinalized = false
+
             } else if (socket.status === WebSocket.Open) {
+
                 CommonProperties.notifications.info('Server connected', 'webclient')
+
                 connected('Server connected')
+
                 isConnected = true
+
                 root.bytesRecv = 0
                 root.bytesSent = 0
-                doRequestAsync("GET", "/udp", "")
-                    .then((response) => {
-                                  udp.hostname = root.hostname
-                                  udp.port = response.port
-                              })
+
+                if(appData.wasm) {
+                    root.sendTextMessage(
+                                JSON.stringify(
+                                    {
+                                        'type': 'request_ws_udp_tunnel'
+                                    }
+                                    )
+                                )
+                }
+                else {
+                    doRequestAsync("GET", "/udp", "")
+                        .then((response) => {
+                                      udp.hostname = root.hostname
+                                      udp.port = response.port
+                                  })
+                }
+
             } else if (socket.status === WebSocket.Closed) {
                 CommonProperties.notifications.error('Socket closed', 'webclient')
                 isConnected = false
@@ -166,7 +202,7 @@ Item
     WorkerScript {
 
         id: worker
-        source: "DeserializationWorker.mjs"
+        source: "DeserializationWorker.js"
         onMessage: function(msg) {
             Client.handleMessage(msg)
         }
@@ -230,6 +266,12 @@ Item
         category: 'client'
         property alias hostname: root.hostname
         property alias port: root.port
+    }
+
+    Component.onCompleted: {
+        if(appData.portFromCmdLine) {
+            root.port = appData.port
+        }
     }
 
 }

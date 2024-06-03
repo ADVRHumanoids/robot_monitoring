@@ -8,6 +8,25 @@ launcher:
   type: launcher
   launcher_config: launcher_config.yaml
 
+concert:
+  type: concert
+  sanding_tool_activated_service: ciao
+  blob_array_topic: ciaoo
+  sanding_status_topic: ciaooo
+  sanding_progress_topic: ciaoooo
+
+speech:
+  prompt: hey concert 
+  commands:
+    teaching: /voice_commands/teaching
+    lift: /voice_commands/lift
+    transportation: /voice_commands/transportation
+  grammar:
+    - hey concert
+    - teaching mode
+    - lift the object
+    - enable transportation
+
 #horizon:
 #  type: horizon  
 #ecat_master_process:

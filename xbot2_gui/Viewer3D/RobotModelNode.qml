@@ -7,7 +7,7 @@ import Qt3D.Animation
 import QtQuick.Scene2D
 import QtQuick.Scene3D
 
-import xbot2_gui.RobotModel
+import RobotModel
 import Main
 import "RobotModelNode.js" as Logic
 

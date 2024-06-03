@@ -1,4 +1,5 @@
 import QtQuick
+import QtCore
 import QtQuick.Window
 import QtQuick.Layouts
 import QtQuick.Controls
@@ -121,13 +122,13 @@ ApplicationWindow {
             visible: requestedPages.indexOf(name) > -1
         }
 
-        // PageItem {
-        //     name: "Playground"
-        //     page: "/qt/qml/TestThings/Playground.qml"
-        //     iconText: MaterialSymbolNames.playground
-        //     iconFont: syms.font.family
-        //     active: true
-        // }
+        PageItem {
+            name: "Playground"
+            page: "/qt/qml/Audio/Prova.qml"
+            iconText: MaterialSymbolNames.playground
+            iconFont: syms.font.family
+            active: true
+        }
 
         PageItem {
             name: "Builder"
@@ -450,18 +451,12 @@ ApplicationWindow {
                                       })
     }
 
-    // a timer to periodically try connection
-    // with server
-    //    Timer {
-    //        id: reconnectTimer
-    //        interval: 1000
-    //        running: !client.active
-    //        repeat: true
-
-    //        onTriggered: {
-    //            client.active = true
-    //        }
-
-    //    }
+    Settings {
+        category: 'layout'
+        property alias x: mainWindow.x
+        property alias y: mainWindow.y
+        property alias width: mainWindow.width
+        property alias height: mainWindow.height
+    }
 
 }

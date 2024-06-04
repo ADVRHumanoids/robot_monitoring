@@ -150,7 +150,7 @@ def main():
     async def run_ui():
 
         proc = await asyncio.create_subprocess_shell(
-            f'/home/alaurenzi/code/next_ui/build-robot_monitoring-Desktop_Qt_6_6_0_GCC_64bit-RelWithDebInfo/xbot2_gui/xbot2_gui -p {args.port}',
+            f'new-xbot2-gui -p {args.port}',
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.STDOUT,
                     stdin=asyncio.subprocess.PIPE)

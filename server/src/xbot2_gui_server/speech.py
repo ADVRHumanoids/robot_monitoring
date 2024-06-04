@@ -134,7 +134,7 @@ class SpeechHandler:
         finally:
             print('command end')
             self.cmd_queue = None 
-            await self.srv.ws_send_to_all(dict(type='speech_cmd', cmd='__end__'))
+            # await self.srv.ws_send_to_all(dict(type='speech_cmd', cmd='__end__'))
     
 
     async def run(self):

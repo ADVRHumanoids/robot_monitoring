@@ -97,12 +97,16 @@ Item {
         }
 
         Label {
+            text: 'Recognized text:'
+        }
+
+        Label {
 
             id: speechTextLabel
 
             font.pixelSize: 40
 
-            text: 'niente'
+            text: '--'
 
             onTextChanged: timer.start()
 
@@ -112,6 +116,20 @@ Item {
                 onTriggered: speechTextLabel.text = '--'
             }
 
+        }
+
+        Label {
+            text: 'Status:'
+        }
+
+
+        Label {
+
+            id: statusLabel
+
+            font.pixelSize: 40
+
+            text: 'waiting for magic prompt'
         }
 
     }
@@ -138,24 +156,30 @@ Item {
             if(msg.type === 'speech_cmd') {
 
                 if(msg.cmd === '__start__') {
-                    tts.say('waiting for command')
+                    statusLabel.text = 'waiting for command'
+                    tts.say(statusLabel.text)
                 }
                 else if(msg.cmd === '__invalid__') {
-                    tts.say('invalid command')
+                    statusLabel.text = 'invalid command'
+                    tts.say(statusLabel.text)
                 }
                 else if(msg.cmd === '__done__') {
-                    tts.say('executing command')
+                    statusLabel.text = 'command executed ok'
                 }
                 else if(msg.cmd === '__timeout__') {
-                    tts.say('no command received')
+                    statusLabel.text = 'no command received'
+                    tts.say(statusLabel.text)
                 }
                 else if(msg.cmd === '__error__') {
-                    tts.say('an error occurred')
+                    statusLabel.text = 'an error occurred'
+                    tts.say(statusLabel.text)
                 }
                 else if(msg.cmd === '__end__') {
+                    statusLabel.text = 'waiting for magic prompt'
                 }
                 else {
-                    tts.say('will execute command: ' + msg.cmd)
+                    statusLabel.text = 'will execute command: ' + msg.cmd
+                    tts.say(statusLabel.text)
                 }
 
                 return

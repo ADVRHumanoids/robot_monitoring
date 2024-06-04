@@ -41,19 +41,19 @@ void AudioSource::checkMicrophonePermissions()
         qInfo() << "mic permission granted";
     }
 
-    QBluetoothPermission btPermission;
+    // QBluetoothPermission btPermission;
 
-    switch (qApp->checkPermission(btPermission)) {
-    case Qt::PermissionStatus::Undetermined:
-        qApp->requestPermission(btPermission, this,
-                                &AudioSource::checkMicrophonePermissions);
-        return;
-    case Qt::PermissionStatus::Denied:
-        qFatal() << "bt permission denied";
-        return;
-    case Qt::PermissionStatus::Granted:
-        qInfo() << "bt permission granted";
-    }
+    // switch (qApp->checkPermission(btPermission)) {
+    // case Qt::PermissionStatus::Undetermined:
+    //     qApp->requestPermission(btPermission, this,
+    //                             &AudioSource::checkMicrophonePermissions);
+    //     return;
+    // case Qt::PermissionStatus::Denied:
+    //     qFatal() << "bt permission denied";
+    //     return;
+    // case Qt::PermissionStatus::Granted:
+    //     qInfo() << "bt permission granted";
+    // }
 }
 
 void AudioSource::initializeDevices()
@@ -67,6 +67,8 @@ void AudioSource::initializeDevices()
 
     for(auto& deviceInfo : _media_devices->audioInputs())
     {
+        qInfo() << "device " << deviceInfo.description() << " id " << deviceInfo.id();
+
         if (deviceInfo != defaultDeviceInfo)
         {
             _audio_dev_descr.append(deviceInfo.description());

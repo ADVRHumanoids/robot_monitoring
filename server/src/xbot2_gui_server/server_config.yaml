@@ -21,6 +21,7 @@ speech:
     teaching: /voice_commands/teaching
     lift: /voice_commands/lift
     transportation: /voice_commands/transportation
+    autonomous: adssdd
 
 #horizon:
 #  type: horizon  

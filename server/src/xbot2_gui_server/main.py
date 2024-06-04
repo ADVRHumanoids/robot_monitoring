@@ -150,19 +150,22 @@ def main():
     async def run_ui():
 
         proc = await asyncio.create_subprocess_shell(
-            f'new-xbot2-gui -p {args.port}',
+            f'bash -ic "new-xbot2-gui -p {args.port}"',
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.STDOUT,
                     stdin=asyncio.subprocess.PIPE)
         
         while True:
-            l = await proc.stdout.readline()
-            if len(l) == 0:
-                retcode = await proc.wait()
-                print(f'[ui] process exited with {retcode}')
-                exit(retcode)
-            l = l.decode()
-            print('[ui]', l, end='')
+            try:
+                l = await proc.stdout.readline()
+                if len(l) == 0:
+                    retcode = await proc.wait()
+                    print(f'[ui] process exited with {retcode}')
+                    sys.exit(retcode)
+                l = l.decode()
+                print('[ui]', l, end='')
+            except KeyboardInterrupt:
+                return
 
     if args.launch_ui:
         srv.schedule_task(run_ui())

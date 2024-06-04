@@ -7,7 +7,6 @@ import queue
 import time
 import base64
 
-import pyaudio
 import vosk
 
 import rospy
@@ -37,6 +36,7 @@ class SpeechHandler:
         self.text_queue = queue.Queue()
 
         self.vosk_thread = threading.Thread(target=self.vosk_thread_main)
+        self.vosk_thread.setDaemon(daemonic=True)
         self.vosk_thread.start()
 
         self.grammar = config.get('grammar', [])

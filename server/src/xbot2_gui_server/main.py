@@ -129,18 +129,19 @@ def main():
         except ModuleNotFoundError:
             pass
 
+        print('load extensions completed', extensions)
+
     # schedule extension loading task
     srv.schedule_task(load_extensions())
 
-    # parse requested pages
-    requested_pages = cfg.get('requested_pages', [])
-    for e in extensions:
-        try:
-            requested_pages += e.requested_pages
-        except:
-            pass 
-
     async def requested_pages_handler(req):
+        # parse requested pages
+        requested_pages = cfg.get('requested_pages', [])
+        for e in extensions:
+            try:
+                requested_pages += e.requested_pages
+            except:
+                pass 
         print(requested_pages)
         return web.Response(text=json.dumps({'requested_pages': requested_pages}))
 

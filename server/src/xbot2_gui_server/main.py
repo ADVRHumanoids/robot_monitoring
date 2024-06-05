@@ -129,18 +129,19 @@ def main():
         except ModuleNotFoundError:
             pass
 
+        print('load extensions completed', extensions)
+
     # schedule extension loading task
     srv.schedule_task(load_extensions())
 
-    # parse requested pages
-    requested_pages = cfg.get('requested_pages', [])
-    for e in extensions:
-        try:
-            requested_pages += e.requested_pages
-        except:
-            pass 
-
     async def requested_pages_handler(req):
+        # parse requested pages
+        requested_pages = cfg.get('requested_pages', [])
+        for e in extensions:
+            try:
+                requested_pages += e.requested_pages
+            except:
+                pass 
         print(requested_pages)
         return web.Response(text=json.dumps({'requested_pages': requested_pages}))
 
@@ -150,19 +151,22 @@ def main():
     async def run_ui():
 
         proc = await asyncio.create_subprocess_shell(
-            f'/home/alaurenzi/code/next_ui/build-robot_monitoring-Desktop_Qt_6_6_0_GCC_64bit-RelWithDebInfo/xbot2_gui/xbot2_gui -p {args.port}',
+            f'bash -ic "new-xbot2-gui -p {args.port}"',
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.STDOUT,
                     stdin=asyncio.subprocess.PIPE)
         
         while True:
-            l = await proc.stdout.readline()
-            if len(l) == 0:
-                retcode = await proc.wait()
-                print(f'[ui] process exited with {retcode}')
-                exit(retcode)
-            l = l.decode()
-            print('[ui]', l, end='')
+            try:
+                l = await proc.stdout.readline()
+                if len(l) == 0:
+                    retcode = await proc.wait()
+                    print(f'[ui] process exited with {retcode}')
+                    sys.exit(retcode)
+                l = l.decode()
+                print('[ui]', l, end='')
+            except KeyboardInterrupt:
+                return
 
     if args.launch_ui:
         srv.schedule_task(run_ui())

@@ -8,7 +8,7 @@ import "Drilling.js" as Logic
 Control {
 
     property alias motionTarget: moveCombo.currentText
-    property alias maxSpeed: maxSpeedLinearSpinBox.value
+    property real maxSpeed: maxSpeedLinearSpinBox.value
     property alias joyXEnabled: chkX.checked
     property alias joyYEnabled: chkY.checked
     property alias joyZEnabled: chkZ.checked
@@ -75,6 +75,10 @@ Control {
             from: 0.0
             to: 2.0
             value: 0.2
+
+            onValueModified: (v) => {
+                                 root.maxSpeed = v
+                             }
         }
 
         Item {

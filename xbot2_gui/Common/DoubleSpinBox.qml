@@ -29,7 +29,8 @@ Item {
         editable: true
 
         onValueModified: {
-            root.valueModified(root.from + (value / to) * root._range)
+            let v = root.from + (value / to) * root._range
+            root.valueModified(v)
         }
 
         // onValueChanged: {

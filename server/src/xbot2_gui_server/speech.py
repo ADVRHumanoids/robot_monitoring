@@ -7,7 +7,6 @@ import queue
 import time
 import base64
 
-import pyaudio
 import vosk
 
 import rospy
@@ -37,6 +36,7 @@ class SpeechHandler:
         self.text_queue = queue.Queue()
 
         self.vosk_thread = threading.Thread(target=self.vosk_thread_main)
+        self.vosk_thread.setDaemon(daemonic=True)
         self.vosk_thread.start()
 
         self.grammar = config.get('grammar', [])
@@ -134,7 +134,7 @@ class SpeechHandler:
         finally:
             print('command end')
             self.cmd_queue = None 
-            await self.srv.ws_send_to_all(dict(type='speech_cmd', cmd='__end__'))
+            # await self.srv.ws_send_to_all(dict(type='speech_cmd', cmd='__end__'))
     
 
     async def run(self):

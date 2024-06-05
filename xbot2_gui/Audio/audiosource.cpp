@@ -2,11 +2,64 @@
 #include <QPermissions>
 #include <QCoreApplication>
 
-AudioSource::AudioSource()
+#include <QJniObject>
+
+std::function<void(QByteArray)> __audio_recv_cb = [](QByteArray){};
+
+static void onAudioDataReceivedBase64(JNIEnv * env, jobject /*thiz*/, jbyteArray audio)
 {
+    jbyte* audio_data =  env->GetByteArrayElements(audio, 0);
+    int size = env->GetArrayLength(audio);
+    __audio_recv_cb(QByteArray(reinterpret_cast<char*>(audio_data), size));
+}
+
+
+AudioSource::AudioSource():
+    _buf_dev(&_buf_internal)
+{
+
+#ifdef ANDROID
+    QJniObject::callStaticMethod<void>(
+        "it/iit/hhcm/xbot2_gui_client/AudioSource",
+        "setContext",
+        QNativeInterface::QAndroidApplication::context());
+
+
+    QJniObject devs;
+
+    devs = QJniObject::callStaticObjectMethod(
+        "it/iit/hhcm/xbot2_gui_client/AudioSource",
+        "getAudioInputDevices",
+        "()[Ljava/lang/String;");
+
+
+    if (devs.isValid()) {
+        QJniEnvironment env;
+        jobjectArray devsArray = static_cast<jobjectArray>(devs.object());
+        const jint size = env->GetArrayLength(devsArray);
+        for (int i = 0; i < size; ++i) {
+            QString val = QJniObject(env->GetObjectArrayElement(devsArray, i)).toString();
+            qInfo() << val;
+        }
+    }
+
+    const JNINativeMethod methods[] = {
+        { "onAudioDataReceivedBase64", "([B)V", (void *)onAudioDataReceivedBase64 }
+    };
+
+    bool registered = QJniEnvironment().registerNativeMethods(
+        "it/iit/hhcm/xbot2_gui_client/AudioSource", methods,
+        std::size(methods));
+
+    if(!registered)
+    {
+        qFatal() << "error registering native methods";
+    }
+#endif
+
     checkMicrophonePermissions();
 
-    _buf_dev.open(QBuffer::ReadWrite);
+    _buf_dev.open(QBuffer::ReadOnly);
 
     _media_devices = std::make_unique<QMediaDevices>();
 
@@ -95,6 +148,32 @@ qreal AudioSource::calculateLevel(const char *data, qint64 len) const
     return maxValue;
 }
 
+#ifdef ANDROID
+void AudioSource::initializeAudio(const QAudioDevice &deviceInfo)
+{
+    _format.setSampleRate(16000);
+    _format.setChannelCount(1);
+    _format.setSampleFormat(QAudioFormat::Int16);
+
+    __audio_recv_cb = [this](QByteArray data)
+    {
+        _buf.append(data);
+
+        auto lvl = calculateLevel(data.constData(), data.size());
+
+        emit levelChanged(lvl);
+
+        _level = lvl;
+
+        emit bytesAvailableChanged(_buf.size());
+    };
+
+    QJniObject::callStaticMethod<void>(
+        "it/iit/hhcm/xbot2_gui_client/AudioSource",
+        "startSoundRecording",
+        deviceInfo.id().toInt());
+}
+#else
 void AudioSource::initializeAudio(const QAudioDevice &deviceInfo)
 {
     _format.setSampleRate(16000);
@@ -167,3 +246,4 @@ void AudioSource::initializeAudio(const QAudioDevice &deviceInfo)
 
             });
 }
+#endif

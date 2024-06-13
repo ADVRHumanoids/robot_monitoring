@@ -1,6 +1,8 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
+// Adapted by A. Laurenzi, IIT (2024)
+
 package it.iit.hhcm.xbot2_gui_client;
 
 import java.util.ArrayList;

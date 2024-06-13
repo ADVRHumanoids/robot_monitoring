@@ -10,13 +10,11 @@ Item {
 
     property ClientEndpoint client
 
-    AudioSource {
+    Connections {
 
-        id: audioSrc
+        target: AudioBroadcaster
 
-        property bool enableSend: tts.state !== TextToSpeech.Speaking
-
-        onLevelChanged: (level) => {
+        function onLevelChanged() {
 
             // plot audio level
 
@@ -27,26 +25,9 @@ Item {
                 plot.initialTime = appData.getTimeNs() * 1e-9
             }
 
-            plot.addPoint(plot.levelTimeSeries, appData.getTimeNs() * 1e-9 - plot.initialTime, level)
-
+            plot.addPoint(plot.levelTimeSeries, appData.getTimeNs() * 1e-9 - plot.initialTime, AudioBroadcaster.level)
         }
-
-        onReadyRead: {
-
-            if(bytesAvailable < 2048 || !enableSend) return
-
-            let data = readString(2048)
-
-            let msg = {
-                'type': 'speech',
-                'data': data
-            }
-
-            client.sendTextMessage(JSON.stringify(msg))
-        }
-
     }
-
 
     TextToSpeech {
 
@@ -60,17 +41,29 @@ Item {
 
         ComboBox {
 
-            model: audioSrc.devices
+            model: AudioBroadcaster.devices
 
             width: parent.width
 
-            onCurrentTextChanged: audioSrc.currentDevice = currentText
+            onCurrentTextChanged: AudioBroadcaster.currentDevice = currentText
 
         }
 
-        Button {
-            text: 'Stop'
-            onClicked: audioSrc.stop()
+        Row {
+
+            spacing: 24
+
+            Button {
+                text: 'Stop'
+                onClicked: AudioBroadcaster.stop()
+            }
+
+
+            Button {
+                text: 'Start'
+                onClicked: AudioBroadcaster.start()
+            }
+
         }
 
         Plotter {
@@ -97,16 +90,12 @@ Item {
         }
 
         Label {
-            text: 'Recognized text:'
-        }
-
-        Label {
 
             id: speechTextLabel
 
             font.pixelSize: 40
 
-            text: '--'
+            text: 'niente'
 
             onTextChanged: timer.start()
 
@@ -116,20 +105,6 @@ Item {
                 onTriggered: speechTextLabel.text = '--'
             }
 
-        }
-
-        Label {
-            text: 'Status:'
-        }
-
-
-        Label {
-
-            id: statusLabel
-
-            font.pixelSize: 40
-
-            text: 'waiting for magic prompt'
         }
 
     }
@@ -156,30 +131,24 @@ Item {
             if(msg.type === 'speech_cmd') {
 
                 if(msg.cmd === '__start__') {
-                    statusLabel.text = 'waiting for command'
-                    tts.say(statusLabel.text)
+                    tts.say('waiting for command')
                 }
                 else if(msg.cmd === '__invalid__') {
-                    statusLabel.text = 'invalid command'
-                    tts.say(statusLabel.text)
+                    tts.say('invalid command')
                 }
                 else if(msg.cmd === '__done__') {
-                    statusLabel.text = 'command executed ok'
+                    tts.say('executing command')
                 }
                 else if(msg.cmd === '__timeout__') {
-                    statusLabel.text = 'no command received'
-                    tts.say(statusLabel.text)
+                    tts.say('no command received')
                 }
                 else if(msg.cmd === '__error__') {
-                    statusLabel.text = 'an error occurred'
-                    tts.say(statusLabel.text)
+                    tts.say('an error occurred')
                 }
                 else if(msg.cmd === '__end__') {
-                    statusLabel.text = 'waiting for magic prompt'
                 }
                 else {
-                    statusLabel.text = 'will execute command: ' + msg.cmd
-                    tts.say(statusLabel.text)
+                    tts.say('will execute command: ' + msg.cmd)
                 }
 
                 return

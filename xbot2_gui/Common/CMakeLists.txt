@@ -23,10 +23,10 @@ qt_add_qml_module(xbot2_gui_common
     SmallToolButton.qml
     MultiPaneResponsiveLayout.qml
     LayoutClassHelper.qml
-    QML_FILES CheckList.qml
-    QML_FILES CheckListItem.qml
-    QML_FILES NotificationPopup.qml
-    QML_FILES ResizableRectangle.qml
+    CheckList.qml
+    CheckListItem.qml
+    NotificationPopup.qml
+    ResizableRectangle.qml
 )
 
 target_link_libraries(xbot2_gui PRIVATE xbot2_gui_commonplugin)

@@ -73,6 +73,29 @@ MultiPaneResponsiveLayout {
     id: root
 
 
+
+    MaterialSymbols {
+        id: syms
+    }
+
+
+
+    Popup {
+        id: configPopup
+        anchors.centerIn: Overlay.overlay
+        width: Overlay.overlay.width * 0.8
+        height: Overlay.overlay.height * 0.8
+        Configuration {
+            anchors.fill: parent
+        }
+        modal: true
+        focus: true
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        padding: 16
+        clip: true
+    }
+
+
     ScrollView {
 
         property string iconText: 'Status'
@@ -83,10 +106,19 @@ MultiPaneResponsiveLayout {
 
         Column {
 
+            id: leftCol
             spacing: CommonProperties.geom.spacing
+            width: scroll.contentWidth
 
             SectionHeader {
                 text: `XBot2 GUI ${appData.version.join('.')}`
+                SmallToolButton {
+                    text: MaterialSymbolNames.settings
+                    font.family: syms.font.family
+                    font.pixelSize: 24
+                    onClicked: configPopup.open()
+                }
+                width: leftCol.width
             }
 
             ServerStatusCard {

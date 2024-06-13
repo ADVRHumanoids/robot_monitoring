@@ -27,9 +27,18 @@ class SpeechHandler:
         self.srv.schedule_task(self.run())
         self.rate = 30
 
-        # self.srv.add_route('POST', '/concert/do_drill',
-        #                    self.do_drill_handler,
-        #                    'concert_do_drill')
+        self.srv.add_route('POST', '/speech/enable_commands',
+                           self.enable_commands_handler,
+                           'speech_enable_commands')
+
+
+        self.srv.add_route('POST', '/speech/send_command',
+                           self.send_command_handler,
+                           'speech_send_command')
+
+        self.srv.add_route('GET', '/speech/info',
+                           self.info_handler,
+                           'speech_info')
     
 
         self.audio_queue = queue.Queue()
@@ -43,6 +52,8 @@ class SpeechHandler:
         self.cmd_dict = config.get('commands', {})
         self.prompt = config['prompt']
         self.cmd_queue = None
+
+        self.enable_commands = False
 
         # audio (this is for playing received audio - testing only)
         # audio = pyaudio.PyAudio()
@@ -80,6 +91,51 @@ class SpeechHandler:
     #     return self.audio_queue.get(), pyaudio.paContinue
 
 
+    @utils.handle_exceptions
+    async def send_command_handler(self, req):
+
+        cmd : str = req.rel_url.query['cmd']
+        cmd = cmd.lower()
+
+        success, msg = await self.send_command(cmd)
+
+        return web.Response(text=json.dumps(
+            {
+                'success': success,
+                'message': msg
+            }
+            ))
+
+
+    @utils.handle_exceptions
+    async def enable_commands_handler(self, req):
+
+        self.enable_commands = utils.str2bool(req.rel_url.query['active'])
+
+        return web.Response(text=json.dumps(
+            {
+                'success': True,
+                'message': 'voice commands active:' + str(self.enable_commands)
+            }
+            ))
+
+
+    @utils.handle_exceptions
+    async def info_handler(self, req):
+
+        return web.Response(text=json.dumps(
+            {
+                'body': {
+                    'active': self.enable_commands,
+                    'prompt': self.prompt,
+                    'commands': list(self.cmd_dict.keys())
+                },
+                'success': True,
+                'message': 'voice commands active:' + str(self.enable_commands)
+            }
+            ))
+
+
     def vosk_thread_main(self):
 
         md = vosk.Model(lang='en-us')
@@ -109,6 +165,23 @@ class SpeechHandler:
                     self.text_queue.put(res)
 
 
+    async def send_command(self, cmd):
+        if cmd not in self.cmd_dict.keys():
+            await self.srv.ws_send_to_all(dict(type='speech_cmd', cmd='__invalid__'))
+            return False, 'invalid command'
+        else:
+            await self.srv.ws_send_to_all(dict(type='speech_cmd', cmd=cmd))
+            srv = self.cmd_dict[cmd]
+            srv = rospy.ServiceProxy(srv, Trigger)
+            try:
+                srv()
+                await self.srv.ws_send_to_all(dict(type='speech_cmd', cmd='__done__'))
+                return True, ''
+            except:
+                await self.srv.ws_send_to_all(dict(type='speech_cmd', cmd='__error__'))
+                return False, 'error while executing command'
+
+
     async def listen_to_command(self, timeout):
         print('started listening')
         await self.srv.ws_send_to_all(dict(type='speech_cmd', cmd='__start__'))
@@ -116,17 +189,7 @@ class SpeechHandler:
             cmd = await asyncio.wait_for(self.cmd_queue.get(), timeout=timeout)
             cmd = cmd.replace('[unk]', '').strip()
             print(f'processing command "{cmd}"')
-            if cmd not in self.cmd_dict.keys():
-                await self.srv.ws_send_to_all(dict(type='speech_cmd', cmd='__invalid__'))
-            else:
-                await self.srv.ws_send_to_all(dict(type='speech_cmd', cmd=cmd))
-                srv = self.cmd_dict[cmd]
-                srv = rospy.ServiceProxy(srv, Trigger)
-                try:
-                    srv()
-                    await self.srv.ws_send_to_all(dict(type='speech_cmd', cmd='__done__'))
-                except:
-                    await self.srv.ws_send_to_all(dict(type='speech_cmd', cmd='__error__'))
+            await self.send_command(cmd)
                 
         except asyncio.TimeoutError as e:
             await self.srv.ws_send_to_all(dict(type='speech_cmd', cmd='__timeout__'))
@@ -147,7 +210,7 @@ class SpeechHandler:
                     txt = self.text_queue.get_nowait().strip()
                     await self.srv.ws_send_to_all(dict(type='speech_text', text=txt))
 
-                    if txt == self.prompt and self.cmd_queue is None:
+                    if self.enable_commands and txt == self.prompt and self.cmd_queue is None:
                         self.cmd_queue = asyncio.Queue()
                         self.srv.schedule_task(self.listen_to_command(timeout=8))
                         

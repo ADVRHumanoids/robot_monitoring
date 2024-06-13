@@ -2,6 +2,7 @@
 #include <QPermissions>
 #include <QCoreApplication>
 
+#ifdef ANDROID
 #include <QJniObject>
 
 std::function<void(QByteArray)> __audio_recv_cb = [](QByteArray){};
@@ -12,26 +13,30 @@ static void onAudioDataReceivedBase64(JNIEnv * env, jobject /*thiz*/, jbyteArray
     int size = env->GetArrayLength(audio);
     __audio_recv_cb(QByteArray(reinterpret_cast<char*>(audio_data), size));
 }
-
+#endif
 
 AudioSource::AudioSource():
     _buf_dev(&_buf_internal)
 {
 
+    connect(this, &AudioSource::activeChanged,
+            [this](bool active)
+            {
+                if(active) start();
+                else stop();
+            });
+
 #ifdef ANDROID
+
     QJniObject::callStaticMethod<void>(
         "it/iit/hhcm/xbot2_gui_client/AudioSource",
         "setContext",
         QNativeInterface::QAndroidApplication::context());
 
-
-    QJniObject devs;
-
-    devs = QJniObject::callStaticObjectMethod(
+    auto devs = QJniObject::callStaticObjectMethod(
         "it/iit/hhcm/xbot2_gui_client/AudioSource",
         "getAudioInputDevices",
         "()[Ljava/lang/String;");
-
 
     if (devs.isValid()) {
         QJniEnvironment env;
@@ -55,6 +60,7 @@ AudioSource::AudioSource():
     {
         qFatal() << "error registering native methods";
     }
+
 #endif
 
     checkMicrophonePermissions();
@@ -75,7 +81,34 @@ AudioSource::AudioSource():
 
     initializeDevices();
 
-    initializeAudio(_audio_dev.last());
+    // initializeAudio(_audio_dev.last());
+}
+
+void AudioSource::start()
+{
+    _buf.clear();
+    emit bytesAvailableChanged(0);
+    _active = true;
+    initializeAudio(_audio_dev[_audio_dev_descr.indexOf(_current_device)]);
+}
+
+void AudioSource::stop()
+{
+#ifdef ANDROID
+    QJniObject::callStaticMethod<void>(
+        "it/iit/hhcm/xbot2_gui_client/AudioSource",
+        "stopSoundStreaming");
+#else
+    if(_io_dev)
+    {
+        _io_dev->close();
+        _io_dev = nullptr;
+    }
+
+    _audio_src.reset();
+#endif
+    _active = false;
+    qInfo("audio stopped");
 }
 
 void AudioSource::checkMicrophonePermissions()
@@ -128,6 +161,8 @@ void AudioSource::initializeDevices()
             _audio_dev.append(deviceInfo);
         }
     }
+
+    _current_device = defaultDeviceInfo.description();
 }
 
 qreal AudioSource::calculateLevel(const char *data, qint64 len) const
@@ -168,6 +203,8 @@ void AudioSource::initializeAudio(const QAudioDevice &deviceInfo)
         _level = lvl;
 
         emit bytesAvailableChanged(_buf.size());
+
+        emit readyRead();
     };
 
     QJniObject::callStaticMethod<void>(
@@ -184,7 +221,8 @@ void AudioSource::initializeAudio(const QAudioDevice &deviceInfo)
 
     if(!deviceInfo.isFormatSupported(_format))
     {
-        qFatal() << "device does not support format";
+        qCritical() << "[ AudioSource ] device does not support format";
+        return;
     }
 
     // if(_io_dev)
@@ -228,13 +266,9 @@ void AudioSource::initializeAudio(const QAudioDevice &deviceInfo)
     _conn2 = connect(_io_dev, &QIODevice::readyRead,
             [this]()
             {
-                // _buf_dev.seek(0);
-
                 auto data = _io_dev->readAll();
 
-                // _buf_dev.seek(0);
-
-                // _buf_dev.buffer().clear();
+                if(data.size() == 0) qCritical("zero size audio data recv");
 
                 auto lvl = calculateLevel(data.constData(), data.size());
 

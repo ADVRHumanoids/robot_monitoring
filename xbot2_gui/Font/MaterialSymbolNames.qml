@@ -33,6 +33,7 @@ Item {
     property string walker: '\uf8d5'
     property string wrench: '\ue869'
     property string plotSmall: '\ue922'
+    property string weight: '\ue13d'
 
     property FontLoader filledFont: FontLoader {
         source: `/Font/materialsymbols/MaterialSymbolsOutlined[opsz,wght,FILL,GRAD@20,200,1,200].otf`

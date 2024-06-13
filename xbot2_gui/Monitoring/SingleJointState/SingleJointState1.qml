@@ -224,7 +224,7 @@ Item {
 
                 property string jName: root.jointNames[index]
 
-                columns: 9
+                columns: grid.width > 450 ? 9 : 3
 
                 // normal fields
                 Repeater {
@@ -243,6 +243,7 @@ Item {
                             Layout.maximumWidth: 50
                             Layout.minimumWidth: 50
                             wrapMode: Text.WordWrap
+                            visible: grid.columns > 3 || longName !== ''
                         }
 
                         Label {
@@ -265,11 +266,12 @@ Item {
                             leftPadding: 4
                             rightPadding: 4
                             opacity: shortName !== '' || isFault ? 1 : 0
+                            visible: grid.columns > 3 || longName !== ''
                             horizontalAlignment: isFault ? Text.AlignLeft : Text.AlignRight
 
                             Connections {
                                 target: updTimer
-                                onTriggered: function() {
+                                function onTriggered() {
 
                                     if(shortName === '') {
                                         return
@@ -290,7 +292,7 @@ Item {
                             Connections {
                                 enabled: valueLabel.isFault
                                 target: root
-                                onSetFaultCode: function(jName, faultCode) {
+                                function onSetFaultCode(jName, faultCode) {
                                     if(jName !== grid.jName) {
                                         return
                                     }
@@ -329,6 +331,7 @@ Item {
 
                             leftPadding: -12
                             rightPadding: 4
+                            visible: grid.columns > 3 || longName !== ''
 
                         }
 

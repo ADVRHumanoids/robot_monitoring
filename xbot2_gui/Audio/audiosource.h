@@ -15,6 +15,7 @@ class AudioSource : public QObject
     Q_PROPERTY(QStringList devices READ devices NOTIFY devicesChanged FINAL)
     Q_PROPERTY(QString currentDevice READ currentDevice WRITE setCurrentDevice NOTIFY currentDeviceChanged FINAL)
     Q_PROPERTY(int bytesAvailable READ bytesAvailable NOTIFY bytesAvailableChanged FINAL)
+    Q_PROPERTY(bool active MEMBER _active NOTIFY activeChanged FINAL)
 
 
 public:
@@ -55,7 +56,10 @@ public:
 
         emit currentDeviceChanged(currentDevice);
 
-        initializeAudio(_audio_dev[idx]);
+        if(_active)
+        {
+            initializeAudio(_audio_dev[idx]);
+        }
     }
 
     Q_INVOKABLE QByteArray read(qint64 maxBytes)
@@ -66,7 +70,7 @@ public:
         return ret;
     }
 
-    Q_INVOKABLE QString readString(qint64 maxBytes)
+    Q_INVOKABLE QString readBase64(qint64 maxBytes)
     {
         auto ret = _buf.first(maxBytes <= 0 ? _buf.size() : std::min(_buf.size(), maxBytes));
         _buf.remove(0, ret.size());
@@ -74,16 +78,11 @@ public:
         return ret.toBase64();
     }
 
-    Q_INVOKABLE void stop()
-    {
-        if(_io_dev)
-        {
-            _io_dev->close();
-            _io_dev = nullptr;
-        }
+    Q_INVOKABLE void start();
 
-        _audio_src.reset();
-    }
+    Q_INVOKABLE void stop();
+
+
 
 signals:
 
@@ -97,12 +96,17 @@ signals:
 
     void bytesAvailableChanged(int bytes);
 
+    void activeChanged(bool active);
+
+
 public slots:
 
 
 private:
 
     void checkMicrophonePermissions();
+
+    bool _active = false;
 
     QBuffer _buf_dev;
 

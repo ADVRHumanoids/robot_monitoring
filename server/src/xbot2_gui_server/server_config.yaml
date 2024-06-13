@@ -22,6 +22,8 @@ speech:
     lift: /voice_commands/lift
     transportation: /voice_commands/transportation
     autonomous: adssdd
+    close gripper: cg
+    open gripper: og
 
 #horizon:
 #  type: horizon  

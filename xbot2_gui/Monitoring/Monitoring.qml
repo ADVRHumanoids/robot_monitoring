@@ -18,8 +18,8 @@ MultiPaneResponsiveLayout {
 
     id: root
     property Item livePlot: CommonProperties.globalLivePlot
-    // onBeforeLayoutChange: loader.active = false
-    // onAfterLayoutChange: loader.active = true
+    onBeforeLayoutChange: loader.active = false
+    onAfterLayoutChange: loader.active = true
     property real vbatt
     property real iload
 
@@ -44,6 +44,8 @@ MultiPaneResponsiveLayout {
             // safety, filters, and battery
             GridLayout {
 
+                id: jointDeviceGrid
+
                 width: parent.width
 
                 rows: lay.compact ? -1 : 1
@@ -63,7 +65,6 @@ MultiPaneResponsiveLayout {
                     onSetFilterActive: Logic.setFilterActive(ok)
                     onSetFilterCutoff: Logic.setFilterProfile(profile)
                 }
-
 
 
                 Control {
@@ -104,7 +105,7 @@ MultiPaneResponsiveLayout {
                 id: scroll1
 
                 width: parent.width
-                height: leftRoot.height - jointDevice.height - parent.spacing - parent.topPadding - parent.bottomPadding
+                height: leftRoot.height - jointDeviceGrid.height - parent.spacing - parent.topPadding - parent.bottomPadding
                 contentWidth: availableWidth
 
                 Column {
@@ -159,7 +160,6 @@ MultiPaneResponsiveLayout {
                             onPlotAdded: function(jName, fieldName) {
                                 Logic.addJointStateSeries(livePlot, jName, fieldName)
                             }
-
                         }
 
                     }
@@ -181,25 +181,26 @@ MultiPaneResponsiveLayout {
         anchors.fill: parent
 
         Loader {
+
             id: loader
             width: parent.width
             asynchronous: true
-            visible: status === Loader.Ready
+            // visible: status === Loader.Ready
             active: true
 
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.preferredHeight: 200
 
-            sourceComponent:
-                RobotModelViewer {
-                    id: robotViewer
-                    implicitHeight: 200
-                    implicitWidth: 200
+            sourceComponent: RobotModelViewer {
+                id: robotViewer
+                implicitHeight: 200
+                implicitWidth: 200
 
-                    client: root.client
-                    backgroundColor: 'transparent'
-                }
+                client: root.client
+                backgroundColor: 'transparent'
+
+            }
 
         }
 

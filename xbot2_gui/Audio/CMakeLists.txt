@@ -2,12 +2,16 @@ add_library(xbot2_gui_audio STATIC)
 
 find_package(Qt6 REQUIRED COMPONENTS Multimedia)
 
+set_source_files_properties(AudioBroadcaster.qml PROPERTIES
+    QT_QML_SINGLETON_TYPE TRUE
+)
+
 qt_add_qml_module(xbot2_gui_audio
     URI Audio
     VERSION 1.0
     QML_FILES
-    SOURCES
-    QML_FILES Prova.qml
+    Prova.qml
+    AudioBroadcaster.qml
     SOURCES audiosource.h audiosource.cpp
 )
 

@@ -7,6 +7,7 @@ import QtQuick.Controls
 import Common
 import Menu
 import Font
+import Audio
 
 ApplicationWindow {
 
@@ -128,6 +129,7 @@ ApplicationWindow {
             iconText: MaterialSymbolNames.playground
             iconFont: syms.font.family
             active: true
+            visible: false
         }
 
         PageItem {
@@ -174,6 +176,15 @@ ApplicationWindow {
             active: true
             sizeFactor: 1.
             visible: requestedPages.indexOf(name) > -1
+        }
+
+        PageItem {
+            name: "Transportation"
+            page: "/qt/qml/Concert/Transportation.qml"
+            iconText: MaterialSymbolNames.weight
+            iconFont: syms.font.family
+            active: true
+            visible: requestedPages.indexOf(name) > -1 || true
         }
 
         PageItem {
@@ -378,8 +389,6 @@ ApplicationWindow {
         width: layout.compact ? pagesStack.width : 600
         height: Math.min(implicitHeight, mainWindow.height/2)
 
-
-
         anchors.horizontalCenter: parent.horizontalCenter
         y: showPopup ? mainWindow.height - height - 24 : mainWindow.height
 
@@ -449,6 +458,30 @@ ApplicationWindow {
                                           nav.construct()
                                           navBar.construct()
                                       })
+    }
+
+    // audio
+    Connections {
+
+        target: AudioBroadcaster
+
+        function onReadyRead() {
+
+            if(AudioBroadcaster.bytesAvailable < 2048 ||
+                    !AudioBroadcaster.enableSend)
+            {
+                return
+            }
+
+            let data = AudioBroadcaster.readBase64(2048)
+
+            let msg = {
+                'type': 'speech',
+                'data': data
+            }
+
+            client.sendTextMessage(JSON.stringify(msg))
+        }
     }
 
     Settings {

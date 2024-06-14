@@ -184,7 +184,7 @@ ApplicationWindow {
             iconText: MaterialSymbolNames.weight
             iconFont: syms.font.family
             active: true
-            visible: requestedPages.indexOf(name) > -1 || true
+            visible: requestedPages.indexOf(name) > -1 
         }
 
         PageItem {

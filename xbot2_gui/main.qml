@@ -277,7 +277,6 @@ ApplicationWindow {
 
         onCurrentIndexChanged: {
 
-            nav.setBadgeNumber(currentIndex, 0)
 
             try {
                 itemAt(currentIndex).item.numErrors = 0
@@ -286,6 +285,8 @@ ApplicationWindow {
             try {
                 itemAt(currentIndex).item.pageSelected()
             }catch(err){}
+
+            nav.setBadgeNumber(currentIndex, 0)
         }
 
         // load all pages in the model

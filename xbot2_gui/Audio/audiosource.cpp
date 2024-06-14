@@ -22,6 +22,7 @@ AudioSource::AudioSource():
     connect(this, &AudioSource::activeChanged,
             [this](bool active)
             {
+                qInfo("AudioSource::onActiveChanged");
                 if(active) start();
                 else stop();
             });

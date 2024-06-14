@@ -182,7 +182,7 @@ Item {
 
     }
 
-    onPageSelected: {
+    Component.onCompleted: {
 
         client.doRequestAsync('GET', '/speech/info', '')
         .then((msg) => {

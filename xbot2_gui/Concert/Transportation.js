@@ -1,5 +1,5 @@
 .import Common 1.0 as Common
-.import AudioBroadcaster 1.0 as AudioBroadcaster
+.import Audio 1.0 as Audio
 let error = Common.CommonProperties.notifications.error
 
 function setAsrState(active) {
@@ -13,7 +13,8 @@ function setAsrState(active) {
 
     if(active)
     {
-        AudioBroadcaster.active = true
+        console.log('enabling audio broadcaster')
+        Audio.AudioBroadcaster.active = true
     }
 }
 

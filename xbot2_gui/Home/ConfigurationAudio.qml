@@ -52,13 +52,13 @@ ScrollView {
 
         ComboBox {
             model: AudioBroadcaster.devices
-            onCurrentTextChanged: AudioBroadcaster.device = currentText
+            onCurrentTextChanged: AudioBroadcaster.currentDevice = currentText
             Layout.fillWidth: true
         }
 
         //
         Label {
-            text: 'Audio Level'
+            text: `Audio Level (${AudioBroadcaster.level.toFixed(2)})`
         }
 
         Plotter {

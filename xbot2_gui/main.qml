@@ -67,7 +67,9 @@ ApplicationWindow {
     // this model contains all main pages
     // (i) hello page (select server address)
     // (ii) monitoring page
+    // etc
     property list<string> requestedPages
+
     Item {
 
         id: pagesModel
@@ -86,6 +88,7 @@ ApplicationWindow {
             iconText: MaterialSymbolNames.dashboard
             iconFont: syms.font.family
             active: true
+            visible: requestedPages.indexOf(name) > -1
         }
 
         PageItem {
@@ -137,7 +140,7 @@ ApplicationWindow {
             iconText: MaterialSymbolNames.playground
             iconFont: syms.font.family
             active: true
-            visible: true
+            visible: false
         }
 
         PageItem {

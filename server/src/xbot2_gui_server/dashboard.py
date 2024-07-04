@@ -21,6 +21,8 @@ class DashboardHandler:
 
         print('DASHBOARD')
 
+        self.requested_pages = ['Dashboard']
+
         # config
 
         self.rate = config.get('rate', 10.0)

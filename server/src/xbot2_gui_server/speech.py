@@ -174,12 +174,16 @@ class SpeechHandler:
             srv = self.cmd_dict[cmd]
             srv = rospy.ServiceProxy(srv, Trigger)
             try:
-                srv()
-                await self.srv.ws_send_to_all(dict(type='speech_cmd', cmd='__done__'))
-                return True, ''
+                res = srv()
+                if res.success:
+                    await self.srv.ws_send_to_all(dict(type='speech_cmd', cmd='__done__'))
+                    return True, 'ok'
+                else:
+                    await self.srv.ws_send_to_all(dict(type='speech_cmd', cmd='__error__', msg=res.message))
+                    return False, res.message
             except:
-                await self.srv.ws_send_to_all(dict(type='speech_cmd', cmd='__error__'))
-                return False, 'error while executing command'
+                await self.srv.ws_send_to_all(dict(type='speech_cmd', cmd='__error__', msg='service failure'))
+                return False, 'service failure'
 
 
     async def listen_to_command(self, timeout):

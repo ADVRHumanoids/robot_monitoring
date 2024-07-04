@@ -2,9 +2,9 @@ import QtQuick
 import QtQuick.Controls
 import QtCharts
 
-import ".."
-import xbot2_gui.RobotModel
-import xbot2_gui.MeshGeometry
+import Main
+import RobotModel
+import ViewerQuick3D
 
 
 import QtQuick.Layouts

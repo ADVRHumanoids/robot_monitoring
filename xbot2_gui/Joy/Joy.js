@@ -104,9 +104,10 @@ function updateTaskNames(taskCombo) {
                          var cartesianTaskNames = []
                          for(let i = 0; i < response.names.length; i++) {
                              console.log(`got task ${response.types[i]} ${response.names[i]}`)
-                             if(response.types[i] === "Cartesian") {
-                                 cartesianTaskNames.push(response.names[i])
-                             }
+                             // if(response.types[i] === "Cartesian" ||
+                             //         response.types[i] === "Interaction") {
+                             //     cartesianTaskNames.push(response.names[i])
+                             // }
                              if(response.types[i] === "SimpleTopic") {
                                  cartesianTaskNames.push('[simple topic] '+response.names[i])
                              }

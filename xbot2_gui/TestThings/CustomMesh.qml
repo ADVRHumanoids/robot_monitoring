@@ -1,8 +1,8 @@
 import QtQuick
 import QtQuick3D
 import QtQuick3D.Helpers
-import xbot2_gui.MeshGeometry
-import ".."
+import ViewerQuick3D
+import Main
 
 Node {
 
@@ -18,7 +18,6 @@ Node {
     property alias localPosition: model.position
     property alias localRotation: model.rotation
 
-
     // private
     id: root
     property Geometry modelGeometry: MeshGeometry {
@@ -28,10 +27,10 @@ Node {
     Model {
         id: model
         visible: true
-        scale: Qt.vector3d(0.001, 0.001, 0.001)
         materials: [
             DefaultMaterial {
                 id: material
+                diffuseColor: Qt.rgba(0.8, 0.8, 0.8, 1.0)
             }
         ]
 

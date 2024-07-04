@@ -2,8 +2,10 @@ import QtQuick
 import QtQuick3D
 import QtQuick3D.Helpers
 
-import xbot2_gui.RobotModel
-import ".."
+import RobotModel
+import Common
+import Main
+import ViewerQuick3D
 import "RobotModelNode.js" as Logic
 
 Node {
@@ -36,6 +38,7 @@ Node {
 
     function createViewer() {
         Logic.createViewer()
+        Logic.updateTf()
     }
 
 
@@ -53,8 +56,8 @@ Node {
 //            type: modelData.type
             meshUri: modelData.filename
 
-//            cylinderLength: modelData.length || 0
-//            cylinderRadius: modelData.radius || 0
+            // cylinderLength: modelData.length || 0
+            // cylinderRadius: modelData.radius || 0
             scale: modelData.scale
             localPosition: modelData.origin_xyz
             localRotation: modelData.origin_rot

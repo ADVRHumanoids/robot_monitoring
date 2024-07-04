@@ -14,7 +14,9 @@ qt_add_qml_module(xbot2_gui_launcher
     LauncherConsoleItem.qml
     PluginCard.qml
     ProcessCard.qml
-    QML_FILES CustoCommand.qml
+    CustoCommand.qml
+    Dashboard.qml
+    QML_FILES Dashboard.js
 )
 
 target_link_libraries(xbot2_gui PRIVATE xbot2_gui_launcherplugin)

@@ -3,7 +3,6 @@
 
 #include <QQuick3DGeometry>
 
-
 class MeshGeometry : public QQuick3DGeometry
 {
     Q_OBJECT
@@ -16,12 +15,12 @@ public:
     MeshGeometry();
 
     QByteArray meshFile() const;
+
     void setMeshFile(QByteArray meshFile);
 
 signals:
 
     void meshFileChanged();
-
 
 private:
 

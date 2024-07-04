@@ -10,6 +10,7 @@ find_package(Qt6 COMPONENTS
     Core
     Gui
     Quick
+    Quick3D
     WebSockets
     Widgets
     QuickControls2
@@ -24,7 +25,6 @@ if(NOT EMSCRIPTEN)
     find_package(Qt6 COMPONENTS
         WebView
         Protobuf
-        Quick3D
         3DCore
         3DRender
         3DInput
@@ -65,6 +65,7 @@ target_link_libraries(xbot2_gui
     Qt6::QuickControls2
     Qt6::Widgets
     Qt6::TextToSpeech
+    Qt6::Quick3D
 )
 
 if(NOT EMSCRIPTEN)
@@ -128,6 +129,8 @@ add_subdirectory(Joy)
 add_subdirectory(Video)
 
 add_subdirectory(Viewer3D)
+
+add_subdirectory(ViewerQuick3D)
 
 
 # ws receiver

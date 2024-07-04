@@ -7,9 +7,9 @@ function makeModel(linkToUri) {
         let obj = {}
         obj.linkName = key
         obj.filename = value.filename
-        obj.scale = Qt.vector3d(value.scale[0],
-                                value.scale[1],
-                                value.scale[2])
+        obj.scale = Qt.vector3d(value.scale[0]*100,
+                                value.scale[1]*100,
+                                value.scale[2]*100)
         obj.type = value.type
         obj.radius = value.radius
         obj.length = value.length
@@ -35,7 +35,9 @@ function updateTf() {
                   let obj = visualRepeater.objectAt(i)
                   let linkName = visualRepeater.model[i].linkName
                   let tf = msg[linkName]
-                  obj.translation = Qt.vector3d(tf[0][0], tf[0][1], tf[0][2])
+                  obj.position = Qt.vector3d(tf[0][0]*100,
+                                                tf[0][1]*100,
+                                                tf[0][2]*100)
                   obj.rotation = Qt.quaternion(tf[1][3], tf[1][0], tf[1][1], tf[1][2])
               }
           })

@@ -81,6 +81,14 @@ ApplicationWindow {
         }
 
         PageItem {
+            name: "Dashboard"
+            page: "/qt/qml/Launcher/Dashboard.qml"
+            iconText: MaterialSymbolNames.dashboard
+            iconFont: syms.font.family
+            active: true
+        }
+
+        PageItem {
             name: "Process"
             page: "/qt/qml/Launcher/Launcher.qml"
             iconText: MaterialSymbolNames.terminal
@@ -125,11 +133,11 @@ ApplicationWindow {
 
         PageItem {
             name: "Playground"
-            page: "/qt/qml/Audio/Prova.qml"
+            page: "/qt/qml/TestThings/Playground.qml"
             iconText: MaterialSymbolNames.playground
             iconFont: syms.font.family
             active: true
-            visible: false
+            visible: true
         }
 
         PageItem {

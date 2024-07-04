@@ -22,7 +22,7 @@ void MeshGeometry::updateData()
     clear();
 
     // define stride: 1 vertex + 1 normal
-    int stride = 6*sizeof(float);
+    int stride = 3*sizeof(float);
 
     // STL format:
     // UINT8[80]    – Header                 -     80 bytes
@@ -92,15 +92,26 @@ void MeshGeometry::updateData()
         auto bV3 = m_meshFile.sliced(readIdx, 3*sizeof(float));
         readIdx += 3*sizeof(float);
 
+        // print
+        // auto bNf = (float*)bNormal.data();
+        // auto bV1f = (float*)bV1.data();
+        // auto bV2f = (float*)bV2.data();
+        // auto bV3f = (float*)bV3.data();
+
+        // printf("N  = %f %f %f \n", bNf[0], bNf[1], bNf[2]);
+        // printf("V1 = %f %f %f \n", bV1f[0], bV1f[1], bV1f[2]);
+        // printf("V2 = %f %f %f \n", bV2f[0], bV2f[1], bV2f[2]);
+        // printf("V3 = %f %f %f \n", bV3f[0], bV3f[1], bV3f[2]);
+
         // append in vertex format n-v-n-v-n-v
         vertices.append(bV1);
-        vertices.append(bNormal);
+        // vertices.append(bNormal);
 
         vertices.append(bV2);
-        vertices.append(bNormal);
+        // vertices.append(bNormal);
 
         vertices.append(bV3);
-        vertices.append(bNormal);
+        // vertices.append(bNormal);
 
         // attribute byte count
         readIdx += 2;
@@ -117,9 +128,9 @@ void MeshGeometry::updateData()
                  0,
                  QQuick3DGeometry::Attribute::F32Type);
 
-    addAttribute(QQuick3DGeometry::Attribute::NormalSemantic,
-                 3 * sizeof(float),
-                 QQuick3DGeometry::Attribute::F32Type);
+    // addAttribute(QQuick3DGeometry::Attribute::NormalSemantic,
+    //              3 * sizeof(float),
+    //              QQuick3DGeometry::Attribute::F32Type);
 
 
     update();

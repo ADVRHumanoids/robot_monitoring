@@ -106,7 +106,7 @@ class DashboardHandler:
             while not self.xbot2_alive:
                 await asyncio.sleep(0.1)
             
-            self.active_state = 'idle'
+            self.active_state = 'ready'
             
         elif command == 'stop':
 
@@ -206,7 +206,9 @@ class DashboardHandler:
 
             if not self.xbot2_alive:
                 self.active_state = 'inactive'
-            
+            elif self.active_state == 'inactive':
+               self.active_state = 'ready'
+
             self.xbot2_alive = False
 
             await self.srv.ws_send_to_all(
@@ -222,6 +224,7 @@ class DashboardHandler:
     def on_stats_recv(self, msg):
         self.stats = msg
         self.xbot2_alive = True
+        
 
 
     async def wait_for_state(self, plugin_name, state):

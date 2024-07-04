@@ -135,7 +135,7 @@ def main():
             ext = DashboardHandler(srv, cfg.get('dashboard', {}))
             extensions.append(ext)
         except BaseException as e:
-            print(e)
+            print('Exception ', type(e), e)
 
         srv.extensions = extensions
 

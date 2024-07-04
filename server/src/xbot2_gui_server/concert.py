@@ -32,7 +32,7 @@ class ConcertHandler:
     def __init__(self, srv: ServerBase, config=dict()) -> None:
 
         # request ui page
-        self.requested_pages = ['Builder', 'Linfa', 'Drill Task', 'Sanding']
+        self.requested_pages = ['Builder', 'Linfa', 'Drill Task', 'Sanding', 'Transportation']
 
         # config
         self.rate = config.get('rate', 10.0)
@@ -133,10 +133,11 @@ class ConcertHandler:
     async def enable_arm_handler(self, req):
 
         active = utils.str2bool(req.rel_url.query['active'])
+        task_name = req.rel_url.query['task_name']
 
         from cartesian_interface.srv import SetControlMode
 
-        srv = rospy.ServiceProxy('/cartesian/ee_E/set_control_mode', SetControlMode)
+        srv = rospy.ServiceProxy(f'/cartesian/{task_name}/set_control_mode', SetControlMode)
 
         if active: 
             res = await utils.to_thread(srv, ctrl_mode='velocity')

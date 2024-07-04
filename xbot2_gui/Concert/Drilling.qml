@@ -146,7 +146,7 @@ Item {
 
         property list<real> vref: [0, 0, 0, 0, 0, 0]
         property string baseTaskName: '[simple topic] /omnisteering/cmd_vel'
-        property string armTaskName: 'ee_E'
+        property string armTaskName: configPane.armEE
 
         enabled: configPane.motionMode
 
@@ -228,9 +228,8 @@ Item {
     }
 
     onPageSelected: {
-        console.log(`requesting stream ${video.videoStreamName}`)
         VideoStream.setStream(video.videoStreamName, video)
-        console.log(`done`)
+        Logic.updateTaskNames()
     }
 
 }

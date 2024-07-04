@@ -12,6 +12,8 @@ Item {
     property alias joyZEnabled: motionTab.joyZEnabled
     property bool motionMode: bar.currentItem.text === 'Motion'
     property bool drillMode: bar.currentItem.text === 'Dlill'
+    property alias armEE: motionTab.armEE
+    property alias armEEOptions: motionTab.armEEOptions
     signal modeChanged()
 
     //

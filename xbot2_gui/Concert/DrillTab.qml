@@ -70,7 +70,7 @@ Control {
 
         DelayButton {
             Layout.fillWidth: true
-            text: 'DLILLALE'
+            text: 'Execute drill'
             width: parent.width
 
             onActivated: {

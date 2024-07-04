@@ -12,6 +12,8 @@ Control {
     property alias joyXEnabled: chkX.checked
     property alias joyYEnabled: chkY.checked
     property alias joyZEnabled: chkZ.checked
+    property alias armEE: eeCombo.currentText
+    property alias armEEOptions: eeCombo.model
 
     //
     id: root
@@ -24,6 +26,13 @@ Control {
         id: col
 
         spacing: 3
+
+        Switch {
+            text: 'Enable'
+            visible: false
+            checked: true
+            id: moveEnableSwitch
+        }
 
         Label {
             text: ' joy target'
@@ -48,11 +57,7 @@ Control {
                 }
             }
 
-            Switch {
-                visible: false
-                checked: true
-                id: moveEnableSwitch
-            }
+
 
         }
 
@@ -60,6 +65,23 @@ Control {
             width: parent.width
             height: 3
         }
+
+        Label {
+            text: ' arm ee'
+            font.pointSize: 10
+        }
+
+        ComboBox {
+            id: eeCombo
+            model: ['ee_E', 'drillbit_E']
+            Layout.fillWidth: true
+        }
+
+        Item {
+            width: parent.width
+            height: 3
+        }
+
 
         Label {
             enabled: moveEnableSwitch.checked

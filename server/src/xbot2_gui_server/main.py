@@ -128,6 +128,7 @@ def main():
             extensions.append(ext)
         except ModuleNotFoundError:
             pass
+        srv.extensions = extensions
 
         print('load extensions completed', extensions)
 

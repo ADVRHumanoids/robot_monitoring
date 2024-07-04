@@ -56,6 +56,8 @@ class ServerBase:
 class Xbot2WebServer(ServerBase):
 
     def __init__(self) -> None:
+
+        self.extensions = []
         
         # web app
         self.app = web.Application()

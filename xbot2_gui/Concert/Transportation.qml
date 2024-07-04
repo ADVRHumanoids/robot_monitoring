@@ -133,6 +133,7 @@ Item {
 
     TextToSpeech {
         id: tts
+        volume: 1.0
     }
 
     Connections {
@@ -164,14 +165,14 @@ Item {
                     tts.say(currStateLabel.text)
                 }
                 else if(msg.cmd === '__error__') {
-                    currStateLabel.text = 'an error occurred'
+                    currStateLabel.text = 'error: ' + msg.msg
                     currCmdLabel.text += ' (failed)'
                     tts.say(currStateLabel.text)
                 }
                 else if(msg.cmd === '__end__') {
                 }
                 else {
-                    currStateLabel.text = 'will execute command: ' + msg.cmd
+                    currStateLabel.text = 'executing command: ' + msg.cmd
                     currCmdLabel.text = Logic.toTitleCase(msg.cmd)
                     tts.say(currStateLabel.text)
                 }

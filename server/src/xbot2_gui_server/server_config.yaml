@@ -25,6 +25,29 @@ speech:
     close gripper: cg
     open gripper: og
 
+dashboard:
+  all_plugins: [homing, ros_control]
+  all_processes: [prova1, prova2]
+  states:
+    - name: jogging_cartesian
+      nice_name: Jogging (Cartesian)
+      process: []
+      plugin: [homing]
+    - name: jogging_joint
+      nice_name: Jogging (Joint)
+      process: []
+      plugin: [ros_control]
+    - name: drilling
+      process: [prova1]
+      plugin: []
+    - name: transportation
+      process: [prova2]
+      plugin: []
+    - name: idle
+      process: []
+      plugin: []
+
+
 #horizon:
 #  type: horizon  
 #ecat_master_process:

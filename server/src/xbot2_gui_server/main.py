@@ -128,6 +128,15 @@ def main():
             extensions.append(ext)
         except ModuleNotFoundError:
             pass
+        
+        # dashboard
+        try:
+            from .dashboard import DashboardHandler
+            ext = DashboardHandler(srv, cfg.get('dashboard', {}))
+            extensions.append(ext)
+        except BaseException as e:
+            print(e)
+
         srv.extensions = extensions
 
         print('load extensions completed', extensions)

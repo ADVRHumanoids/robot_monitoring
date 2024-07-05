@@ -12,8 +12,6 @@ from .server import ServerBase
 from . import utils
 from . import launcher
 
-from concert_launcher import executor as exe
-
 
 class DashboardHandler:
 
@@ -29,7 +27,7 @@ class DashboardHandler:
 
         self.states = {item['name']: item for item in config['states']}
 
-        self.active_state = 'none'
+        self.active_state = 'inactive'
 
         self.all_plugins = config['all_plugins']
 
@@ -122,6 +120,8 @@ class DashboardHandler:
             if not await l.kill(process='ecat', graceful=True):
                 raise RuntimeError('could not stop ecat')
             
+            self.active_state = 'inactive'
+            
         else:
 
             raise KeyError(f'bad command {command}')
@@ -204,12 +204,12 @@ class DashboardHandler:
 
         while True:
 
-            if not self.xbot2_alive:
-                self.active_state = 'inactive'
-            elif self.active_state == 'inactive':
-               self.active_state = 'ready'
+            # if not self.xbot2_alive:
+            #     self.active_state = 'inactive'
+            # elif self.active_state == 'inactive':
+            #    self.active_state = 'ready'
 
-            self.xbot2_alive = False
+            # self.xbot2_alive = False
 
             await self.srv.ws_send_to_all(
                 {

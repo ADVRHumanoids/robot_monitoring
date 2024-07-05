@@ -41,6 +41,17 @@ MultiPaneResponsiveLayout {
                 Layout.fillHeight: true
                 Layout.fillWidth: true
 
+                Rectangle {
+                    color: 'transparent'
+                    border.color: 'lightgreen'
+                    border.width: 4
+                    width: parent.background.width
+                    height: parent.background.height
+                    radius: height/2
+                    anchors.centerIn: parent
+                    visible: btn.stateActive
+                }
+
                 text: root.stateMap[modelData].nice_name || Logic.toTitleCase(modelData)
                 font.pixelSize: CommonProperties.font.h3
 
@@ -56,10 +67,7 @@ MultiPaneResponsiveLayout {
 
                 }
 
-                Component.onCompleted: backgroundColor = palette.active.button
-
-                Material.background: (stateActive) ?
-                                      CommonProperties.colors.ok : backgroundColor
+                Component.onCompleted: backgroundColor = background.color
 
                 SequentialAnimation on Material.background {
 
@@ -70,23 +78,21 @@ MultiPaneResponsiveLayout {
                     alwaysRunToEnd: true
 
                     ColorAnimation {
-                        from: 'lightgreen'
-                        to: backgroundColor
-                        duration: 400
-                    }
-
-                    ColorAnimation {
                         from: backgroundColor
                         to: 'lightgreen'
                         duration: 400
                     }
 
+                    ColorAnimation {
+                        from: 'lightgreen'
+                        to: backgroundColor
+                        duration: 400
+                    }
+
+
+
                     onFinished: {
                         console.log('finished')
-                        btn.Material.background = Qt.binding(
-                                    function(){
-                                        return (stateActive) ? CommonProperties.colors.ok : backgroundColor
-                                    })
                     }
 
                 }
@@ -101,47 +107,62 @@ MultiPaneResponsiveLayout {
 
         Button {
 
+            id: startStopBtn
+
             text: root.activeState === 'inactive' ? 'Start' : 'Stop'
 
             Layout.fillHeight: true
             Layout.fillWidth: true
             font.pixelSize: CommonProperties.font.h3
 
+
+
             Material.background: root.activeState === 'inactive' ?
                                      CommonProperties.colors.ok :
                                      CommonProperties.colors.err
 
-            onClicked: {
-                if(text === 'Stop') {
-                    Logic.triggerSafety()
-                    stopPopup.open()
-                }
-                else {
-                    Logic.startRobot()
-                }
-
-
-            }
+            onClicked: stopPopup.open()
 
             Popup {
+
                 id: stopPopup
                 anchors.centerIn: Overlay.overlay
                 modal: true
                 focus: true
+                padding: 16
+
                 ColumnLayout {
+
                     spacing: 16
+
                     Text {
-                        text: 'Press the <b>emergency button</b> to engage brakes, then confirm.'
+
+                        text: startStopBtn.text === 'Start' ?
+                                  'Release the <b>emergency button</b> to power up the motors, then confirm.' :
+                                  'Press the <b>emergency button</b> to engage brakes, then confirm.'
+
                         font.pixelSize: CommonProperties.font.h3
+
                         color: palette.active.text
                     }
+
                     Button {
+
                         text: 'Confirm'
+
                         font.pixelSize: CommonProperties.font.h3
+
                         Layout.alignment: Qt.AlignHCenter
 
                         onClicked: {
-                            Logic.stopRobot()
+
+                            if(startStopBtn.text === 'Start') {
+                                Logic.startRobot()
+                            }
+                            else {
+                                Logic.stopRobot()
+                            }
+
                             stopPopup.close()
                         }
                     }
@@ -191,6 +212,9 @@ MultiPaneResponsiveLayout {
             if(msg.type !== 'dashboard_msg') {
                 return
             }
+
+
+            console.log(JSON.stringify(msg))
 
             root.activeState = msg.active_state || root.activeState
 

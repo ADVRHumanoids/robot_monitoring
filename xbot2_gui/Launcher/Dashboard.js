@@ -6,6 +6,8 @@ function changeState(self, state) {
 
     client.doRequestAsync('POST', `/dashboard/${state}/start`, '')
         .then(function(res) {
+            let prefix = res.success ? '[status] ' : '[fail] '
+            log.append(prefix + res.message)
             self.activationInProgress = false
         })
 

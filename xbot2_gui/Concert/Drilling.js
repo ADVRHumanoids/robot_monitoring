@@ -25,6 +25,11 @@ function abortDlillale() {
 }
 
 function enableArmControl(active) {
+
+    if(configPane.armEE === '') {
+        return
+    }
+
     return client.doRequestAsync('POST',
                           `/concert/enable_arm?active=${active}&task_name=${configPane.armEE}`, '')
     .then((res) => {

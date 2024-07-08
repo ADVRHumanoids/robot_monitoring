@@ -73,7 +73,7 @@ Control {
 
         ComboBox {
             id: eeCombo
-            model: ['ee_E', 'drillbit_E']
+            model: []
             Layout.fillWidth: true
         }
 

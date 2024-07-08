@@ -67,11 +67,12 @@ Item
 
 
     // method for performing an http request
-    function doRequest(verb, url, body, callback) {
+    function doRequest(verb, url, body, callback, quiet = false) {
         Client.httpRequest(verb,
                            "http://" + hostname + ":" + port + url,
                            body,
-                           callback)
+                           callback,
+                           quiet)
     }
 
     function doRequestRaw(verb, url, body, callback) {
@@ -81,10 +82,11 @@ Item
                            callback)
     }
 
-    function doRequestAsync(verb, url, body) {
+    function doRequestAsync(verb, url, body, quiet = false) {
         return Client.httpRequestAsync(verb,
                                        "http://" + hostname + ":" + port + url,
-                                       body)
+                                       body,
+                                       quiet)
     }
 
     // method for sending a text message over websocket
@@ -186,6 +188,7 @@ Item
                 isConnected = false
                 active = false
                 root.isFinalized = false
+                udp.rebind()
             }
         }
     }
@@ -259,6 +262,21 @@ Item
         running: udp.bound
         onTriggered: {
             udp.sendTextMessage('udp_discovery')
+        }
+    }
+
+    Timer {
+        id: retryConnect
+        interval: 2000
+        repeat: true
+        running: !root.active
+
+        onTriggered: {
+            doRequestAsync('GET', '/version', '', true)
+            .then((res) => {
+                   console.log('server is alive, connecting ws')
+                   root.active = true
+                  })
         }
     }
 

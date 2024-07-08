@@ -13,6 +13,7 @@ UdpSocket::UdpSocket(QObject *parent)
             this, &UdpSocket::socketStateChanged);
 
     _sock.bind();
+
 }
 
 void UdpSocket::sendTextMessage(QString msg)
@@ -30,7 +31,13 @@ void UdpSocket::sendTextMessage(QString msg)
     {
         qWarning("could not send udp datagram");
     }
+}
 
+void UdpSocket::rebind()
+{
+    _sock.abort();
+
+    _sock.bind();
 }
 
 QString UdpSocket::hostname() const

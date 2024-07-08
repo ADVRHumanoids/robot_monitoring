@@ -23,6 +23,8 @@ public:
 
     Q_INVOKABLE void sendTextMessage(QString msg);
 
+    Q_INVOKABLE void rebind();
+
     /**
      * @return the remote hostname to send messages to (i.e., the gui server)
      */

@@ -64,7 +64,7 @@ function httpRequestRaw(verb, url, body, callback) {
     xhr.send(body);
 }
 
-function httpRequest(verb, url, body, callback) {
+function httpRequest(verb, url, body, callback, quiet) {
 
     var xhr = new XMLHttpRequest();
 
@@ -75,14 +75,16 @@ function httpRequest(verb, url, body, callback) {
         }
         else if(xhr.readyState === XMLHttpRequest.DONE)
         {
-            if(!notifyStatus(verb, url, xhr))
+            if(!quiet && !notifyStatus(verb, url, xhr))
             {
                 return;
             }
 
             try {
                 var object = JSON.parse(xhr.responseText.toString())
-                notifyResponseStatus(verb, url, object)
+                if(!quiet) {
+                    notifyResponseStatus(verb, url, object)
+                }
             }
             catch(err) {
                 error(verb + ' ' + url + ': failed to parse message: ' + xhr.responseText.toString())
@@ -103,7 +105,7 @@ function httpRequest(verb, url, body, callback) {
 }
 
 
-function httpRequestAsync(verb, url, body) {
+function httpRequestAsync(verb, url, body, quiet = false) {
 
     let promise = new Promise(
             (resolve, reject) =>
@@ -114,14 +116,16 @@ function httpRequestAsync(verb, url, body) {
 
                 xhr.onload = () => {
 
-                    if(!notifyStatus(verb, url, xhr))
+                    if(!quiet && !notifyStatus(verb, url, xhr))
                     {
                         reject(xhr.statusText);
                     }
 
                     try {
                         var object = JSON.parse(xhr.responseText.toString());
-                        notifyResponseStatus(verb, url, object)
+                        if(!quiet) {
+                            notifyResponseStatus(verb, url, object)
+                        }
                         resolve(object);
                     }
                     catch(err) {
@@ -132,7 +136,9 @@ function httpRequestAsync(verb, url, body) {
                 }
 
                 xhr.onerror = () => {
-                    notifyStatus(verb, url, xhr);
+                    if(!quiet) {
+                        notifyStatus(verb, url, xhr);
+                    }
                     reject(xhr.statusText);
                 }
 

@@ -17,7 +17,6 @@ ApplicationWindow {
     visible: true
     title: "Xbot2 Robot GUI"
     visibility: Qt.platform.os === "android" ? Window.FullScreen : Window.AutomaticVisibility
-
     property bool dbg: false
 
     palette {
@@ -45,6 +44,34 @@ ApplicationWindow {
 
     Component.onCompleted: {
         console.log(`palette.disabled.buttonText ${palette.disabled.buttonText.a}`)
+    }
+
+    MouseArea {
+        z: 100
+        height: 50
+        width: 50
+        anchors {
+            left: parent.left
+            bottom: parent.bottom
+        }
+        onDoubleClicked: {
+            console.log('taking screenshot')
+            appData.screenshot(mainWindow, `xbot2_gui_${Date()}`)
+        }
+    }
+
+    DelayButtonRound {
+        id: softEmergency
+        visible: false
+        anchors {
+            left: parent.left
+            bottom: parent.bottom
+            margins: 16
+        }
+        z: 200
+        width: 70
+        height: 70
+        opacity: 0.8
     }
 
     MaterialSymbols {
@@ -75,21 +102,21 @@ ApplicationWindow {
         id: pagesModel
 
         PageItem {
-            name: "Home"
+            name: "Network"
             page: "/qt/qml/Home/HelloScreen.qml"
-            iconText: MaterialSymbolNames.home
+            iconText: MaterialSymbolNames.netSettings
             iconFont: syms.font.family
             active: true
         }
 
-        PageItem {
-            name: "Dashboard"
-            page: "/qt/qml/Launcher/Dashboard.qml"
-            iconText: MaterialSymbolNames.dashboard
-            iconFont: syms.font.family
-            active: true
-            visible: requestedPages.indexOf(name) > -1
-        }
+        // PageItem {
+        //     name: "Dashboard"
+        //     page: "/qt/qml/Launcher/Dashboard.qml"
+        //     iconText: MaterialSymbolNames.dashboard
+        //     iconFont: syms.font.family
+        //     active: true
+        //     visible: requestedPages.indexOf(name) > -1
+        // }
 
         PageItem {
             name: "Process"
@@ -196,6 +223,7 @@ ApplicationWindow {
             iconFont: syms.font.family
             active: true
             visible: requestedPages.indexOf(name) > -1 
+            sizeFactor: 1.1
         }
 
         PageItem {

@@ -6,6 +6,7 @@
 #include <QCommandLineParser>
 #include <QtWidgets/QApplication>
 #include <QtQml/qqmlregistration.h>
+#include <QtQuickWidgets/QtQuickWidgets>
 
 #include "Video/videostreampainter.h"
 #include "RobotModel/robot_model.h"
@@ -36,18 +37,35 @@ public:
     }
 
     Q_PROPERTY(QList<int> version MEMBER version);
+
     Q_PROPERTY(QString hostname MEMBER hostname);
+
     Q_PROPERTY(int port MEMBER port);
+
     Q_PROPERTY(bool wasm MEMBER wasm);
+
     Q_PROPERTY(bool portFromCmdLine MEMBER portFromCmdLine);
+
     Q_INVOKABLE void updateUi();
+
     Q_INVOKABLE uint64_t getTimeNs() const;
+
     Q_INVOKABLE static QUrl fromUserInput(const QString& userInput)
     {
         if (userInput.isEmpty())
             return QUrl::fromUserInput("about:blank");
         const QUrl result = QUrl::fromUserInput(userInput);
         return result.isValid() ? result : QUrl::fromUserInput("about:blank");
+    }
+
+    Q_INVOKABLE void screenshot(QQuickWindow *widget, QString fileName)
+    {
+        QPixmap pixmap = QPixmap::fromImage(widget->grabWindow());
+        QFile f(fileName.replace(" ", "_") + ".png");
+        f.open(QIODevice::WriteOnly);
+        if(f.isOpen()) {
+            pixmap.save(&f, "PNG");
+        }
     }
 
 public:

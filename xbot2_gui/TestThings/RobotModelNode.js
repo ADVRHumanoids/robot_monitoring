@@ -72,9 +72,9 @@ function updateQ(q) {
 
         let pose = model.getPose(linkName)
 
-        obj.position = Qt.vector3d(pose.translation[0],
-                                      pose.translation[1],
-                                      pose.translation[2])
+        obj.position = Qt.vector3d(pose.translation[0]*100,
+                                      pose.translation[1]*100,
+                                      pose.translation[2]*100)
 
         obj.rotation = Qt.quaternion(pose.rotation[0],
                                      pose.rotation[1],

@@ -132,7 +132,7 @@ MultiPaneResponsiveLayout {
 
     ColumnLayout {
 
-        property string iconText: 'Log'
+        property string iconText: 'Server log'
         property string iconChar: MaterialSymbolNames.log
 
         id: textCol
@@ -148,7 +148,7 @@ MultiPaneResponsiveLayout {
             CheckBox {
                 id: verbosityCheck
                 text: 'Verbose'
-                checked: true
+                checked: false
             }
 
             CheckBox {

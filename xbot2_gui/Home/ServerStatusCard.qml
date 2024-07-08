@@ -69,7 +69,7 @@ Card1 {
 
     Timer {
         id: delayedConnect
-        interval: 1000
+        interval: 3000
         onTriggered: root.updateServerUrl()
     }
 

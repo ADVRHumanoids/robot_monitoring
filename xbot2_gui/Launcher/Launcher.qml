@@ -13,9 +13,8 @@ MultiPaneResponsiveLayout {
     id: root
 
     property ClientEndpoint client
+
     property int numErrors: 0
-
-
 
     ScrollView {
 
@@ -36,7 +35,33 @@ MultiPaneResponsiveLayout {
 
             SectionHeader {
 
-                objectName: 'sechdr'
+                property int columnSpan: leftGrid.columns
+
+                Button {
+                    text: 'Refresh'
+                    onClicked: {
+                        dashboard.refresh()
+                    }
+                }
+
+                text: 'Operation mode'
+
+                onClicked: {
+                    dashboard.visible = !dashboard.visible
+                    leftGrid.computeLayout()
+                }
+
+                font.italic: !dashboard.visible
+
+            }
+
+            Dashboard {
+                id: dashboard
+                client: root.client
+                property int columnSpan: leftGrid.columns
+            }
+
+            SectionHeader {
 
                 property int columnSpan: leftGrid.columns
 
@@ -53,6 +78,13 @@ MultiPaneResponsiveLayout {
                     text: 'Refresh'
                     onClicked: Logic.requestProcessUpdate(processRepeater)
                 }
+
+                onClicked: {
+                    processRepeater.visible = !processRepeater.visible
+                    leftGrid.computeLayout()
+                }
+
+                font.italic: !processRepeater.visible
             }
 
             Repeater {
@@ -61,7 +93,7 @@ MultiPaneResponsiveLayout {
 
                 ProcessCard {
 
-                    visible: showAllChk.checked || modelData.visible
+                    visible: (showAllChk.checked || modelData.visible) && processRepeater.visible
 
                     processName: modelData.name
                     processState: modelData.status
@@ -80,7 +112,7 @@ MultiPaneResponsiveLayout {
                 id: customCmd
                 pageItem: root
                 onSubmitCommand: Logic.customCommand(machine, command, timeout)
-                visible: true
+                visible: processRepeater.visible
             }
 
             Item {
@@ -89,6 +121,7 @@ MultiPaneResponsiveLayout {
                 property int columnSpan: leftGrid.columns
 
                 height: 16
+                visible: processRepeater.visible
             }
 
             SectionHeader {
@@ -103,6 +136,13 @@ MultiPaneResponsiveLayout {
                         Logic.requestPluginUpdate(pluginRepeater)
                     }
                 }
+
+                onClicked: {
+                    pluginRepeater.visible = !pluginRepeater.visible
+                    leftGrid.computeLayout()
+                }
+
+                font.italic: !pluginRepeater.visible
             }
 
             Repeater {
@@ -110,6 +150,7 @@ MultiPaneResponsiveLayout {
                 id: pluginRepeater
 
                 PluginCard {
+                    visible: pluginRepeater.visible
                     pluginName: modelData
                     onStart: Logic.pluginCmd(pluginName, 'start')
                     onStop: Logic.pluginCmd(pluginName, 'stop')

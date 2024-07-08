@@ -43,7 +43,7 @@ dashboard:
     - name: transportation
       process: [prova2]
       plugin: []
-    - name: idle
+    - name: ready
       process: []
       plugin: []
 

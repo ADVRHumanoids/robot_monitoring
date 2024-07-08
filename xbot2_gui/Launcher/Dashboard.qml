@@ -9,7 +9,7 @@ import Main
 import "Dashboard.js" as Logic
 
 
-MultiPaneResponsiveLayout {
+Control {
 
     //
     id: root
@@ -22,9 +22,27 @@ MultiPaneResponsiveLayout {
 
     property string activeState
 
-    ColumnLayout {
+    property Button readyBtn
 
-        anchors.fill: parent
+    property TextArea log: TextArea {}
+
+    property bool startStopPending: false
+
+    function refresh() {
+        Logic.refresh()
+    }
+
+    padding: 4
+
+    contentItem: GridLayout {
+
+        // anchors.fill: parent
+
+        columns: width > 450 ? 2 : 1
+
+        uniformCellWidths: true
+
+        columnSpacing: 16
 
         Repeater {
 
@@ -45,14 +63,15 @@ MultiPaneResponsiveLayout {
                     color: 'transparent'
                     border.color: 'lightgreen'
                     border.width: 4
-                    width: parent.background.width
-                    height: parent.background.height
+                    width: parent.background.width + 4
+                    height: parent.background.height + 4
                     radius: height/2
                     anchors.centerIn: parent
                     visible: btn.stateActive
                 }
 
                 text: root.stateMap[modelData].nice_name || Logic.toTitleCase(modelData)
+
                 font.pixelSize: CommonProperties.font.h3
 
                 enabled: root.activeState !== "inactive"
@@ -67,7 +86,10 @@ MultiPaneResponsiveLayout {
 
                 }
 
-                Component.onCompleted: backgroundColor = background.color
+                Component.onCompleted: {
+                    backgroundColor = background.color
+                    if(modelData === 'ready') readyBtn = btn
+                }
 
                 SequentialAnimation on Material.background {
 
@@ -89,37 +111,64 @@ MultiPaneResponsiveLayout {
                         duration: 400
                     }
 
-
-
-                    onFinished: {
-                        console.log('finished')
-                    }
-
                 }
 
 
             }
         }
 
-        MenuSeparator {
-            Layout.alignment: Qt.AlignHCenter
-        }
+        // MenuSeparator {
+        //     Layout.alignment: Qt.AlignHCenter
+        // }
 
         Button {
 
             id: startStopBtn
-
+            property color backgroundColor
             text: root.activeState === 'inactive' ? 'Start' : 'Stop'
 
             Layout.fillHeight: true
             Layout.fillWidth: true
             font.pixelSize: CommonProperties.font.h3
 
+            Component.onCompleted: backgroundColor = background.color
 
+            Rectangle {
+                id: startStopBtnBorder
+                color: 'transparent'
+                border.color: root.activeState === 'inactive' ?
+                                  'lightgreen' :
+                                  CommonProperties.colors.err
+                border.width: 4
+                width: parent.background.width + 4
+                height: parent.background.height + 4
+                radius: height/2
+                anchors.centerIn: parent
+            }
 
-            Material.background: root.activeState === 'inactive' ?
-                                     CommonProperties.colors.ok :
-                                     CommonProperties.colors.err
+            SequentialAnimation on Material.background {
+
+                loops: Animation.Infinite
+
+                running: root.startStopPending
+
+                alwaysRunToEnd: true
+
+                ColorAnimation {
+                    from: startStopBtn.backgroundColor
+                    to: startStopBtnBorder.border.color
+                    duration: 400
+                }
+
+                ColorAnimation {
+                    from: startStopBtnBorder.border.color
+                    to: startStopBtn.backgroundColor
+                    duration: 400
+                }
+
+                onFinished: startStopBtn.Material.background = startStopBtn.backgroundColor
+
+            }
 
             onClicked: stopPopup.open()
 
@@ -171,35 +220,10 @@ MultiPaneResponsiveLayout {
         }
     }
 
-    ColumnLayout {
-
-        TextArea {
-            id: log
-            placeholderText: 'Log'
-            Layout.fillHeight: true
-            Layout.fillWidth: true
-        }
-
-    }
 
     Component.onCompleted: {
 
-        client.doRequestAsync('GET', '/dashboard/get_states', '')
-            .then(function(res) {
-
-                root.stateMap = res
-
-                let tmp_stateNames = []
-
-                for (const [key, value] of Object.entries(res)) {
-                    tmp_stateNames.push(key)
-                }
-
-                root.stateNames = tmp_stateNames
-
-                console.log(`${root.stateNames}`)
-
-            })
+        Logic.refresh()
 
     }
 
@@ -212,9 +236,6 @@ MultiPaneResponsiveLayout {
             if(msg.type !== 'dashboard_msg') {
                 return
             }
-
-
-            console.log(JSON.stringify(msg))
 
             root.activeState = msg.active_state || root.activeState
 

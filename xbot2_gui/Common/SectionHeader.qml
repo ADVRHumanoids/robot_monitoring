@@ -6,8 +6,12 @@ import Common
 
 RowLayout {
 
-    id: root
     property alias text: title.text
+    property alias font: title.font
+    signal clicked()
+
+    //
+    id: root
 
     Label {
         id: title
@@ -15,5 +19,10 @@ RowLayout {
         font.pixelSize: CommonProperties.font.h1
         Layout.fillWidth: true
         wrapMode: Text.Wrap
+
+        MouseArea {
+            anchors.fill: parent
+            onClicked: root.clicked()
+        }
     }
 }

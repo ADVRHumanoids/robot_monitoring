@@ -196,6 +196,7 @@ class DashboardHandler:
 
     async def plugin_switch(self, plugin_name, switch_flag):
         switch = rospy.ServiceProxy(f'xbotcore/{plugin_name}/switch', service_class=SetBool)
+        await utils.to_thread(switch.wait_for_service, timeout=1.0)
         res = await utils.to_thread(switch, switch_flag)
         return res.success
 

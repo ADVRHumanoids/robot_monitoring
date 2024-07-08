@@ -17,6 +17,7 @@ qt_add_qml_module(xbot2_gui_launcher
     CustoCommand.qml
     Dashboard.qml
     QML_FILES Dashboard.js
+    QML_FILES DashboardStatus.qml
 )
 
 target_link_libraries(xbot2_gui PRIVATE xbot2_gui_launcherplugin)

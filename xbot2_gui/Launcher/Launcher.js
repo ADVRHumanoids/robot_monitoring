@@ -4,7 +4,7 @@ function construct(procRepeater, pluginRepeater) {
 
     requestProcessUpdate(procRepeater)
 
-    requestPluginUpdate(pluginRepeater)
+    requestPluginUpdate(pluginRepeater, true)
 
 }
 
@@ -112,14 +112,14 @@ function onProcMessageReceived(procRepeater, consoleItem, msg) {
 }
 
 
-function requestPluginUpdate(pluginRepeater) {
+function requestPluginUpdate(pluginRepeater, quiet = false) {
     // create plugin cards when available
     let onPluginListReceived = function (msg) {
         // SharedData.pluginNames = msg.plugins
         pluginRepeater.model = msg.plugins
     }
 
-    client.doRequest('GET', '/plugin/get_list', '', onPluginListReceived)
+    client.doRequest('GET', '/plugin/get_list', '', onPluginListReceived, quiet)
 }
 
 

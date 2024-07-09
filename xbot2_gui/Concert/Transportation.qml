@@ -257,7 +257,7 @@ Item {
                             opacity: 1.0
                             border.color: "#8bd5ca"
                             border.width: 5
-                            visible: parent.text === currCmdLabel.text
+                            visible: active_states[index]// parent.text === currCmdLabel.text
                         }
                     }
                 }

@@ -138,6 +138,10 @@ class DashboardHandler:
     @utils.handle_exceptions
     async def dashboard_start(self, request: web.Request):
 
+        # check xbot2 alive
+        if self.stats is None:
+            raise RuntimeError('xbot2 is not alive')
+
         # we need the task name and ctrl mode
         task_name = request.match_info.get('task_name', None)
         
@@ -148,34 +152,37 @@ class DashboardHandler:
 
         # stop all plugins
         all_plugins = [t.name for t in self.stats.task_stats if t.name in self.all_plugins]
+        plugins_to_start = plugins = task['plugin']
+        plugins_to_stop = [p for p in all_plugins if p not in plugins_to_start]
 
-        for p in all_plugins:
+        for p in plugins_to_stop:
             await self.send_status(f'stopping plugin {p}')
             await self.plugin_switch(p, 0)
 
-        for p in all_plugins:
+        for p in plugins_to_stop:
             await self.send_status(f'waiting for plugin {p} to stop...')
             await asyncio.wait_for(self.wait_for_state(p, ['Stopped', 'Initialized']),
                                    timeout=10.0)
 
         # start required plugins
-        plugins = task['plugin']
-        for p in plugins:
+        for p in plugins_to_start:
             await self.send_status(f'starting plugin {p}')
             await self.plugin_switch(p, 1)
-        for p in plugins:
+        for p in plugins_to_start:
             await self.send_status(f'waiting for plugin {p} to start...')
             await self.wait_for_state(p, 'Running')
 
         # kill all active processes
-        for p in self.all_processes:
+        process_to_start = task['process']
+        process_to_stop = [p for p in self.all_processes if p not in process_to_start]
+        for p in process_to_stop:
             await self.send_status(f'killing process {p}')
             l : launcher.Launcher = self.get_launcher()
             await asyncio.wait_for(l.kill(process=p, graceful=True),
                                    timeout=30)
             
         # start required processes
-        for p in task['process']:
+        for p in process_to_start:
             await self.send_status(f'starting process {p}')
             l : launcher.Launcher = self.get_launcher()
             await asyncio.wait_for(l.start(process=p),

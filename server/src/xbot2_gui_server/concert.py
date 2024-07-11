@@ -88,8 +88,11 @@ class ConcertHandler:
         # coworker supervisor
         self.coworker_current_state = None
         self.coworker_is_task_running = None
-        self.coworker_current_state_sub = rospy.Subscriber(config['coworker_current_state_topic'], String, self.coworker_current_state_recv)
-        self.coworker_is_task_running_sub = rospy.Subscriber(config['coworker_is_task_running_topic'], Bool, self.coworker_is_task_running_recv)
+        try:
+            self.coworker_current_state_sub = rospy.Subscriber(config['coworker_current_state_topic'], String, self.coworker_current_state_recv)
+            self.coworker_is_task_running_sub = rospy.Subscriber(config['coworker_is_task_running_topic'], Bool, self.coworker_is_task_running_recv)
+        except BaseException as e:
+            print(e)
 
     def blob_array_recv(self, msg: BlobArray):
         self.last_recv_marker = msg

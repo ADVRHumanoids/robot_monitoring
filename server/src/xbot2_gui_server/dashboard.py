@@ -120,6 +120,14 @@ class DashboardHandler:
             if not await l.kill(process='ecat', graceful=True):
                 raise RuntimeError('could not stop ecat')
             
+            # kill all procs
+            process_to_stop = self.all_processes
+            for p in process_to_stop:
+                await self.send_status(f'killing process {p}')
+                l : launcher.Launcher = self.get_launcher()
+                await asyncio.wait_for(l.kill(process=p, graceful=True),
+                                    timeout=30)
+            
             self.active_state = 'inactive'
             
         else:

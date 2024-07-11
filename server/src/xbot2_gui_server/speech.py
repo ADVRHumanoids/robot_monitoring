@@ -49,7 +49,10 @@ class SpeechHandler:
         self.vosk_thread.start()
 
         self.grammar = config.get('grammar', [])
-        self.cmd_dict = config.get('commands', {})
+        self.state_cmd_dict = config.get('commands', {}).get('state', {})
+        self.task_cmd_dict = config.get('commands', {}).get('task', {})
+        self.allowed_task_dict = config.get('state_task_map', {})
+
         self.prompt = config['prompt']
         self.cmd_queue = None
 
@@ -128,7 +131,11 @@ class SpeechHandler:
                 'body': {
                     'active': self.enable_commands,
                     'prompt': self.prompt,
-                    'commands': list(self.cmd_dict.keys())
+                    'commands':{
+                        'states': list(self.state_cmd_dict.keys()),
+                        'task': list(self.task_cmd_dict.keys())
+                    },
+                    'allowed_task': dict(self.allowed_task_dict)
                 },
                 'success': True,
                 'message': 'voice commands active:' + str(self.enable_commands)
@@ -140,7 +147,7 @@ class SpeechHandler:
 
         md = vosk.Model(lang='en-us')
 
-        grammar = list(self.cmd_dict.keys()) + [self.prompt] + ['[unk]']
+        grammar = list(self.state_cmd_dict.keys()) + list(self.task_cmd_dict.keys())  + [self.prompt] + ['[unk]']
 
         rec = vosk.KaldiRecognizer(md, 16000, json.dumps(grammar))
 
@@ -166,24 +173,30 @@ class SpeechHandler:
 
 
     async def send_command(self, cmd):
-        if cmd not in self.cmd_dict.keys():
+        
+        # find service (if command is valid)
+        if cmd not in self.state_cmd_dict.keys() and cmd not in self.task_cmd_dict.keys():
             await self.srv.ws_send_to_all(dict(type='speech_cmd', cmd='__invalid__'))
             return False, 'invalid command'
-        else:
+        elif cmd in self.state_cmd_dict.keys():
             await self.srv.ws_send_to_all(dict(type='speech_cmd', cmd=cmd))
-            srv = self.cmd_dict[cmd]
-            srv = rospy.ServiceProxy(srv, Trigger)
-            try:
-                res = srv()
-                if res.success:
-                    await self.srv.ws_send_to_all(dict(type='speech_cmd', cmd='__done__'))
-                    return True, 'ok'
-                else:
-                    await self.srv.ws_send_to_all(dict(type='speech_cmd', cmd='__error__', msg=res.message))
-                    return False, res.message
-            except:
-                await self.srv.ws_send_to_all(dict(type='speech_cmd', cmd='__error__', msg='service failure'))
-                return False, 'service failure'
+            srv = self.state_cmd_dict[cmd]
+        elif cmd in self.task_cmd_dict.keys():
+            await self.srv.ws_send_to_all(dict(type='speech_cmd', cmd=cmd))
+            srv = self.task_cmd_dict[cmd]
+
+        # try run service
+        try:
+            res = srv()
+            if res.success:
+                await self.srv.ws_send_to_all(dict(type='speech_cmd', cmd='__done__'))
+                return True, 'ok'
+            else:
+                await self.srv.ws_send_to_all(dict(type='speech_cmd', cmd='__error__', msg=res.message))
+                return False, res.message
+        except:
+            await self.srv.ws_send_to_all(dict(type='speech_cmd', cmd='__error__', msg='service failure'))
+            return False, 'service failure'
 
 
     async def listen_to_command(self, timeout):

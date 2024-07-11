@@ -20,7 +20,7 @@ except ModuleNotFoundError:
 
 
 from std_srvs.srv import SetBool, Trigger
-from std_msgs.msg import Float64, String, Int16
+from std_msgs.msg import Float64, String, Int16, Bool
 from geometry_msgs.msg import TwistStamped, Twist
 
 from .server import ServerBase
@@ -85,8 +85,12 @@ class ConcertHandler:
 
         # drill action client
         self.autodrill_client = None
+        # coworker supervisor
+        self.coworker_current_state = None
+        self.coworker_is_task_running = None
+        self.coworker_current_state_sub = rospy.Subscriber(config['coworker_current_state_topic'], String, self.coworker_current_state_recv)
+        self.coworker_is_task_running_sub = rospy.Subscriber(config['coworker_is_task_running_topic'], Bool, self.coworker_is_task_running_recv)
 
-    
     def blob_array_recv(self, msg: BlobArray):
         self.last_recv_marker = msg
 
@@ -105,7 +109,6 @@ class ConcertHandler:
 
                 self.sanding_progress = None
                 self.sanding_status = None
-
                 await self.srv.udp_send_to_all(msg)
                 
             
@@ -124,6 +127,23 @@ class ConcertHandler:
                     
                 self.last_recv_marker = None
 
+                await self.srv.udp_send_to_all(msg)
+
+            if self.coworker_current_state is not None:
+
+                msg = {
+                    'type': 'coworker_state',
+                    'state': self.coworker_current_state
+                }
+                self.coworker_current_state = None
+                await self.srv.udp_send_to_all(msg)
+            
+            if self.coworker_is_task_running is not None:
+                msg = {
+                    'type': 'coworker_is_task_running',
+                    'state': self.coworker_is_task_running
+                }
+                self.coworker_is_task_running = None
                 await self.srv.udp_send_to_all(msg)
 
             await asyncio.sleep(1./self.rate)
@@ -276,6 +296,13 @@ class ConcertHandler:
     def sanding_progress_recv(self, msg: Int16):
         self.sanding_progress = msg.data
 
+    def coworker_current_state_recv(self, msg: String):
+        print(f"Got state: {msg.data}")
+        self.coworker_current_state = msg.data
+
+    def coworker_is_task_running_recv(self, msg: Bool):
+        print(f"Task is running: {msg.data}")
+        self.coworker_is_task_running = msg.data
 
     @utils.handle_exceptions
     async def sanding_configure_handler(self, req: web.Request):

@@ -6,3 +6,5 @@ server/build/
 xbot2_gui_server.egg-info/
 travis/docker/context
 travis/travis
+build/
+.vscode/

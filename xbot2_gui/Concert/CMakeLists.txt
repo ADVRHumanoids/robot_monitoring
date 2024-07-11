@@ -13,9 +13,13 @@ qt_add_qml_module(xbot2_gui_concert
     SliderModelItem.qml
     Sanding.qml
     Sanding.js
-    QML_FILES Transportation.qml
-    QML_FILES Transportation.js
-    QML_FILES PatternTab.qml
+    Transportation.qml
+    Transportation.js
+    TransportationTasks/TeachingTasks.qml
+    TransportationTasks/FollowTasks.qml
+    TransportationTasks/AutonomousTasks.qml
+    TaskBusyIndicator.qml
+    PatternTab.qml
 )
 
 target_link_libraries(xbot2_gui PRIVATE xbot2_gui_concertplugin)

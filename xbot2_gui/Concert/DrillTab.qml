@@ -9,6 +9,8 @@ Control {
 
     property list<string> blobIds
 
+    property string selectedBlob
+
     //
     id: root
 
@@ -32,6 +34,10 @@ Control {
             id: blobIdCombo
             model: root.blobIds
             width: parent.width
+            onActivated: {
+                selectedBlob = currentText
+            }
+
         }
 
         Label {
@@ -69,6 +75,15 @@ Control {
             Layout.fillHeight: true
         }
 
+        Label {
+            id: blobIdLabel
+            text: selectedBlob.length === 0 ?
+                      'no blob selected' :
+                      `will drill '${selectedBlob}''`
+            Layout.fillWidth: true
+            font.pixelSize: CommonProperties.font.h3
+        }
+
         DelayButton {
             Layout.fillWidth: true
             text: 'Execute drill'
@@ -76,7 +91,9 @@ Control {
 
             onActivated: {
                 Logic.enableArmControl(false)
-                .then( (res) => Logic.doDlillale(blobIdCombo.currentText, depthSpin.value*0.01, drillSpeedSpin.value*0.001) )
+                .then( (res) => Logic.doDlillale(selectedBlob,
+                                                 depthSpin.value*0.01,
+                                                 drillSpeedSpin.value*0.001) )
                 progress = 0
 
             }

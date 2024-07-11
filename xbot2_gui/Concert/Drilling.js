@@ -63,3 +63,15 @@ function updateTaskNames() {
                          configPane.armEEOptions = cartesianTaskNames
                      })
 }
+
+function drillPattern() {
+    let body = Object()
+    body.pattern = patternCombo.currentText
+    body.length = lengthSpin.value * 0.01
+    body.xOffset = xOffsetSpin.value * 0.01
+    body.yOffset = yOffsetSpin.value * 0.01
+    body.numPoints = pointsSpin.value
+    body.drillDepth = drillDepthSpin.value * 0.01
+    console.log(JSON.stringify(body))
+    client.doRequestAsync('POST', '/concert/do_drill_pattern', JSON.stringify(body))
+}

@@ -144,6 +144,8 @@ Item {
 
     DualJoy {
 
+        z: -1
+
         property list<real> vref: [0, 0, 0, 0, 0, 0]
         property string baseTaskName: '[simple topic] /omnisteering/cmd_vel'
         property string armTaskName: configPane.armEE
@@ -151,7 +153,7 @@ Item {
         enabled: configPane.motionMode
 
         anchors {
-            top: toolCol.bottom
+            top: parent.verticalCenter
             bottom: parent.bottom
             left: parent.left
             right: parent.right

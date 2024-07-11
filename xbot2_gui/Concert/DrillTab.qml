@@ -64,8 +64,9 @@ Control {
             to: 10
         }
 
+
         Item {
-            Layout.preferredHeight: 2
+            Layout.fillHeight: true
         }
 
         DelayButton {
@@ -90,10 +91,6 @@ Control {
             onReleased: {
                 Logic.abortDlillale()
             }
-        }
-
-        Item {
-            Layout.fillHeight: true
         }
 
     }

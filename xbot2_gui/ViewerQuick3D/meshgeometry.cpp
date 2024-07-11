@@ -1,4 +1,6 @@
 #include "meshgeometry.h"
+#include <QVector3D>
+#include <QFile>
 
 MeshGeometry::MeshGeometry()
 {
@@ -15,6 +17,13 @@ void MeshGeometry::setMeshFile(QByteArray meshFile)
     m_meshFile = meshFile;
     updateData();
     emit meshFileChanged();
+}
+
+void MeshGeometry::setUrl(QUrl meshUrl)
+{
+    QFile mesh(meshUrl.path());
+    mesh.open(QFile::OpenModeFlag::ReadOnly);
+    setMeshFile(mesh.readAll());
 }
 
 void MeshGeometry::updateData()
@@ -66,6 +75,8 @@ void MeshGeometry::updateData()
         return;
     }
 
+    QVector3D min(1e9, 1e9, 1e9), max(-1e9, -1e9, -1e9);
+
     for(int i = 0; i < numTriangles; i++)
     {
 //        for(int j = 0; j < 12; j++)
@@ -93,10 +104,19 @@ void MeshGeometry::updateData()
         readIdx += 3*sizeof(float);
 
         // print
-        // auto bNf = (float*)bNormal.data();
-        // auto bV1f = (float*)bV1.data();
-        // auto bV2f = (float*)bV2.data();
-        // auto bV3f = (float*)bV3.data();
+        auto bNf = (float*)bNormal.data();
+        auto bV1f = (float*)bV1.data();
+        auto bV2f = (float*)bV2.data();
+        auto bV3f = (float*)bV3.data();
+
+        for(auto v : std::vector<float*>{bV1f, bV2f, bV3f})
+        {
+            for(int i = 0; i < 3; i++)
+            {
+                min[i] = std::min(min[i], v[i]);
+                max[i] = std::max(max[i], v[i]);
+            }
+        }
 
         // printf("N  = %f %f %f \n", bNf[0], bNf[1], bNf[2]);
         // printf("V1 = %f %f %f \n", bV1f[0], bV1f[1], bV1f[2]);
@@ -117,6 +137,8 @@ void MeshGeometry::updateData()
         readIdx += 2;
 
     }
+
+    setBounds(min, max);
 
     setVertexData(vertices);
 

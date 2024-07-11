@@ -18,6 +18,8 @@ public:
 
     void setMeshFile(QByteArray meshFile);
 
+    Q_INVOKABLE void setUrl(QUrl meshUrl);
+
 signals:
 
     void meshFileChanged();

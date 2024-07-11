@@ -56,8 +56,8 @@ Node {
 //            type: modelData.type
             meshUri: modelData.filename
 
-            // cylinderLength: modelData.length || 0
-            // cylinderRadius: modelData.radius || 0
+            cylinderLength: modelData.length || 0
+            cylinderRadius: modelData.radius || 0
             scale: modelData.scale
             localPosition: modelData.origin_xyz
             localRotation: modelData.origin_rot

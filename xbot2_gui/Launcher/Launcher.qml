@@ -37,6 +37,8 @@ MultiPaneResponsiveLayout {
 
                 property int columnSpan: leftGrid.columns
 
+                iconText: dashboard.visible ? '\uf077' : '\uf078'
+
                 Button {
                     text: 'Refresh'
                     onClicked: {
@@ -50,8 +52,6 @@ MultiPaneResponsiveLayout {
                     dashboard.visible = !dashboard.visible
                     leftGrid.computeLayout()
                 }
-
-                font.italic: !dashboard.visible
 
             }
 
@@ -84,7 +84,8 @@ MultiPaneResponsiveLayout {
                     leftGrid.computeLayout()
                 }
 
-                font.italic: !processRepeater.visible
+                iconText: processRepeater.visible ? '\uf077' : '\uf078'
+
             }
 
             Repeater {
@@ -142,7 +143,7 @@ MultiPaneResponsiveLayout {
                     leftGrid.computeLayout()
                 }
 
-                font.italic: !pluginRepeater.visible
+                iconText: pluginRepeater.visible ? '\uf077' : '\uf078'
             }
 
             Repeater {

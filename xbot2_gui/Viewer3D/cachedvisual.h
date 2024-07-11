@@ -21,8 +21,6 @@ public:
 
     Q_PROPERTY(QUrl file READ file NOTIFY fileChanged);
 
-    Q_PROPERTY(QUrl file READ file NOTIFY fileChanged);
-
     QUrl file() const;
 
 signals:

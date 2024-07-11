@@ -10,8 +10,8 @@ Item {
     property alias joyXEnabled: motionTab.joyXEnabled
     property alias joyYEnabled: motionTab.joyYEnabled
     property alias joyZEnabled: motionTab.joyZEnabled
-    property bool motionMode: bar.currentItem.text === 'Motion'
-    property bool drillMode: bar.currentItem.text === 'Dlill'
+    property bool motionMode: bar.currentIndex === 0
+    property bool drillMode: bar.currentItem.text === 'Blob'
     property alias armEE: motionTab.armEE
     property alias armEEOptions: motionTab.armEEOptions
     signal modeChanged()
@@ -42,16 +42,22 @@ Item {
             onCurrentIndexChanged: root.modeChanged()
 
             TabButton {
-                text: 'Motion'
+                text: 'Jogging'
             }
 
             TabButton {
-                text: 'Dlill'
+                text: 'Blob'
+            }
+
+            TabButton {
+                text: 'Pattern'
             }
 
         }
 
         StackLayout {
+
+            id: stack
 
             currentIndex: bar.currentIndex
 
@@ -68,6 +74,10 @@ Item {
 
             DrillTab {
                 id: drillTab
+            }
+
+            PatternTab {
+                id: patternTab
             }
         }
 

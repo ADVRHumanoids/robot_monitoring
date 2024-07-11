@@ -185,8 +185,10 @@ class SpeechHandler:
             await self.srv.ws_send_to_all(dict(type='speech_cmd', cmd=cmd))
             srv = self.task_cmd_dict[cmd]
 
+        print(f"Command: {cmd}")
         # try run service
         try:
+            srv = rospy.ServiceProxy(srv, Trigger)
             res = srv()
             if res.success:
                 await self.srv.ws_send_to_all(dict(type='speech_cmd', cmd='__done__'))

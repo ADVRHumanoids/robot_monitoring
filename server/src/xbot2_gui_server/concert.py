@@ -5,6 +5,7 @@ import json
 import rospy
 import actionlib
 import tf
+import numpy as np
 
 try:
     from concert_vision.msg import BlobArray, Blob
@@ -51,6 +52,10 @@ class ConcertHandler:
                            self.abort_drill_handler,
                            'concert_abort_drill')
         
+        self.srv.add_route('POST', '/concert/do_drill_pattern',
+                           self.do_drill_pattern_handler,
+                           'concert_do_drill_pattern')
+        
         self.srv.add_route('POST', '/concert/enable_arm',
                            self.enable_arm_handler,
                            'concert_enable_arm')
@@ -69,7 +74,7 @@ class ConcertHandler:
         
         self.srv.add_route('POST', '/concert/sanding/tool_started_ack',
                            self.sanding_tool_started_ack_handler,
-                           'concert_sanding_tool_started_ack_handler')
+                           'concert_sanding_tool_started_ack_handler') 
         
         # drilling subscribers
         if concert_drilling_found:
@@ -156,6 +161,7 @@ class ConcertHandler:
     async def enable_arm_handler(self, req):
 
         active = utils.str2bool(req.rel_url.query['active'])
+
         task_name = req.rel_url.query['task_name']
 
         from cartesian_interface.srv import SetControlMode
@@ -180,9 +186,13 @@ class ConcertHandler:
 
         active = utils.str2bool(req.rel_url.query['active'])
 
+        # first we exit conda ros control
+        conda_rosctrl = rospy.ServiceProxy('/cartesio/roscontrol_switch', SetBool)
+        res = await utils.to_thread(conda_rosctrl, False)
+
+        # enable/disable gcomp
         gcomp_switch = rospy.ServiceProxy('/cartesio/gcomp_switch', SetBool)
 
-        print('[gcomp_switch] waiting for server...')
         ok = await utils.to_thread(gcomp_switch.wait_for_service, timeout=rospy.Duration(3.0))
        
         res = await utils.to_thread(gcomp_switch, active)
@@ -219,7 +229,7 @@ class ConcertHandler:
         goal = AutoDrillGoal()
         goal.blob_id = blob_id
         goal.approach_velocity = 0.03
-        goal.pre_approach_distance = 0.30
+        goal.pre_approach_distance = 0.03
         goal.force_threshold = 40.0
         goal.blob_depth = blob_depth
         goal.drill_velocity = drill_velocity
@@ -281,6 +291,63 @@ class ConcertHandler:
                 'success': True,
                 'message': 'cancel done',
             }))
+
+    
+    @utils.handle_exceptions
+    async def do_drill_pattern_handler(self, req):
+        
+        body = await req.json()
+        
+        print(body)
+
+        # do things
+        x_offset = []
+        y_offset = []
+        
+        offset = np.array([
+            float(body['xOffset']),
+            float(body['yOffset'])
+        ])
+        
+        if body['pattern'] == 'horizontal':
+            delta = np.array([1, 0])
+        elif body['pattern'] == 'vertical':
+            delta = np.array([0, 1]) 
+        else:
+            raise ValueError('invalid pattern')
+        
+        p0 = offset + delta * body['length'] / 2
+        pf = offset - delta * body['length'] / 2
+        
+        n_points = body['numPoints']
+        
+        if n_points == 1:
+            
+            x_offset.append(offset[0])
+            y_offset.append(offset[1])
+            
+        else:
+            
+            for i in range(n_points):
+                p = p0 + i*(pf - p0)/float(n_points - 1)
+                x_offset.append(p[0])
+                y_offset.append(p[1])
+        
+        x_offset = list(map(float, x_offset))
+        y_offset = list(map(float, y_offset))
+        
+        rospy.set_param('click_detector/offset_x/fiducial_0', x_offset)
+        rospy.set_param('click_detector/offset_y/fiducial_0', y_offset)
+        
+        rospy.set_param('bt_node/drill_in', body['drillDepth'])
+            
+        return web.Response(text=json.dumps(
+            {
+                'success': True,
+                'message': 'ok',
+            }))
+
+
 
 
     async def handle_ws_msg(self, msg, proto, ws):

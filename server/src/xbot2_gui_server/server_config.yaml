@@ -15,16 +15,33 @@ concert:
   sanding_status_topic: ciaooo
   sanding_progress_topic: ciaoooo
 
-speech:
-  prompt: hey concert 
-  commands:
-    teaching: /voice_commands/teaching
-    lift: /voice_commands/lift
-    transportation: /voice_commands/transportation
-    autonomous: adssdd
-    close gripper: cg
-    open gripper: og
+#speech:
+#  prompt: hey concert 
+#  commands:
+#    teaching: /voice_commands/teaching
+#    lift: /voice_commands/lift
+#    transportation: /voice_commands/transportation
+#    autonomous: adssdd
+#    close gripper: cg
+#    open gripper: og
 
+speech:
+  prompt: hey concert
+  commands: 
+    state:
+      autonomous: /coworker_supervisor/start_autonomous
+      teaching: /coworker_supervisor/start_teaching
+      follow: /coworker_supervisor/start_ffm
+      stop: /coworker_supervisor/abort
+    task:
+      lift: /coworker_supervisor/move_arm_up
+      place: /coworker_supervisor/move_arm_down
+      open: /coworker_supervisor/open_gripper
+      close: /coworker_supervisor/close_gripper
+  state_task_map: # mapping between state and allowed tasks
+    autonomous: [lift, place]
+    teaching: [open, close, lift]
+    follow: [place]
 #horizon:
 #  type: horizon  
 #ecat_master_process:

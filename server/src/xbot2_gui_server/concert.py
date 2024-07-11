@@ -32,7 +32,7 @@ class ConcertHandler:
     def __init__(self, srv: ServerBase, config=dict()) -> None:
 
         # request ui page
-        self.requested_pages = ['Builder', 'Linfa', 'Drill Task', 'Sanding', 'Transportation']
+        self.requested_pages = ['Builder', 'Linfa', 'Drill Task', 'Transportation']
 
         # config
         self.rate = config.get('rate', 10.0)

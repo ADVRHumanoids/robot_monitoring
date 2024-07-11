@@ -64,21 +64,25 @@ def main():
         from .joint_states import JointStateHandler
         ext = JointStateHandler(srv, cfg.get('joint_states', {}))
         extensions.append(ext)
+        print(ext)
 
         # joint device
         from .joint_device import JointDeviceHandler
         ext = JointDeviceHandler(srv, cfg.get('joint_device', {}))
         extensions.append(ext)
+        print(ext)
 
         # plugin
         from .plugin import PluginHandler
         ext = PluginHandler(srv, cfg.get('plugin', {}))
         extensions.append(ext)
+        print(ext)
 
         # theora video
         from .theora_video import TheoraVideoHandler
         ext = TheoraVideoHandler(srv, cfg.get('theora_video', {}))
         extensions.append(ext)
+        print(ext)
 
         # cartesian
         try:
@@ -93,6 +97,7 @@ def main():
             from .speech import SpeechHandler
             ext = SpeechHandler(srv, cfg.get('speech', {}))
             extensions.append(ext)
+            print(ext)
         except ModuleNotFoundError:
             pass
 
@@ -100,14 +105,17 @@ def main():
         from .visual import VisualHandler
         ext = VisualHandler(srv, cfg.get('visual', {}))
         extensions.append(ext)
+        print(ext)
 
         # concert
         if 'concert' in cfg.keys():
-            from .concert import ConcertHandler
-            print('concert')
-            ext = ConcertHandler(srv, cfg.get('concert', {}))
-            print('concert')
-            extensions.append(ext)
+            try:
+                from .concert import ConcertHandler
+                ext = ConcertHandler(srv, cfg.get('concert', {}))
+                extensions.append(ext)
+                print(ext)    
+            except BaseException as e:
+                print('Exception ', type(e), e)  
 
         # ecat
         if 'ecat' in cfg.keys():
@@ -126,6 +134,7 @@ def main():
             from .launcher import Launcher
             ext = Launcher(srv, cfg.get('launcher', {}))
             extensions.append(ext)
+            print(ext)
         except ModuleNotFoundError:
             pass
         
@@ -134,6 +143,7 @@ def main():
             from .dashboard import DashboardHandler
             ext = DashboardHandler(srv, cfg.get('dashboard', {}))
             extensions.append(ext)
+            print(ext)
         except BaseException as e:
             print('Exception ', type(e), e)
 

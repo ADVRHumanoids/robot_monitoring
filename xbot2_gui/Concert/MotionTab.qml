@@ -35,6 +35,7 @@ Control {
         }
 
         Label {
+            topPadding: 4
             text: ' joy target'
             font.pointSize: 10
             enabled: moveEnableSwitch.checked

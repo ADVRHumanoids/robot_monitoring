@@ -9,7 +9,7 @@ Control {
 
     property list<string> blobIds
 
-    property string selectedBlob
+    property alias selectedBlob: blobIdCombo.currentText
 
     //
     id: root
@@ -32,17 +32,20 @@ Control {
         ComboBox {
             Layout.fillWidth: true
             id: blobIdCombo
-            model: root.blobIds
+            model: []
             width: parent.width
-            onActivated: {
-                selectedBlob = currentText
-            }
+        }
 
+        Button {
+            text: 'Update blobs'
+            onClicked: blobIdCombo.model = root.blobIds
+            Layout.fillWidth: true
         }
 
         Label {
             text: ' select depth (cm)'
             font.pointSize: 10
+            topPadding: 4
         }
 
         SpinBox {

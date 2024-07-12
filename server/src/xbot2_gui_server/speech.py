@@ -229,7 +229,7 @@ class SpeechHandler:
                     txt = self.text_queue.get_nowait().strip()
                     await self.srv.ws_send_to_all(dict(type='speech_text', text=txt))
 
-                    if self.enable_commands and txt == self.prompt and self.cmd_queue is None:
+                    if self.enable_commands and self.prompt in txt and self.cmd_queue is None:
                         self.cmd_queue = asyncio.Queue()
                         self.srv.schedule_task(self.listen_to_command(timeout=8))
                         

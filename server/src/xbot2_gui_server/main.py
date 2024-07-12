@@ -84,6 +84,16 @@ def main():
         extensions.append(ext)
         print(ext)
 
+        # launcher
+        try:
+            from .launcher import Launcher
+            ext = Launcher(srv, cfg.get('launcher', {}))
+            extensions.append(ext)
+        except ModuleNotFoundError:
+            pass
+        except BaseException as e:
+            print('Exception ', type(e), e)  
+
         # cartesian
         try:
             from .cartesian import CartesianHandler
@@ -100,6 +110,9 @@ def main():
             print(ext)
         except ModuleNotFoundError:
             pass
+        except BaseException as e:
+            print('Exception ', type(e), e)  
+
 
         # visual
         from .visual import VisualHandler
@@ -128,15 +141,6 @@ def main():
             from .horizon import HorizonHandler
             ext = HorizonHandler(srv, cfg.get('horizon', {}))
             extensions.append(ext)
-
-        # launcher
-        try:
-            from .launcher import Launcher
-            ext = Launcher(srv, cfg.get('launcher', {}))
-            extensions.append(ext)
-            print(ext)
-        except ModuleNotFoundError:
-            pass
         
         # dashboard
         try:

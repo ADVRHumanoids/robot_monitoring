@@ -96,6 +96,7 @@ class ConcertHandler:
         try:
             self.coworker_current_state_sub = rospy.Subscriber(config['coworker_current_state_topic'], String, self.coworker_current_state_recv)
             self.coworker_is_task_running_sub = rospy.Subscriber(config['coworker_is_task_running_topic'], Bool, self.coworker_is_task_running_recv)
+            print(f'subscribed to cowoerker supervisor topics')
         except BaseException as e:
             print(e)
 

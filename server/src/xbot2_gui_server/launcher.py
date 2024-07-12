@@ -21,7 +21,7 @@ class Launcher:
         if not os.path.isabs(launcher_cfg_path):
             launcher_cfg_path = os.path.join(os.path.dirname(srv.cfgpath), launcher_cfg_path)
         
-        self.cfg = yaml.safe_load(open(config['launcher_config'], 'r'))
+        self.cfg = yaml.safe_load(open(launcher_cfg_path, 'r'))
 
         self.rate = 3.333
         

@@ -134,13 +134,15 @@ Item {
 
     RowLayout {
 
+        z: -1
+
         visible: !layout.compact
 
         anchors {
             left: parent.left
             bottom: parent.bottom
             right: parent.right
-            top: toolCol.bottom
+            top: setupCard.bottom
             margins: 16
         }
 

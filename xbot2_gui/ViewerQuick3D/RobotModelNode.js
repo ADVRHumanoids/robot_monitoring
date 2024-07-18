@@ -62,6 +62,8 @@ function getPose(model, linkName) {
 
 function updateQ(q) {
 
+    console.log(`updateQ ${JSON.stringify(q)}`)
+
     model.setJointPosition(q)
 
     for(let i = 0; i < visualRepeater.count; i++) {

@@ -31,7 +31,7 @@ dashboard:
   states:
     - name: jogging_cartesian
       nice_name: Jogging (Cartesian)
-      process: []
+      process: [prova1, prova2]
       plugin: [homing]
     - name: jogging_joint
       nice_name: Jogging (Joint)

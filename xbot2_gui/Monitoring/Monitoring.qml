@@ -7,6 +7,7 @@ import Common
 import Main
 import Monitoring.BarPlot
 import Monitoring.SingleJointState
+import ViewerQuick3D as V
 
 import "Monitoring.js" as Logic
 
@@ -184,7 +185,7 @@ MultiPaneResponsiveLayout {
 
             id: loader
             width: parent.width
-            asynchronous: true
+            asynchronous: false
             // visible: status === Loader.Ready
             active: true
 
@@ -192,13 +193,11 @@ MultiPaneResponsiveLayout {
             Layout.fillHeight: true
             Layout.preferredHeight: 200
 
-            sourceComponent: RobotModelViewer {
+            sourceComponent: V.RobotModelViewer {
                 id: robotViewer
-                implicitHeight: 200
-                implicitWidth: 200
 
                 client: root.client
-                backgroundColor: 'transparent'
+                // backgroundColor: 'transparent'
 
             }
 

@@ -79,6 +79,10 @@ public class AudioSource
                 return "Wired headphones";
             case AudioDeviceInfo.TYPE_WIRED_HEADSET:
                 return "Wired headset";
+            case AudioDeviceInfo.TYPE_USB_HEADSET:
+                return "Wired USB headset";
+            case AudioDeviceInfo.TYPE_USB_DEVICE:
+                return "Wired USB device";
             case AudioDeviceInfo.TYPE_TELEPHONY:
             case AudioDeviceInfo.TYPE_UNKNOWN:
             default:
@@ -108,6 +112,7 @@ public class AudioSource
                 String deviceType = audioDeviceTypeToString(deviceInfo.getType());
 
                 if (deviceType.equals(audioDeviceTypeToString(AudioDeviceInfo.TYPE_UNKNOWN))) {
+                    System.out.println("Unknown device");
                     // Not supported device type
                     continue;
                 } else if (deviceType.equals(audioDeviceTypeToString(AudioDeviceInfo.TYPE_BUILTIN_MIC))) {

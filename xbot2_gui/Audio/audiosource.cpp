@@ -46,8 +46,16 @@ AudioSource::AudioSource():
         for (int i = 0; i < size; ++i) {
             QString val = QJniObject(env->GetObjectArrayElement(devsArray, i)).toString();
             qInfo() << val;
+            int id = val.split(":")[0].toInt();
+            QString descr = val.split(":")[1];
+            _audio_dev_descr.append(descr);
+            _audio_dev_id.append(id);
+            _audio_dev.append(QAudioDevice());
         }
+        _current_device = _audio_dev_descr[0];
     }
+
+    qInfo() << _audio_dev_descr;
 
     const JNINativeMethod methods[] = {
         { "onAudioDataReceivedBase64", "([B)V", (void *)onAudioDataReceivedBase64 }
@@ -82,6 +90,8 @@ AudioSource::AudioSource():
 
     initializeDevices();
 
+    emit devicesChanged(_audio_dev_descr);
+
     // initializeAudio(_audio_dev.last());
 }
 
@@ -90,7 +100,8 @@ void AudioSource::start()
     _buf.clear();
     emit bytesAvailableChanged(0);
     _active = true;
-    initializeAudio(_audio_dev[_audio_dev_descr.indexOf(_current_device)]);
+    int idx = _audio_dev_descr.indexOf(_current_device);
+    initializeAudio(_audio_dev[idx], _audio_dev_id[idx]);
 }
 
 void AudioSource::stop()
@@ -145,12 +156,19 @@ void AudioSource::checkMicrophonePermissions()
 
 void AudioSource::initializeDevices()
 {
+
+#ifdef ANDROID
+    qInfo() << __func__ << "does nothing on android";
+    return;
+#endif
+
     _audio_dev_descr.clear();
     _audio_dev.clear();
 
     const QAudioDevice& defaultDeviceInfo = QMediaDevices::defaultAudioInput();
     _audio_dev_descr.append(defaultDeviceInfo.description());
     _audio_dev.append(defaultDeviceInfo);
+    _audio_dev_id.append(defaultDeviceInfo.id().toInt());
 
     for(auto& deviceInfo : _media_devices->audioInputs())
     {
@@ -160,6 +178,7 @@ void AudioSource::initializeDevices()
         {
             _audio_dev_descr.append(deviceInfo.description());
             _audio_dev.append(deviceInfo);
+            _audio_dev_id.append(deviceInfo.id().toInt());
         }
     }
 
@@ -187,7 +206,8 @@ qreal AudioSource::calculateLevel(const char *data, qint64 len) const
 }
 
 #ifdef ANDROID
-void AudioSource::initializeAudio(const QAudioDevice &deviceInfo)
+void AudioSource::initializeAudio(const QAudioDevice &deviceInfo,
+                                  int id)
 {
     _format.setSampleRate(16000);
     _format.setChannelCount(1);
@@ -211,10 +231,10 @@ void AudioSource::initializeAudio(const QAudioDevice &deviceInfo)
     QJniObject::callStaticMethod<void>(
         "it/iit/hhcm/xbot2_gui_client/AudioSource",
         "startSoundRecording",
-        deviceInfo.id().toInt());
+        id);
 }
 #else
-void AudioSource::initializeAudio(const QAudioDevice &deviceInfo)
+void AudioSource::initializeAudio(const QAudioDevice &deviceInfo, int id)
 {
     _format.setSampleRate(16000);
     _format.setChannelCount(1);

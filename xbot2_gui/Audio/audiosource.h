@@ -29,6 +29,7 @@ public:
 
     QStringList devices() const
     {
+        qInfo() << __func__ << _audio_dev_descr;
         return _audio_dev_descr;
     }
 
@@ -58,7 +59,7 @@ public:
 
         if(_active)
         {
-            initializeAudio(_audio_dev[idx]);
+            initializeAudio(_audio_dev[idx], _audio_dev_id[idx]);
         }
     }
 
@@ -120,11 +121,13 @@ private:
 
     qreal calculateLevel(const char *data, qint64 len) const;
 
-    void initializeAudio(const QAudioDevice &deviceInfo);
+    void initializeAudio(const QAudioDevice &deviceInfo,
+                         int id = 0);
 
     std::unique_ptr<QAudioSource> _audio_src;
     QIODevice * _io_dev = nullptr;
     QStringList _audio_dev_descr;
+    QList<int> _audio_dev_id;
     QList<QAudioDevice> _audio_dev;
     std::unique_ptr<QMediaDevices> _media_devices;
     QString _current_device;

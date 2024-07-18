@@ -46,19 +46,25 @@ def main():
             try:
                 await srv.log('waiting for ros master')
                 rospy.get_master().getPid()
+                # init rospy node
+                rospy.init_node('xbot2_gui_server', disable_signals=True)
                 break
             except Exception as e:
+                print(type(e), e)
                 await asyncio.sleep(1.0)
-
+            except:
+                print('unk exc')
+                
         await srv.log('ros master is alive')
 
-        # init rospy node
-        rospy.init_node('xbot2_gui_server', disable_signals=True)
-
         # wasm ui
-        from .webui import WebUiHandler
-        ext = WebUiHandler(srv, cfg.get('webui', {}))
-        extensions.append(ext)
+        try:
+            from .webui import WebUiHandler
+            ext = WebUiHandler(srv, cfg.get('webui', {}))
+            extensions.append(ext)
+            print(ext)
+        except BaseException as e:
+            print(type(e), e)
 
         # joint states
         from .joint_states import JointStateHandler
@@ -81,6 +87,12 @@ def main():
         # theora video
         from .theora_video import TheoraVideoHandler
         ext = TheoraVideoHandler(srv, cfg.get('theora_video', {}))
+        extensions.append(ext)
+        print(ext)
+
+        # parameter tuning
+        from .parameters import ParameterHandler
+        ext = ParameterHandler(srv, cfg.get('parameters', {}))
         extensions.append(ext)
         print(ext)
 

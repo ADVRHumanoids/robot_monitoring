@@ -4,7 +4,7 @@ import QtQuick.Layouts
 
 import Common
 import Main
-import Viewer3D
+import ViewerQuick3D
 import "/qt/qml/Main/sharedData.js" as SharedData
 
 import "JointCommand.js" as Logic
@@ -101,7 +101,7 @@ Card {
             text: 'Reset'
             onReleased: {
                 root.resetCmd()
-                nameCombo.currentIndexChanged()
+                // nameCombo.currentIndexChanged()
             }
         }
 

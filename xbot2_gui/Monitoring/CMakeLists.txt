@@ -11,6 +11,8 @@ qt_add_qml_module(xbot2_gui_monitoring
     Monitoring.qml
     RobotModelViewer.js
     RobotModelViewer.qml
+    QML_FILES Parameters.qml
+    QML_FILES Parameters.js
 )
 
 target_link_libraries(xbot2_gui PRIVATE xbot2_gui_monitoringplugin)

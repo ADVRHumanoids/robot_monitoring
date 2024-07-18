@@ -49,6 +49,16 @@ Item {
                 }
             }
 
+            Label {
+                text: 'Select audio source'
+                font.pixelSize: CommonProperties.font.h3
+            }
+            ComboBox {
+                model: AudioBroadcaster.devices
+                onCurrentTextChanged: AudioBroadcaster.currentDevice = currentText
+                Layout.fillWidth: true
+            }
+
             //
             Label {
                 text: 'Recognized text'

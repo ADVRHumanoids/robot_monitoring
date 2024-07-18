@@ -163,11 +163,11 @@ ApplicationWindow {
 
         PageItem {
             name: "Playground"
-            page: "/qt/qml/TestThings/Playground.qml"
+            page: "/qt/qml/Monitoring/Parameters.qml"
             iconText: MaterialSymbolNames.playground
             iconFont: syms.font.family
             active: true
-            visible: false
+            visible: true
         }
 
         PageItem {

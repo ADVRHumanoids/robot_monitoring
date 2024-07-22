@@ -43,7 +43,7 @@ ApplicationWindow {
     }
 
     Component.onCompleted: {
-        console.log(`palette.disabled.buttonText ${palette.disabled.buttonText.a}`)
+        appData.keepScreenOn(true)
     }
 
     MouseArea {

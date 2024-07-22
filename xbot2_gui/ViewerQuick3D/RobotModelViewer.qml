@@ -1,8 +1,11 @@
 import QtQuick
+import QtQuick.Layouts
+import QtQuick.Controls
 import QtQuick3D
 import QtQuick3D.Helpers
 
 import Main
+import Common
 import "/qt/qml/Main/sharedData.js" as SharedData
 import "RobotModelViewer.js" as Logic
 
@@ -13,6 +16,7 @@ Rectangle {
     property ClientEndpoint client
     property alias robotState: robotState
     property alias robotCmd: robotCmd
+    property alias showRobotCmd: showCmdChk.checked
 
     function updateRobotState(js, robot, fieldName) {
         Logic.updateViewerState(js, robot, fieldName)
@@ -26,6 +30,28 @@ Rectangle {
 
     //
     id: root
+
+    Control {
+
+        z: 10
+
+        contentItem: GridLayout {
+            columns: 2
+            CheckBox {
+                id: showAxesChk
+                Layout.fillWidth: true
+                Layout.columnSpan: 2
+                text: 'Show axes'
+            }
+            CheckBox {
+                id: showCmdChk
+                Layout.fillWidth: true
+                Layout.columnSpan: 2
+                text: 'Show command robot'
+            }
+        }
+
+    }
 
     // The root scene
     Node {
@@ -51,7 +77,7 @@ Rectangle {
         }
 
         Axes3D {
-
+            visible: showAxesChk.checked
         }
 
         Node {
@@ -64,16 +90,14 @@ Rectangle {
                 eulerRotation.x: -25
             }
 
-
-
             RobotModelNode {
                 id: robotState
                 client: root.client
                 eulerRotation.x: -90
                 y: 75
-                opacity: 0.5
+                opacity: showAxesChk.checked ? 0.9 : 1
                 color: 'green'
-                visible: false
+                axesVisible: showAxesChk.checked
             }
 
             RobotModelNode {
@@ -82,6 +106,7 @@ Rectangle {
                 eulerRotation.x: -90
                 y: 75
                 opacity: 0.5
+                visible: showCmdChk.checked
             }
 
         }
@@ -97,7 +122,7 @@ Rectangle {
 
         environment: SceneEnvironment {
                  backgroundMode: SceneEnvironment.Color
-                 clearColor: Qt.rgba(0.8, 0.8, 0.8, 1)
+                 clearColor: palette.active.base
                  InfiniteGrid {
                      gridInterval: 30
                  }

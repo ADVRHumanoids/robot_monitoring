@@ -20,7 +20,7 @@ Node {
 
     property alias ndof: model.ndof
 
-    property bool visible: true
+    property bool axesVisible: false
 
     property var q: Array(ndof).fill(0.0)
 
@@ -65,6 +65,7 @@ Node {
             alpha: root.alpha
             visible: root.visible
             client: root.client
+            axesVisible: root.axesVisible
         }
     }
 

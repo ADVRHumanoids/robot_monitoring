@@ -62,7 +62,10 @@ function getPose(model, linkName) {
 
 function updateQ(q) {
 
-    console.log(`updateQ ${JSON.stringify(q)}`)
+    if(q.length !== model.ndof) {
+        console.error(`q.length !== model.ndof (${q.length} !== ${model.ndof})`)
+        return
+    }
 
     model.setJointPosition(q)
 

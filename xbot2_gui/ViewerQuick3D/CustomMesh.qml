@@ -12,6 +12,7 @@ Node {
     property string meshUri
 
     property alias visible: model.visible
+    property alias axesVisible: axes.visible
     property color color: Qt.rgba(0.8, 0.8, 0.8, 1.0)
     property alias alpha: material.opacity
 
@@ -49,6 +50,7 @@ Node {
         }
 
         Axes3D {
+            id: axes
             scale: Qt.vector3d(0.1, 0.1, 0.1)
         }
 

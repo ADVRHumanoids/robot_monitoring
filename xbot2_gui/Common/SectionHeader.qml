@@ -11,6 +11,7 @@ RowLayout {
     property alias font: title.font
     signal clicked()
     property alias iconText: iconLabel.text
+    property int pixelSize: CommonProperties.font.h1
 
     //
     id: root
@@ -21,7 +22,8 @@ RowLayout {
         id: iconLabel
 
         font.family: CommonProperties.fontAwesome.solid.family
-        font.pixelSize: CommonProperties.font.h1
+        font.pixelSize: root.pixelSize
+        visible: text !== ''
 
         MouseArea {
             anchors.fill: parent
@@ -33,7 +35,7 @@ RowLayout {
     Label {
         id: title
         text: 'Title'
-        font.pixelSize: CommonProperties.font.h1
+        font.pixelSize: root.pixelSize
         Layout.fillWidth: true
         wrapMode: Text.Wrap
 

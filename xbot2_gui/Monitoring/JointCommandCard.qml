@@ -14,6 +14,7 @@ Card {
     property ClientEndpoint client
     property RobotModelNode robotCmd
     signal resetCmd()
+    signal cmdChanged()
     function selectJoint(jname) {
         nameCombo.currentIndex = nameCombo.find(jname)
     }
@@ -55,6 +56,7 @@ Card {
             onMoved: {
                 robotCmd.q[nameCombo.currentIndex] = value
                 robotCmd.qChanged()
+                root.cmdChanged()
             }
             from: SharedData.qmin[SharedData.jointNames.indexOf(nameCombo.currentText)]
             to: SharedData.qmax[SharedData.jointNames.indexOf(nameCombo.currentText)]
@@ -101,7 +103,7 @@ Card {
             text: 'Reset'
             onReleased: {
                 root.resetCmd()
-                // nameCombo.currentIndexChanged()
+                nameCombo.currentIndexChanged()
             }
         }
 

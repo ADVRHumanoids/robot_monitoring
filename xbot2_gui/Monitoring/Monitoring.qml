@@ -19,8 +19,8 @@ MultiPaneResponsiveLayout {
 
     id: root
     property Item livePlot: CommonProperties.globalLivePlot
-    onBeforeLayoutChange: loader.active = false
-    onAfterLayoutChange: loader.active = true
+    // onBeforeLayoutChange: loader.active = false
+    // onAfterLayoutChange: loader.active = true
     property real vbatt
     property real iload
 
@@ -185,7 +185,7 @@ MultiPaneResponsiveLayout {
 
             id: loader
             width: parent.width
-            asynchronous: false
+            asynchronous: true
             // visible: status === Loader.Ready
             active: true
 
@@ -195,8 +195,8 @@ MultiPaneResponsiveLayout {
 
             sourceComponent: V.RobotModelViewer {
                 id: robotViewer
-
                 client: root.client
+                color: Qt.transparent
                 // backgroundColor: 'transparent'
 
             }
@@ -209,6 +209,7 @@ MultiPaneResponsiveLayout {
             client: root.client
             robotCmd: loader.item.robotCmd
             onResetCmd: robotViewer.resetCmd()
+            onCmdChanged: robotViewer.showRobotCmd = true
             enabled: jointDevice.jointActive
         }
 

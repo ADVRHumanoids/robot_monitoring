@@ -20,6 +20,8 @@
 #include "ViewerQuick3D/meshgeometry.h"
 #endif
 
+#include <QtCore/qcoreapplication_platform.h>
+
 class AppData : public QObject
 {
     Q_OBJECT
@@ -68,6 +70,45 @@ public:
         }
     }
 
+    Q_INVOKABLE void keepScreenOn(bool on)
+    {
+#ifdef ANDROID
+        QNativeInterface::QAndroidApplication::runOnAndroidMainThread(
+            [on]()
+            {
+                QJniObject activity = QNativeInterface::QAndroidApplication::context();
+
+                if (activity.isValid())
+                {
+                    QJniObject window =
+                        activity.callObjectMethod("getWindow", "()Landroid/view/Window;");
+
+                    if (window.isValid())
+                    {
+                        const int FLAG_KEEP_SCREEN_ON = 128;
+
+                        if (on)
+                        {
+                            window.callMethod<void>("addFlags", "(I)V", FLAG_KEEP_SCREEN_ON);
+                        }
+                        else
+                        {
+                            window.callMethod<void>("clearFlags", "(I)V", FLAG_KEEP_SCREEN_ON);
+                        }
+                    }
+                }
+
+                QJniEnvironment env;
+
+                if (env->ExceptionCheck()) {
+                    env->ExceptionClear();
+                }
+            });
+#else
+        static_cast<void>(on);
+#endif
+    }
+
 public:
 
     QString hostname { "localhost" };
@@ -82,6 +123,7 @@ public:
 
 int main(int argc, char *argv[])
 {
+
     // create appdata global object
     AppData appdata;
 

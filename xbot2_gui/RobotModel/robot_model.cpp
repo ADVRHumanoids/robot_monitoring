@@ -19,7 +19,7 @@ public:
 
     QList<QString> getJointNames();
 
-    int ndof;
+    int ndof = 0;
 
     QList<QString> jointNames;
 

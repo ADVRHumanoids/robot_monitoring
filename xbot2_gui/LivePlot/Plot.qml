@@ -63,6 +63,7 @@ MultiPaneResponsiveLayout {
                     spacing: 3
 
                     Button {
+                        width: parent.width
                         text: 'Reset'
                         onClicked: livePlot.resetView()
                     }
@@ -78,11 +79,10 @@ MultiPaneResponsiveLayout {
                         font.pointSize: 10
                     }
 
-                    DoubleSpinBox {
+                    SpinBox {
                         id: rangeSpin
                         from: 0
                         to: 1000
-                        stepSize: 1
                         value: 10
                     }
                 }

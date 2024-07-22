@@ -18,6 +18,7 @@ find_package(Qt6 COMPONENTS
     ShaderTools
     DataVisualization
     TextToSpeech
+    Charts
     REQUIRED)
 
 if(NOT EMSCRIPTEN)

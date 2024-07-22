@@ -11,108 +11,124 @@ Item {
 
     id: root
 
+    property list<ParameterView> paramViews: [rootView]
+
     property ClientEndpoint client
 
-    property Component boolDelegate: CheckBox {
-        readonly property bool value: checked
-    }
+    property Component paramViewDelegate: ParameterView {}
 
-    property Component intDelegate: SpinBox {
+    property Component boolDelegate: BoolDelegate {}
 
-    }
+    property Component intDelegate: IntDelegate {}
 
-    property Component vectorDelegate: Control {
-        id: control1
-        property list<real> value
-        contentItem: Flow {
+    property Component vectorDelegate: VectorDelegate {}
+
+    property Component doubleDelegate: RealDelegate {}
+
+    property Component discreteValuesDelegate: DiscreteValuesDelegate {}
+
+    property Component wrapperItemDelegate: Control {
+
+        property alias name: header.text
+        property alias loader: loader
+        property bool busy: false
+
+        id: control
+        leftPadding: 10
+        rightPadding: 10
+        topPadding: 8
+        bottomPadding: 8
+
+        contentItem: Column {
+
             spacing: 8
-            Repeater {
-                model: control1.value.length
-                TextField {
-                    padding: 4
-                    required property int index
-                    text: `${control1.value[index]}`
-                    color: palette.active.text
-                    placeholderText: `id ${index}`
-                    width: 60
-                    onAccepted: {
-                        control1.value[index] = Number(text)
+
+            add: Transition {
+                NumberAnimation{
+                    property: "opacity"
+                    from: 0
+                    to: 1
+                }
+            }
+
+            SectionHeader {
+                id: header
+                pixelSize: CommonProperties.font.h3
+                onClicked: loaderWrapper.visible = !loaderWrapper.visible
+                width: parent.width
+                // Layout.fillWidth: true
+
+                Button {
+                    text: 'Set'
+                    enabled: !control.busy
+                    onClicked: {
+                        control.busy = true
+                        Logic.setParams(control.name, loader.item.value)
+                        .then((res) => control.busy = false)
                     }
                 }
             }
-        }
-    }
 
-    property Component doubleDelegate: RowLayout {
-        id: control
-        property real min: -1
-        property real max: 1
-        function setValue(value) {
-            console.log(`setValue ${value}`)
-            slider.value = value
-            spin.value = value
-        }
-        readonly property real value: slider.value
+            Item {
 
-        Slider {
-            id: slider
-            Layout.fillWidth: true
-            from: control.min
-            to: control.max
-            onMoved: spin.value = value
-        }
-        DoubleSpinBox1 {
-            id: spin
-            from: control.min
-            to: control.max
-            onValueModified: slider.value = value
-        }
-    }
-
-    property Component discreteValuesDelegate: ComboBox {
-        readonly property string value: currentText
-    }
-
-    ColumnLayout {
-
-        anchors.fill: parent
-
-        RowLayout{
-            Layout.fillWidth: true
-            Button {
-                Layout.fillWidth: true
-                text: 'Refresh'
-                onClicked: Logic.refresh()
-            }
-            Button {
-                Layout.fillWidth: true
-                text: 'Set'
-                onClicked: Logic.setParams()
-            }
-        }
-
-        Repeater {
-
-            id: repeater
-
-            RowLayout {
-
-                property alias name: nameLabel.text
-                property alias loader: loader
-                property alias checked: nameLabel.checked
-                spacing: 16
-
-                CheckBox {
-                    id: nameLabel
-                    text: ''
-                    checked: false
-                }
+                id: loaderWrapper
+                width: parent.width
+                height: loader.height
 
                 Loader {
                     id: loader
-                    Layout.fillWidth: true
-
+                    // Layout.fillWidth: true
+                    width: parent.width
+                    opacity: control.busy ? 0.1 : 1
                 }
+
+                BusyIndicator {
+                    running: control.busy
+                    anchors.centerIn: loader
+                    z: 1
+                }
+
+            }
+
+        }
+
+        background: Rectangle {
+            radius: 4
+            color: Qt.rgba(1, 1, 1, 0.1)
+        }
+    }
+
+    ScrollView {
+
+        id: scroll
+        anchors.fill: parent
+        contentWidth: availableWidth
+
+        Column {
+
+            spacing: 16
+            width: scroll.availableWidth
+
+            RowLayout{
+                width: parent.width
+                Button {
+                    Layout.fillWidth: true
+                    text: 'Refresh'
+                    onClicked: Logic.refresh1()
+                }
+                Button {
+                    Layout.fillWidth: true
+                    text: 'Set'
+                    onClicked: Logic.setParams()
+                }
+            }
+
+            ParameterView {
+
+                id: rootView
+                width: parent.width
+
+                viewName: '/'
 
             }
 

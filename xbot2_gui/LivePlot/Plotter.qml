@@ -2,9 +2,14 @@ import QtQuick
 import QtCharts
 import QtQuick.Controls
 import QtQuick.Layouts
+
 import Common
 
 Item {
+
+    PlotRebuilder {
+        id: rebuilder
+    }
 
     // public
     property Item plotterLegend
@@ -46,17 +51,22 @@ Item {
     }
 
     function rebuild() {
+
+        if(_rebuilding) {
+            return
+        }
+
         _rebuilding = true
+
+
+
         for(let i = 0; i < chart.count; i++) {
 
             // save points, type, name
             let series = chart.series(i)
             console.log(series, series.name)
 
-            let points = Array(series.count)
-            for(var k = 0; k < series.count; k++) {
-                points[k] = series.at(k)
-            }
+            let points = rebuilder.getPoints(series)
             let type = series.type
             let name = series.name
 
@@ -66,15 +76,14 @@ Item {
             // create
             series = chart.createSeries(type,
                                         name);
+
             series.useOpenGL = true
             series.antialiasing = false
             series.axisX = axisTime
             series.axisY = axisValueLeft
 
             // fill with saved points
-            for(let k = 0; k < points.length; k++) {
-                series.append(points[k].x, points[k].y)
-            }
+            rebuilder.setPoints(series, points)
 
             // update seriesdata
             currSeries[name].series = series

@@ -159,6 +159,7 @@ class JointStateHandler:
 
         # parse urdf
         print('parsing urdf..')
+        urdf = urdf.replace('<texture/>', '')
         model = urdf_parser.Robot.from_xml_string(urdf)
 
         # read joint limits from urdf

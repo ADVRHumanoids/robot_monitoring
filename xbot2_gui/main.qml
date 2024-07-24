@@ -167,7 +167,7 @@ ApplicationWindow {
             iconText: MaterialSymbolNames.playground
             iconFont: syms.font.family
             active: true
-            visible: true
+            visible: false
         }
 
         PageItem {

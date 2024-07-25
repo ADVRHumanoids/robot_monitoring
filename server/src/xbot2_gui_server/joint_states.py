@@ -104,6 +104,7 @@ class JointStateHandler:
     async def get_urdf_handler(self, request: web.Request):
         print('retrieving robot description..')
         urdf = rospy.get_param('xbotcore/robot_description', default='')
+        urdf = urdf.replace('<texture/>', '')
         return web.Response(text=json.dumps({'urdf': urdf}))
     
 
@@ -152,6 +153,7 @@ class JointStateHandler:
         # get urdf
         print('retrieving robot description..')
         urdf = rospy.get_param('xbotcore/robot_description', default='')
+        urdf = urdf.replace('<texture/>', '')
         if len(urdf) == 0:
             joint_info['message'] = 'unable to get robot description'
             joint_info['success'] = False
@@ -159,7 +161,6 @@ class JointStateHandler:
 
         # parse urdf
         print('parsing urdf..')
-        urdf = urdf.replace('<texture/>', '')
         model = urdf_parser.Robot.from_xml_string(urdf)
 
         # read joint limits from urdf

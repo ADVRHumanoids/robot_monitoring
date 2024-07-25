@@ -47,6 +47,7 @@ class VisualHandler:
         
         # parse urdf
         urdf = rospy.get_param('xbotcore/robot_description')
+        urdf = urdf.replace('<texture/>', '')
         model = urdf_parser.Robot.from_xml_string(urdf)
 
         # get list of visuals
@@ -96,6 +97,7 @@ class VisualHandler:
 
         # parse urdf
         urdf = rospy.get_param('xbotcore/robot_description')
+        urdf = urdf.replace('<texture/>', '')
         model = urdf_parser.Robot.from_xml_string(urdf)
         root = 'base_link'
 

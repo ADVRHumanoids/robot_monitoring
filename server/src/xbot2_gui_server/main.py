@@ -151,6 +151,14 @@ def main():
         except BaseException as e:
             print('Exception ', type(e), e)
 
+        try:
+            from .parameters import ParameterHandler
+            ext = ParameterHandler(srv, cfg.get('parameters', {}))
+            extensions.append(ext)
+            print(ext)
+        except BaseException as e:
+            print('Exception ', type(e), e)
+
         srv.extensions = extensions
 
         print('load extensions completed', extensions)

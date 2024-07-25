@@ -111,15 +111,16 @@ Item {
 
             RowLayout{
                 width: parent.width
-                Button {
+                Label {
+                    text: 'Parameter Tuning'
+                    font.pixelSize: CommonProperties.font.h1
                     Layout.fillWidth: true
+                }
+
+                Button {
+                    Layout.fillWidth: false
                     text: 'Refresh'
                     onClicked: Logic.refresh1()
-                }
-                Button {
-                    Layout.fillWidth: true
-                    text: 'Set'
-                    onClicked: Logic.setParams()
                 }
             }
 
@@ -136,5 +137,6 @@ Item {
 
     }
 
+    Component.onCompleted: Logic.refresh1()
 
 }

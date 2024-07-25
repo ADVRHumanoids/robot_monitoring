@@ -36,6 +36,7 @@ Item {
     property string weight: '\ue13d'
     property string dashboard: '\ue9b0'
     property string netSettings: '\ueb2f'
+    property string tune: '\ue429'
 
     property FontLoader filledFont: FontLoader {
         source: `/Font/materialsymbols/MaterialSymbolsOutlined[opsz,wght,FILL,GRAD@20,200,1,200].otf`

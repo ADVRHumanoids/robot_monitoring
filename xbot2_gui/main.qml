@@ -162,12 +162,12 @@ ApplicationWindow {
         }
 
         PageItem {
-            name: "Playground"
+            name: "Tuning"
             page: "/qt/qml/Monitoring/Parameters.qml"
-            iconText: MaterialSymbolNames.playground
+            iconText: MaterialSymbolNames.tune
             iconFont: syms.font.family
             active: true
-            visible: false
+            visible: true
         }
 
         PageItem {

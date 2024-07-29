@@ -202,7 +202,7 @@ function handleMessage(obj) {
     }
     else if(obj.type === "heartbeat")
     {
-
+        root.clientId = obj.cli_id
     }
     else if(obj.type === 'ping')
     {

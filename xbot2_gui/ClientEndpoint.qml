@@ -65,6 +65,9 @@ Item
     property int jsMsgRecv: 0
     property int jsDropped: 0
 
+    // assigned id
+    property string clientId: '-1'
+
 
     // method for performing an http request
     function doRequest(verb, url, body, callback, quiet = false) {
@@ -155,6 +158,8 @@ Item
 
                 root.isFinalized = false
 
+                root.clientId = -1
+
             } else if (socket.status === WebSocket.Open) {
 
                 CommonProperties.notifications.info('Server connected', 'webclient')
@@ -189,6 +194,7 @@ Item
                 active = false
                 root.isFinalized = false
                 udp.rebind()
+                root.clientId = -1
             }
         }
     }

@@ -6,13 +6,17 @@ qt_add_qml_module(xbot2_gui_viewerquick3d
     SOURCES
     meshgeometry.h
     meshgeometry.cpp
+    pointcloudinstancetable.h
+    pointcloudinstancetable.cpp
     QML_FILES
     RobotModelNode.qml
     RobotModelNode.js
     CustomMesh.qml
     Axes3D.qml
-    QML_FILES RobotModelViewer.qml
-    QML_FILES RobotModelViewer.js
+    RobotModelViewer.qml
+    RobotModelViewer.js
+    QML_FILES PointCloud.qml
+    QML_FILES MobileJoggingView.qml
 )
 
 target_link_libraries(xbot2_gui_viewerquick3d PRIVATE Qt6::Quick3D)

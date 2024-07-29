@@ -16,11 +16,11 @@ from sensor_msgs.msg import PointCloud2, Range
 from threading import Lock
 from functools import partial
 
-class RoundingFloat(float):
-    __repr__ = staticmethod(lambda x: format(x, '.2f'))
+# class RoundingFloat(float):
+#     __repr__ = staticmethod(lambda x: format(x, '.2f'))
 
-json.encoder.c_make_encoder = None
-json.encoder.float = RoundingFloat
+# json.encoder.c_make_encoder = None
+# json.encoder.float = RoundingFloat
 
 class VisualHandler:
 
@@ -54,32 +54,44 @@ class VisualHandler:
         
         self.srv.schedule_task(self.run())
 
-        # # point clouds
-        # self.pc_lock = Lock()
-        # pc_topics = ['/VLP16_lidar_back/velodyne_points', '/VLP16_lidar_front/velodyne_points']
-        # self.pc_subs = [rospy.Subscriber(t, PointCloud2, self.on_pc_recv, t, queue_size=1) for t in pc_topics]      
-        # self.pc_map = {t: None for t in pc_topics}
-        # self.pc_frame_map = {t: None for t in pc_topics}
+        self.srv.register_ws_coroutine(self.handle_ws)
+
+        # point clouds
+        self.pc_lock = Lock()
+        pc_topics = ['/VLP16_lidar_back/velodyne_points', '/VLP16_lidar_front/velodyne_points']
+        self.pc_subs = [rospy.Subscriber(t, PointCloud2, self.on_pc_recv, t, queue_size=1) for t in pc_topics]      
+        self.pc_map = {t: None for t in pc_topics}
+        self.pc_frame_map = {t: None for t in pc_topics}
+        self.pc_client_ids = set()
         
-        # # sonar topics
-        # sonar_topics = [
-        #     '/bosch_uss5/ultrasound_fl_lat',      
-        #     '/bosch_uss5/ultrasound_fl_sag',      
-        #     '/bosch_uss5/ultrasound_fr_lat',      
-        #     '/bosch_uss5/ultrasound_fr_sag',      
-        #     '/bosch_uss5/ultrasound_rl_lat',      
-        #     '/bosch_uss5/ultrasound_rl_sag',      
-        #     '/bosch_uss5/ultrasound_rr_lat',      
-        #     '/bosch_uss5/ultrasound_rr_sag',  
-        #     ]
+        # sonar topics
+        sonar_topics = [
+            '/bosch_uss5/ultrasound_fl_lat',      
+            '/bosch_uss5/ultrasound_fl_sag',      
+            '/bosch_uss5/ultrasound_fr_lat',      
+            '/bosch_uss5/ultrasound_fr_sag',      
+            '/bosch_uss5/ultrasound_rl_lat',      
+            '/bosch_uss5/ultrasound_rl_sag',      
+            '/bosch_uss5/ultrasound_rr_lat',      
+            '/bosch_uss5/ultrasound_rr_sag',  
+            ]
         
-        # self.sonar_subs = [rospy.Subscriber(t, Range, self.on_sonar_recv, t, queue_size=1) for t in sonar_topics]
-        # self.sonar_map = {t: None for t in sonar_topics}
-        # self.sonar_frame_map = {t: None for t in sonar_topics}
+        self.sonar_subs = [rospy.Subscriber(t, Range, self.on_sonar_recv, t, queue_size=1) for t in sonar_topics]
+        self.sonar_map = {t: None for t in sonar_topics}
+        self.sonar_frame_map = {t: None for t in sonar_topics}
 
         
-
+    async def handle_ws(self, msg, proto, ws):
+        if msg['type'] == 'pc_registration':
+            cli_id = int(msg['cli_id'])
+            if cli_id not in self.pc_client_ids:
+                self.pc_client_ids.append(cli_id)
+                print(f'registered client id {cli_id}: total is {len(self.pc_client_ids)}')
+        elif msg['type'] == 'pc_unregistration':
+            cli_id = int(msg['cli_id'])
+            del self.pc_client_ids[self.pc_client_ids.index(cli_id)]
     
+
     @utils.handle_exceptions
     async def visual_get_pc(self, req: web.Request):
         
@@ -116,25 +128,30 @@ class VisualHandler:
         return web.json_response(res)
 
 
-    async def run(self):
+    async def run_loop(self):
 
-        while True:
-            
-            await self.srv.udp_send_to_all({
+        await self.srv.udp_send_to_all({
                 'type': 'sonar',
                 'range': self.sonar_map
             })
-            
-            with self.pc_lock:
-                for k, v in self.pc_map.items():
-                    if v is None: continue
-                    try:
-                        await self.srv.ws_send_to_all(v) 
-                    except BaseException as e:
-                        print(type(e), e)
-                        continue
+                    
+        self.pc_client_ids = [cli_id for cli_id in self.pc_client_ids if cli_id in self.srv.client_id_ws_map]
 
-            await asyncio.sleep(0.1)
+        print(self.pc_client_ids)
+        
+        with self.pc_lock:
+            for k, v in self.pc_map.items():
+                if v is None: continue
+                try:
+                    await self.srv.ws_send_to_all(v, client_ids=self.pc_client_ids) 
+                except BaseException as e:
+                    print(type(e), e)
+                    continue
+
+    async def run(self):
+
+        wrapped = utils.sync_loop(self.run_loop, dt=0.1)
+        await wrapped()
 
     
     def on_sonar_recv(self, msg: Range, sname):
@@ -146,6 +163,9 @@ class VisualHandler:
     def on_pc_recv(self, msg: PointCloud2, pcname):
 
         self.pc_frame_map[pcname] = msg.header.frame_id
+
+        if len(self.pc_client_ids) == 0:
+            return
 
         points = list(pc2.read_points(msg, field_names=('x', 'y', 'z')))[::1]
 

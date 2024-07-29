@@ -38,7 +38,7 @@ Node {
 
     function createViewer() {
         Logic.createViewer()
-        Logic.updateTf()
+        // Logic.updateTf()
     }
 
 

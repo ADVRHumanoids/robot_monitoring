@@ -180,55 +180,54 @@ class JointStateHandler:
         print('done!')
 
         return web.Response(text=json.dumps(joint_info))
+    
+
+    async def run_loop(self):
+
+        # broadcast fault
+        if self.fault is not None:
+            fault_msg = dict()
+            fault_msg['type'] = 'joint_fault'
+            fault_msg['name'] = self.fault.name
+            fault_msg['fault'] = self.fault.fault
+            self.fault = None
+            await self.srv.ws_send_to_all(json.dumps(fault_msg))
+
+        # check js received
+        if self.msg is None:
+            return
+        
+        # convert to dict
+        js_msg_to_send = self.js_msg_to_dict(self.msg)
+
+        # test: avoid sending names to save bw
+        del js_msg_to_send['name']
+
+        # add pow data and seq id
+        js_msg_to_send['vbatt'] = self.vbatt
+        js_msg_to_send['iload'] = self.iload
+        js_msg_to_send['seq'] = self.js_seq
+        self.js_seq += 1
+
+        # serialize msg to json
+        js_str = json.dumps(js_msg_to_send)      
+
+        # send to all connected clients
+        await self.srv.udp_send_to_all(js_str)
+
+        # clear to avoid sending duplicates
+        self.msg = None
+        for v in self.aux_map.values():
+            v.clear()
 
 
     async def run(self):
 
-        t0 = time.time()
+        async def log_error(msg: str):
+            await self.srv.log(sev=2)
 
-        while True:
-            
-            # sync loop at given rate
-            tnow = time.time()
-            await asyncio.sleep(1./self.rate - (tnow - t0))
-            t0 = tnow
-
-            # broadcast fault
-            if self.fault is not None:
-                fault_msg = dict()
-                fault_msg['type'] = 'joint_fault'
-                fault_msg['name'] = self.fault.name
-                fault_msg['fault'] = self.fault.fault
-                self.fault = None
-                await self.srv.ws_send_to_all(json.dumps(fault_msg))
-
-            # check js received
-            if self.msg is None:
-                continue
-            
-            # convert to dict
-            js_msg_to_send = self.js_msg_to_dict(self.msg)
-
-            # test: avoid sending names to save bw
-            del js_msg_to_send['name']
-
-            # add pow data and seq id
-            js_msg_to_send['vbatt'] = self.vbatt
-            js_msg_to_send['iload'] = self.iload
-            js_msg_to_send['seq'] = self.js_seq
-            self.js_seq += 1
-
-            # serialize msg to json
-            js_str = json.dumps(js_msg_to_send)      
-
-            # send to all connected clients
-            await self.srv.udp_send_to_all(js_str)
-
-            # clear to avoid sending duplicates
-            self.msg = None
-            for v in self.aux_map.values():
-                v.clear()
-
+        await utils.sync_loop(self.run_loop, dt=1./self.rate, on_exception=log_error)()
+          
     
     def command_acquire(self):
         if self.cmd_busy:

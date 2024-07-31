@@ -147,7 +147,11 @@ Item {
 
                 let instanceTable = pcRepeater.objectAt(pcNameToId[obj.name]).instancing
 
-                instanceTable.clear()
+                if(obj.iblk === 1) {
+                    instanceTable.clear()
+                }
+
+
 
                 for(let i = 0; i < obj.points.length; i++) {
                     instanceTable.addPoint(obj.points[i][0],
@@ -156,7 +160,10 @@ Item {
                                            )
                 }
 
-                instanceTable.commit()
+                if(obj.iblk === obj.nblk) {
+                    instanceTable.commit()
+                    console.log(`${obj.name} ${obj.iblk}/${obj.nblk}`)
+                }
 
             }
 

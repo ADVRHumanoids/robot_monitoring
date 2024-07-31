@@ -17,7 +17,7 @@ from threading import Lock
 from functools import partial
 
 # class RoundingFloat(float):
-#     __repr__ = staticmethod(lambda x: format(x, '.2f'))
+#     __repr__ = staticmethod(lambda x: format(x, '.3f'))
 
 # json.encoder.c_make_encoder = None
 # json.encoder.float = RoundingFloat
@@ -60,7 +60,7 @@ class VisualHandler:
         self.pc_lock = Lock()
         pc_topics = ['/VLP16_lidar_back/velodyne_points', '/VLP16_lidar_front/velodyne_points']
         self.pc_subs = [rospy.Subscriber(t, PointCloud2, self.on_pc_recv, t, queue_size=1) for t in pc_topics]      
-        self.pc_map = {t: None for t in pc_topics}
+        self.pc_map = {t: [] for t in pc_topics}
         self.pc_frame_map = {t: None for t in pc_topics}
         self.pc_client_ids = set()
         
@@ -136,21 +136,19 @@ class VisualHandler:
             })
                     
         self.pc_client_ids = [cli_id for cli_id in self.pc_client_ids if cli_id in self.srv.client_id_ws_map]
-
-        print(self.pc_client_ids)
         
         with self.pc_lock:
             for k, v in self.pc_map.items():
-                if v is None: continue
-                try:
-                    await self.srv.ws_send_to_all(v, client_ids=self.pc_client_ids) 
-                except BaseException as e:
-                    print(type(e), e)
-                    continue
+                for i, m in enumerate(v):
+                    await self.srv.udp_send_to_all(m) # client_ids=self.pc_client_ids) 
+                
 
     async def run(self):
 
-        wrapped = utils.sync_loop(self.run_loop, dt=0.1)
+        async def print_err(msg):
+            print(msg)
+
+        wrapped = utils.sync_loop(self.run_loop, dt=0.1, on_exception=print_err)
         await wrapped()
 
     
@@ -167,18 +165,34 @@ class VisualHandler:
         if len(self.pc_client_ids) == 0:
             return
 
-        points = list(pc2.read_points(msg, field_names=('x', 'y', 'z')))[::1]
+        points = list(pc2.read_points(msg, field_names=('x', 'y', 'z')))
 
-        msg = json.dumps(
+        blksize = 500 // (4 * 3)
+
+        nblk = len(points) // blksize + 1
+
+        msgs = []
+        
+        for i in range(nblk): 
+            istart = i * blksize
+            iend = min(istart + blksize, len(points))
+
+            msg = json.dumps(
                 {
-                    'points': points,
+                    'points': points[istart:iend]    ,
                     'name': pcname,
-                    'type': 'pointcloud'
+                    'type': 'pointcloud',
+                    'iblk': i+1,
+                    'nblk': nblk
                 })
-
+            
+            print(len(msg), blksize*4*3)
+            
+            msgs.append(msg)
+            
         with self.pc_lock:
         
-            self.pc_map[pcname] = msg
+            self.pc_map[pcname] = msgs
     
     
     @utils.handle_exceptions

@@ -13,8 +13,6 @@ import asyncio
 
 from . import ros_utils
 
-def try_load()
-
 def main():
 
     # cli
@@ -25,7 +23,7 @@ def main():
     args = parser.parse_args()
 
     # set verbose logging level
-    logging.basicConfig(level=logging.INFO, force=True)
+    logging.basicConfig(level=logging.DEBUG, force=True)
     
     # load config
     if args.config:
@@ -39,8 +37,7 @@ def main():
     srv = Xbot2WebServer()
     srv.cfgpath = cfgpath
 
-    # spin ros callbacks
-    srv.schedule_task(ros_utils.ros_handle.spin_node())
+   
 
     # load default extensions
     extensions = []
@@ -56,6 +53,9 @@ def main():
 
         # load ros
         ros_utils.ros_handle = ros_utils.RosWrapper()
+
+        # spin ros callbacks
+        srv.schedule_task(ros_utils.ros_handle.spin_node())
 
         # wasm ui
         from .webui import WebUiHandler

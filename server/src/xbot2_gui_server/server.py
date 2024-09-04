@@ -37,8 +37,8 @@ class ServerBase:
             raise ValueError(f'unsupported protocol "{proto}"')
 
 
-    def ws_clients(self) -> List[web.WebSocketResponse]:
-        raise NotImplementedError
+    # def ws_clients(self) -> List[web.WebSocketResponse]:
+    #     raise NotImplementedError
 
     def register_ws_coroutine(self, coroutine):
         raise NotImplementedError

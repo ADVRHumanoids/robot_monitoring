@@ -211,9 +211,6 @@ class JointStateHandler:
             # convert to dict
             js_msg_to_send = self.js_msg_to_dict(self.msg)
 
-            # test: avoid sending names to save bw
-            del js_msg_to_send['name']
-
             # add pow data and seq id
             js_msg_to_send['vbatt'] = self.vbatt
             js_msg_to_send['iload'] = self.iload
@@ -346,10 +343,15 @@ class JointStateHandler:
         js_msg_dict['driverTemp'] = msg.temperature_driver if self.dri_temp is None else self.dri_temp.value
         js_msg_dict['k'] = msg.stiffness
         js_msg_dict['d'] = msg.damping
+
+        for k, v in js_msg_dict.items():
+            js_msg_dict[k] = list(v)
+
         js_msg_dict['stamp'] = ros_handle.timestamp_to_sec(msg.header.stamp)
         js_msg_dict['aux_types'] = []
         for k, v in self.aux_map.items():
             if len(v) > 0:
                 js_msg_dict[k] = [None if ai < 0 or math.isnan(v[ai]) else v[ai] for ai in self.js_to_aux_id]
                 js_msg_dict['aux_types'].append(k)
+        
         return js_msg_dict

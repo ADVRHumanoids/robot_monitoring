@@ -2,14 +2,15 @@ import asyncio
 from aiohttp import web
 import json
 
-import rospy
 from urdf_parser_py import urdf as urdf_parser
-import tf
 from scipy.spatial.transform import Rotation as R
 
 from .server import ServerBase
 from . import utils
 
+# ros handle
+from . import ros_utils
+ros_handle : ros_utils.RosWrapper = ros_utils.ros_handle
 
 class VisualHandler:
 
@@ -29,15 +30,15 @@ class VisualHandler:
                            self.visual_get_mesh_entities,
                            'visual_get_mesh_entities')
 
-        self.srv.add_route('GET', '/visual/get_mesh_tfs',
-                           self.visual_get_mesh_tfs,
-                           'visual_get_mesh_tfs')         
+        # self.srv.add_route('GET', '/visual/get_mesh_tfs',
+        #                    self.visual_get_mesh_tfs,
+        #                    'visual_get_mesh_tfs')         
 
     
     @utils.handle_exceptions
     async def visual_get_mesh_handler(self, request):
         uri = request.match_info['uri']
-        path = utils.resolve_ros_uri(uri)
+        path = ros_utils.resolve_ros_uri(uri)
         print('URI/PATH: ', uri, path)
         return web.FileResponse(path)
 
@@ -46,7 +47,7 @@ class VisualHandler:
     async def visual_get_mesh_entities(self, request):
         
         # parse urdf
-        urdf = rospy.get_param('xbotcore/robot_description')
+        urdf = ros_handle.get_urdf()
         urdf = urdf.replace('<texture/>', '')
         model = urdf_parser.Robot.from_xml_string(urdf)
 
@@ -89,29 +90,29 @@ class VisualHandler:
         return web.json_response(visuals)
 
 
-    @utils.handle_exceptions
-    async def visual_get_mesh_tfs(self, request: web.Request):
+    # @utils.handle_exceptions
+    # async def visual_get_mesh_tfs(self, request: web.Request):
 
-        # tf listener
-        tfl = tf.TransformListener()
+    #     # tf listener
+    #     tfl = tf.TransformListener()
 
-        # parse urdf
-        urdf = rospy.get_param('xbotcore/robot_description')
-        urdf = urdf.replace('<texture/>', '')
-        model = urdf_parser.Robot.from_xml_string(urdf)
-        root = 'base_link'
+    #     # parse urdf
+    #     urdf = ros_handle.get_urdf()
+    #     urdf = urdf.replace('<texture/>', '')
+    #     model = urdf_parser.Robot.from_xml_string(urdf)
+    #     root = 'base_link'
 
-        # get list of visuals
-        transforms = dict()
-        for lname, l in model.link_map.items():
+    #     # get list of visuals
+    #     transforms = dict()
+    #     for lname, l in model.link_map.items():
             
-            for c in l.collisions:
-                if isinstance(c.geometry, urdf_parser.Mesh):
-                    await utils.to_thread(tfl.waitForTransform, lname, root, rospy.Time(0), timeout=rospy.Duration(1.0))
-                    trans, rot = tfl.lookupTransform(root, lname, rospy.Time(0))
-                    transforms[lname] = [trans, rot]
+    #         for c in l.collisions:
+    #             if isinstance(c.geometry, urdf_parser.Mesh):
+    #                 await utils.to_thread(tfl.waitForTransform, lname, root, rospy.Time(0), timeout=rospy.Duration(1.0))
+    #                 trans, rot = tfl.lookupTransform(root, lname, rospy.Time(0))
+    #                 transforms[lname] = [trans, rot]
         
-        return web.json_response(transforms)
+    #     return web.json_response(transforms)
 
 
 

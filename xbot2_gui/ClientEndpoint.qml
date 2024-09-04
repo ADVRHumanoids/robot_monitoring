@@ -248,6 +248,14 @@ Item
     }
 
     Timer {
+        id: jointInfoTimer
+        interval: 1000
+        running: root.isConnected && !root.isFinalized
+        repeat: true
+        onTriggered: doRequest("GET", "/joint_states/info", "", (response) => {root.onInfoReceived(response)})
+    }
+
+    Timer {
         id: robotConnectedTimer
         interval: 1000
         onTriggered: {

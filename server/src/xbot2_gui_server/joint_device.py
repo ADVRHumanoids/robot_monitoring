@@ -2,7 +2,10 @@ import asyncio
 from aiohttp import web
 import json
 
-import rospy
+# ros handle
+from . import ros_utils
+ros_handle : ros_utils.RosWrapper = ros_utils.ros_handle
+
 from std_srvs.srv import SetBool, Trigger
 from xbot_msgs.msg import JointDeviceInfo
 from xbot_msgs.srv import SetControlMask
@@ -26,15 +29,15 @@ class JointDeviceHandler:
         self.srv.add_route('POST', '/joint/safety/set_enabled', self.set_enabled_handler, 'set_enabled')
 
         # xbot2 joint device info
-        self.jinfo_sub = rospy.Subscriber('xbotcore/joint_device_info', JointDeviceInfo, self.on_jdevinfo_recv, queue_size=1)
+        self.jinfo_sub = ros_handle.create_subscription(JointDeviceInfo, 'xbotcore/joint_device_info', self.on_jdevinfo_recv, queue_size=1)
         self.msg = None
 
     
     @utils.handle_exceptions
     async def set_filter_profile_handler(self, request: web.Request):
         profile = request.rel_url.query['profile']
-        set_profile = rospy.ServiceProxy(name=f'xbotcore/set_filter_profile_{profile}', service_class=Trigger)
-        res = await utils.to_thread(set_profile)
+        set_profile = ros_handle.create_client(Trigger, f'xbotcore/set_filter_profile_{profile}')
+        res = await ros_handle.call(set_profile, timeout_sec=1)
         return web.Response(text=json.dumps({
             'success': res.success,
             'message': res.message,
@@ -44,8 +47,8 @@ class JointDeviceHandler:
     @utils.handle_exceptions
     async def set_filter_active_handler(self, request: web.Request):
         active = utils.str2bool(request.rel_url.query['active'])
-        enable_joint_filter = rospy.ServiceProxy(name=f'xbotcore/enable_joint_filter', service_class=SetBool)
-        res = await utils.to_thread(enable_joint_filter, active)
+        enable_joint_filter = ros_handle.create_client(SetBool, f'xbotcore/enable_joint_filter')
+        res = await ros_handle.call(enable_joint_filter, timeout_sec=1, data=active)
         return web.Response(text=json.dumps({
             'success': res.success,
             'message': res.message,
@@ -55,8 +58,9 @@ class JointDeviceHandler:
     @utils.handle_exceptions
     async def set_enabled_handler(self, request: web.Request):
         enabled = utils.str2bool(request.rel_url.query['enabled'])
-        set_control_mask = rospy.ServiceProxy(name=f'xbotcore/joint_master/set_control_mask', service_class=SetControlMask)
-        res = await utils.to_thread(set_control_mask, 255 if enabled else 0)
+        set_control_mask = ros_handle.create_client(SetControlMask, f'xbotcore/joint_master/set_control_mask')
+        mask = 255 if enabled else 0
+        res = await ros_handle.call(set_control_mask, timeout_sec=1, ctrl_mask=mask)
         return web.Response(text=json.dumps({
             'success': res.success,
             'message': res.message,

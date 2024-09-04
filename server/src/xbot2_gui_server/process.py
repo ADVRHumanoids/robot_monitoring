@@ -15,10 +15,24 @@ class ProcessHandler:
 
     def __init__(self, srv: ServerBase, config=dict()) -> None:
 
+        self.srv = srv
+
         # config
-        self.name = config['name']
+        self.name = config.get('name', None)
         self.rate = config.get('rate', 10.)
         self.max_bw = config.get('max_bw_kbps', 1000)
+
+        # generic process handler
+        if self.name is None: 
+
+            self.srv.add_route('GET', f'/process/get_list', 
+                           self.process_get_list_handler, f'process_get_list_handler')
+            
+            self.srv.add_route('POST', f'/process/custom_command',
+                            self.process_custom_command_handler, f'process_custom_command_handler')
+            
+            return
+
 
         # create process
         self.proc = Process(name=self.name,
@@ -33,16 +47,13 @@ class ProcessHandler:
             self.proc.cmdline[entry['name']] = entry
 
         # save server object, register our handlers
-        self.srv = srv
         self.srv.schedule_task(self.run())
         self.srv.schedule_task(self.proc_output_broadcaster(self.proc, stream_type='stdout'))
         self.srv.schedule_task(self.proc_output_broadcaster(self.proc, stream_type='stderr'))
-        self.srv.add_route('GET', f'/process/get_list', 
-                           self.process_get_list_handler, f'process_get_list_handler')
-        self.srv.add_route('POST', f'/process/custom_command',
-                           self.process_custom_command_handler, f'process_custom_command_handler')
+        
         self.srv.add_route('PUT', f'/process/{self.name}/command/{{command}}',
                            self.process_command_handler, f'process_{self.name}_cmd_handler')
+        
         self.srv.add_route('GET', f'/process/{self.name}/state',
                            self.process_state_handler, f'process_{self.name}_state_handler')
 

@@ -6,11 +6,14 @@ from .server import Xbot2WebServer
 import yaml, json
 import sys
 import importlib
-import rospy
 import logging
 import argparse
 from aiohttp import web
 import asyncio
+
+from . import ros_utils
+
+def try_load()
 
 def main():
 
@@ -36,24 +39,23 @@ def main():
     srv = Xbot2WebServer()
     srv.cfgpath = cfgpath
 
+    # spin ros callbacks
+    srv.schedule_task(ros_utils.ros_handle.spin_node())
+
     # load default extensions
     extensions = []
 
     # task that load all extensions after waiting for ros master
     async def load_extensions():
 
-        while True:
-            try:
-                await srv.log('waiting for ros master')
-                rospy.get_master().getPid()
-                break
-            except Exception as e:
-                await asyncio.sleep(1.0)
+        while not ros_utils.RosWrapper.master_alive():
+            await srv.log('waiting for ros master')
+            await asyncio.sleep(1.0)
 
         await srv.log('ros master is alive')
 
-        # init rospy node
-        rospy.init_node('xbot2_gui_server', disable_signals=True)
+        # load ros
+        ros_utils.ros_handle = ros_utils.RosWrapper()
 
         # wasm ui
         from .webui import WebUiHandler

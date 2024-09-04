@@ -6,10 +6,12 @@ import base64
 import math
 import time
 
+# ros handle
+from . import ros_utils
+ros_handle : ros_utils.RosWrapper = ros_utils.ros_handle
 
-import rospy 
 from xbot_msgs.msg import JointState, Fault, JointCommand, CustomState
-from std_msgs.msg import Float32
+from std_msgs.msg import Float32, String
 from urdf_parser_py import urdf as urdf_parser
 
 from .server import ServerBase
@@ -44,8 +46,8 @@ class JointStateHandler:
         self.srv.add_route('POST', '/joint_command/goto/stop', self.stop_handler, 'stop')
         
         # joint state subscriber
-        self.js_sub = rospy.Subscriber('xbotcore/joint_states', JointState, self.on_js_recv, queue_size=1)
-        self.fault_sub = rospy.Subscriber('xbotcore/fault', Fault, self.on_fault_recv, queue_size=20)
+        self.js_sub = ros_handle.create_subscription(JointState, 'xbotcore/joint_states', self.on_js_recv, queue_size=1)
+        self.fault_sub = ros_handle.create_subscription(Fault, 'xbotcore/fault', self.on_fault_recv, queue_size=20)
         self.msg = None
         self.last_js_msg = None
         self.fault = None
@@ -54,12 +56,12 @@ class JointStateHandler:
         # temperatures
         self.mot_temp = None
         self.dri_temp = None
-        self.mot_temp_sub = rospy.Subscriber('xbotcore/temperature_motor', CustomState, self.on_mot_temp_recv, queue_size=1)
-        self.dri_temp_sub = rospy.Subscriber('xbotcore/temperature_driver', CustomState, self.on_dri_temp_recv, queue_size=1)
+        self.mot_temp_sub = ros_handle.create_subscription(CustomState, 'xbotcore/temperature_motor', self.on_mot_temp_recv, queue_size=1)
+        self.dri_temp_sub = ros_handle.create_subscription(CustomState, 'xbotcore/temperature_driver', self.on_dri_temp_recv, queue_size=1)
 
         # vbatt iload
-        self.vbatt_sub = rospy.Subscriber('xbotcore/vbatt', Float32, self.on_vbatt_recv, queue_size=1)
-        self.iload_sub = rospy.Subscriber('xbotcore/iload', Float32, self.on_iload_recv, queue_size=1)
+        self.vbatt_sub = ros_handle.create_subscription(Float32, 'xbotcore/vbatt', self.on_vbatt_recv, queue_size=1)
+        self.iload_sub = ros_handle.create_subscription(Float32, 'xbotcore/iload', self.on_iload_recv, queue_size=1)
         self.vbatt = 0
         self.iload = 0
 
@@ -69,7 +71,7 @@ class JointStateHandler:
         self.js_to_aux_id = []
                     
         # command publisher
-        self.cmd_pub = rospy.Publisher('xbotcore/command', JointCommand, queue_size=1)
+        self.cmd_pub = ros_handle.create_publisher(JointCommand, 'xbotcore/command', queue_size=1)
         self.cmd_busy = False
         self.cmd_guard = JointStateHandler.CommandGuard(self.command_acquire, self.command_release)
         self.cmd_should_stop = True
@@ -99,11 +101,11 @@ class JointStateHandler:
             if not math.isnan(msg.value[i]):
                 aux[i] = msg.value[i]
 
-    
+
     @utils.handle_exceptions
     async def get_urdf_handler(self, request: web.Request):
         print('retrieving robot description..')
-        urdf = rospy.get_param('xbotcore/robot_description', default='')
+        urdf = ros_handle.get_urdf()
         urdf = urdf.replace('<texture/>', '')
         return web.Response(text=json.dumps({'urdf': urdf}))
     
@@ -141,20 +143,20 @@ class JointStateHandler:
         # aux
         self.aux_map = dict()
         self.aux_subs = []
-        for tname, ttype in rospy.get_published_topics():
+        for tname, ttype in ros_handle.get_topic_names_and_types():
             tname: str = tname
             if ttype == 'xbot_msgs/CustomState' and 'aux/' in tname:
                 aux_type_name = 'aux/' + tname[tname.find('aux/')+4:]
                 self.aux_map[aux_type_name] = list()
                 cb = functools.partial(self.on_aux_recv, aux=self.aux_map[aux_type_name])
-                sub = rospy.Subscriber(tname, CustomState, cb, queue_size=10)
+                sub = ros_handle.create_subscription(CustomState, tname, cb, queue_size=10)
                 self.aux_subs.append(sub)
 
         # get urdf
         print('retrieving robot description..')
-        urdf = rospy.get_param('xbotcore/robot_description', default='')
+        urdf = ros_handle.get_urdf()
         urdf = urdf.replace('<texture/>', '')
-        if len(urdf) == 0:
+        if urdf is None:
             joint_info['message'] = 'unable to get robot description'
             joint_info['success'] = False
             return web.Response(text=json.dumps(joint_info))
@@ -258,7 +260,7 @@ class JointStateHandler:
             trj_time = float(req.rel_url.query['time'])
             joint_name = req.match_info['joint_name']
 
-            time = rospy.Time.now()
+            time = ros_handle.now()
             t0 = time
             dt = 0.01
             jidx = self.last_js_msg.name.index(joint_name)
@@ -278,7 +280,7 @@ class JointStateHandler:
                 msg.position = [qref]
                 self.cmd_pub.publish(msg)
                 await asyncio.sleep(dt)
-                time = rospy.Time.now()
+                time = ros_handle.now()
 
             if self.cmd_should_stop:
                 print('trj stopped!')
@@ -331,8 +333,7 @@ class JointStateHandler:
 
     def js_msg_to_dict(self, msg: JointState):
         js_msg_dict = dict()
-        js_msg_dict['type'] = 'joint_states'
-        js_msg_dict['name'] = msg.name
+        
         js_msg_dict['posRef'] = msg.position_reference
         js_msg_dict['motPos'] = msg.motor_position
         js_msg_dict['linkPos'] = msg.link_position
@@ -345,7 +346,7 @@ class JointStateHandler:
         js_msg_dict['driverTemp'] = msg.temperature_driver if self.dri_temp is None else self.dri_temp.value
         js_msg_dict['k'] = msg.stiffness
         js_msg_dict['d'] = msg.damping
-        js_msg_dict['stamp'] = msg.header.stamp.to_sec()
+        js_msg_dict['stamp'] = ros_handle.timestamp_to_sec(msg.header.stamp)
         js_msg_dict['aux_types'] = []
         for k, v in self.aux_map.items():
             if len(v) > 0:

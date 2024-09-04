@@ -51,6 +51,8 @@ class ServerBase:
     
     async def log(self, txt, sev=0):
         raise NotImplementedError
+    
+    
 
 
 class Xbot2WebServer(ServerBase):

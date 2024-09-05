@@ -5,6 +5,7 @@ import asyncio
 from aiohttp import web 
 import json 
 import traceback
+import time
 
 th_executor = ThreadPoolExecutor(max_workers=8)
 
@@ -39,3 +40,20 @@ def handle_exceptions(func):
 
     return async_wrapper
 
+
+def sync_loop(func, dt, on_exception=print):
+
+    # @functools.wraps(func)
+    async def async_wrapper(*args, **kwargs):
+        t0 = time.time()
+        while True:
+            try:
+                await func(*args, **kwargs)
+            except BaseException as e:
+                traceback.print_exc()
+                await on_exception(f'{func.__name__} failed with exception: {e.__class__.__name__} {e}')         
+            finally:
+                t0 += dt
+                await asyncio.sleep(t0 - time.time())
+
+    return async_wrapper

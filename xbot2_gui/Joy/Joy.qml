@@ -9,6 +9,7 @@ import "../Video/VideoStream.js" as VideoStream
 import "Joy.js" as Joy
 import Common
 import Font
+import ViewerQuick3D
 
 Item {
 
@@ -21,6 +22,8 @@ Item {
     property ClientEndpoint client
 
     JoyCartesianCard {
+
+        z: 2
 
         id: setupCard
 
@@ -43,6 +46,8 @@ Item {
         padding: 8
 
         id: toolCol
+
+        z: 2
 
         anchors {
             right: setupCard.right
@@ -127,6 +132,17 @@ Item {
 
     }
 
+    Loader {
+
+        active: setupCard.lidarActive
+        anchors.fill: video
+
+        sourceComponent: MobileJoggingView {
+            client: root.client
+        }
+
+    }
+
     property var vref: [0, 0, 0, 0, 0, 0]
     property real maxLinearV: maxSpeedLinearSpinBox.value
     property alias maxAngularV: root.maxLinearV
@@ -134,7 +150,7 @@ Item {
 
     RowLayout {
 
-        z: -1
+        z: 1
 
         visible: !layout.compact
 

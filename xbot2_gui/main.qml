@@ -17,7 +17,7 @@ ApplicationWindow {
     visible: true
     title: "Xbot2 Robot GUI"
     visibility: Qt.platform.os === "android" ? Window.FullScreen : Window.AutomaticVisibility
-    property bool dbg: false
+    property bool dbg: true
 
     palette {
         active {
@@ -165,6 +165,15 @@ ApplicationWindow {
             name: "Tuning"
             page: "/qt/qml/Monitoring/Parameters.qml"
             iconText: MaterialSymbolNames.tune
+            iconFont: syms.font.family
+            active: true
+            visible: true
+        }
+
+        PageItem {
+            name: "Playground"
+            page: "/qt/qml/TestThings/Playground.qml"
+            iconText: MaterialSymbolNames.playground
             iconFont: syms.font.family
             active: true
             visible: true

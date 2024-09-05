@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
-import QtDataVisualization
 
 import "../Common"
 
@@ -18,7 +17,7 @@ Item {
             i = processNames.indexOf(procName)
         }
 
-        let color = theme.baseColors[(i+1) % theme.baseColors.length].color
+        let color = theme.baseColors[(i+1) % theme.baseColors.length]
 
         text = `<font color="${color}">` + text + '</font>'
 
@@ -43,30 +42,29 @@ Item {
     implicitHeight: card.implicitHeight
 
     // https://doc.qt.io/qt-6/qml-color.html
-    Theme3D {
+    Item {
         id: theme
-        type: Q3DTheme.ThemeUserDefined
-        baseColors: [
-            ThemeColor {
-                color: 'white'
+        property list<Item> baseColors: [
+            Item {
+                property color color: 'white'
             },
-            ThemeColor {
-                color: 'aquamarine'
+            Item {
+                property color color: 'aquamarine'
             },
-            ThemeColor {
-                color: 'darkkhaki'
+            Item {
+                property color color: 'darkkhaki'
             },
-            ThemeColor {
-                color: 'mediumspringgreen'
+            Item {
+                property color color: 'mediumspringgreen'
             },
-            ThemeColor {
-                color: 'greenyellow'
+            Item {
+                property color color: 'greenyellow'
             },
-            ThemeColor {
-                color: 'lightpink'
+            Item {
+                property color color: 'lightpink'
             },
-            ThemeColor {
-                color: 'lightseagreen'
+            Item {
+                property color color: 'lightseagreen'
             }
 
         ]

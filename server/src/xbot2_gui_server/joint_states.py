@@ -117,6 +117,7 @@ class JointStateHandler:
             if self.msg is not None:
                 return web.Response(text=json.dumps({'response': True}))
             await asyncio.sleep(0.01)
+        print(self.msg)
         return web.Response(text=json.dumps({'response': False}))
         
 
@@ -173,61 +174,71 @@ class JointStateHandler:
 
         # todo: handle undefined limits
         for jn in js_msg['name']:
-            joint = model.joint_map[jn]
-            joint_info['qmin'].append(joint.limit.lower)
-            joint_info['qmax'].append(joint.limit.upper)
-            joint_info['vmax'].append(joint.limit.velocity)
-            joint_info['taumax'].append(joint.limit.effort)
+            try:
+                joint = model.joint_map[jn]
+                joint_info['qmin'].append(joint.limit.lower)
+                joint_info['qmax'].append(joint.limit.upper)
+                joint_info['vmax'].append(joint.limit.velocity)
+                joint_info['taumax'].append(joint.limit.effort)
+            except KeyError:
+                joint_info['qmin'].append(-1)
+                joint_info['qmax'].append(1)
+                joint_info['vmax'].append(0)
+                joint_info['taumax'].append(0)
+
+            
 
         print('done!')
 
         return web.Response(text=json.dumps(joint_info))
+    
+
+    async def run_loop(self):
+
+        # broadcast fault
+        if self.fault is not None:
+            fault_msg = dict()
+            fault_msg['type'] = 'joint_fault'
+            fault_msg['name'] = self.fault.name
+            fault_msg['fault'] = self.fault.fault
+            self.fault = None
+            await self.srv.ws_send_to_all(json.dumps(fault_msg))
+
+        # check js received
+        if self.msg is None:
+            return
+        
+        # convert to dict
+        js_msg_to_send = self.js_msg_to_dict(self.msg)
+
+        # to save bw
+        del js_msg_to_send['name']
+
+        # add pow data and seq id
+        js_msg_to_send['vbatt'] = self.vbatt
+        js_msg_to_send['iload'] = self.iload
+        js_msg_to_send['seq'] = self.js_seq
+        self.js_seq += 1
+
+        # serialize msg to json
+        js_str = json.dumps(js_msg_to_send)      
+
+        # send to all connected clients
+        await self.srv.udp_send_to_all(js_str)
+
+        # clear to avoid sending duplicates
+        self.msg = None
+        for v in self.aux_map.values():
+            v.clear()
 
 
     async def run(self):
 
-        t0 = time.time()
+        async def log_error(msg: str):
+            await self.srv.log(sev=2)
 
-        while True:
-            
-            # sync loop at given rate
-            tnow = time.time()
-            await asyncio.sleep(1./self.rate - (tnow - t0))
-            t0 = tnow
-
-            # broadcast fault
-            if self.fault is not None:
-                fault_msg = dict()
-                fault_msg['type'] = 'joint_fault'
-                fault_msg['name'] = self.fault.name
-                fault_msg['fault'] = self.fault.fault
-                self.fault = None
-                await self.srv.ws_send_to_all(json.dumps(fault_msg))
-
-            # check js received
-            if self.msg is None:
-                continue
-            
-            # convert to dict
-            js_msg_to_send = self.js_msg_to_dict(self.msg)
-
-            # add pow data and seq id
-            js_msg_to_send['vbatt'] = self.vbatt
-            js_msg_to_send['iload'] = self.iload
-            js_msg_to_send['seq'] = self.js_seq
-            self.js_seq += 1
-
-            # serialize msg to json
-            js_str = json.dumps(js_msg_to_send)      
-
-            # send to all connected clients
-            await self.srv.udp_send_to_all(js_str)
-
-            # clear to avoid sending duplicates
-            self.msg = None
-            for v in self.aux_map.values():
-                v.clear()
-
+        await utils.sync_loop(self.run_loop, dt=1./self.rate, on_exception=log_error)()
+          
     
     def command_acquire(self):
         if self.cmd_busy:
@@ -330,7 +341,7 @@ class JointStateHandler:
 
     def js_msg_to_dict(self, msg: JointState):
         js_msg_dict = dict()
-        
+        js_msg_dict['name'] = msg.name
         js_msg_dict['posRef'] = msg.position_reference
         js_msg_dict['motPos'] = msg.motor_position
         js_msg_dict['linkPos'] = msg.link_position
@@ -347,6 +358,7 @@ class JointStateHandler:
         for k, v in js_msg_dict.items():
             js_msg_dict[k] = list(v)
 
+        js_msg_dict['type'] = 'joint_states'
         js_msg_dict['stamp'] = ros_handle.timestamp_to_sec(msg.header.stamp)
         js_msg_dict['aux_types'] = []
         for k, v in self.aux_map.items():

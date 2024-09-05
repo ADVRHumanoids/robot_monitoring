@@ -117,10 +117,13 @@ def main():
 
 
         # visual
-        from .visual import VisualHandler
-        ext = VisualHandler(srv, cfg.get('visual', {}))
-        extensions.append(ext)
-        print(ext)
+        try:
+            from .visual import VisualHandler
+            ext = VisualHandler(srv, cfg.get('visual', {}))
+            extensions.append(ext)
+            print(ext)
+        except BaseException as e:
+            print('Exception ', type(e), e)  
 
         # concert
         if 'concert' in cfg.keys():

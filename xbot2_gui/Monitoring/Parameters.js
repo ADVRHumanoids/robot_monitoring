@@ -139,7 +139,6 @@ function setParams(name, value) {
 
     paramUpdate[name] = value
 
-
     return client.doRequestAsync('POST', '/parameters/set_value',
                                  JSON.stringify(paramUpdate))
 

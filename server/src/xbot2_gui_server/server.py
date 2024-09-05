@@ -22,7 +22,7 @@ from . import mkcert
 
 class ServerBase:
 
-    async def ws_send_to_all(self, msg, clients=None):
+    async def ws_send_to_all(self, msg, clients=None, client_ids=None):
         raise NotImplementedError
 
     async def udp_send_to_all(self, msg, clients=None):
@@ -69,8 +69,8 @@ class Xbot2WebServer(ServerBase):
         self.loop = asyncio.get_event_loop()
 
         # websocket clients
-        self.ws_clients = set()
-        self.ws_udp_tunnel = set()
+        self.client_id_ws_map = dict()
+        self.client_id_ws_tunnel = dict()
 
         # ws callbacks
         self.ws_callbacks = list()
@@ -109,10 +109,13 @@ class Xbot2WebServer(ServerBase):
         self.ws_callbacks.append(callback)
 
     
-    async def ws_send_to_all(self, msg, clients=None):
+    async def ws_send_to_all(self, msg, clients=None, client_ids=None):
 
         if clients is None:
-            clients = self.ws_clients
+            clients = list(self.client_id_ws_map.values())
+
+        if client_ids is not None:
+            clients = [self.client_id_ws_map[id] for id in client_ids]
 
         if len(clients) > 0 and isinstance(msg, dict):
             msg = json.dumps(msg)
@@ -144,7 +147,7 @@ class Xbot2WebServer(ServerBase):
     async def udp_send_to_all(self, msg: str, clients=None):
 
         # tunnel udp via ws for wasm clients
-        await self.ws_send_to_all(msg, self.ws_udp_tunnel)
+        await self.ws_send_to_all(msg, self.client_id_ws_tunnel.values())
         
         # send udp to normal clients
         if self.udp is None:
@@ -157,7 +160,10 @@ class Xbot2WebServer(ServerBase):
             msg = json.dumps(msg)
 
         for addr in clients:
-            self.udp.sendto(msg.encode(), addr)
+            try:
+                self.udp.sendto(msg.encode(), addr)
+            except BaseException as e:
+                print(f'error sending to udp client at {addr}: ', type(e), e)
 
         return True
 
@@ -202,60 +208,52 @@ class Xbot2WebServer(ServerBase):
     
     async def start_http_server(self, runner, host, port, ssl_context):
         await runner.setup()
-        print('starting web server')
         site = web.TCPSite(runner, host, port, ssl_context=ssl_context)
         await site.start()
-        print('started web server')
 
-      
+
+    async def heartbeat_loop(self):
+
+        # save disconnected sockets for later removal
+        udp_to_remove = set()
+        cli_id_to_remove = set()
+
+        # check udp timeout
+        for addr, timeout in self.udp_clients_timeout.items():
+            if time.time() > timeout:
+                print(f'removing stale udp remote {addr}')
+                udp_to_remove.add(addr)
+
+        # iterate over sockets (one per client)
+        for cli_id, ws in self.client_id_ws_map.items():
+
+            try:
+                await ws.send_json(dict(type='heartbeat', cli_id=str(cli_id)))  
+            except ConnectionResetError as e:
+                print(f'removing stale ws remote')
+                cli_id_to_remove.add(cli_id)
+            except BaseException as e:
+                print(f'error: {e}')
+        
+        for cli_id in cli_id_to_remove:
+            del self.client_id_ws_map[cli_id]
+            if cli_id in self.client_id_ws_tunnel:
+                del self.client_id_ws_tunnel[cli_id]
+
+        for addr in udp_to_remove:
+            self.udp_clients.remove(addr)
+            del self.udp_clients_timeout[addr]
+    
+    
     # heartbeat broadcaster
     async def heartbeat(self):
+
+        async def print_err(msg):
+            print(msg)
         
-        """
-        broadcast periodic heartbeat with server-relate lightweight data
-        note: this also cleans up close websockets
-        """
+        wrapped = utils.sync_loop(self.heartbeat_loop, dt=0.666, on_exception=print_err)
 
-        # serialize msg to json
-        msg_str = json.dumps(
-            {
-                'type': 'heartbeat',
-            }
-        )
-
-        while True:
-
-            # save disconnected sockets for later removal
-            ws_to_remove = set()
-            udp_to_remove = set()
-
-            # check udp timeout
-            for addr, timeout in self.udp_clients_timeout.items():
-                if time.time() > timeout:
-                    print(f'removing stale udp remote {addr}')
-                    udp_to_remove.add(addr)
-
-            # iterate over sockets (one per client)
-            for ws in self.ws_clients:
-                
-                try:
-                    await ws.send_str(msg_str)  
-                except ConnectionResetError as e:
-                    print(f'removing stale ws remote')
-                    ws_to_remove.add(ws)
-                except BaseException as e:
-                    print(f'error: {e}')
-            
-            for ws in ws_to_remove:
-                self.ws_clients.remove(ws)
-                self.ws_udp_tunnel.remove(ws)
-
-            for addr in udp_to_remove:
-                self.udp_clients.remove(addr)
-                del self.udp_clients_timeout[addr]
-            
-            # periodic loop at 10 Hz
-            await asyncio.sleep(0.666)
+        await wrapped()
     
 
     # root handler serves html for web app
@@ -270,9 +268,13 @@ class Xbot2WebServer(ServerBase):
         ws = web.WebSocketResponse()
         await ws.prepare(request)
 
-        # add new connection
-        self.ws_clients.add(ws)
-        await self.log(f'new client connected (total is {len(self.ws_clients)})')
+        # create client id
+        cli_id = time.time_ns()
+        self.client_id_ws_map[cli_id] = ws
+
+        print(cli_id)
+        
+        await self.log(f'new client connected (id = {cli_id}) (total is {len(self.client_id_ws_map)})')
 
         # start receiver task
         await self.websocket_receiver(ws)
@@ -295,6 +297,12 @@ class Xbot2WebServer(ServerBase):
                     ws.exception())
                 break
 
+    
+    def _get_cli_id_from_ws(self, ws):
+        keys_list = list(self.client_id_ws_map.keys())
+        values_list = list(self.client_id_ws_map.values())
+        return keys_list[values_list.index(ws)]
+
 
     async def handle_ping_msg(self, msg, proto, ws):
         
@@ -302,8 +310,9 @@ class Xbot2WebServer(ServerBase):
             await self.msg_send_to_all(json.dumps(msg), proto=proto, clients=[ws])
         
         if msg['type'] == 'request_ws_udp_tunnel':
-            print(f'set websocket as udp tunnel ({ws})')
-            self.ws_udp_tunnel.add(ws)
+            cli_id = self._get_cli_id_from_ws(ws)
+            print(f'set websocket as udp tunnel ({ws}) for cli_id {cli_id}')
+            self.client_id_ws_tunnel[cli_id] = ws
             
 
     

@@ -15,6 +15,7 @@ Card1 {
     property alias currentTask: taskCombo.currentText
     property bool ikRunning: false
     property alias videoStream: videoStreamCombo.currentText
+    property alias lidarActive: lidarSwitch.checked
 
     // private
     id: root
@@ -107,6 +108,16 @@ Card1 {
                                              videoStreamCombo.model = topics
                                          })
             }
+        }
+
+        Label {
+            text: 'Lidar'
+            Layout.columnSpan: 2
+        }
+
+        Switch {
+            id: lidarSwitch
+            checked: false
         }
     }
 

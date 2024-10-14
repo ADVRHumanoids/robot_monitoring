@@ -26,7 +26,8 @@ function refresh() {
                       if(obj.descriptor.type === 'IsPositive') {
                           loader.item.min = 0
                           loader.item.max = 5 * obj.value
-                      } else if(obj.descriptor === 'InRange') {
+                      } else if(obj.descriptor.type === 'InRange') {
+
                           loader.item.min = obj.descriptor.min
                           loader.item.max = obj.descriptor.max
                       }
@@ -104,7 +105,7 @@ function refresh1() {
                       if(obj.descriptor.type === 'IsPositive') {
                           loader.item.min = 0
                           loader.item.max = 5 * obj.value
-                      } else if(obj.descriptor === 'InRange') {
+                      } else if(obj.descriptor.type === 'InRange') {
                           loader.item.min = obj.descriptor.min
                           loader.item.max = obj.descriptor.max
                       }

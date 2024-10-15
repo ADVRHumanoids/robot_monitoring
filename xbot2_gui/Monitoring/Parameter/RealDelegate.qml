@@ -12,8 +12,10 @@ RowLayout {
 
     readonly property real value: slider.value
 
+    signal valueChangedByUser(real value)
+
     function setValue(value) {
-        console.log(`setValue ${value}`)
+        console.log(`setValue ${value} min ${min} max ${max}`)
         slider.value = value
         spin.value = value
     }
@@ -26,13 +28,21 @@ RowLayout {
         Layout.fillWidth: true
         from: control.min
         to: control.max
-        onMoved: spin.value = value
+        onMoved: {
+            control.valueChangedByUser(value)
+            spin.value = value
+        }
     }
 
     DoubleSpinBox1 {
         id: spin
         from: control.min
         to: control.max
-        onValueModified: slider.value = value
+        onValueModified: function(value) {
+            control.valueChangedByUser(value)
+            slider.value = value
+
+        }
+        adaptivePrecision: true
     }
 }

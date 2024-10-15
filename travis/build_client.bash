@@ -11,9 +11,9 @@ cp -r * travis/docker/context/robot_monitoring || true
 docker build travis/docker -t travis_build_image --pull
 
 # build client via docker
-docker run --rm \
+docker run --rm -it \
  -v $PWD/build_output:/home/user/build_output \
- travis_build_image bash /home/user/build.bash
+ travis_build_image bash -i /home/user/build.bash
 
 # restore correct ownership
 sudo chown -R $USER build_output

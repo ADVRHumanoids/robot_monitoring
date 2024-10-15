@@ -25,10 +25,6 @@ if(NOT EMSCRIPTEN)
 
     find_package(Qt6 COMPONENTS
         WebView
-        Protobuf
-        3DCore
-        3DRender
-        3DInput
         REQUIRED
     )
 
@@ -73,10 +69,6 @@ if(NOT EMSCRIPTEN)
 
     target_link_libraries(xbot2_gui
         PUBLIC
-        Qt6::Protobuf
-        Qt6::3DCore
-        Qt6::3DRender
-        Qt6::3DInput
         Qt6::WebView
         mesh_geometry
     )
@@ -117,11 +109,11 @@ add_subdirectory(Monitoring)
 
 add_subdirectory(Network)
 
-if(NOT EMSCRIPTEN)
+# if(NOT EMSCRIPTEN)
 
-    add_subdirectory(Protobuf)
+#     add_subdirectory(Protobuf)
 
-endif()
+# endif()
 
 add_subdirectory(TestThings)
 

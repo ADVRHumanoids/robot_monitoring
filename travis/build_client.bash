@@ -8,7 +8,7 @@ rm -rf travis/docker/context && mkdir -p travis/docker/context/robot_monitoring
 cp -r * travis/docker/context/robot_monitoring || true
 
 # build docker image
-docker build travis/docker -t travis_build_image
+docker build travis/docker -t travis_build_image --pull
 
 # build client via docker
 docker run --rm \

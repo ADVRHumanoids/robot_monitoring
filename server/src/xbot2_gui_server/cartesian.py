@@ -2,11 +2,14 @@ import asyncio
 from aiohttp import web
 import json
 
-import rospy
+# ros handle
+from . import ros_utils
+ros_handle : ros_utils.RosWrapper = ros_utils.ros_handle
+
 from std_srvs.srv import SetBool, Trigger
 from geometry_msgs.msg import TwistStamped, Twist
 try:
-    from cartesian_interface.srv import SetControlMode, SetControlModeRequest, GetTaskList, GetCartesianTaskInfo
+    from cartesian_interface.srv import SetControlMode, GetTaskList, GetCartesianTaskInfo
 except ModuleNotFoundError:
     pass
 
@@ -42,19 +45,18 @@ class CartesianHandler:
     
     @utils.handle_exceptions
     async def cartesian_get_task_list_handler(self, request):
+
+        res = GetTaskList.Response()
         
         # get cartesio tasks
         try:
-            get_task_list = rospy.ServiceProxy('cartesian/get_task_list', GetTaskList)
-            res = await utils.to_thread(get_task_list)
-        except:
-            class DummyResponse:
-                def __init__(self) -> None:
-                    self.names = []
-                    self.types = []
-            res = DummyResponse()
+            get_task_list = ros_handle.create_client(GetTaskList, 'cartesian/get_task_list')
+            res = await ros_handle.call(get_task_list, 0.2)
+            print(res)
+        except TimeoutError:
+            pass
 
-         # get topic names from ros master
+        # get topic names from ros master
         for tname in self.cmd_vel_topics:
             res.names.append(tname)
             res.types.append('SimpleTopic')
@@ -151,31 +153,31 @@ class CartesianHandler:
             topic_name = rospy.resolve_name(f'cartesian/{task_name}/velocity_reference')
             TopicType = TwistStamped
 
-        if self.vref_pub is None or self.vref_pub.resolved_name != topic_name:
+        if self.vref_pub is None or self.vref_pub.topic_name != topic_name:
             try:
                 print(f'unregistering {self.vref_pub.name}')
             except:
                 pass
             print(f'advertising {topic_name}')
-            self.vref_pub = rospy.Publisher(topic_name, TopicType, queue_size=1)
+            self.vref_pub = ros_handle.create_publisher(TopicType, topic_name, queue_size=1)
 
 
         rosmsg = TopicType()
 
         if TopicType is TwistStamped:
-            rosmsg.header.stamp = rospy.Time.now()
+            rosmsg.header.stamp = ros_handle.now()
             rosmsg.header.frame_id = task_name
             twist = rosmsg.twist
         else:
             twist = rosmsg
 
         vref = msg['vref']
-        twist.linear.x = vref[0]
-        twist.linear.y = vref[1]
-        twist.linear.z = vref[2]
-        twist.angular.x = vref[3]
-        twist.angular.y = vref[4]
-        twist.angular.z = vref[5]
+        twist.linear.x = float(vref[0])
+        twist.linear.y = float(vref[1])
+        twist.linear.z = float(vref[2])
+        twist.angular.x = float(vref[3])
+        twist.angular.y = float(vref[4])
+        twist.angular.z = float(vref[5])
 
         self.vref_pub.publish(rosmsg)
 

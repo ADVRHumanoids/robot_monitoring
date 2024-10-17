@@ -63,7 +63,7 @@ class Ros2Utils:
         if latch:
             durability=QoSDurabilityPolicy.TRANSIENT_LOCAL
         else:
-            durability=QoSDurabilityPolicy.BEST_AVAILABLE
+            durability=QoSDurabilityPolicy.VOLATILE
 
         if best_effort:
             reliability=QoSReliabilityPolicy.BEST_EFFORT

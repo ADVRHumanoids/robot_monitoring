@@ -51,7 +51,7 @@ class PluginHandler:
         req_data = command == 'start'
         
         switch = ros_handle.create_client(SetBool, f'xbotcore/{plugin_name}/switch')
-        await ros_handle.call(switch, timeout_sec=1.0, data=req_data)
+        res = await ros_handle.call(switch, timeout_sec=1.0, data=req_data)
 
         return web.Response(text=json.dumps({'success': res.success, 'message': res.message}))
 

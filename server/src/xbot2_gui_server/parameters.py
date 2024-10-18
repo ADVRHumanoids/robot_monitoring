@@ -8,11 +8,11 @@ from std_srvs.srv import SetBool, Trigger
 from std_msgs.msg import String
 from geometry_msgs.msg import TwistStamped, Twist
 from xbot_msgs.msg import Statistics2
-from xbot_msgs.srv import GetParameterInfo, SetString
+# from xbot_msgs.srv import GetParameterInfo, SetString
+from rosbot_param_server.srv import GetParameterInfo, SetString
 
 from .server import ServerBase
 from . import utils
-from . import launcher
 
 
 class ParameterHandler:
@@ -32,8 +32,8 @@ class ParameterHandler:
                            'parameters_set_value')
 
         # subscribe to stats
-        self.get_info = rospy.ServiceProxy('xbotcore/get_parameter_info', GetParameterInfo)
-        self.set_parameters = rospy.ServiceProxy('xbotcore/set_parameters', SetString)
+        self.get_info = rospy.ServiceProxy('horizon/get_parameter_info', GetParameterInfo)
+        self.set_parameters = rospy.ServiceProxy('horizon/set_parameters', SetString)
 
     
     @utils.handle_exceptions

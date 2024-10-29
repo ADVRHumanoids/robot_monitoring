@@ -12,6 +12,8 @@ Item {
 
     property ClientEndpoint client
 
+    property alias camHeight: cameraPerspectiveTwo.z
+
     //
     id: root
 
@@ -26,7 +28,7 @@ Item {
 
             PerspectiveCamera {
                 id: cameraPerspectiveTwo
-                z: 200
+                z: 400
                 clipNear: 1
             }
 
@@ -56,6 +58,8 @@ Item {
 
                 RobotModelNode {
                     client: root.client
+                    opacity: 0.5
+                    color: 'white'
                 }
 
                 Repeater3D {
@@ -154,15 +158,17 @@ Item {
 
 
                 for(let i = 0; i < obj.points.length; i++) {
-                    instanceTable.addPoint(obj.points[i][0],
-                                           obj.points[i][1],
-                                           obj.points[i][2]
+                    instanceTable.addPoint(obj.points[i][0]/100.,
+                                           obj.points[i][1]/100.,
+                                           obj.points[i][2]/100.
                                            )
                 }
 
+                // console.log(`${obj.name} ${obj.iblk}/${obj.nblk}`)
+
                 if(obj.iblk === obj.nblk) {
                     instanceTable.commit()
-                    console.log(`${obj.name} ${obj.iblk}/${obj.nblk}`)
+                    console.log(`OK ${obj.name} ${obj.iblk}/${obj.nblk}`)
                 }
 
             }

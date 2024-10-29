@@ -105,6 +105,26 @@ Item {
                 }
             }
 
+            Item {
+                width: parent.width
+                height: 6
+                visible: setupCard.lidarActive
+            }
+
+            Label {
+                text: ' cam distance'
+                visible: setupCard.lidarActive
+                font.pointSize: 10
+            }
+
+            SpinBox {
+                id: camHeightSpin
+                visible: setupCard.lidarActive
+                from: 1
+                to: 20
+                value: 8
+            }
+
         }
 
     }
@@ -139,6 +159,7 @@ Item {
 
         sourceComponent: MobileJoggingView {
             client: root.client
+            camHeight: camHeightSpin.value * 100
         }
 
     }

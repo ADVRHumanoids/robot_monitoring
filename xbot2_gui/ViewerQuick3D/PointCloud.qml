@@ -5,7 +5,7 @@ import QtQuick3D.Helpers
 
 Node {
 
-    property vector3d scale: Qt.vector3d(0.05, 0.05, 0.05)
+    property vector3d scale: Qt.vector3d(0.1, 0.1, 0.1)
     property alias instancing: instanceTable
 
 

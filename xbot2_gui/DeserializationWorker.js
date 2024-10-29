@@ -1,4 +1,10 @@
 WorkerScript.onMessage = function(message) {
-    let obj = JSON.parse(message)
-    WorkerScript.sendMessage(obj)
+    try
+    {
+        let obj = JSON.parse(message)
+        WorkerScript.sendMessage(obj)
+    }
+    catch (error) {
+        console.error('received invalid json (' + error + '): ' + message);
+    }
 }

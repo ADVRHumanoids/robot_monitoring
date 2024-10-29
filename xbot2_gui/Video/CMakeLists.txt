@@ -9,6 +9,7 @@ qt_add_qml_module(xbot2_gui_video
     VideoStreamCard.qml
     SOURCES
     videostreampainter.h videostreampainter.cpp
+    SOURCES mediaplayer.h mediaplayer.cpp
 )
 
 qt_add_shaders(xbot2_gui_video "xbot2_gui-shaders"

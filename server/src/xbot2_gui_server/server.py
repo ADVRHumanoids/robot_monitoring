@@ -25,7 +25,7 @@ class ServerBase:
     async def ws_send_to_all(self, msg, clients=None, client_ids=None):
         raise NotImplementedError
 
-    async def udp_send_to_all(self, msg, clients=None):
+    async def udp_send_to_all(self, msg, clients=None, client_ids=None):
         raise NotImplementedError
 
     async def msg_send_to_all(self, msg, proto:str, clients=None):
@@ -142,7 +142,7 @@ class Xbot2WebServer(ServerBase):
         await self.ws_send_to_all(json.dumps(msg))
 
     
-    async def udp_send_to_all(self, msg: str, clients=None):
+    async def udp_send_to_all(self, msg: str, clients=None, client_ids=None):
 
         # tunnel udp via ws for wasm clients
         await self.ws_send_to_all(msg, self.client_id_ws_tunnel.values())
@@ -153,6 +153,9 @@ class Xbot2WebServer(ServerBase):
         
         if clients is None:
             clients = self.udp_clients
+
+        # if client_ids is not None:
+        #     self.c
 
         if len(clients) > 0 and isinstance(msg, dict):
             msg = json.dumps(msg)

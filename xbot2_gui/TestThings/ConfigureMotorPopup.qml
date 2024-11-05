@@ -19,13 +19,17 @@ Control {
 
     property var motorProperties
 
-    property var selectedMotorProperties: motorProperties[motorCombo.currentText]
+    property var selectedMotorProperties
 
     property string selectedMotorType
 
     property real loadMass: -1
 
     property real loadRadius: -1
+
+    property bool configured: selectedMotorType.length > 0 && loadMass >= 0 && loadRadius >= 0
+
+    signal done()
 
     function refresh() {
         Logic.updateMotorProperties()
@@ -36,34 +40,19 @@ Control {
 
     contentItem: ColumnLayout {
 
-        RowLayout {
+        GridLayout {
 
-            spacing: 16
+            columns: 2
 
             Label {
                 text: 'Motor type'
                 verticalAlignment: Text.AlignVCenter
-                anchors.verticalCenter: parent.verticalCenter
             }
 
             ComboBox {
                 id: motorCombo
+                editable: true
             }
-
-            Item {
-                Layout.preferredWidth: 24
-            }
-
-            CheckBox {
-                id: lockedOutputCheck
-                text: 'Locked Output'
-            }
-
-        }
-
-        RowLayout {
-
-            spacing: 16
 
             Label {
                 text: 'Load radius [cm]'
@@ -79,10 +68,6 @@ Control {
                 }
             }
 
-            Item {
-                Layout.preferredWidth: 24
-            }
-
             Label {
                 text: 'Load mass [kg]'
             }
@@ -96,14 +81,16 @@ Control {
                     notation: DoubleValidator.StandardNotation
                 }
             }
-        }
 
-        GridLayout {
+            Item {
+                Layout.columnSpan: 2
+                Layout.preferredHeight: 24
+            }
 
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-
-            columns: 2
+            Label {
+                text: 'Properties'
+                Layout.columnSpan: 2
+            }
 
             Label {
                 text: 'Max Velocity'
@@ -126,6 +113,20 @@ Control {
                 text: selectedMotorProperties['max_torque']
             }
 
+        }
+
+        Button {
+
+            text: 'Ok'
+            onClicked: {
+                done()
+                selectedMotorType = motorCombo.currentText
+                loadMass = parseFloat(loadMassTxt.text)
+                loadRadius = parseFloat(loadRadiusTxt.text)*0.01
+                console.log(`${selectedMotorType} ${loadMass} ${loadRadius}`)
+                selectedMotorProperties = motorProperties[selectedMotorType]
+            }
+            Layout.alignment: Qt.AlignRight
         }
 
     }

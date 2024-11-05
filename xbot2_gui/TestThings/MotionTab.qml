@@ -37,6 +37,8 @@ Control {
 
         RowLayout {
 
+
+
             Frame {
 
                 Layout.fillHeight: true
@@ -51,6 +53,8 @@ Control {
 
                     RowLayout {
 
+                        spacing: 24
+
                         Button {
                             text: 'Configuration'
                             onClicked: {
@@ -62,13 +66,14 @@ Control {
                         Button {
                             text: 'Connect'
                             onClicked: Logic.connect()
+                            enabled: cfg.configured
                         }
 
                         TextArea {
                             id: statusText
                             placeholderText: 'Status'
                             readOnly: true
-                            text: 'Unknown'
+                            text: !cfg.configured ? 'Configuration missing' : 'Configured'
                             Layout.fillWidth: true
                         }
 
@@ -94,35 +99,39 @@ Control {
                         }
 
                         Control {
+
                             contentItem: GridLayout {
 
                                 columns: 1
 
-                                TextEdit {
-                                    text: 'Trajectory 1/4'
-                                }
-
                                 TextArea {
-                                    text: 'Make sure th'
+                                    text: 'Trajectory 1/4 with duration = '
                                 }
 
-
-
+                                ProgressBar {
+                                    Layout.fillWidth: true
+                                }
                             }
                         }
 
                     }
 
-                    Item {}
+                    RowLayout {
 
-                    Button {
-                        text: 'Next'
-                        onClicked: stack.currentIndex = stack.currentIndex + 1
-                    }
+                        Item {
+                            Layout.fillWidth: true
+                        }
 
-                    Button {
-                        text: 'Cancel'
-                        onClicked: stack.currentIndex = 0
+                        Button {
+                            text: 'Next'
+                            onClicked: stack.currentIndex = stack.currentIndex + 1
+                        }
+
+                        Button {
+                            text: 'Cancel'
+                            onClicked: stack.currentIndex = 0
+                        }
+
                     }
 
 
@@ -298,6 +307,7 @@ Control {
             id: cfg
             anchors.fill: parent
             client: root.client
+            onDone: motorConfigPopup.close()
         }
 
         anchors.centerIn: Overlay.overlay

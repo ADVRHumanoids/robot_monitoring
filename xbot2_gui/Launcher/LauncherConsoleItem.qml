@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
-import QtDataVisualization
+// import QtDataVisualization
 
 import "../Common"
 
@@ -18,7 +18,7 @@ Item {
             i = processNames.indexOf(procName)
         }
 
-        let color = theme.baseColors[(i+1) % theme.baseColors.length].color
+        let color = 'white' //theme.baseColors[(i+1) % theme.baseColors.length].color
 
         text = `<font color="${color}">` + text + '</font>'
 
@@ -42,35 +42,35 @@ Item {
 
     implicitHeight: card.implicitHeight
 
-    // https://doc.qt.io/qt-6/qml-color.html
-    Theme3D {
-        id: theme
-        type: Q3DTheme.ThemeUserDefined
-        baseColors: [
-            ThemeColor {
-                color: 'white'
-            },
-            ThemeColor {
-                color: 'aquamarine'
-            },
-            ThemeColor {
-                color: 'darkkhaki'
-            },
-            ThemeColor {
-                color: 'mediumspringgreen'
-            },
-            ThemeColor {
-                color: 'greenyellow'
-            },
-            ThemeColor {
-                color: 'lightpink'
-            },
-            ThemeColor {
-                color: 'lightseagreen'
-            }
+    // // https://doc.qt.io/qt-6/qml-color.html
+    // Theme3D {
+    //     id: theme
+    //     type: Q3DTheme.ThemeUserDefined
+    //     baseColors: [
+    //         ThemeColor {
+    //             color: 'white'
+    //         },
+    //         ThemeColor {
+    //             color: 'aquamarine'
+    //         },
+    //         ThemeColor {
+    //             color: 'darkkhaki'
+    //         },
+    //         ThemeColor {
+    //             color: 'mediumspringgreen'
+    //         },
+    //         ThemeColor {
+    //             color: 'greenyellow'
+    //         },
+    //         ThemeColor {
+    //             color: 'lightpink'
+    //         },
+    //         ThemeColor {
+    //             color: 'lightseagreen'
+    //         }
 
-        ]
-    }
+    //     ]
+    // }
 
     Card1 {
         id: card

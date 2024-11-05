@@ -8,6 +8,9 @@ qt_add_qml_module(xbot2_gui_testthings
     Playground2.qml
     Linfa.qml
     AlberoBuilder.qml
+    QML_FILES MotionTab.qml
+    QML_FILES MotionTab.js
+    QML_FILES ConfigureMotorPopup.qml
 )
 
 target_link_libraries(xbot2_gui PRIVATE xbot2_gui_testthingsplugin)

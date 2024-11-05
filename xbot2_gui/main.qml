@@ -144,6 +144,14 @@ ApplicationWindow {
         }
 
         PageItem {
+            name: "Playground"
+            page: "/qt/qml/TestThings/Playground.qml"
+            iconText: MaterialSymbolNames.playground
+            iconFont: syms.font.family
+            active: true
+        }
+
+        PageItem {
             name: "Joy"
             page: "/qt/qml/Joy/Joy.qml"
             iconText: MaterialSymbolNames.joystick

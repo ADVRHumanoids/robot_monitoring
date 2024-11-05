@@ -355,7 +355,7 @@ Item {
         }
 
         Component.onCompleted: {
-            removeAllSeries()
+            // removeAllSeries()
         }
 
     }

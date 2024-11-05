@@ -141,6 +141,12 @@ def main():
             from .horizon import HorizonHandler
             ext = HorizonHandler(srv, cfg.get('horizon', {}))
             extensions.append(ext)
+
+        # horizon
+        if 'hhcm_calibration' in cfg.keys():
+            from .hhcm_calibration import HhcmCalibrationHandler
+            ext = HhcmCalibrationHandler(srv, cfg.get('hhcm_calibration', {}))
+            extensions.append(ext)
         
         # dashboard
         try:

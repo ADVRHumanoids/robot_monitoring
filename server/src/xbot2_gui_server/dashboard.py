@@ -1,6 +1,7 @@
 import asyncio
 from aiohttp import web
 import json
+import yaml
 
 import rospy
 from std_srvs.srv import SetBool, Trigger
@@ -79,6 +80,12 @@ class DashboardHandler:
 
         l : launcher.Launcher = self.get_launcher()
 
+        body = await request.text()
+
+        print(body)
+
+        body = yaml.safe_load(body)
+
         if command == 'start':
             
             # start ecat
@@ -96,8 +103,11 @@ class DashboardHandler:
             await self.send_status('starting robot 3/3 (xbot2)')
 
             # start xbot2
+            user_variants = body.get('variants', ['ec_imp'])
+            user_params = body.get('params', {})
             if not await l.start(process='xbot2',
-                          user_variants=['ec_imp']):
+                          user_variants=['ec_imp'], 
+                          user_params=user_params):
                 raise RuntimeError('could not start xbot2')
             
             # wait alive 
@@ -112,12 +122,12 @@ class DashboardHandler:
             sdict = await l.status()
 
             if sdict.get('xbot2', '') == 'Running':
-                raise RuntimeError('xbot2 is up: have you pressed the emergency button?') 
+                await l.kill(process='xbot2', graceful=True)
 
             # kill ecat and hope for the best
             await self.send_status('stopping robot (ecat)')
 
-            if not await l.kill(process='ecat', graceful=True):
+            if not await l.kill(process='ecat', graceful=False):
                 raise RuntimeError('could not stop ecat')
             
             # kill all procs

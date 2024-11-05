@@ -50,6 +50,7 @@ Control {
                 ColumnLayout {
 
                     anchors.fill: parent
+                    spacing: 24
 
                     RowLayout {
 
@@ -85,7 +86,6 @@ Control {
 
                         Layout.fillHeight: true
                         Layout.fillWidth: true
-                        Layout.columnSpan: 3
                         clip: true
 
 
@@ -94,29 +94,112 @@ Control {
                             Layout.fillWidth: true
                             contentItem: Button {
                                 text: 'Start acquisition'
-                                onClicked: Logic.startAcquisition()
+                                onClicked: stack.currentIndex = 1
                             }
                         }
 
-                        Control {
+                        Repeater {
 
-                            contentItem: GridLayout {
+                            model: cfg.selectedMotorProperties.trajectory.length
 
-                                columns: 1
+                            Control {
 
-                                TextArea {
-                                    text: 'Trajectory 1/4 with duration = '
-                                }
+                                required property int index
 
-                                ProgressBar {
-                                    Layout.fillWidth: true
+                                property var trj: cfg.selectedMotorProperties.trajectory[index]
+
+                                contentItem: GridLayout {
+
+                                    columns: 2
+
+                                    Label {
+                                        text: `Trajectory #${index+1} (name "${trj.name}")`
+                                        Layout.columnSpan: 2
+                                        Layout.alignment: Qt.AlignHCenter
+                                        font.pointSize: 12
+                                        padding: 8
+                                    }
+
+                                    Label {
+                                        text: 'Amplitude'
+                                    }
+
+                                    TextField {
+                                        text: trj.amplitude
+                                        readOnly: true
+                                        enabled: false
+                                    }
+
+                                    Label {
+                                        text: 'Omega min.'
+                                    }
+
+                                    TextField {
+                                        text: trj.omega_min
+                                        readOnly: true
+                                        enabled: false
+                                    }
+
+                                    Label {
+                                        text: 'Omega max.'
+                                    }
+
+                                    TextField {
+                                        text: trj.omega_max
+                                        readOnly: true
+                                        enabled: false
+                                    }
+
+                                    Label {
+                                        text: 'Locked output'
+                                    }
+
+                                    TextField {
+                                        text: trj.locked_output
+                                        readOnly: true
+                                        enabled: false
+                                    }
+
+                                    ProgressBar {
+                                        Layout.fillWidth: true
+                                        Layout.columnSpan: 2
+                                        padding: 16
+                                    }
+
+                                    Button {
+                                        text: 'Start'
+                                        onClicked: startDialog.open()
+
+                                        Dialog {
+
+                                            id: startDialog
+                                            modal: true
+                                            anchors.centerIn: Overlay.overlay
+                                            standardButtons: Dialog.Ok | Dialog.Cancel
+
+                                            Text {
+                                                text: `Make sure that the load is ${trj.locked_output ? "LOCKED" : "UNLOCKED"}, then press OK to continue. The motor will start moving`
+                                                color: palette.active.text
+                                                font.pointSize: 14
+                                            }
+
+
+
+                                            onAccepted: {
+                                                Logic.startAcquisition(trj)
+                                            }
+                                        }
+                                    }
                                 }
                             }
+
                         }
 
                     }
 
                     RowLayout {
+
+                        Layout.fillWidth: true
 
                         Item {
                             Layout.fillWidth: true

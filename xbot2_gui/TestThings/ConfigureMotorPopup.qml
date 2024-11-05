@@ -100,6 +100,7 @@ Control {
             TextField {
                 readOnly: true
                 text: selectedMotorProperties['max_velocity']
+                enabled: false
             }
 
 
@@ -111,21 +112,36 @@ Control {
             TextField {
                 readOnly: true
                 text: selectedMotorProperties['max_torque']
+                enabled: false
             }
 
         }
 
-        Button {
+        Row {
 
-            text: 'Ok'
-            onClicked: {
-                done()
-                selectedMotorType = motorCombo.currentText
-                loadMass = parseFloat(loadMassTxt.text)
-                loadRadius = parseFloat(loadRadiusTxt.text)*0.01
-                console.log(`${selectedMotorType} ${loadMass} ${loadRadius}`)
-                selectedMotorProperties = motorProperties[selectedMotorType]
+            spacing: 16
+
+            Button {
+
+                text: 'Ok'
+                onClicked: {
+                    selectedMotorType = motorCombo.currentText
+                    loadMass = parseFloat(loadMassTxt.text)
+                    loadRadius = parseFloat(loadRadiusTxt.text)*0.01
+                    console.log(`${selectedMotorType} ${loadMass} ${loadRadius}`)
+                    selectedMotorProperties = motorProperties[selectedMotorType]
+                }
             }
+
+
+            Button {
+
+                text: 'Close'
+                onClicked: {
+                    done()
+                }
+            }
+
             Layout.alignment: Qt.AlignRight
         }
 

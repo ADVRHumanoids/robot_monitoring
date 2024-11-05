@@ -29,14 +29,14 @@ function connect() {
 }
 
 
-function startAcquisition() {
+function startAcquisition(trj) {
 
     statusText.text = 'Configuring data acquisition...'
 
     let params = {
-        'log_file': `${cfg.selectedMotorType}_${cfg.lockedOutput ? "LOCKED" : "FREE"}_${cfg.loadMass.toFixed(2)}KG_${cfg.loadRadius.toFixed(2)}R`,
-        'freq_min': cfg.selectedMotorProperties.trajectory_freq_min,
-        'freq_max': cfg.selectedMotorProperties.trajectory_freq_max
+        'log_file': `${cfg.selectedMotorType}_${trj.locked_output ? "LOCKED" : "FREE"}_${cfg.loadMass.toFixed(2)}KG_${cfg.loadRadius.toFixed(2)}R`,
+        'freq_min': trj.omega_min / 6.28,
+        'freq_max': trj.omega_max / 6.28
     }
 
     client.doRequestAsync('POST',

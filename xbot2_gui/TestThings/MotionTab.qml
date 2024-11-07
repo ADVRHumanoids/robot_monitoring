@@ -26,6 +26,10 @@ Control {
 
     property alias robotViewer: viewerLoader.item
 
+    property string dateTime
+
+    property real trjProgress
+
 
     topPadding: 16
 
@@ -87,14 +91,39 @@ Control {
                         Layout.fillHeight: true
                         Layout.fillWidth: true
                         clip: true
+                        enabled: statusText.text === 'Connected'
 
 
                         Control {
                             Layout.fillHeight: true
                             Layout.fillWidth: true
-                            contentItem: Button {
-                                text: 'Start acquisition'
-                                onClicked: stack.currentIndex = 1
+                            contentItem: ColumnLayout {
+
+                                Text {
+                                    Layout.fillWidth: true
+                                    color: palette.active.text
+                                    text: 'Press <i>Start acquisition</i> to begin the data acquisition procedure, that will guide you through the execution of n=${numTrj} trajectories. <br/><br/>Select the <i>Test Run</i> switch to mark this run as not to be used for calibration.'
+                                    wrapMode: Text.WordWrap
+                                    font.pointSize: 12
+                                    // readOnly: true
+
+                                }
+
+                                Button {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    text: 'Start acquisition'
+                                    onClicked: {
+                                        root.trjProgress = -1.0
+                                        root.dateTime = new Date().toLocaleString('en-US', {'second': 'numeric'});
+                                        stack.currentIndex = 1
+                                    }
+                                }
+
+                                Switch {
+                                    id: testRunSwitch
+                                    Layout.alignment: Qt.AlignHCenter
+                                    text: 'Test Run'
+                                }
                             }
                         }
 
@@ -163,7 +192,8 @@ Control {
                                     ProgressBar {
                                         Layout.fillWidth: true
                                         Layout.columnSpan: 2
-                                        padding: 16
+                                        indeterminate: root.trjProgress < 0
+                                        value: root.trjProgress
                                     }
 
                                     Button {
@@ -183,9 +213,9 @@ Control {
                                                 font.pointSize: 14
                                             }
 
-
-
                                             onAccepted: {
+                                                trj['date_time'] = appData.getDateTime()
+                                                trj['test_run'] = testRunSwitch.checked
                                                 Logic.startAcquisition(trj)
                                             }
                                         }
@@ -207,7 +237,11 @@ Control {
 
                         Button {
                             text: 'Next'
-                            onClicked: stack.currentIndex = stack.currentIndex + 1
+                            onClicked: {
+                                root.trjProgress = -1.0
+                                stack.currentIndex = stack.currentIndex + 1
+                            }
+                            enabled: root.trjProgress >= 1.0 && stack.currentIndex > 0
                         }
 
                         Button {
@@ -417,6 +451,9 @@ Control {
         function onObjectReceived (msg) {
             if(msg.type === 'plugin_stats') {
                 root.trjPluginState = msg['trajectory'].state
+            }
+            if(msg.type === 'hhcm_calib') {
+                root.trjProgress = msg.progress
             }
         }
     }

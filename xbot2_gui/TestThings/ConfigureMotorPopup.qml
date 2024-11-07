@@ -124,6 +124,7 @@ Control {
             Button {
 
                 text: 'Ok'
+                Keys.onReturnPressed: clicked()
                 onClicked: {
                     selectedMotorType = motorCombo.currentText
                     loadMass = parseFloat(loadMassTxt.text)

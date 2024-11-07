@@ -31,12 +31,13 @@ function connect() {
 
 function startAcquisition(trj) {
 
-    statusText.text = 'Configuring data acquisition...'
+    // statusText.text = 'Configuring data acquisition...'
 
     let params = {
-        'log_file': `${cfg.selectedMotorType}_${trj.locked_output ? "LOCKED" : "FREE"}_${cfg.loadMass.toFixed(2)}KG_${cfg.loadRadius.toFixed(2)}R`,
-        'freq_min': trj.omega_min / 6.28,
-        'freq_max': trj.omega_max / 6.28
+        'motor_type': cfg.selectedMotorType,
+        'load_mass': cfg.loadMass,
+        'load_radius': cfg.loadRadius,
+        'trj': trj
     }
 
     client.doRequestAsync('POST',
@@ -49,8 +50,7 @@ function startAcquisition(trj) {
                 return
             }
 
-            statusText.text = Qt.binding(() => {return 'Trajectory: ' + root.trjPluginState})
-            return client.doRequestAsync('PUT', '/plugin/trajectory/command/start')
+            return client.doRequestAsync('POST', '/hhcm_calibration/start')
         })
 }
 

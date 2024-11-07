@@ -52,6 +52,8 @@ public:
 
     Q_INVOKABLE uint64_t getTimeNs() const;
 
+    Q_INVOKABLE QString getDateTime() const;
+
     Q_INVOKABLE static QUrl fromUserInput(const QString& userInput)
     {
         if (userInput.isEmpty())
@@ -207,4 +209,9 @@ uint64_t AppData::getTimeNs() const
 {
     auto now = std::chrono::high_resolution_clock::now();
     return now.time_since_epoch().count();
+}
+
+QString AppData::getDateTime() const
+{
+    return QDateTime::currentDateTime().toString("yyyy_MM_dd_hh_mm_ss");
 }

@@ -14,6 +14,7 @@ import LivePlot
 import "MotionTab.js" as Logic
 
 import ViewerQuick3D as V
+import QtQml.StateMachine as SM
 
 
 Control {
@@ -31,9 +32,28 @@ Control {
     property real trjProgress
 
 
-    topPadding: 16
-
     id: root
+
+    SM.StateMachine {
+        id: sm
+        running: true
+        initialState: unconfigured
+
+        SM.State {
+            id: notConfigured
+            SM.SignalTransition {
+                targetState: notConnected
+            }
+        }
+
+        SM.State {
+            id: notConnected
+        }
+
+
+    }
+
+    topPadding: 16
 
     contentItem: ColumnLayout {
 

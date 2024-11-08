@@ -18,6 +18,7 @@ find_package(Qt6 COMPONENTS
     ShaderTools
     DataVisualization
     TextToSpeech
+    StateMachine
     Charts
     REQUIRED)
 
@@ -62,6 +63,7 @@ target_link_libraries(xbot2_gui
     Qt6::QuickControls2
     Qt6::Widgets
     Qt6::TextToSpeech
+    Qt6::StateMachine
     Qt6::Quick3D
 )
 

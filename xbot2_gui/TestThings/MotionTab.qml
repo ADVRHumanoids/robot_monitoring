@@ -28,6 +28,8 @@ Control {
 
     property string xbot2Status
 
+    property string calibDataDir
+
     property alias robotViewer: viewerLoader.item
 
     property string dateTime
@@ -236,6 +238,34 @@ Control {
 
                 }
 
+                RowLayout {
+
+                    spacing: 24
+
+                    TextArea {
+                        placeholderText: 'Motor ID (Motor Type)'
+                        readOnly: true
+                        text: `MOTOR-ID-TODO (${cfg.selectedMotorType})`
+                    }
+
+                    TextArea {
+                        placeholderText: 'Calib. Data Location'
+                        readOnly: true
+                        text: root.calibDataDir
+                        Layout.fillWidth: true
+                        id: calibDataLocText
+                    }
+
+                    ToolButton {
+                        text: 'Copy'
+                        onClicked: {
+                            calibDataLocText.selectAll()
+                            calibDataLocText.copy()
+                        }
+                    }
+
+                }
+
                 StackLayout {
 
                     id: stack
@@ -265,7 +295,7 @@ Control {
                                 text: 'Start acquisition'
                                 onClicked: {
                                     root.trjProgress = -1.0
-                                    root.dateTime = new Date().toLocaleString('en-US', {'second': 'numeric'});
+                                    root.dateTime = appData.getDateTime()
                                     stack.currentIndex = 1
                                     root.acquisitionStarted()
                                 }
@@ -371,7 +401,7 @@ Control {
                                         }
 
                                         onAccepted: {
-                                            trj['date_time'] = appData.getDateTime()
+                                            trj['date_time'] = root.dateTime
                                             trj['test_run'] = testRunSwitch.checked
                                             root.trjProgress = -1
                                             Logic.startAcquisition(trj)
@@ -391,20 +421,30 @@ Control {
                     Control {
                         Layout.fillHeight: true
                         Layout.fillWidth: true
-                        padding: 16
+                        padding: 0
                         contentItem: ColumnLayout {
 
                             Text {
                                 Layout.fillWidth: true
-                                text: 'Data acquisition completed. Press OK to save and upload to OneDrive.'
+                                text: 'Data acquisition completed. Press "Calibrate" to run a simple calibration.'
                                 font.pointSize: 11
                                 color: palette.text
                                 wrapMode: Text.WordWrap
                             }
 
-                            Button {
-                                id: acquisitionCompletedBtn
-                                text: 'Ok'
+                            RowLayout {
+
+                                Button {
+                                    id: acquisitionCompletedBtn
+                                    text: 'Calibrate'
+                                    onClicked: Logic.calibrate()
+                                }
+
+                                Button {
+                                    text: 'Upload'
+                                    onClicked: Logic.upload()
+                                }
+
                             }
 
                             ScrollView {
@@ -413,8 +453,11 @@ Control {
                                 Layout.fillWidth: true
                                 id: textScroll
                                 TextArea {
-                                    text: 'OneDrive client output'
+                                    id: calibOutputText
+                                    placeholderText: 'Console output'
+                                    text: ''
                                     readOnly: true
+                                    wrapMode: Text.WordWrap
                                 }
 
                             }
@@ -444,7 +487,7 @@ Control {
                     }
 
                     Button {
-                        text: 'Cancel'
+                        text: stack.currentIndex === stack.count - 1 ? 'Finish' : 'Cancel'
                         onClicked: {
                             root.acquisitionCanceled()
                             stack.currentIndex = 0
@@ -627,6 +670,10 @@ Control {
         function onProcMessageReceived(msg) {
             if(msg.content === 'status' && msg.name === 'xbot2') {
                 xbot2Status = msg.status
+            }
+            else if(msg.content === 'output' && msg.name === 'onedrive') {
+                calibOutputText.text += msg.stdout
+                calibOutputText.text += '\n'
             }
         }
 

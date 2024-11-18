@@ -20,6 +20,7 @@ Item {
         id: bar
         anchors.top: parent.top
         width: parent.width
+        visible: false
 
         TabButton {
             text: 'Motion'
@@ -31,7 +32,7 @@ Item {
     }
 
     StackLayout {
-        anchors.top: bar.bottom
+        anchors.top: parent.top
         anchors.bottom: parent.bottom
         width: parent.width
 

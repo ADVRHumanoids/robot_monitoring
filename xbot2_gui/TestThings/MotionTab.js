@@ -55,6 +55,8 @@ function startAcquisition(trj) {
                 return
             }
 
+            root.calibDataDir = res.data_dir
+
             return client.doRequestAsync('POST', '/hhcm_calibration/start')
         })
 }
@@ -67,6 +69,55 @@ function stopTrajectory() {
                              trjProgress = -1
                          }
                      })
+}
+
+function calibrate() {
+
+    // statusText.text = 'Configuring data acquisition...'
+
+    let body = {
+        'data_dir': root.calibDataDir
+    }
+
+    console.log('requesting calib...')
+
+    client.doRequestAsync('POST',
+                          '/hhcm_calibration/calibrate',
+                          JSON.stringify(body))
+        .then(function(res){
+            if(!res.success)
+            {
+                calibOutputText.text = 'Calibration error \n' + res.stderr
+                return
+            }
+
+            console.log('...OK')
+            calibOutputText.text = res.calib_result
+        })
+}
+
+function upload() {
+
+    // statusText.text = 'Configuring data acquisition...'
+
+    let body = {
+    }
+
+    console.log('requesting calib...')
+
+    client.doRequestAsync('POST',
+                          '/hhcm_calibration/upload',
+                          JSON.stringify(body))
+        .then(function(res){
+            if(!res.success)
+            {
+                calibOutputText.text = 'Upload error \n' + res.stderr
+                return
+            }
+
+            console.log('...OK')
+            calibOutputText.text = 'Started syncing with onedrive client...'
+        })
 }
 
 function updateMotorProperties() {

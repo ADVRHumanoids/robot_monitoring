@@ -17,7 +17,9 @@ Control {
 
     property ClientEndpoint client
 
-    property var motorProperties
+    property var motorProperties: {
+        'dummy': {}
+    }
 
     property var selectedMotorProperties
 
@@ -30,6 +32,8 @@ Control {
     property bool configured: selectedMotorType.length > 0 && loadMass >= 0 && loadRadius >= 0
 
     signal done()
+
+    signal configurationChanged()
 
     function refresh() {
         Logic.updateMotorProperties()
@@ -52,6 +56,7 @@ Control {
             ComboBox {
                 id: motorCombo
                 editable: true
+                model: ['dummy']
             }
 
             Label {
@@ -123,14 +128,15 @@ Control {
 
             Button {
 
-                text: 'Ok'
+                text: 'Apply'
                 Keys.onReturnPressed: clicked()
                 onClicked: {
                     selectedMotorType = motorCombo.currentText
                     loadMass = parseFloat(loadMassTxt.text)
                     loadRadius = parseFloat(loadRadiusTxt.text)*0.01
-                    console.log(`${selectedMotorType} ${loadMass} ${loadRadius}`)
+                    console.log(`motor: ${selectedMotorType}  mass: ${loadMass}  radius: ${loadRadius}`)
                     selectedMotorProperties = motorProperties[selectedMotorType]
+                    root.configurationChanged()
                 }
             }
 

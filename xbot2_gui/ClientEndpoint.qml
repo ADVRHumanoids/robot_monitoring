@@ -166,7 +166,7 @@ Item
                 root.bytesRecv = 0
                 root.bytesSent = 0
 
-                if(appData.wasm) {
+                if(true || appData.wasm) {
                     root.sendTextMessage(
                                 JSON.stringify(
                                     {

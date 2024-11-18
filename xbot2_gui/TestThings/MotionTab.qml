@@ -10,6 +10,7 @@ import Font
 import Menu
 import Joy
 import LivePlot
+import Launcher
 
 import "MotionTab.js" as Logic
 
@@ -23,7 +24,9 @@ Control {
 
     property real initialTime: -1
 
-    property string trjPluginState
+    property string trjPluginStatus
+
+    property string xbot2Status
 
     property alias robotViewer: viewerLoader.item
 
@@ -31,401 +34,550 @@ Control {
 
     property real trjProgress
 
+    property int numTrj: cfg.selectedMotorProperties.trajectory.length
 
+    signal stopped()
+
+    signal connectionError()
+
+    signal connected()
+
+    signal acquisitionStarted()
+
+    signal acquisitionCanceled()
+
+    //
     id: root
 
     SM.StateMachine {
         id: sm
         running: true
-        initialState: unconfigured
+        initialState: stateNotConfigured
 
+        // not configured
         SM.State {
-            id: notConfigured
+            id: stateNotConfigured
+            onEntered: statusText.text = 'Configuration Missing'
             SM.SignalTransition {
-                targetState: notConnected
+                targetState: stateNotConnected
+                signal: cfg.configurationChanged
             }
         }
 
+        // not connected
         SM.State {
-            id: notConnected
+            id: stateNotConnected
+            onEntered: statusText.text = 'Not connected'
+            SM.SignalTransition {
+                signal: connectBtn.clicked
+                targetState: stateConnectionInProgress
+            }
         }
 
+        // connection in progress
+        SM.State {
+            id: stateConnectionInProgress
+            initialState: stateStopping
 
+            SM.State {
+                id: stateStopping
+                onEntered: Logic.stop()
+                SM.SignalTransition {
+                    signal: root.stopped
+                    targetState: stateStarting
+                }
+            }
+
+            SM.State {
+                id: stateStarting
+                onEntered: Logic.connect()
+                SM.SignalTransition {
+                    signal: root.connected
+                    targetState: stateConnected
+                }
+            }
+
+            SM.SignalTransition {
+                signal: root.connectionError
+                targetState: stateConnectionError
+            }
+        }
+
+        // connection error
+        SM.State {
+            id: stateConnectionError
+            property string reason: 'undefined'
+            onEntered: statusText.text = 'Connection error: ' + reason
+            SM.SignalTransition {
+                signal: connectBtn.clicked
+                targetState: stateConnectionInProgress
+            }
+        }
+
+        // connected
+        SM.State {
+            id: stateConnected
+            initialState: stateIdle
+            onEntered: {
+                viewerLoader.active = false
+                viewerLoader.active = true
+            }
+
+            // connected but doing nothing
+            SM.State {
+                id: stateIdle
+                onEntered: {
+                    statusText.text = 'Connected'
+                }
+
+                SM.SignalTransition {
+                    signal: root.acquisitionStarted
+                    targetState: stateAcquisitionInProgress
+                }
+
+                SM.SignalTransition {
+                    signal: connectBtn.clicked
+                    targetState: stateConnected
+                }
+            }
+
+            // connected, started acquisition procedure
+            SM.State {
+                id: stateAcquisitionInProgress
+                initialState: stateAcquisitionIdle
+
+                SM.SignalTransition {
+                    signal: root.acquisitionCanceled
+                    targetState: stateConnected
+                }
+
+                // trj not running
+                SM.State {
+                    id: stateAcquisitionIdle
+
+                    onEntered: statusText.text = `Trajectory ${stack.currentIndex}/${stack.count - 2}: not running`
+
+                    SM.SignalTransition {
+                        signal: acquisitionCompletedBtn.clicked
+                        targetState: stateConnected
+                    }
+
+                    SM.SignalTransition {
+                        signal: trjPluginStatusChanged
+                        guard: trjPluginStatus === 'Running'
+                        targetState: stateAcquisitionRunning
+                    }
+                }
+
+                // trj running
+                SM.State {
+                    id: stateAcquisitionRunning
+                    onEntered: statusText.text = `Trajectory ${stack.currentIndex}/${stack.count - 2}: running`
+
+                    SM.SignalTransition {
+                        signal: trjPluginStatusChanged
+                        guard: trjPluginStatus === 'Stopped'
+                        targetState: stateAcquisitionIdle
+                    }
+                }
+            }
+
+            SM.SignalTransition {
+                signal: root.xbot2StatusChanged
+                guard: root.xbot2Status !== 'Running'
+                targetState: stateNotConnected
+                onTriggered: stateConnectionError.reason = 'xbot2 not running'
+            }
+        }
     }
 
     topPadding: 16
 
-    contentItem: ColumnLayout {
+    contentItem: RowLayout {
 
-        spacing: 16
+        Frame {
 
-        RowLayout {
+            Layout.fillHeight: true
+            Layout.fillWidth: true
+            Layout.preferredWidth: 1
 
+            padding: 16
 
+            ColumnLayout {
 
-            Frame {
+                anchors.fill: parent
+                spacing: 24
 
-                Layout.fillHeight: true
-                Layout.fillWidth: true
-                Layout.preferredWidth: 1
+                RowLayout {
 
-                padding: 16
-
-                ColumnLayout {
-
-                    anchors.fill: parent
                     spacing: 24
 
-                    RowLayout {
-
-                        spacing: 24
-
-                        Button {
-                            text: 'Configuration'
-                            onClicked: {
-                                motorConfigPopup.refresh()
-                                motorConfigPopup.open()
-                            }
+                    Button {
+                        text: 'Configure'
+                        onClicked: {
+                            motorConfigPopup.refresh()
+                            motorConfigPopup.open()
                         }
-
-                        Button {
-                            text: 'Connect'
-                            onClicked: Logic.connect()
-                            enabled: cfg.configured
-                        }
-
-                        TextArea {
-                            id: statusText
-                            placeholderText: 'Status'
-                            readOnly: true
-                            text: !cfg.configured ? 'Configuration missing' : 'Configured'
-                            Layout.fillWidth: true
-                        }
-
                     }
 
-                    StackLayout {
+                    Button {
+                        id: connectBtn
+                        text: 'Connect'
+                        enabled: cfg.configured && !stateAcquisitionInProgress.active
+                    }
 
-                        id: stack
+                    TextArea {
+                        id: statusText
+                        placeholderText: 'Status'
+                        readOnly: true
+                        text: '--'
+                        Layout.fillWidth: true
+                    }
 
+                }
+
+                StackLayout {
+
+                    id: stack
+
+                    Layout.fillHeight: true
+                    Layout.fillWidth: true
+                    clip: true
+                    enabled: stateConnected.active
+
+                    Control {
                         Layout.fillHeight: true
                         Layout.fillWidth: true
-                        clip: true
-                        enabled: statusText.text === 'Connected'
+                        contentItem: ColumnLayout {
 
+                            Text {
+                                Layout.fillWidth: true
+                                color: palette.text
+                                text: `Press <i>Start acquisition</i> to begin the data acquisition procedure, that will guide you through the execution of n=${numTrj} trajectories. <br/><br/>Select the <i>Test Run</i> switch to mark this run as not to be used for calibration.`
+                                wrapMode: Text.WordWrap
+                                font.pointSize: 11
+                                // readOnly: true
+
+                            }
+
+                            Button {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: 'Start acquisition'
+                                onClicked: {
+                                    root.trjProgress = -1.0
+                                    root.dateTime = new Date().toLocaleString('en-US', {'second': 'numeric'});
+                                    stack.currentIndex = 1
+                                    root.acquisitionStarted()
+                                }
+                            }
+
+                            Switch {
+                                id: testRunSwitch
+                                Layout.alignment: Qt.AlignHCenter
+                                text: 'Test Run'
+                            }
+                        }
+                    }
+
+                    Repeater {
+
+                        model: cfg.selectedMotorProperties.trajectory.length
 
                         Control {
-                            Layout.fillHeight: true
-                            Layout.fillWidth: true
-                            contentItem: ColumnLayout {
 
-                                Text {
+                            required property int index
+
+                            property var trj: cfg.selectedMotorProperties.trajectory[index]
+
+                            contentItem: GridLayout {
+
+                                columns: 4
+
+                                Label {
+                                    text: `Trajectory #${index+1} (name "${trj.name}")`
+                                    Layout.columnSpan: 4
+                                    Layout.alignment: Qt.AlignHCenter
+                                    font.pointSize: 11
+                                    padding: 8
+                                }
+
+                                Label {
+                                    text: 'Amplitude'
+                                }
+
+                                TextField {
+                                    text: trj.amplitude
+                                    readOnly: true
+                                    enabled: false
+                                }
+
+                                Label {
+                                    text: 'Omega min.'
+                                }
+
+                                TextField {
+                                    text: trj.omega_min
+                                    readOnly: true
+                                    enabled: false
+                                }
+
+                                Label {
+                                    text: 'Omega max.'
+                                }
+
+                                TextField {
+                                    text: trj.omega_max
+                                    readOnly: true
+                                    enabled: false
+                                }
+
+                                Label {
+                                    text: 'Locked output'
+                                }
+
+                                TextField {
+                                    text: trj.locked_output
+                                    readOnly: true
+                                    enabled: false
+                                }
+
+                                Label {
+                                    text: 'Progress '
+                                }
+
+                                ProgressBar {
                                     Layout.fillWidth: true
-                                    color: palette.active.text
-                                    text: 'Press <i>Start acquisition</i> to begin the data acquisition procedure, that will guide you through the execution of n=${numTrj} trajectories. <br/><br/>Select the <i>Test Run</i> switch to mark this run as not to be used for calibration.'
-                                    wrapMode: Text.WordWrap
-                                    font.pointSize: 12
-                                    // readOnly: true
-
+                                    Layout.columnSpan: 3
+                                    indeterminate: root.trjProgress < 0
+                                    value: root.trjProgress
                                 }
 
                                 Button {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: 'Start acquisition'
-                                    onClicked: {
-                                        root.trjProgress = -1.0
-                                        root.dateTime = new Date().toLocaleString('en-US', {'second': 'numeric'});
-                                        stack.currentIndex = 1
-                                    }
-                                }
+                                    text: 'Start'
+                                    onClicked: startDialog.open()
+                                    visible: stateAcquisitionIdle.active
 
-                                Switch {
-                                    id: testRunSwitch
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: 'Test Run'
-                                }
-                            }
-                        }
+                                    Dialog {
 
-                        Repeater {
+                                        id: startDialog
+                                        modal: true
+                                        anchors.centerIn: Overlay.overlay
+                                        standardButtons: Dialog.Ok | Dialog.Cancel
 
-                            model: cfg.selectedMotorProperties.trajectory.length
+                                        Text {
+                                            text: `Make sure that the load is ${trj.locked_output ? "LOCKED" : "UNLOCKED"}, then press OK to continue. The motor will start moving`
+                                            color: palette.active.text
+                                            font.pointSize: 12
+                                        }
 
-                            Control {
-
-                                required property int index
-
-                                property var trj: cfg.selectedMotorProperties.trajectory[index]
-
-                                contentItem: GridLayout {
-
-                                    columns: 2
-
-                                    Label {
-                                        text: `Trajectory #${index+1} (name "${trj.name}")`
-                                        Layout.columnSpan: 2
-                                        Layout.alignment: Qt.AlignHCenter
-                                        font.pointSize: 12
-                                        padding: 8
-                                    }
-
-                                    Label {
-                                        text: 'Amplitude'
-                                    }
-
-                                    TextField {
-                                        text: trj.amplitude
-                                        readOnly: true
-                                        enabled: false
-                                    }
-
-                                    Label {
-                                        text: 'Omega min.'
-                                    }
-
-                                    TextField {
-                                        text: trj.omega_min
-                                        readOnly: true
-                                        enabled: false
-                                    }
-
-                                    Label {
-                                        text: 'Omega max.'
-                                    }
-
-                                    TextField {
-                                        text: trj.omega_max
-                                        readOnly: true
-                                        enabled: false
-                                    }
-
-                                    Label {
-                                        text: 'Locked output'
-                                    }
-
-                                    TextField {
-                                        text: trj.locked_output
-                                        readOnly: true
-                                        enabled: false
-                                    }
-
-                                    ProgressBar {
-                                        Layout.fillWidth: true
-                                        Layout.columnSpan: 2
-                                        indeterminate: root.trjProgress < 0
-                                        value: root.trjProgress
-                                    }
-
-                                    Button {
-                                        text: 'Start'
-                                        onClicked: startDialog.open()
-
-                                        Dialog {
-
-                                            id: startDialog
-                                            modal: true
-                                            anchors.centerIn: Overlay.overlay
-                                            standardButtons: Dialog.Ok | Dialog.Cancel
-
-                                            Text {
-                                                text: `Make sure that the load is ${trj.locked_output ? "LOCKED" : "UNLOCKED"}, then press OK to continue. The motor will start moving`
-                                                color: palette.active.text
-                                                font.pointSize: 14
-                                            }
-
-                                            onAccepted: {
-                                                trj['date_time'] = appData.getDateTime()
-                                                trj['test_run'] = testRunSwitch.checked
-                                                Logic.startAcquisition(trj)
-                                            }
+                                        onAccepted: {
+                                            trj['date_time'] = appData.getDateTime()
+                                            trj['test_run'] = testRunSwitch.checked
+                                            root.trjProgress = -1
+                                            Logic.startAcquisition(trj)
                                         }
                                     }
                                 }
+
+                                Button {
+                                    text: 'Stop'
+                                    onClicked: Logic.stopTrajectory()
+                                    visible: stateAcquisitionRunning.active
+                                }
                             }
-
                         }
-
                     }
 
-                    RowLayout {
-
+                    Control {
+                        Layout.fillHeight: true
                         Layout.fillWidth: true
+                        padding: 16
+                        contentItem: ColumnLayout {
 
-                        Item {
-                            Layout.fillWidth: true
-                        }
-
-                        Button {
-                            text: 'Next'
-                            onClicked: {
-                                root.trjProgress = -1.0
-                                stack.currentIndex = stack.currentIndex + 1
+                            Text {
+                                Layout.fillWidth: true
+                                text: 'Data acquisition completed. Press OK to save and upload to OneDrive.'
+                                font.pointSize: 11
+                                color: palette.text
+                                wrapMode: Text.WordWrap
                             }
-                            enabled: root.trjProgress >= 1.0 && stack.currentIndex > 0
-                        }
 
-                        Button {
-                            text: 'Cancel'
-                            onClicked: stack.currentIndex = 0
+                            Button {
+                                id: acquisitionCompletedBtn
+                                text: 'Ok'
+                            }
+
+                            ScrollView {
+
+                                Layout.fillHeight: true
+                                Layout.fillWidth: true
+                                id: textScroll
+                                TextArea {
+                                    text: 'OneDrive client output'
+                                    readOnly: true
+                                }
+
+                            }
                         }
 
                     }
-
-
-
                 }
 
-            }
+                RowLayout {
 
-            Loader {
+                    enabled: stack.enabled
 
-                id: viewerLoader
+                    Layout.fillWidth: true
 
-                asynchronous: true
+                    Item {
+                        Layout.fillWidth: true
+                    }
 
-                active: true
+                    Button {
+                        text: 'Next'
+                        onClicked: {
+                            root.trjProgress = -1.0
+                            stack.currentIndex = stack.currentIndex + 1
+                        }
+                        enabled: stack.currentIndex < stack.count - 1 &&
+                                 (testRunSwitch.checked || (root.trjProgress >= 1.0 && stack.currentIndex > 0))
+                    }
 
-                Layout.fillWidth: true
-
-                Layout.preferredWidth: 1
-                Layout.preferredHeight: 300
-
-                sourceComponent: V.RobotModelViewer {
-                    client: root.client
+                    Button {
+                        text: 'Cancel'
+                        onClicked: {
+                            root.acquisitionCanceled()
+                            stack.currentIndex = 0
+                        }
+                    }
                 }
-
             }
+        }
+
+        Loader {
+
+            id: viewerLoader
+
+            asynchronous: true
+
+            active: true
+
+            visible: false
+
+            Layout.fillWidth: true
+
+            Layout.preferredWidth: 1
+            Layout.preferredHeight: 300
+
+            // sourceComponent: V.RobotModelViewer {
+            //     client: root.client
+            // }
 
         }
 
+
+
         GridLayout {
 
+            id: plotGrid
             Layout.fillWidth: true
             Layout.fillHeight: true
-            columns: 2
+            Layout.preferredWidth: 1
+            columns: 1
+            readonly property int visibleMaskAll: 15
+            property int visibleMask: visibleMaskAll
 
-            Plotter {
+            RowLayout {
+                spacing: 16
+                Layout.alignment: Qt.AlignHCenter
+                Button {
+                    text: 'Reset View'
+                    onClicked: {
+                        positionPlot.resetView()
+                        velocityPlot.resetView()
+                        torquePlot.resetView()
+                        frictionPlot.resetView()
+                        frictionPlot.setXRange(-10, 10)
+                    }
+                }
+                GroupBox {
+                    visible: false
+                    title: 'Time range [s]'
+                    SpinBox {
+                        id: timeSpanSpin
+                        from: 1
+                        to: 100
+                        value: 10
+                        editable: true
+                    }
 
+                }
+            }
+
+            MotionTabPlot {
                 id: positionPlot
+                readonly property int mask: 1
+                title: 'Position'
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-
-                plotterLegend: positionLegend
-
-                interactive: false
-
-                chartView.title: 'Position'
-                chartView.titleColor: palette.text
-                chartView.margins {
-                    bottom: 6
-                    left: 6
-                    right: 6
-                    top: 6
+                visible: plotGrid.visibleMask & mask
+                timeSpan: timeSpanSpin.value
+                onActivated: {
+                    plotGrid.visibleMask =
+                            plotGrid.visibleMask === plotGrid.visibleMaskAll ?
+                                mask :
+                                plotGrid.visibleMaskAll
                 }
-
-                property var linkSeries
-                property var motSeries
-                property var refSeries
-
-                PlotterLegend {
-                    id: positionLegend
-                    chart: parent.chartView
-                    visible: true
-                }
-
             }
 
-            Plotter {
-
+            MotionTabPlot {
                 id: velocityPlot
+                readonly property int mask: 2
+                title: 'Velocity'
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-
-                plotterLegend: velocityLegend
-
-                interactive: false
-
-                chartView.title: 'Velocity'
-                chartView.titleColor: palette.text
-                chartView.margins {
-                    bottom: 6
-                    left: 6
-                    right: 6
-                    top: 6
+                visible: plotGrid.visibleMask & mask
+                timeSpan: timeSpanSpin.value
+                onActivated: {
+                    plotGrid.visibleMask =
+                            plotGrid.visibleMask === plotGrid.visibleMaskAll ?
+                                mask :
+                                plotGrid.visibleMaskAll
                 }
-
-                property var linkSeries
-                property var motSeries
-                property var refSeries
-
-                PlotterLegend {
-                    id: velocityLegend
-                    chart: parent.chartView
-                    visible: true
-                }
-
             }
 
-            Plotter {
-
+            MotionTabPlot {
                 id: torquePlot
-
-                plotterLegend: torqueLegend
+                readonly property int mask: 4
+                title: 'Torque'
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-
-                interactive: false
-
-                chartView.title: 'Torque'
-                chartView.titleColor: palette.text
-                chartView.margins {
-                    bottom: 6
-                    left: 6
-                    right: 6
-                    top: 6
+                visible: plotGrid.visibleMask & mask
+                timeSpan: timeSpanSpin.value
+                onActivated: {
+                    plotGrid.visibleMask =
+                            plotGrid.visibleMask === plotGrid.visibleMaskAll ?
+                                mask :
+                                plotGrid.visibleMaskAll
                 }
-
-                property var linkSeries
-                property var motSeries
-                property var refSeries
-
-                PlotterLegend {
-                    id: torqueLegend
-                    chart: parent.chartView
-                    visible: true
-                }
-
             }
 
-            Plotter {
-
+            MotionTabPlot {
                 id: frictionPlot
+                readonly property int mask: 8
+                title: 'Friction'
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-
-                plotterLegend: frictionLegend
-
-                interactive: false
-
-                chartView.title: 'Friction'
-                chartView.titleColor: palette.text
-                chartView.margins {
-                    bottom: 6
-                    left: 6
-                    right: 6
-                    top: 6
+                xLabel: 'Velocity [rad/s]'
+                visible: plotGrid.visibleMask & mask
+                onActivated: {
+                    plotGrid.visibleMask =
+                            plotGrid.visibleMask === plotGrid.visibleMaskAll ?
+                                mask :
+                                plotGrid.visibleMaskAll
                 }
 
-                property var linkSeries
-                property var motSeries
-                property var refSeries
-
-                PlotterLegend {
-                    id: frictionLegend
-                    chart: parent.chartView
-                    visible: true
-                }
-
+                Component.onCompleted: setXRange(-10, 10)
             }
 
         }
@@ -468,10 +620,17 @@ Control {
             Logic.jsCallback(msg)
         }
 
-        function onObjectReceived (msg) {
-            if(msg.type === 'plugin_stats') {
-                root.trjPluginState = msg['trajectory'].state
+        function onPluginStatMessageReceived (msg) {
+            trjPluginStatus = msg.trajectory.state
+        }
+
+        function onProcMessageReceived(msg) {
+            if(msg.content === 'status' && msg.name === 'xbot2') {
+                xbot2Status = msg.status
             }
+        }
+
+        function onObjectReceived (msg) {
             if(msg.type === 'hhcm_calib') {
                 root.trjProgress = msg.progress
             }

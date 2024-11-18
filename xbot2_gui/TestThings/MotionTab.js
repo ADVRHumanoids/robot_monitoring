@@ -1,30 +1,35 @@
-function connect() {
-
-    // TODO deploy
-    statusText.text = 'Stopping...'
+function stop() {
+    statusText.text = 'Stopping motor'
     client.doRequestAsync('POST', `/dashboard/robot_switch/stop`, '')
         .then(function(res) {
 
             if(!res.success)
             {
-                statusText.text = 'Stop failed: ' + res.message
-                throw new Error(res.message);
+                stateConnectionError.reason = 'Stop failed: ' + res.message
+                root.connectionError()
             }
 
-            viewerLoader.active = false
-
-            let params = {
-                'motor_type': cfg.selectedMotorType,
-                'load_mass': cfg.loadMass,
-                'load_radius': cfg.loadRadius
-            }
-
-            statusText.text = 'Connecting...'
-            return client.doRequestAsync('POST', `/dashboard/robot_switch/start`, JSON.stringify({'params': params}))
+            stopped()
         })
+}
+
+function connect() {
+
+    let params = {
+        'motor_type': cfg.selectedMotorType,
+        'load_mass': cfg.loadMass,
+        'load_radius': cfg.loadRadius
+    }
+    statusText.text = 'Starting motor'
+    client.doRequestAsync('POST', `/dashboard/robot_switch/start`, JSON.stringify({'params': params}))
         .then(function(res) {
-            statusText.text = res.success ? 'Connected' : 'Connection failed'
-            viewerLoader.active = true
+            if(!res.success)
+            {
+                stateConnectionError.reason = 'Start failed: ' + res.message
+                root.connectionError()
+            }
+
+            connected()
         })
 }
 
@@ -54,7 +59,15 @@ function startAcquisition(trj) {
         })
 }
 
-
+function stopTrajectory() {
+    client.doRequest('PUT', '/plugin/trajectory/command/stop', '',
+                     (m) => {
+                         if(m.success)
+                         {
+                             trjProgress = -1
+                         }
+                     })
+}
 
 function updateMotorProperties() {
 
@@ -90,22 +103,34 @@ function construct() {
     props.jName = 'j_motor'
 
     props.fieldName = 'linkPos'
-    positionPlot.linkSeries = positionPlot.addSeries(props.jName + '_' + props.fieldName, props, false)
+    positionPlot.addSeries(props.fieldName, props)
 
     props.fieldName = 'motPos'
-    positionPlot.refSeries = positionPlot.addSeries(props.jName + '_' + props.fieldName, props, false)
+    positionPlot.addSeries(props.fieldName, props)
 
     props.fieldName = 'posRef'
-    positionPlot.motSeries = positionPlot.addSeries(props.jName + '_' + props.fieldName, props, false)
+    positionPlot.addSeries(props.fieldName, props)
 
     props.fieldName = 'linkVel'
-    velocityPlot.linkSeries = velocityPlot.addSeries(props.jName + '_' + props.fieldName, props, false)
+    velocityPlot.addSeries(props.fieldName, props)
 
     props.fieldName = 'velRef'
-    velocityPlot.refSeries = velocityPlot.addSeries(props.jName + '_' + props.fieldName, props, false)
+    velocityPlot.addSeries(props.fieldName, props)
 
     props.fieldName = 'motVel'
-    velocityPlot.motSeries = velocityPlot.addSeries(props.jName + '_' + props.fieldName, props, false)
+    velocityPlot.addSeries(props.fieldName, props)
+
+    props.fieldName = 'tor'
+    torquePlot.addSeries(props.fieldName, props)
+
+    props.fieldName = 'torRef'
+    torquePlot.addSeries(props.fieldName, props)
+
+    props.fieldName = 'motTor'
+    torquePlot.addSeries(props.fieldName, props)
+
+    props.fieldName = 'fc'
+    frictionPlot.addSeries(props.fieldName, props)
 
     console.log('construct done')
 
@@ -122,21 +147,19 @@ function jsCallback(msg) {
 
     let t = msg.stamp - initialTime
 
-    positionPlot.addPoint(positionPlot.linkSeries, t, msg.linkPos[0])
+    positionPlot.addPointsFromMsg(t, msg)
 
-    positionPlot.addPoint(positionPlot.motSeries, t, msg.motPos[0])
+    velocityPlot.addPointsFromMsg(t, msg)
 
-    positionPlot.addPoint(positionPlot.refSeries, t, msg.posRef[0])
+    torquePlot.addPointsFromMsg(t, msg)
 
-    velocityPlot.addPoint(velocityPlot.linkSeries, t, msg.linkVel[0])
+    frictionPlot.addPoint('fc', msg.motVel[0], msg.tor[0] - msg.motTor[0])
 
-    velocityPlot.addPoint(velocityPlot.motSeries, t, msg.motVel[0])
-
-    velocityPlot.addPoint(velocityPlot.refSeries, t, msg.velRef[0])
+    // torquePlot.addPoint(torquePlot.refSeries, t, msg.motTor[0])
 
     // updated 3d viewer
 
-    robotViewer.updateRobotState(msg,
-                                 robotViewer.robotState,
-                                 'linkPos')
+    // robotViewer.updateRobotState(msg,
+    //                              robotViewer.robotState,
+    //                              'linkPos')
 }

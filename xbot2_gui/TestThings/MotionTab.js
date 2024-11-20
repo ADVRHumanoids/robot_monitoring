@@ -16,10 +16,11 @@ function stop() {
 function connect() {
 
     let params = {
-        'motor_type': cfg.selectedMotorType,
-        'load_mass': cfg.loadMass,
-        'load_radius': cfg.loadRadius
+        'motor_type': 'small_30',
+        'load_mass': parseFloat(loadMassText.text),
+        'load_radius': parseFloat(loadRadiusText.text)*0.01
     }
+
     statusText.text = 'Starting motor'
     client.doRequestAsync('POST', `/dashboard/robot_switch/start`, JSON.stringify({'params': params}))
         .then(function(res) {
@@ -29,7 +30,30 @@ function connect() {
                 root.connectionError()
             }
 
+            return client.doRequestAsync('GET', `/hhcm_calibration/properties`, '')
+        })
+        .then(function(res) {
+            if(!res.success)
+            {
+                stateConnectionError.reason = 'Failed to get motor properties: ' + res.message
+                root.connectionError()
+            }
+
+            motorProperties = res.data[res.motor_type]
+            motorType = res.motor_type
+            motorId = res.motor_id
+
+            if(motorType === '' || motorId === '') {
+                stateConnectionError.reason = `Invalid motor ID "${motorId}" or type "${motorType}"`
+                root.connectionError()
+            }
+
             connected()
+        }
+        )
+        .catch(function(error) {
+            stateConnectionError.reason = error
+            root.connectionError()
         })
 }
 
@@ -39,9 +63,10 @@ function startAcquisition(trj) {
     // statusText.text = 'Configuring data acquisition...'
 
     let params = {
-        'motor_type': cfg.selectedMotorType,
-        'load_mass': cfg.loadMass,
-        'load_radius': cfg.loadRadius,
+        'motor_id': root.motorId,
+        'motor_type': root.motorType,
+        'load_mass': parseFloat(loadMassText.text),
+        'load_radius': parseFloat(loadRadiusText.text)*0.01,
         'trj': trj
     }
 
@@ -134,7 +159,9 @@ function updateMotorProperties() {
             motor_types.push(key)
         }
 
-        motorCombo.model = motor_types
+        motorTypeText.text = obj.motor_type
+        motorIdText.text = obj.motor_id
+        scanBusy.visible = false
 
     }
 

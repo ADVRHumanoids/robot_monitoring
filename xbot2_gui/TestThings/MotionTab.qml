@@ -36,7 +36,13 @@ Control {
 
     property real trjProgress
 
-    property int numTrj: cfg.selectedMotorProperties.trajectory.length
+    property int numTrj: motorProperties.trajectory.length
+
+    property var motorProperties
+
+    property string motorId: 'NONE'
+
+    property string motorType: 'NONE'
 
     signal stopped()
 
@@ -54,17 +60,17 @@ Control {
     SM.StateMachine {
         id: sm
         running: true
-        initialState: stateNotConfigured
+        initialState: stateNotConnected
 
-        // not configured
-        SM.State {
-            id: stateNotConfigured
-            onEntered: statusText.text = 'Configuration Missing'
-            SM.SignalTransition {
-                targetState: stateNotConnected
-                signal: cfg.configurationChanged
-            }
-        }
+        // // not configured
+        // SM.State {
+        //     id: stateNotConfigured
+        //     onEntered: statusText.text = 'Configuration Missing'
+        //     SM.SignalTransition {
+        //         targetState: stateNotConnected
+        //         signal: cfg.configurationChanged
+        //     }
+        // }
 
         // not connected
         SM.State {
@@ -210,22 +216,14 @@ Control {
                 anchors.fill: parent
                 spacing: 24
 
+
                 RowLayout {
 
-                    spacing: 24
+                    spacing: 40
 
-                    Button {
-                        text: 'Configure'
-                        onClicked: {
-                            motorConfigPopup.refresh()
-                            motorConfigPopup.open()
-                        }
-                    }
-
-                    Button {
-                        id: connectBtn
-                        text: 'Connect'
-                        enabled: cfg.configured && !stateAcquisitionInProgress.active
+                    Label {
+                        font.pointSize: CommonProperties.font.h1
+                        text: 'Data acquisition wizard'
                     }
 
                     TextArea {
@@ -236,35 +234,95 @@ Control {
                         Layout.fillWidth: true
                     }
 
+                    Button {
+                        id: connectBtn
+                        text: 'Connect'
+                        enabled: !stateAcquisitionInProgress.active
+                    }
+
                 }
 
                 RowLayout {
 
-                    spacing: 24
+                    spacing: 16
 
-                    TextArea {
-                        placeholderText: 'Motor ID (Motor Type)'
-                        readOnly: true
-                        text: `MOTOR-ID-TODO (${cfg.selectedMotorType})`
+                    Label {
+                        text: 'Load Properties '
                     }
 
-                    TextArea {
-                        placeholderText: 'Calib. Data Location'
-                        readOnly: true
-                        text: root.calibDataDir
-                        Layout.fillWidth: true
-                        id: calibDataLocText
-                    }
-
-                    ToolButton {
-                        text: 'Copy'
-                        onClicked: {
-                            calibDataLocText.selectAll()
-                            calibDataLocText.copy()
+                    TextField {
+                        id: loadMassText
+                        placeholderText: 'Mass [kg]'
+                        text: `0`
+                        validator: DoubleValidator {
+                            bottom: 0
+                            top: 50
+                            notation: DoubleValidator.StandardNotation
                         }
                     }
 
+                    TextField {
+                        id: loadRadiusText
+                        placeholderText: ' Radius [cm]'
+                        text: `0`
+                        validator: DoubleValidator {
+                            bottom: 0
+                            top: 50
+                            notation: DoubleValidator.StandardNotation
+                        }
+                    }
+
+                    Label {
+                        leftPadding: 16
+                        text: 'Motor Properties '
+                    }
+
+
+                    TextArea {
+                        placeholderText: 'Motor ID (Motor Type)'
+                        Layout.fillWidth: true
+                        readOnly: true
+                        text: `${root.motorId} (type ${root.motorType})`
+                    }
+
+
+                    // TextArea {
+                    //     placeholderText: 'Calib. Data Location'
+                    //     readOnly: true
+                    //     text: root.calibDataDir
+                    //     id: calibDataLocText
+                    //     visible: false
+                    // }
+
+                    // ToolButton {
+                    //     text: 'Copy'
+                    //     onClicked: {
+                    //         calibDataLocText.selectAll()
+                    //         calibDataLocText.copy()
+                    //     }
+                    // }
+
                 }
+
+                // RowLayout {
+
+                //     spacing: 24
+
+                //     // Button {
+                //     //     text: 'Configure'
+                //     //     onClicked: {
+                //     //         motorConfigPopup.refresh()
+                //     //         motorConfigPopup.open()
+                //     //     }
+                //     // }
+
+
+
+
+
+
+
+                // }
 
                 StackLayout {
 
@@ -311,13 +369,13 @@ Control {
 
                     Repeater {
 
-                        model: cfg.selectedMotorProperties.trajectory.length
+                        model: motorProperties.trajectory.length
 
                         Control {
 
                             required property int index
 
-                            property var trj: cfg.selectedMotorProperties.trajectory[index]
+                            property var trj: motorProperties.trajectory[index]
 
                             contentItem: GridLayout {
 
@@ -627,32 +685,32 @@ Control {
 
     }
 
-    Popup {
+    // Popup {
 
-        id: motorConfigPopup
+    //     id: motorConfigPopup
 
-        function refresh() {
-            cfg.refresh()
-        }
+    //     function refresh() {
+    //         cfg.refresh()
+    //     }
 
-        ConfigureMotorPopup {
-            id: cfg
-            anchors.fill: parent
-            client: root.client
-            onDone: motorConfigPopup.close()
-        }
+    //     ConfigureMotorPopup {
+    //         id: cfg
+    //         anchors.fill: parent
+    //         client: root.client
+    //         onDone: motorConfigPopup.close()
+    //     }
 
-        anchors.centerIn: Overlay.overlay
-        // width: Overlay.overlay.width * 0.8
-        // height: Overlay.overlay.height * 0.8
-        padding: 16
+    //     anchors.centerIn: Overlay.overlay
+    //     // width: Overlay.overlay.width * 0.8
+    //     // height: Overlay.overlay.height * 0.8
+    //     padding: 16
 
-        modal: true
-        focus: true
-        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+    //     modal: true
+    //     focus: true
+    //     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
-        clip: true
-    }
+    //     clip: true
+    // }
 
     Component.onCompleted: Logic.construct()
 

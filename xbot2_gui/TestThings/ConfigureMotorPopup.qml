@@ -25,6 +25,8 @@ Control {
 
     property string selectedMotorType
 
+    property string selectedMotorId
+
     property real loadMass: -1
 
     property real loadRadius: -1
@@ -36,7 +38,7 @@ Control {
     signal configurationChanged()
 
     function refresh() {
-        Logic.updateMotorProperties()
+        // Logic.updateMotorProperties()
     }
 
     //
@@ -48,16 +50,39 @@ Control {
 
             columns: 2
 
-            Label {
-                text: 'Motor type'
-                verticalAlignment: Text.AlignVCenter
-            }
+            // Button {
+            //     text: 'Scan'
+            //     Layout.columnSpan: 2
+            //     Layout.fillWidth: true
+            //     // visible: !scanBusy.visible
+            //     onClicked: {
+            //         // scanBusy.visible = true
+            //         Logic.updateMotorProperties()
+            //     }
+            // }
 
-            ComboBox {
-                id: motorCombo
-                editable: true
-                model: ['dummy']
-            }
+
+            // Label {
+            //     text: 'Motor type'
+            //     verticalAlignment: Text.AlignVCenter
+            // }
+
+            // TextField {
+            //     id: motorTypeText
+            //     readOnly: true
+            // }
+
+
+            // Label {
+            //     text: 'Motor ID'
+            //     verticalAlignment: Text.AlignVCenter
+            // }
+
+            // TextField {
+            //     id: motorIdText
+            //     readOnly: true
+            // }
+
 
             Label {
                 text: 'Load radius [cm]'
@@ -131,7 +156,8 @@ Control {
                 text: 'Apply'
                 Keys.onReturnPressed: clicked()
                 onClicked: {
-                    selectedMotorType = motorCombo.currentText
+                    selectedMotorType = motorTypeText.text
+                    root.selectedMotorId = motorIdText.text
                     loadMass = parseFloat(loadMassTxt.text)
                     loadRadius = parseFloat(loadRadiusTxt.text)*0.01
                     console.log(`motor: ${selectedMotorType}  mass: ${loadMass}  radius: ${loadRadius}`)

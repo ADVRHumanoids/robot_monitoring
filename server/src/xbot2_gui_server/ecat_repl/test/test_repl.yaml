@@ -1,0 +1,31 @@
+
+use_zmq : true
+start_srv : false
+#uri : "com-exp.local:5555"
+uri : "localhost:5555"
+
+cmds:
+  - type: CTRL_CMD
+    ctrl_cmd:
+      type: CTRL_TEST_DONE
+      board_id: 696
+
+  - type: CTRL_CMD
+    ctrl_cmd:
+      type: CTRL_TEST_ERROR
+      board_id: 696
+
+  - type: ECAT_MASTER_CMD
+    ecat_master_cmd:
+      type: STOP_MASTER
+
+  - type: ECAT_MASTER_CMD
+    ecat_master_cmd:
+      type: START_MASTER
+
+  - type: ECAT_MASTER_CMD
+    ecat_master_cmd:
+      type: GET_SLAVES_DESCR
+
+
+

@@ -34,6 +34,12 @@ class HhcmCalibrationHandler:
 
         self.upload_dir = subprocess.check_output(f"echo {config['upload_dir']}", shell=True).decode().strip()
 
+        self.actuator_db = subprocess.check_output(f"echo {config['actuator_db']}", shell=True).decode().strip()
+
+        self.actuator_name_to_type = dict()
+        
+        self.fill_actuator_db()
+
         self.motor_properties_file = subprocess.check_output(f"echo {config['motor_properties']}", shell=True).decode().strip()
 
         self.srv.add_route('GET', '/hhcm_calibration/properties',
@@ -59,6 +65,8 @@ class HhcmCalibrationHandler:
         self.progress_sub = rospy.Subscriber('/trajectory/progress', Float32, self.progress_recv)
         self.progress = None
 
+        
+
         # self.srv.add_route('POST', '/parameters/set_value',
         #                    self.parameters_set_value,
         #                    'parameters_set_value')
@@ -67,11 +75,24 @@ class HhcmCalibrationHandler:
         # self.get_info = rospy.ServiceProxy('xbotcore/get_parameter_info', GetParameterInfo)
         # self.set_parameters = rospy.ServiceProxy('xbotcore/set_parameters', SetString)
 
+
+    def fill_actuator_db(self):
+
+        actuator_db = open(self.actuator_db, 'r').read()
+        for l in actuator_db.split('\n'):
+            tokens = [t.strip() for t in l.strip().split('|')]
+            self.actuator_name_to_type[tokens[1]] = tokens[2]            
+
+
     def progress_recv(self, msg: Float32):
         self.progress = msg.data
 
 
     async def run(self):
+
+        from xbot2_gui_server.ecat_repl.stuff import read_sdo, set_uri
+        set_uri('amax-5580:5555')
+        motor_id = (await utils.to_thread(read_sdo, ['Assigned_name'], [1]))[1]['Assigned_name']
 
         while True:
             if self.progress is not None:
@@ -79,17 +100,32 @@ class HhcmCalibrationHandler:
                 self.progress = None 
             await asyncio.sleep(0.666)
 
+
     @utils.handle_exceptions
     async def hhcm_calibration_properties(self, request):
+        
+        try:
+            from xbot2_gui_server.ecat_repl.stuff import read_sdo, set_uri
+            set_uri('amax-5580:5555')
+            motor_id = (await utils.to_thread(read_sdo, ['Assigned_name'], [1]))[1]['Assigned_name']
+        except ImportError as e:
+            print(e)
+            motor_id = 'A0174'
+
 
         motor_propertes = yaml.safe_load(open(self.motor_properties_file, 'r'))
+
+        await asyncio.sleep(2)
 
         return web.json_response(
             {'success': True, 
              'message': 'all good here', 
-             'data': motor_propertes}
-             )
+             'data': motor_propertes,
+             'motor_type': self.actuator_name_to_type[motor_id],
+             'motor_id': motor_id
+            })
     
+
     @utils.handle_exceptions
     async def hhcm_calibration_configure(self, request: web.Request):
         
@@ -104,13 +140,14 @@ class HhcmCalibrationHandler:
         date_time = body['trj']['date_time'].replace('/', '_').replace(' ', '__').replace(',', '').replace(':', '_')
         
         trj_name = body['trj']['name']
+        motor_id = body['motor_id']
         motor_type = body['motor_type']
         load_mass = body['load_mass']
         
         load_radius = body['load_radius']
         test_run = body['trj']['test_run']
         sub_dir = 'test' if test_run else 'calibration'
-        dir_name = f'{self.data_dir}/{sub_dir}/{motor_type}/{date_time}'
+        dir_name = f'{self.data_dir}/{sub_dir}/{motor_type}/{motor_id}/{date_time}'
         print(dir_name)
         os.makedirs(dir_name, exist_ok=True)
         with open(dir_name + '/DATA.yaml', 'a') as f:

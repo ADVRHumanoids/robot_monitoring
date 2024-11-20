@@ -103,15 +103,15 @@ def main():
             pass
 
         # speech
-        try:
-            from .speech import SpeechHandler
-            ext = SpeechHandler(srv, cfg.get('speech', {}))
-            extensions.append(ext)
-            print(ext)
-        except ModuleNotFoundError:
-            pass
-        except BaseException as e:
-            print('Exception ', type(e), e)  
+        # try:
+        #     from .speech import SpeechHandler
+        #     ext = SpeechHandler(srv, cfg.get('speech', {}))
+        #     extensions.append(ext)
+        #     print(ext)
+        # except ModuleNotFoundError:
+        #     pass
+        # except BaseException as e:
+        #     print('Exception ', type(e), e)  
 
 
         # visual
@@ -144,9 +144,16 @@ def main():
 
         # horizon
         if 'hhcm_calibration' in cfg.keys():
-            from .hhcm_calibration import HhcmCalibrationHandler
-            ext = HhcmCalibrationHandler(srv, cfg.get('hhcm_calibration', {}))
-            extensions.append(ext)
+            try:
+                
+                from .hhcm_calibration import HhcmCalibrationHandler
+                ext = HhcmCalibrationHandler(srv, cfg.get('hhcm_calibration', {}))
+                extensions.append(ext)
+            except BaseException as e:
+                print('Exception ', type(e), e)
+                import traceback
+                traceback.print_exc()
+
         
         # dashboard
         try:

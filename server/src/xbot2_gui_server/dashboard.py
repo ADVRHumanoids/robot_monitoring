@@ -18,8 +18,6 @@ class DashboardHandler:
 
     def __init__(self, srv: ServerBase, config=dict()) -> None:
 
-        print('DASHBOARD')
-
         self.requested_pages = ['Dashboard']
 
         # config
@@ -63,7 +61,6 @@ class DashboardHandler:
         self.active_processes = []
         self.xbot2_alive = False
 
-        print('DASHBOARD')
 
     
     @utils.handle_exceptions

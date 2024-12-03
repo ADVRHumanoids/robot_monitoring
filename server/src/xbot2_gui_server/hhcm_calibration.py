@@ -90,15 +90,11 @@ class HhcmCalibrationHandler:
 
     async def run(self):
 
-        from xbot2_gui_server.ecat_repl.stuff import read_sdo, set_uri
-        set_uri('amax-5580:5555')
-        motor_id = (await utils.to_thread(read_sdo, ['Assigned_name'], [1]))[1]['Assigned_name']
-
         while True:
             if self.progress is not None:
                 await self.srv.ws_send_to_all({'type': 'hhcm_calib', 'progress': self.progress})
                 self.progress = None 
-            await asyncio.sleep(0.666)
+            await asyncio.sleep(0.333)
 
 
     @utils.handle_exceptions
@@ -108,7 +104,7 @@ class HhcmCalibrationHandler:
             from xbot2_gui_server.ecat_repl.stuff import read_sdo, set_uri
             set_uri('amax-5580:5555')
             motor_id = (await utils.to_thread(read_sdo, ['Assigned_name'], [1]))[1]['Assigned_name']
-        except ImportError as e:
+        except BaseException as e:
             print(e)
             motor_id = 'A0174'
 

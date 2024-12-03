@@ -11,6 +11,7 @@ import logging
 import argparse
 from aiohttp import web
 import asyncio
+import traceback as tb
 
 def main():
 
@@ -22,7 +23,7 @@ def main():
     args = parser.parse_args()
 
     # set verbose logging level
-    logging.basicConfig(level=logging.INFO, force=True)
+    logging.basicConfig(level=logging.DEBUG, force=True)
     
     # load config
     if args.config:
@@ -32,6 +33,16 @@ def main():
         cfgpath = __file__ 
         cfg = dict()
 
+    # check ros master
+    try:
+        rospy.get_master().getPid()
+    except Exception as e:
+        print('no ros master running')
+        exit(1)
+
+    # init rospy node
+    rospy.init_node('xbot2_gui_server', disable_signals=True)
+
     # create server
     srv = Xbot2WebServer()
     srv.cfgpath = cfgpath
@@ -40,20 +51,7 @@ def main():
     extensions = []
 
     # task that load all extensions after waiting for ros master
-    async def load_extensions():
-
-        while True:
-            try:
-                await srv.log('waiting for ros master')
-                rospy.get_master().getPid()
-                break
-            except Exception as e:
-                await asyncio.sleep(1.0)
-
-        await srv.log('ros master is alive')
-
-        # init rospy node
-        rospy.init_node('xbot2_gui_server', disable_signals=True)
+    def load_extensions():
 
         # wasm ui
         from .webui import WebUiHandler
@@ -61,46 +59,64 @@ def main():
         extensions.append(ext)
 
         # joint states
-        from .joint_states import JointStateHandler
-        ext = JointStateHandler(srv, cfg.get('joint_states', {}))
-        extensions.append(ext)
-        print(ext)
+        try:
+            print(f'Loading JointStateHandler')
+            from .joint_states import JointStateHandler
+            ext = JointStateHandler(srv, cfg.get('joint_states', {}))
+            extensions.append(ext)
+            print(ext)
+        except BaseException as e:
+            tb.print_exc()
 
         # joint device
-        from .joint_device import JointDeviceHandler
-        ext = JointDeviceHandler(srv, cfg.get('joint_device', {}))
-        extensions.append(ext)
-        print(ext)
+        try:
+            print(f'Loading JointDeviceHandler')
+            from .joint_device import JointDeviceHandler
+            ext = JointDeviceHandler(srv, cfg.get('joint_device', {}))
+            extensions.append(ext)
+            print(ext)
+        except BaseException as e:
+            tb.print_exc()
 
         # plugin
-        from .plugin import PluginHandler
-        ext = PluginHandler(srv, cfg.get('plugin', {}))
-        extensions.append(ext)
-        print(ext)
+        try:
+            print(f'Loading JointDeviceHandler')
+            from .plugin import PluginHandler
+            ext = PluginHandler(srv, cfg.get('plugin', {}))
+            extensions.append(ext)
+            print(ext)
+        except BaseException as e:
+            tb.print_exc()
 
         # theora video
-        from .theora_video import TheoraVideoHandler
-        ext = TheoraVideoHandler(srv, cfg.get('theora_video', {}))
-        extensions.append(ext)
-        print(ext)
+        try:
+            print(f'Loading TheoraVideoHandler')
+            from .theora_video import TheoraVideoHandler
+            ext = TheoraVideoHandler(srv, cfg.get('theora_video', {}))
+            extensions.append(ext)
+            print(ext)
+        except BaseException as e:
+            tb.print_exc()
 
         # launcher
         try:
+            print(f'Loading Launcher')
             from .launcher import Launcher
             ext = Launcher(srv, cfg.get('launcher', {}))
             extensions.append(ext)
-        except ModuleNotFoundError:
-            pass
-        except BaseException as e:
-            print('Exception ', type(e), e)  
+            print(ext)
+        except:
+            tb.print_exc()
 
         # cartesian
         try:
+            print(f'Loading CartesianHandler')
             from .cartesian import CartesianHandler
             ext = CartesianHandler(srv, cfg.get('cartesian', {}))
             extensions.append(ext)
-        except ModuleNotFoundError:
-            pass
+            print(ext)
+        except:
+            tb.print_exc()
 
         # speech
         # try:
@@ -115,10 +131,14 @@ def main():
 
 
         # visual
-        from .visual import VisualHandler
-        ext = VisualHandler(srv, cfg.get('visual', {}))
-        extensions.append(ext)
-        print(ext)
+        try:
+            print(f'Loading VisualHandler')
+            from .visual import VisualHandler
+            ext = VisualHandler(srv, cfg.get('visual', {}))
+            extensions.append(ext)
+            print(ext)
+        except:
+            tb.print_exc()
 
         # concert
         if 'concert' in cfg.keys():
@@ -144,15 +164,13 @@ def main():
 
         # horizon
         if 'hhcm_calibration' in cfg.keys():
-            try:
-                
+            try:  
+                print(f'Loading VisualHandler')
                 from .hhcm_calibration import HhcmCalibrationHandler
                 ext = HhcmCalibrationHandler(srv, cfg.get('hhcm_calibration', {}))
                 extensions.append(ext)
-            except BaseException as e:
-                print('Exception ', type(e), e)
-                import traceback
-                traceback.print_exc()
+            except:
+                tb.print_exc()
 
         
         # dashboard
@@ -177,7 +195,7 @@ def main():
         print('load extensions completed', extensions)
 
     # schedule extension loading task
-    srv.schedule_task(load_extensions())
+    load_extensions()
 
     async def requested_pages_handler(req):
         # parse requested pages

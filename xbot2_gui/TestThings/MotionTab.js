@@ -11,6 +11,10 @@ function stop() {
 
             stopped()
         })
+        .catch(function(error) {
+            stateConnectionError.reason = error
+            root.connectionError()
+        })
 }
 
 function connect() {

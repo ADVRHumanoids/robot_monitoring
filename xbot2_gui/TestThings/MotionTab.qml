@@ -44,6 +44,12 @@ Control {
 
     property string motorType: 'NONE'
 
+    property real loadMass: -1
+
+    property real loadRadius: -1
+
+    signal connectCommand()
+
     signal stopped()
 
     signal connectionError()
@@ -62,22 +68,32 @@ Control {
         running: true
         initialState: stateNotConnected
 
-        // // not configured
-        // SM.State {
-        //     id: stateNotConfigured
-        //     onEntered: statusText.text = 'Configuration Missing'
-        //     SM.SignalTransition {
-        //         targetState: stateNotConnected
-        //         signal: cfg.configurationChanged
-        //     }
-        // }
 
         // not connected
         SM.State {
             id: stateNotConnected
             onEntered: statusText.text = 'Not connected'
+            initialState: state0
+
+            SM.State {
+                id: state0
+            }
+
+            // connection error
+            SM.State {
+                id: stateConnectionError
+                property string reason: 'undefined'
+                onEntered: statusText.text = 'Connection error: ' + reason
+            }
+
+            // stopping
+            SM.State {
+                id: stateDisconnecting
+                onEntered: Logic.stop()
+            }
+
             SM.SignalTransition {
-                signal: connectBtn.clicked
+                signal: root.connectCommand
                 targetState: stateConnectionInProgress
             }
         }
@@ -108,17 +124,6 @@ Control {
             SM.SignalTransition {
                 signal: root.connectionError
                 targetState: stateConnectionError
-            }
-        }
-
-        // connection error
-        SM.State {
-            id: stateConnectionError
-            property string reason: 'undefined'
-            onEntered: statusText.text = 'Connection error: ' + reason
-            SM.SignalTransition {
-                signal: connectBtn.clicked
-                targetState: stateConnectionInProgress
             }
         }
 
@@ -193,8 +198,13 @@ Control {
             SM.SignalTransition {
                 signal: root.xbot2StatusChanged
                 guard: root.xbot2Status !== 'Running'
-                targetState: stateNotConnected
+                targetState: stateConnectionError
                 onTriggered: stateConnectionError.reason = 'xbot2 not running'
+            }
+
+            SM.SignalTransition {
+                signal: root.disconnectCommand
+                targetState: stateDisconnecting
             }
         }
     }
@@ -235,9 +245,76 @@ Control {
                     }
 
                     Button {
-                        id: connectBtn
+                        text: 'Disconnect'
+                        visible: !stateNotConnected.active
+                    }
+
+                    Button {
                         text: 'Connect'
-                        enabled: !stateAcquisitionInProgress.active
+                        onClicked: connectDialog.open()
+                        visible: stateNotConnected.active
+
+                        Dialog {
+
+                            id: connectDialog
+                            modal: true
+                            anchors.centerIn: Overlay.overlay
+                            standardButtons: Dialog.Ok | Dialog.Cancel
+                            padding: 12
+
+                            GridLayout {
+
+                                columns: 2
+                                columnSpacing: 8
+                                rowSpacing: 8
+
+                                Text {
+                                    Layout.columnSpan: 2
+                                    text: `Confirm attached load properties, then press OK to start the motor.`
+                                    color: palette.active.text
+                                    font.pointSize: 12
+                                    bottomPadding: 6
+                                }
+
+                                Label {
+                                    text: 'Load Mass [kg]'
+                                }
+
+                                TextField {
+                                    id: loadMassText
+                                    placeholderText: 'Mass [kg]'
+                                    text: `0`
+                                    validator: DoubleValidator {
+                                        bottom: 0
+                                        top: 50
+                                        notation: DoubleValidator.StandardNotation
+                                    }
+                                }
+
+                                Label {
+                                    text: 'Load Radius [cm]'
+                                }
+
+                                TextField {
+                                    id: loadRadiusText
+                                    placeholderText: 'Radius [cm]'
+                                    text: `0`
+                                    validator: DoubleValidator {
+                                        bottom: 0
+                                        top: 50
+                                        notation: DoubleValidator.StandardNotation
+                                    }
+                                }
+
+                            }
+
+                            onAccepted: {
+                                root.loadMass = parseFloat(loadMassText.text)
+                                root.loadRadius = parseFloat(loadRadiusText.text)*0.01
+                                root.connectCommand()
+                                close()
+                            }
+                        }
                     }
 
                 }
@@ -251,25 +328,15 @@ Control {
                     }
 
                     TextField {
-                        id: loadMassText
                         placeholderText: 'Mass [kg]'
-                        text: `0`
-                        validator: DoubleValidator {
-                            bottom: 0
-                            top: 50
-                            notation: DoubleValidator.StandardNotation
-                        }
+                        text: root.loadMass.toFixed(2)
+                        readOnly: true
                     }
 
                     TextField {
-                        id: loadRadiusText
                         placeholderText: ' Radius [cm]'
-                        text: `0`
-                        validator: DoubleValidator {
-                            bottom: 0
-                            top: 50
-                            notation: DoubleValidator.StandardNotation
-                        }
+                        text: (root.loadRadius*100).toFixed(2)
+                        readOnly: true
                     }
 
                     Label {

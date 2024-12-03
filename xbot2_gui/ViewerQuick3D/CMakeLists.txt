@@ -11,8 +11,8 @@ qt_add_qml_module(xbot2_gui_viewerquick3d
     RobotModelNode.js
     CustomMesh.qml
     Axes3D.qml
-    QML_FILES RobotModelViewer.qml
-    QML_FILES RobotModelViewer.js
+    RobotModelViewer.qml
+    RobotModelViewer.js
 )
 
 target_link_libraries(xbot2_gui_viewerquick3d PRIVATE Qt6::Quick3D)

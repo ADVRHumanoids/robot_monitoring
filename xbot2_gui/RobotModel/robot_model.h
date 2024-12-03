@@ -9,7 +9,7 @@
 #include <QtQmlCore/QtQmlCore>
 
 
-class Pose
+class pose
 {
     Q_GADGET
 
@@ -42,7 +42,7 @@ public:
 
     Q_INVOKABLE void setJointPosition(QVector<qreal> q);
 
-    Q_INVOKABLE Pose getPose(QString frame);
+    Q_INVOKABLE pose getPose(QString frame);
 
     int ndof();
 

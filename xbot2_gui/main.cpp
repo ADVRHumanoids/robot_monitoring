@@ -178,6 +178,16 @@ int main(int argc, char *argv[])
     QtWebView::initialize();
 #endif
 
+    QDirIterator it(":", QDirIterator::Subdirectories);
+    while(it.hasNext())
+    {
+        QDir dir(it.next());
+        auto files = dir.entryList();
+        for(auto f : files)
+        {
+            qDebug() << f;
+        }
+    }
 
     // register appdata
     QQmlApplicationEngine engine;

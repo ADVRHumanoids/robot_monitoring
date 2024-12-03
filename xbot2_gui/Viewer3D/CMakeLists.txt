@@ -4,14 +4,14 @@ qt_add_qml_module(xbot2_gui_viewer3d
     URI Viewer3D
     VERSION 1.0
     QML_FILES
-    CameraController.qml
-    CustomOrbitalController.qml
-    RobotModelNode.js
-    RobotModelNode.qml
-    SunLight.qml
-    Viewer3D.qml
-    VisualEntity.js
-    VisualEntity.qml
+    # CameraController.qml
+    # CustomOrbitalController.qml
+    # RobotModelNode.js
+    # RobotModelNode.qml
+    # SunLight.qml
+    # Viewer3D.qml
+    # VisualEntity.js
+    # VisualEntity.qml
     SOURCES
     cachedvisual.h
     cachedvisual.cpp

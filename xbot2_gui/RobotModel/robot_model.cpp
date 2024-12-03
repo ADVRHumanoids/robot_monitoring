@@ -15,7 +15,7 @@ public:
 
     void setJointPosition(QList<qreal> q);
 
-    Pose getPose(QString frame);
+    pose getPose(QString frame);
 
     QList<QString> getJointNames();
 
@@ -53,9 +53,9 @@ void RobotModel::setJointPosition(QVector<qreal> q)
     i ? i->setJointPosition(q) : void();
 }
 
-Pose RobotModel::getPose(QString frame)
+pose RobotModel::getPose(QString frame)
 {
-    return i ? i->getPose(frame) : Pose();
+    return i ? i->getPose(frame) : pose();
 }
 
 int RobotModel::ndof()
@@ -80,14 +80,14 @@ void RobotModel::Impl::setJointPosition(QList<qreal> q)
     RigidBodyDynamics::UpdateKinematicsCustom(_model, &_qeig, nullptr, nullptr);
 }
 
-Pose RobotModel::Impl::getPose(QString frame)
+pose RobotModel::Impl::getPose(QString frame)
 {
     auto bid = _model.GetBodyId(frame.toStdString().c_str());
 
     if(bid == std::numeric_limits<uint>::max())
     {
         std::cout << "could not find link '" << frame.toStdString() << "' \n";
-        return Pose();
+        return pose();
     }
 
     auto pos = RigidBodyDynamics::CalcBodyToBaseCoordinates(
@@ -114,7 +114,7 @@ Pose RobotModel::Impl::getPose(QString frame)
                 rot_q_eig.z()
     };
 
-    Pose ret;
+    pose ret;
     ret.translation = qpos;
     ret.rotation = qrot;
 

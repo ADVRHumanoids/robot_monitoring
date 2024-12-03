@@ -8,6 +8,7 @@ import Common
 import Menu
 import Font
 import Audio
+import Monitoring
 
 ApplicationWindow {
 
@@ -71,6 +72,16 @@ ApplicationWindow {
         z: 200
         width: 70
         height: 70
+        opacity: 0.8
+    }
+
+    MonWidget {
+        anchors {
+            left: parent.left
+            top: parent.top
+            margins: 8
+        }
+        z: 200
         opacity: 0.8
     }
 
@@ -143,6 +154,14 @@ ApplicationWindow {
             active: client.isConnected || mainWindow.dbg
         }
 
+        // PageItem {
+        //     name: "Playground"
+        //     page: "/qt/qml/TestThings/Playground.qml"
+        //     iconText: MaterialSymbolNames.playground
+        //     iconFont: syms.font.family
+        //     visible: false
+        // }
+
         PageItem {
             name: "Joy"
             page: "/qt/qml/Joy/Joy.qml"
@@ -167,7 +186,7 @@ ApplicationWindow {
             iconText: MaterialSymbolNames.tune
             iconFont: syms.font.family
             active: true
-            visible: true
+            visible: requestedPages.indexOf(name) > -1
         }
 
         PageItem {

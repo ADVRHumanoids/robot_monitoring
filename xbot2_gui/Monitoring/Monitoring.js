@@ -17,9 +17,9 @@ function jsCallback(js) {
 
     addJointStatePoint(livePlot, js)
 
-    robotViewer.updateRobotState(js,
-                                 robotViewer.robotState,
-                                 'linkPos')
+    // robotViewer.updateRobotState(js,
+    //                              robotViewer.robotState,
+    //                              'linkPos')
 
     for(let aux of js.aux_types) {
         barPlot.addAuxType(aux)

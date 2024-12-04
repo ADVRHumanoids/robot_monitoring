@@ -48,6 +48,8 @@ Control {
 
     property real loadRadius: -1
 
+    signal disconnectCommand()
+
     signal connectCommand()
 
     signal stopped()
@@ -90,6 +92,11 @@ Control {
             SM.State {
                 id: stateDisconnecting
                 onEntered: Logic.stop()
+
+                SM.SignalTransition {
+                    signal: root.stopped
+                    targetState: stateNotConnected
+                }
             }
 
             SM.SignalTransition {
@@ -247,6 +254,7 @@ Control {
                     Button {
                         text: 'Disconnect'
                         visible: !stateNotConnected.active
+                        onClicked: root.disconnectCommand()
                     }
 
                     Button {

@@ -61,6 +61,14 @@ class HhcmCalibrationHandler:
         self.srv.add_route('POST', '/hhcm_calibration/calibrate',
                            self.hhcm_calibration_calibrate,
                            'hhcm_calibration_calibrate')
+
+        self.srv.add_route('POST', '/hhcm_calibration/load_calib_result',
+                           self.hhcm_calibration_load_calib_result,
+                           'hhcm_calibration_load_calib_result')
+
+        self.srv.add_route('GET', '/hhcm_calibration/get_data_dirs',
+                           self.hhcm_calibration_get_data_dirs,
+                           'hhcm_calibration_get_data_dirs')
         
         self.progress_sub = rospy.Subscriber('/trajectory/progress', Float32, self.progress_recv)
         self.progress = None
@@ -235,6 +243,42 @@ class HhcmCalibrationHandler:
             })
 
 
+    @utils.handle_exceptions
+    async def hhcm_calibration_get_data_dirs(self, request: web.Request):
+
+        dirs = [x[0] for x in os.walk(self.data_dir) if not x[1]]
+
+        return web.json_response(
+            {
+                'success': True, 
+                'message': 'started syncing with onedrive client', 
+                'result': dirs
+            })
+
+
+    @utils.handle_exceptions
+    async def hhcm_calibration_load_calib_result(self, request: web.Request):
+
+        # get data dir from body
+        body_txt = await request.text()
+        print(body_txt)
+        body = yaml.safe_load(body_txt)
+        data_dir = body['data_dir']
+
+        # send calib data to client
+        from scipy.io import loadmat
+        import numpy as np
+        print('opening file ', data_dir + '/CALIB_RESULT.mat')
+        calib_file = loadmat(data_dir + '/CALIB_RESULT.mat')
+        
+        return web.json_response(
+            {
+                'success': True, 
+                'message': 'ok', 
+                'tau_mot': np.array(calib_file['tau_mot']).flatten().tolist()[::10],
+                'tau_mot_ls_estimate': np.array(calib_file['tau_mot_ls_estimate']).flatten().tolist()[::10],
+            })
+
 
     @utils.handle_exceptions
     async def hhcm_calibration_calibrate(self, request: web.Request):
@@ -247,7 +291,7 @@ class HhcmCalibrationHandler:
         print(data_dir)
 
         # run calibration
-        proc = await asyncio.create_subprocess_shell(cmd='rosrun hhcm_actuator_calibration simple_calib.py *.mat',
+        proc = await asyncio.create_subprocess_shell(cmd='rosrun hhcm_actuator_calibration simple_calib.py *trj*.mat',
                                                cwd=data_dir,
                                                stdout=asyncio.subprocess.PIPE,
                                                stderr=asyncio.subprocess.PIPE)
@@ -259,11 +303,19 @@ class HhcmCalibrationHandler:
 
         if retcode != 0:
             raise RuntimeError(f'calibration failed with retcode {retcode}, stderr = {stderr}')
+        
+        # send calib data to client
+        import h5py
+        import numpy as np
+        calib_file = h5py.File(data_dir + '/CALIB_RESULT.mat')
+        
 
         return web.json_response(
             {
                 'success': True, 
                 'message': 'done calibration', 
                 'calib_result': stdout,
-                'stderr': stderr
+                'stderr': stderr,
+                'tau_mot': np.array(calib_file['tau_mot']).tolist(),
+                'tau_mot_ls_estimate': np.array(calib_file['tau_mot_ls_estimate']).tolist(),
             })

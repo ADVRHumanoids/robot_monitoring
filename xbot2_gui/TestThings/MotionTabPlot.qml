@@ -20,7 +20,7 @@ Control {
     }
 
     function addSeries(name, props) {
-        series[props.fieldName] = plot.addSeries(name, props, false)
+        series[name] = plot.addSeries(name, props, false)
     }
 
     function addPointsFromMsg(t, msg) {
@@ -31,6 +31,10 @@ Control {
 
     function addPoint(field, t, x) {
         plot.addPoint(series[field], t, x)
+    }
+
+    function setPoints(field, dt, vlist) {
+        plot.setPoints(series[field], dt, vlist)
     }
 
     signal activated()

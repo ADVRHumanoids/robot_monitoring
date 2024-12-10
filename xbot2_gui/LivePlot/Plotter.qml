@@ -53,6 +53,27 @@ Item {
         currTime = t
     }
 
+    function setPoints(seriesData, t_list, val_list) {
+
+        // set points
+        rebuilder.setPoints(seriesData.series, t_list, val_list)
+        let valMax = Math.max(...val_list)
+        let valMin = Math.min(...val_list)
+
+        // handle autoscale
+        let axisValue = seriesData.axisValue
+
+        console.log(`min = ${valMin} max = ${valMax} -- ${axisValue.max} ${axisValue.min}`)
+
+        if(axisValue.max < valMax && chart.autoscale) {
+            axisValue.max = valMax + (axisValue.max - axisValue.min)*0.1
+        }
+
+        if(axisValue.min > valMin && chart.autoscale) {
+            axisValue.min = valMin - (axisValue.max - axisValue.min)*0.1
+        }
+    }
+
     function setXRange(xmin, xmax) {
         chart.autoscroll = false
         axisTime.min = xmin

@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtWebView
+import QtQuick.Dialogs
 
 import Common
 import Main
@@ -236,7 +236,7 @@ Control {
 
                 RowLayout {
 
-                    spacing: 40
+                    spacing: 16
 
                     Label {
                         font.pointSize: CommonProperties.font.h1
@@ -322,6 +322,69 @@ Control {
                                 root.connectCommand()
                                 close()
                             }
+                        }
+                    }
+
+                    Button {
+                        text: 'Open'
+                        onClicked: {
+                            showCalibDialog.refresh()
+                            showCalibDialog.open()
+                        }
+
+                        Dialog {
+
+                            property alias calibDataPlot: calibDataPlotLoader.item
+
+                            id: showCalibDialog
+                            modal: true
+                            anchors.centerIn: Overlay.overlay
+                            width: Overlay.overlay.width * 0.8
+                            height: Overlay.overlay.height * 0.8
+                            standardButtons: Dialog.Ok | Dialog.Cancel
+                            padding: 12
+
+                            GridLayout {
+
+                                anchors.fill: parent
+
+                                columns: 2
+
+                                ComboBox {
+                                    Layout.fillWidth: true
+                                    id: calibCombo
+                                }
+
+                                Button {
+                                    text: 'Load'
+                                    onClicked: {
+                                        Logic.loadCalibResult(calibCombo.currentText)
+                                    }
+                                }
+
+                                Loader {
+
+                                    id: calibDataPlotLoader
+
+                                    active: showCalibDialog.visible
+
+                                    Layout.columnSpan: 2
+                                    Layout.fillWidth: true
+                                    Layout.fillHeight: true
+
+                                    sourceComponent: MotionTabPlot {
+                                        title: 'Motor torque fitting'
+                                    }
+
+                                }
+
+                            }
+
+                            function refresh() {
+                                Logic.getCalibList()
+                            }
+
+
                         }
                     }
 

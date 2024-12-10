@@ -125,6 +125,49 @@ function calibrate() {
         })
 }
 
+function getCalibList() {
+    client.doRequestAsync('GET',
+                          '/hhcm_calibration/get_data_dirs')
+    .then(function(res){
+        calibCombo.model = res.result
+    })
+
+}
+
+function loadCalibResult(dataDir) {
+
+    // statusText.text = 'Configuring data acquisition...'
+
+    let body = {
+        'data_dir': dataDir
+    }
+
+    client.doRequestAsync('POST',
+                          '/hhcm_calibration/load_calib_result',
+                          JSON.stringify(body))
+        .then(function(res){
+            if(!res.success)
+            {
+                calibOutputText.text = 'Calibration error \n' + res.stderr
+                return
+            }
+
+            let calibDataPlot = calibDataPlotLoader.item
+
+            calibDataPlot.addSeries('tau_mot', {})
+            calibDataPlot.addSeries('tau_mot_ls_estimate', {})
+
+            console.log(`adding npoints = ${res.tau_mot.length}....`)
+
+            calibDataPlot.setPoints('tau_mot', 0.001, res.tau_mot)
+            calibDataPlot.setPoints('tau_mot_ls_estimate', 0.001, res.tau_mot_ls_estimate)
+
+            console.log('....done')
+
+            calibDataPlot.setXRange(0, res.tau_mot.length*0.001)
+        })
+}
+
 function upload() {
 
     // statusText.text = 'Configuring data acquisition...'

@@ -184,6 +184,15 @@ class JointStateHandler:
 
     async def run(self):
 
+        try:
+            await self._run()
+        except:
+            import traceback
+            traceback.print_exc()
+
+
+    async def _run(self):
+
         t0 = time.time()
 
         while True:

@@ -112,9 +112,10 @@ class HhcmCalibrationHandler:
             from xbot2_gui_server.ecat_repl.stuff import read_sdo, set_uri
             set_uri('amax-5580:5555')
             motor_id = (await utils.to_thread(read_sdo, ['Assigned_name'], [1]))[1]['Assigned_name']
+            motor_id = motor_id.split('_')[0]
         except BaseException as e:
             print(e)
-            motor_id = 'A0174'
+            motor_id = 'UNKNOWN'
 
 
         motor_propertes = yaml.safe_load(open(self.motor_properties_file, 'r'))
@@ -162,15 +163,17 @@ class HhcmCalibrationHandler:
         freq_min = body['trj']['omega_min']/6.28
         freq_max = body['trj']['omega_max']/6.28
         amplitude = body['trj']['amplitude']
+        locked_output = body['trj']['locked_output']
 
         params = {
             '/trajectory/log_file': log_file,
             '/trajectory/enable_log': True,
             '/trajectory/stop_time': 60.0,
-            '/trajectory/j_motor/period': 20.0,
+            '/trajectory/j_motor/period': 30.0,
             '/trajectory/j_motor/freq_min': freq_min,
             '/trajectory/j_motor/freq_max': freq_max,
-            '/trajectory/j_motor/amplitude': amplitude
+            '/trajectory/j_motor/amplitude': amplitude,
+            '/trajectory/trj_out': 'Torque' if locked_output else 'Position'
         }
 
         res = await utils.to_thread(set_parameters, request=yaml.safe_dump(params))

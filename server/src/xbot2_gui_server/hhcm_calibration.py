@@ -89,6 +89,8 @@ class HhcmCalibrationHandler:
         actuator_db = open(self.actuator_db, 'r').read()
         for l in actuator_db.split('\n'):
             tokens = [t.strip() for t in l.strip().split('|')]
+            if len(tokens) <= 2:
+                continue
             self.actuator_name_to_type[tokens[1]] = tokens[2]            
 
 
@@ -112,6 +114,7 @@ class HhcmCalibrationHandler:
             from xbot2_gui_server.ecat_repl.stuff import read_sdo, set_uri
             set_uri('amax-5580:5555')
             motor_id = (await utils.to_thread(read_sdo, ['Assigned_name'], [1]))[1]['Assigned_name']
+            print(motor_id)
             motor_id = motor_id.split('_')[0]
         except BaseException as e:
             print(e)
@@ -164,11 +167,12 @@ class HhcmCalibrationHandler:
         freq_max = body['trj']['omega_max']/6.28
         amplitude = body['trj']['amplitude']
         locked_output = body['trj']['locked_output']
+        stop_time = body['trj'].get('duration', 60.0)
 
         params = {
             '/trajectory/log_file': log_file,
             '/trajectory/enable_log': True,
-            '/trajectory/stop_time': 60.0,
+            '/trajectory/stop_time': stop_time,
             '/trajectory/j_motor/period': 30.0,
             '/trajectory/j_motor/freq_min': freq_min,
             '/trajectory/j_motor/freq_max': freq_max,
@@ -250,6 +254,7 @@ class HhcmCalibrationHandler:
     async def hhcm_calibration_get_data_dirs(self, request: web.Request):
 
         dirs = [x[0] for x in os.walk(self.data_dir) if not x[1]]
+        dirs.sort()
 
         return web.json_response(
             {
@@ -298,27 +303,19 @@ class HhcmCalibrationHandler:
                                                cwd=data_dir,
                                                stdout=asyncio.subprocess.PIPE,
                                                stderr=asyncio.subprocess.PIPE)
-        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=10.0)
+        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=30.0)
         stdout, stderr = stdout.decode(), stderr.decode()
         retcode = proc.returncode
 
         print(stdout)
 
         if retcode != 0:
-            raise RuntimeError(f'calibration failed with retcode {retcode}, stderr = {stderr}')
-        
-        # send calib data to client
-        import h5py
-        import numpy as np
-        calib_file = h5py.File(data_dir + '/CALIB_RESULT.mat')
-        
+            raise RuntimeError(f'calibration failed with retcode {retcode}, stderr = {stderr}')        
 
         return web.json_response(
             {
                 'success': True, 
                 'message': 'done calibration', 
                 'calib_result': stdout,
-                'stderr': stderr,
-                'tau_mot': np.array(calib_file['tau_mot']).tolist(),
-                'tau_mot_ls_estimate': np.array(calib_file['tau_mot_ls_estimate']).tolist(),
+                'stderr': stderr
             })

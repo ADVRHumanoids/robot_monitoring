@@ -2,10 +2,12 @@ import os
 
 try:
     from . import ros2_wrapper
-    RosWrapper = ros2_wrapper.Ros2Utils
+    RosWrapperClass = ros2_wrapper.Ros2Utils
+    type RosWrapper = ros2_wrapper.Ros2Utils
 except ImportError:
     from . import ros1_wrapper
-    RosWrapper = ros1_wrapper.Ros1Utils
+    RosWrapperClass = ros1_wrapper.Ros2Utils
+    type RosWrapper = ros1_wrapper.Ros1Utils
 
 ros_handle: RosWrapper = None
 

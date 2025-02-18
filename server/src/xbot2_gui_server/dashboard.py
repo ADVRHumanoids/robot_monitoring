@@ -2,7 +2,9 @@ import asyncio
 from aiohttp import web
 import json
 
-import rospy
+from . import ros_utils
+ros_handle : ros_utils.RosWrapper = ros_utils.ros_handle
+
 from std_srvs.srv import SetBool, Trigger
 from std_msgs.msg import String
 from geometry_msgs.msg import TwistStamped, Twist
@@ -17,21 +19,17 @@ class DashboardHandler:
 
     def __init__(self, srv: ServerBase, config=dict()) -> None:
 
-        print('DASHBOARD')
-
-        self.requested_pages = ['Dashboard']
-
         # config
 
         self.rate = config.get('rate', 10.0)
 
-        self.states = {item['name']: item for item in config['states']}
+        self.states = {item['name']: item for item in config.get('states', [])}
 
         self.active_state = 'inactive'
 
-        self.all_plugins = config['all_plugins']
+        self.all_plugins = config.get('all_plugins', [])
 
-        self.all_processes = config['all_processes']
+        self.all_processes = config.get('all_processes', [])
 
         # save server object, register our handlers
         
@@ -54,7 +52,10 @@ class DashboardHandler:
                            'dashboard_start')
         
         # subscribe to stats
-        self.stats_sub = rospy.Subscriber('xbotcore/statistics', Statistics2, self.on_stats_recv)
+        self.stats_sub = ros_handle.create_subscription(Statistics2, 
+                                                        'xbotcore/statistics', 
+                                                        self.on_stats_recv,
+                                                        1)
         self.stats: Statistics2 = None
 
         # launcher
@@ -62,7 +63,6 @@ class DashboardHandler:
         self.active_processes = []
         self.xbot2_alive = False
 
-        print('DASHBOARD')
 
     
     @utils.handle_exceptions
@@ -210,11 +210,11 @@ class DashboardHandler:
     
 
     async def plugin_switch(self, plugin_name, switch_flag):
-        switch = rospy.ServiceProxy(f'xbotcore/{plugin_name}/switch', service_class=SetBool)
-        await utils.to_thread(switch.wait_for_service, timeout=1.0)
-        res = await utils.to_thread(switch, switch_flag)
+        switch = ros_handle.create_client(SetBool, f'xbotcore/{plugin_name}/switch')
+        await ros_handle.wait_for_server(switch, timeout_sec=1.0)
+        res = await ros_handle.call(switch, timeout_sec=1.0, data=switch_flag)
         return res.success
-
+    
 
     async def run(self):
 
@@ -273,7 +273,6 @@ class DashboardHandler:
     
 
     async def send_status(self, txt):
-        print(txt)
         await self.srv.ws_send_to_all(
             dict(type='dashboard_msg',
                  msg=txt)

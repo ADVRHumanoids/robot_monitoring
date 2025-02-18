@@ -13,15 +13,22 @@ from concert_launcher import remote
 from .server import ServerBase
 from . import utils
 
+import logging
+
 class Launcher:
 
     def __init__(self, srv: ServerBase, config=dict()) -> None:
         
-        launcher_cfg_path = config['launcher_config']
-        if not os.path.isabs(launcher_cfg_path):
-            launcher_cfg_path = os.path.join(os.path.dirname(srv.cfgpath), launcher_cfg_path)
-        
-        self.cfg = yaml.safe_load(open(launcher_cfg_path, 'r'))
+        try:
+            launcher_cfg_path = None
+            launcher_cfg_path = config['launcher_config']
+            if not os.path.isabs(launcher_cfg_path):
+                launcher_cfg_path = os.path.join(os.path.dirname(srv.cfgpath), launcher_cfg_path)
+            
+            self.cfg = yaml.safe_load(open(launcher_cfg_path, 'r'))
+        except Exception as e:
+            logging.error(f'failed to load launcher config {launcher_cfg_path}: {e}')
+            self.cfg = {}
 
         self.rate = 3.333
         

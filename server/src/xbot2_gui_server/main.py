@@ -5,7 +5,9 @@ sys.path.append(os.path.dirname(SCRIPT_DIR))
 from .server import Xbot2WebServer
 import yaml, json
 import sys
+import time
 import importlib
+import os
 import logging
 import argparse
 from aiohttp import web
@@ -19,7 +21,6 @@ def main():
     parser = argparse.ArgumentParser(description='A modern UI for the Xbot2 framework, written in Qt6 / QML')
     parser.add_argument('config', type=str, nargs='?', help='path to config file')
     parser.add_argument('--port', '-p', type=int, default=8080, help='port for the UI server (it must be available on both TCP and UDP)')
-    parser.add_argument('--launch-ui', '-u', action='store_true', help='run the UI frontend')
     args = parser.parse_args()
 
     # set verbose logging level
@@ -29,9 +30,19 @@ def main():
     if args.config:
         cfgpath = args.config
         cfg = yaml.safe_load(open(cfgpath, 'r').read())
+    elif os.environ.get('XBOT2_GUI_CONFIG'):
+        cfgpath = os.environ.get('XBOT2_GUI_CONFIG')
+        cfg = yaml.safe_load(open(cfgpath, 'r').read())
     else:
         cfgpath = __file__ 
         cfg = dict()
+        
+    logging.info('config loaded from %s' % cfgpath)
+        
+    # wait for ros (1)
+    while not ros_utils.RosWrapperClass.master_alive():
+        logging.info('waiting for ros master')
+        time.sleep(1)
 
     # create server
     srv = Xbot2WebServer()
@@ -43,16 +54,10 @@ def main():
     extensions = []
 
     # task that load all extensions after waiting for ros master
-    async def load_extensions():
-
-        while not ros_utils.RosWrapper.master_alive():
-            await srv.log('waiting for ros master')
-            await asyncio.sleep(1.0)
-
-        await srv.log('ros master is alive')
+    def load_extensions():
 
         # load ros
-        ros_utils.ros_handle = ros_utils.RosWrapper()
+        ros_utils.ros_handle = ros_utils.RosWrapperClass()
 
         # spin ros callbacks
         srv.schedule_task(ros_utils.ros_handle.spin_node())
@@ -66,25 +71,25 @@ def main():
         from .joint_states import JointStateHandler
         ext = JointStateHandler(srv, cfg.get('joint_states', {}))
         extensions.append(ext)
-        print(ext)
+        print('OK LOADED', ext)
 
         # joint device
         from .joint_device import JointDeviceHandler
         ext = JointDeviceHandler(srv, cfg.get('joint_device', {}))
         extensions.append(ext)
-        print(ext)
+        print('OK LOADED', ext)
 
         # plugin
         from .plugin import PluginHandler
         ext = PluginHandler(srv, cfg.get('plugin', {}))
         extensions.append(ext)
-        print(ext)
+        print('OK LOADED', ext)
 
         # theora video
         from .theora_video import TheoraVideoHandler
         ext = TheoraVideoHandler(srv, cfg.get('theora_video', {}))
         extensions.append(ext)
-        print(ext)
+        print('OK LOADED', ext)
 
         # launcher
         try:
@@ -168,8 +173,8 @@ def main():
 
         print('load extensions completed', extensions)
 
-    # schedule extension loading task
-    srv.schedule_task(load_extensions())
+    # load extensions
+    load_extensions()
 
     async def requested_pages_handler(req):
         # parse requested pages
@@ -183,30 +188,6 @@ def main():
         return web.Response(text=json.dumps({'requested_pages': requested_pages}))
 
     srv.add_route('GET', '/requested_pages', requested_pages_handler, 'requested_pages_handler')
-
-    # run ui client if required
-    async def run_ui():
-
-        proc = await asyncio.create_subprocess_shell(
-            f'bash -ic "new-xbot2-gui -p {args.port}"',
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.STDOUT,
-                    stdin=asyncio.subprocess.PIPE)
-        
-        while True:
-            try:
-                l = await proc.stdout.readline()
-                if len(l) == 0:
-                    retcode = await proc.wait()
-                    print(f'[ui] process exited with {retcode}')
-                    sys.exit(retcode)
-                l = l.decode()
-                print('[ui]', l, end='')
-            except KeyboardInterrupt:
-                return
-
-    if args.launch_ui:
-        srv.schedule_task(run_ui())
 
     # run server
     srv.run_server(port=args.port)

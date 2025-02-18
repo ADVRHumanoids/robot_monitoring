@@ -46,7 +46,7 @@ class JointStateHandler:
         self.srv.add_route('POST', '/joint_command/goto/stop', self.stop_handler, 'stop')
         
         # joint state subscriber
-        self.js_sub = ros_handle.create_subscription(JointState, 'xbotcore/joint_states', self.on_js_recv, queue_size=1)
+        self.js_sub = ros_handle.create_subscription(JointState, 'xbotcore/joint_states', self.on_js_recv, queue_size=1, best_effort=True)
         self.fault_sub = ros_handle.create_subscription(Fault, 'xbotcore/fault', self.on_fault_recv, queue_size=20)
         self.msg = None
         self.last_js_msg = None
@@ -194,6 +194,8 @@ class JointStateHandler:
     
 
     async def run_loop(self):
+        
+        tic = time.time()
 
         # broadcast fault
         if self.fault is not None:
@@ -230,6 +232,8 @@ class JointStateHandler:
         self.msg = None
         for v in self.aux_map.values():
             v.clear()
+            
+        # print(f'js loop time: {1000*(time.time() - tic)} ms')
 
 
     async def run(self):

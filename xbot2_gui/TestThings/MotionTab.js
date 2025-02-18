@@ -20,7 +20,7 @@ function stop() {
 function connect() {
 
     let params = {
-        'motor_type': 'CE0100A1',
+        'motor_type': 'small_30',
         'load_mass': parseFloat(loadMassText.text),
         'load_radius': parseFloat(loadRadiusText.text)*0.01
     }

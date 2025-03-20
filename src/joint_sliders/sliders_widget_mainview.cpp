@@ -1,8 +1,8 @@
 #include "sliders_widget_mainview.h"
 
 #ifdef XBOT_MSGS_SUPPORT
-    #include <xbot_msgs/msg/joint_state.h>
-    #include <xbot_msgs/msg/joint_command.h>
+    #include <xbot_msgs/msg/joint_state.hpp>
+    #include <xbot_msgs/msg/joint_command.hpp>
 #endif
 
 #include <xbot2_interface/robotinterface2.h>

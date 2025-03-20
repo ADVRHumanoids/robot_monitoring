@@ -2,15 +2,16 @@
 #include <QApplication>
 #include <QTimer>
 
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.h>
 
 int main(int argc, char *argv[])
 {
-    ros::init(argc, argv, "xbot_gui");
+    rclcpp::init(argc, argv);
     QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
 //    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar); //fix for menubar notshowing in ubuntu
     QApplication a(argc, argv);
-    JointMonitorWidget w;
+    rclcpp::Node::SharedPtr node = rclcpp::Node::make_shared("xbot2_gui");
+    JointMonitorWidget w(0, nullptr, nullptr, node);
     w.show();
     return a.exec();
 }

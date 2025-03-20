@@ -7,10 +7,10 @@
 #include <QStatusBar>
 #include <QMenuBar>
 
-#include <ros/ros.h>
-#include <xbot_msgs/JointState.h>
-#include <xbot_msgs/CustomState.h>
-#include <xbot_msgs/Fault.h>
+#include <rclcpp/rclcpp.hpp>
+#include <xbot_msgs/msg/joint_state.hpp>
+#include <xbot_msgs/msg/custom_state.hpp>
+#include <xbot_msgs/msg/fault.hpp>
 #include <urdf_parser/urdf_parser.h>
 
 #include "xbot2_wid.h"
@@ -19,6 +19,8 @@
 #include "../joint_sliders/sliders_widget_mainview.h"
 #include "top_right_tab.h"
 #include "../qcustomplot/qcustom_chart.h"
+
+using namespace std::placeholders;
 
 /**
  * @brief The JointMonitorWidget class is the main widget for the
@@ -31,7 +33,8 @@ public:
 
     explicit JointMonitorWidget(int argc = 0,
                                 char ** argv = nullptr,
-                                QWidget *parent = nullptr);
+                                QWidget *parent = nullptr, 
+                                rclcpp::Node::SharedPtr node = nullptr);
 
     /**
      * @brief barplot_wid is the bar plot for the joint state
@@ -84,10 +87,14 @@ public:
 
 private:
 
+    rclcpp::Node::SharedPtr _node;
+
     XBot::Ui::Context::Ptr _ctx;
 
     QTimer * _timer;
-    ros::Subscriber _jstate_sub, _aux_sub, _fault_sub;
+    rclcpp::Subscription<xbot_msgs::msg::JointState>::SharedPtr _jstate_sub;
+    rclcpp::Subscription<xbot_msgs::msg::CustomState>::SharedPtr _aux_sub;
+    rclcpp::Subscription<xbot_msgs::msg::Fault>::SharedPtr _fault_sub;
     bool _valid_msg_recv;
     bool _widget_started;
     std::vector<std::string> _jnames;
@@ -97,11 +104,9 @@ private:
     void save_default_cfg();
 
     void on_timer_event();
-    void on_jstate_recv(xbot_msgs::JointStateConstPtr msg);
-    void on_fault_recv(xbot_msgs::FaultConstPtr msg);
-    void on_aux_recv(xbot_msgs::CustomStateConstPtr msg);
-
-
+    void on_jstate_recv(const xbot_msgs::msg::JointState & msg);
+    void on_fault_recv(const xbot_msgs::msg::Fault & msg);
+    void on_aux_recv(const xbot_msgs::msg::CustomState &msg);
 
     std::map<std::string, int> _jidmap;
 

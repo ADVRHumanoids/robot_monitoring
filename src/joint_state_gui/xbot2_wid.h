@@ -10,7 +10,9 @@
 #include "xbot2_plugin_wid.h"
 #include "xbot2_status_wid.h"
 
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
+#include <xbot_msgs/msg/statistics2.hpp>
+#include <xbot_msgs/msg/joint_device_info.hpp>
 
 class XBot2Widget : public QWidget
 {
@@ -19,7 +21,8 @@ class XBot2Widget : public QWidget
 
 public:
 
-    explicit XBot2Widget(QMainWindow * mw, QWidget * parent = nullptr);
+    explicit XBot2Widget(QMainWindow * mw, QWidget * parent = nullptr, 
+        rclcpp::Node::SharedPtr node = nullptr);
 
     void update();
 
@@ -27,10 +30,12 @@ signals:
 
 private:
 
-    ros::NodeHandle _nh;
+    rclcpp::Node::SharedPtr _node;
     XBot2StatusWidget * _status_wid;
     std::map<std::string, XBot2PluginWidget*> _pl_map;
-    ros::Subscriber _stats_sub, _jdinfo_sub, _stderr_sub;
+    rclcpp::Subscription<xbot_msgs::msg::Statistics2>::SharedPtr _stats_sub;
+    rclcpp::Subscription<xbot_msgs::msg::JointDeviceInfo>::SharedPtr _jdinfo_sub;
+    //rclcpp::Subscription<rosgraph_msgs::msg::log>::SharedPtr _stderr_sub;
 
 };
 

@@ -1,13 +1,12 @@
 #include "sliders_widget_mainview.h"
-#include <sensor_msgs/JointState.h>
 
 #ifdef XBOT_MSGS_SUPPORT
-    #include <xbot_msgs/JointState.h>
-    #include <xbot_msgs/JointCommand.h>
+    #include <xbot_msgs/msg/joint_state.h>
+    #include <xbot_msgs/msg/joint_command.h>
 #endif
 
-#include <XBotInterface/RobotInterface.h>
-#include <RobotInterfaceROS/ConfigFromParam.h>
+#include <xbot2_interface/robotinterface2.h>
+//#include <RobotInterfaceROS/ConfigFromParam.h>
 
 namespace
 {
@@ -35,22 +34,23 @@ std::vector<double> eigen_to_std(Eigen::VectorXd v)
 }
 
 cartesio_gui::SlidersWidgetMainView::Options::Options():
-    message_type("sensor_msgs"),
+    message_type("xbot_msgs"),
     enable_velocity_tab(true),
     enable_effort_tab(true),
-    joint_state_topic("joint_states"),
-    command_topic("command")
+    joint_state_topic("/xbotcore/joint_states"),
+    command_topic("/xbotcore/command")
 {
 }
 
 
 
 cartesio_gui::SlidersWidgetMainView::SlidersWidgetMainView (Options opt,
-                                                            QWidget* parent):
+                                                            QWidget* parent,
+                                                            rclcpp::Node::SharedPtr node):
     QWidget(parent),
     _load_success(false),
     _opt(opt),
-    _nh(opt.ns)
+    _node(node)
 {
 
     /* Create publisher */
@@ -329,20 +329,20 @@ void cartesio_gui::SlidersWidgetMainView::make_publisher()
 {
     if(_opt.message_type == "sensor_msgs")
     {
-        _pub = _nh.advertise<sensor_msgs::JointState>(_opt.command_topic, 10);
+       //_pub = _node->create_publisher<sensor_msgs::msg::JointState>(_opt.command_topic, 10);
     }
     else if(_opt.message_type == "xbot_msgs")
     {
 #ifdef XBOT_MSGS_SUPPORT
-        auto op = 
-            ros::AdvertiseOptions::create<xbot_msgs::JointCommand>(_opt.command_topic, 
-                                                                   10, 
-                                                                   connected,
-                                                                   disconnected, 
-                                                                   ros::VoidPtr(), 
-                                                                   NULL);
-        op.has_header = false; 
-        _pub = _nh.advertise(op);
+        // auto op = 
+        //     ros::AdvertiseOptions::create<xbot_msgs::JointCommand>(_opt.command_topic, 
+        //                                                            10, 
+        //                                                            connected,
+        //                                                            disconnected, 
+        //                                                            ros::VoidPtr(), 
+        //                                                            NULL);
+        // op.has_header = false; 
+        _pub = _node->create_publisher<xbot_msgs::msg::JointState>(opt.command_topic, 10);
 #else
         throw std::runtime_error("Widget was compiled without -DXBOT_MSGS_SUPPORT");
 #endif

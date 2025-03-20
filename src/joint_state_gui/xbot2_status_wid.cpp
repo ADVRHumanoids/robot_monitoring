@@ -13,12 +13,12 @@
 #include <QInputDialog>
 #include <QMenuBar>
 
-#include <std_msgs/String.h>
-#include <std_msgs/Float32.h>
-#include <std_srvs/Trigger.h>
-#include <xbot_msgs/GetPluginList.h>
-#include <xbot_msgs/StartProcess.h>
-#include <xbot_msgs/StopProcess.h>
+#include <std_msgs/msg/string.hpp>
+#include <std_msgs/msg/float32.hpp>
+#include <std_srvs/srv/trigger.hpp>
+#include <xbot_msgs/srv/get_plugin_list.hpp>
+#include <xbot_msgs/srv/start_process.hpp>
+#include <xbot_msgs/srv/stop_process.hpp>
 
 void xbot2_status_widget_qrc_init()
 {
@@ -59,9 +59,10 @@ QWidget * LoadUiFileBringup(QWidget * parent)
 }
 
 XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
-                                     QWidget* parent):
+                                     QWidget* parent,
+                                     rclcpp::Node::SharedPtr node) :
     QWidget (parent),
-    _nh("xbotcore"),
+    _node(node),
     _mw(mw)
 {
     auto layout = new QVBoxLayout;
@@ -74,7 +75,7 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
     _status_label->setToolTip("xbot2 process status from topic 'xbotcore/status'");
     _status_label->setText("Inactive");
 
-    auto on_status_recv = [this](const std_msgs::StringConstPtr& msg)
+    auto on_status_recv = [this](const std_msgs::msg::string& msg)
     {
         _status_label->setText(QString::fromStdString(msg->data));
         _last_status_recv = ros::Time::now();
@@ -82,22 +83,22 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
 
     };
 
-    _status_sub = _nh.subscribe<std_msgs::String>("status", 1, on_status_recv);
+    _status_sub = _node->subscription<std_msgs::msg::string>("/xbotcore/status", 1, on_status_recv);
 
     // cmd button
     _cmd_button = findChild<QPushButton*>("cmdBtn");
     _cmd_button->setToolTip("Start/stop xbot2 process "
                             "(needs xbot2-launcher daemon running)");
 
-    _srv_start = _nh.serviceClient<xbot_msgs::StartProcess>("d/start");
-    _srv_stop = _nh.serviceClient<xbot_msgs::StopProcess>("d/stop");
+    _srv_start = _node->create_client<xbot_msgs::srv::StartProcess>("d/start");
+    _srv_stop = _node->create_client<xbot_msgs::srv::StopProcess>("d/stop");
 
     connect(_cmd_button, &QPushButton::released,
             [this]()
     {
         if(_cmd_button->text() == "Start")
         {
-            xbot_msgs::StartProcess srv;
+            xbot_msgs::srv::start_process srv;
 
             if(!_hw_type.empty())
             {
@@ -110,7 +111,7 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
                 srv.request.args.push_back("--simtime");
             }
 
-            if(!_srv_start.waitForExistence(ros::Duration(1.0)))
+            if(!_srv_start->wait_for_service(1s))
             {
                 QMessageBox msgBox;
                 msgBox.setText("Start service is offline, make sure "
@@ -119,20 +120,23 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
                 return;
             }
 
-            if(!_srv_start.call(srv))
+            auto result = _srv_start->async_send_request(srv)
+
+            if (rclcpp::spin_until_future_complete(_node, result) !=
+                rclcpp::FutureReturnCode::SUCCESS)
             {
                 QMessageBox msgBox;
                 msgBox.setText("Start service failed, make sure "
                                "xbot2-launcher daemon is up and running");
                 msgBox.exec();
                 return;
-            }
 
-            if(!srv.response.success)
+
+            } else if (!result.get()->success)
             {
                 QMessageBox msgBox;
                 msgBox.setText("Start service returned false: " +
-                               QString::fromStdString(srv.response.message));
+                               QString::fromStdString(result.get()->message));
                 msgBox.exec();
                 return;
             }
@@ -142,9 +146,9 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
         }
         else if(_cmd_button->text() == "Stop")
         {
-            xbot_msgs::StopProcess srv;
+            xbot_msgs::srv::stop_process srv;
 
-            if(!_srv_stop.waitForExistence(ros::Duration(1.0)))
+            if(!_srv_stop->wait_for_service(1s))
             {
                 QMessageBox msgBox;
                 msgBox.setText("Stop service is offline, make sure "
@@ -153,17 +157,22 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
                 return;
             }
 
-            if(!_srv_stop.call(srv))
+            auto result = client->async_send_request(request);
+
+            if (rclcpp::spin_until_future_complete(node, result) !=
+                rclcpp::FutureReturnCode::SUCCESS)
             {
                 QMessageBox msgBox;
                 msgBox.setText("Stop service failed, make sure "
                                "xbot2-launcher daemon is up and running");
                 msgBox.exec();
                 return;
-            }
 
-            if(!srv.response.success)
-            {
+            } else {
+                RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to call service add_two_ints");
+
+            } else if (!result.get()->success) {
+
                 QMessageBox msgBox;
                 msgBox.setText("Stop service returned false: " +
                                QString::fromStdString(srv.response.message));
@@ -214,7 +223,7 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
     });
 
     // vbatt lcd
-    auto on_vbatt_recv = [this](const std_msgs::Float32ConstPtr& msg)
+    auto on_vbatt_recv = [this](const std_msgs::msg::float32& msg)
     {
         if(msg->data > 100)
         {
@@ -228,7 +237,7 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
         }
     };
 
-    _vbatt_sub = _nh.subscribe<std_msgs::Float32>("vbatt", 1, on_vbatt_recv);
+    _vbatt_sub = _node->subscription<std_msgs::msg::float32>("/xbotcore/vbatt", 1, on_vbatt_recv);
 
     _lcd = findChild<QLCDNumber*>("voltLcd");
     _lcd->setStyleSheet("border: 0px");

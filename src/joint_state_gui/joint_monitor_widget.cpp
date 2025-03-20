@@ -7,12 +7,14 @@
 #include <memory>
 #include "robot_monitoring/context.h"
 
- JointMonitorWidget::JointMonitorWidget(int argc,
+JointMonitorWidget::JointMonitorWidget(int argc,
                                        char ** argv,
-                                       QWidget *parent) :
+                                       QWidget *parent,
+                                       rclcpp::Node::SharedPtr node) :
     QMainWindow(parent),
     _valid_msg_recv(false),
-    _widget_started(false)
+    _widget_started(false),
+    _node(node)
 {
     /* Create context */
     _ctx = std::make_shared<XBot::Ui::Context>();
@@ -25,14 +27,12 @@
     _menu_bar = new QMenuBar;
     setMenuBar(_menu_bar);
     create_menu();
+;
 
-    // subscribe to joint states, fault, aux
-    ros::NodeHandle nh("xbotcore");
-
-    _jstate_sub = nh.subscribe("joint_states",
-                               10,
-                               &JointMonitorWidget::on_jstate_recv,
-                               this);
+    _jstate_sub = _node->create_subscription(
+        "/xbotcore/joint_states",
+        10,
+        std::bind(&JointMonitorWidget::on_jstate_recv, this, _1));
 
     // wait for a first valid joint state message
     int attempts = 100;
@@ -90,19 +90,20 @@
     // if joint state received, go on constructing the whole gui
 
     // subscribers to fault and aux
-    _fault_sub = nh.subscribe("fault",
-                              10,
-                              &JointMonitorWidget::on_fault_recv,
-                              this);
+    _fault_sub = _node->create_subscription(
+        "/xbotcore/fault",
+        10,
+        std::bind(&JointMonitorWidget::on_fault_recv, this, _1));
 
-    _aux_sub = nh.subscribe("aux",
-                            10,
-                            &JointMonitorWidget::on_aux_recv,
-                            this);
+    _aux_sub = _node->create_subscription(
+        "/xbotcore/aux",
+        10,
+        std::bind(&JointMonitorWidget::on_aux_recv, this, _1));
 
     // get robot description
     std::string urdf_str;
-    nh.getParam("robot_description", urdf_str);
+    // TODO how to get params now?
+    // nh.getParam("robot_description", urdf_str);
 
     if(urdf_str.empty())
     {
@@ -113,9 +114,9 @@
     _urdf = urdf::parseURDF(urdf_str);
 
     // try to load a joint id map
-    std::string jidmap_str = nh.param<std::string>("joint_id_map", "");
-    if(!jidmap_str.empty())
-    {
+    // std::string jidmap_str = nh.param<std::string>("joint_id_map", "");
+    // if(!jidmap_str.empty())
+    // {
         try
         {
             auto jidmap_yaml = YAML::Load(jidmap_str);
@@ -128,7 +129,7 @@
         {
             fprintf(stderr, "Unable to get joint IDs: %s \n", e.what());
         }
-    }
+   // }
 
     // create sliders widget
     cartesio_gui::SlidersWidgetMainView::Options opt;
@@ -281,7 +282,7 @@ void JointMonitorWidget::create_menu()
 void JointMonitorWidget::on_timer_event()
 {
     // receive callbacks
-    ros::spinOnce();
+    _node->spin_all();
 
     // update joint state widget
     jstate_wid->updateStatus();
@@ -297,12 +298,12 @@ void JointMonitorWidget::on_timer_event()
 
 }
 
-void JointMonitorWidget::on_jstate_recv(xbot_msgs::JointStateConstPtr msg)
+void JointMonitorWidget::on_jstate_recv(const xbot_msgs::msg::JointState & msg)
 {
     // if first message received, just set the _jnames vector
     if(!_valid_msg_recv)
     {
-        _jnames = msg->name;
+        _jnames = msg.name;
         _valid_msg_recv = true;
         return;
     }
@@ -313,81 +314,81 @@ void JointMonitorWidget::on_jstate_recv(xbot_msgs::JointStateConstPtr msg)
         return;
     }
 
-    auto now = msg->header.stamp;
+    auto now = msg.header.stamp;
 
     // parse message
-    for(int i = 0; i < msg->name.size(); i++)
+    for(int i = 0; i < msg.name.size(); i++)
     {
 
         // some variables for convenience
-        double k = msg->stiffness[i];
-        double d = msg->damping[i];
-        double qerr = msg->position_reference[i] - msg->link_position[i];
-        double dqerr = msg->velocity_reference[i] - msg->link_velocity[i];
-        double tauref_imp = k*qerr + d*dqerr + msg->effort_reference[i];
+        double k = msg.stiffness[i];
+        double d = msg.damping[i];
+        double qerr = msg.position_reference[i] - msg.link_position[i];
+        double dqerr = msg.velocity_reference[i] - msg.link_velocity[i];
+        double tauref_imp = k*qerr + d*dqerr + msg.effort_reference[i];
 
         // add a point to all chars lines
-        _chart->addPoint(QString::fromStdString(msg->name[i]) + "/link_pos",
+        _chart->addPoint(QString::fromStdString(msg.name[i]) + "/link_pos",
                          now.toSec(),
-                         msg->link_position[i]);
+                         msg.link_position[i]);
 
-        _chart->addPoint(QString::fromStdString(msg->name[i]) + "/motor_pos",
+        _chart->addPoint(QString::fromStdString(msg.name[i]) + "/motor_pos",
                          now.toSec(),
-                         msg->motor_position[i]);
+                         msg.motor_position[i]);
 
-        _chart->addPoint(QString::fromStdString(msg->name[i]) + "/pos_ref",
+        _chart->addPoint(QString::fromStdString(msg.name[i]) + "/pos_ref",
                          now.toSec(),
-                         msg->position_reference[i]);
+                         msg.position_reference[i]);
 
-        _chart->addPoint(QString::fromStdString(msg->name[i]) + "/link_vel",
+        _chart->addPoint(QString::fromStdString(msg.name[i]) + "/link_vel",
                          now.toSec(),
-                         msg->link_velocity[i]);
+                         msg.link_velocity[i]);
 
-        _chart->addPoint(QString::fromStdString(msg->name[i]) + "/motor_vel",
+        _chart->addPoint(QString::fromStdString(msg.name[i]) + "/motor_vel",
                          now.toSec(),
-                         msg->motor_velocity[i]);
+                         msg.motor_velocity[i]);
 
-        _chart->addPoint(QString::fromStdString(msg->name[i]) + "/vel_ref",
+        _chart->addPoint(QString::fromStdString(msg.name[i]) + "/vel_ref",
                          now.toSec(),
-                         msg->velocity_reference[i]);
+                         msg.velocity_reference[i]);
 
-        _chart->addPoint(QString::fromStdString(msg->name[i]) + "/torque",
+        _chart->addPoint(QString::fromStdString(msg.name[i]) + "/torque",
                          now.toSec(),
-                         msg->effort[i]);
+                         msg.effort[i]);
 
-        _chart->addPoint(QString::fromStdString(msg->name[i]) + "/torque_ffwd",
+        _chart->addPoint(QString::fromStdString(msg.name[i]) + "/torque_ffwd",
                          now.toSec(),
-                         msg->effort_reference[i]);
+                         msg.effort_reference[i]);
 
-        _chart->addPoint(QString::fromStdString(msg->name[i]) + "/torque_imp",
+        _chart->addPoint(QString::fromStdString(msg.name[i]) + "/torque_imp",
                          now.toSec(),
                          tauref_imp);
 
-        _chart->addPoint(QString::fromStdString(msg->name[i]) + "/driver_temp",
+        _chart->addPoint(QString::fromStdString(msg.name[i]) + "/driver_temp",
                          now.toSec(),
-                         msg->temperature_driver[i]);
+                         msg.temperature_driver[i]);
 
-        _chart->addPoint(QString::fromStdString(msg->name[i]) + "/motor_temp",
+        _chart->addPoint(QString::fromStdString(msg.name[i]) + "/motor_temp",
                          now.toSec(),
-                         msg->temperature_motor[i]);
+                         msg.temperature_motor[i]);
 
 
 
         // update the currently active joint state widget
-        if(msg->name[i] == jstate_wid->getJointName().toStdString())
+        if(msg.name[i] == jstate_wid->getJointName().toStdString())
         {
-            jstate_wid->tor->setValue(msg->effort[i]);
-            jstate_wid->torref->setValue(msg->effort_reference[i]);
-            jstate_wid->velref->setValue(msg->velocity_reference[i]);
-            jstate_wid->posref->setValue(msg->position_reference[i]);
-            jstate_wid->motopos->setValue(msg->motor_position[i]);
-            jstate_wid->motovel->setValue(msg->motor_velocity[i]);
-            jstate_wid->linkpos->setValue(msg->link_position[i]);
-            jstate_wid->linkvel->setValue(msg->link_velocity[i]);
-            jstate_wid->stiffness->setValue(msg->stiffness[i]);
-            jstate_wid->damping->setValue(msg->damping[i]);
-            jstate_wid->mototemp->setValue(msg->temperature_motor[i]);
-            jstate_wid->drivertemp->setValue(msg->temperature_driver[i]);
+            jstate_wid->tor->setValue(msg.effort[i]);
+            jstate_wid->torref->setValue(msg.effort_reference[i]);
+            jstate_wid->velref->setValue(msg.velocity_reference[i]);
+            jstate_wid->posref->setValue(msg.position_reference[i]);
+            jstate_wid->motopos->setValue(msg.motor_position[i]);
+            jstate_wid->motovel->setValue(msg.motor_velocity[i]);
+            jstate_wid->linkpos->setValue(msg.link_position[i]);
+            jstate_wid->linkvel->setValue(msg.link_velocity[i]);
+            jstate_wid->stiffness->setValue(msg.stiffness[i]);
+            jstate_wid->damping->setValue(msg.damping[i]);
+            jstate_wid->mototemp->setValue(msg.temperature_motor[i]);
+            jstate_wid->drivertemp->setValue(msg.temperature_driver[i]);
             jstate_wid->torref_imp->setValue(tauref_imp);
 
         }
@@ -395,91 +396,91 @@ void JointMonitorWidget::on_jstate_recv(xbot_msgs::JointStateConstPtr msg)
         // update field of barplot, if active
         if(barplot_wid->getFieldType() == "temperature")
         {
-            auto wid = barplot_wid->wid_map.at(msg->name[i]);
-            wid->setValue(std::max(msg->temperature_motor[i],
-                                   msg->temperature_driver[i]));
+            auto wid = barplot_wid->wid_map.at(msg.name[i]);
+            wid->setValue(std::max(msg.temperature_motor[i],
+                                   msg.temperature_driver[i]));
             wid->setRange(30, 90);
 
         }
         else if(barplot_wid->getFieldType() == "torque")
         {
-            auto wid = barplot_wid->wid_map.at(msg->name[i]);
-            wid->setValue(std::fabs(msg->effort[i]), msg->effort[i]);
-            double taumax = _urdf->getJoint(msg->name[i])->limits->effort;
+            auto wid = barplot_wid->wid_map.at(msg.name[i]);
+            wid->setValue(std::fabs(msg.effort[i]), msg.effort[i]);
+            double taumax = _urdf->getJoint(msg.name[i])->limits->effort;
             wid->setRange(0, taumax);
 
         }
         else if(barplot_wid->getFieldType() == "torque tracking error")
         {
-            double k = msg->stiffness[i];
-            double d = msg->damping[i];
-            double qerr = msg->position_reference[i] - msg->link_position[i];
-            double dqerr = msg->velocity_reference[i] - msg->link_velocity[i];
-            double tauref_imp = k*qerr + d*dqerr + msg->effort_reference[i];
-            double tau_err = tauref_imp - msg->effort[i];
+            double k = msg.stiffness[i];
+            double d = msg.damping[i];
+            double qerr = msg.position_reference[i] - msg.link_position[i];
+            double dqerr = msg.velocity_reference[i] - msg.link_velocity[i];
+            double tauref_imp = k*qerr + d*dqerr + msg.effort_reference[i];
+            double tau_err = tauref_imp - msg.effort[i];
 
-            auto wid = barplot_wid->wid_map.at(msg->name[i]);
+            auto wid = barplot_wid->wid_map.at(msg.name[i]);
             wid->setValue(std::fabs(tau_err), tau_err);
             wid->setRange(0, 15.0);
 
         }
         else if(barplot_wid->getFieldType() == "position tracking error")
         {
-            double qerr = msg->position_reference[i] - msg->link_position[i];
+            double qerr = msg.position_reference[i] - msg.link_position[i];
 
-            auto wid = barplot_wid->wid_map.at(msg->name[i]);
+            auto wid = barplot_wid->wid_map.at(msg.name[i]);
             wid->setValue(std::fabs(qerr), qerr);
             wid->setRange(0, 3.0);
 
         }
         else if(barplot_wid->getFieldType() == "link position")
         {
-            auto wid = barplot_wid->wid_map.at(msg->name[i]);
-            wid->setValue(msg->link_position[i]);
-            double qmin = _urdf->getJoint(msg->name[i])->limits->lower;
-            double qmax = _urdf->getJoint(msg->name[i])->limits->upper;
+            auto wid = barplot_wid->wid_map.at(msg.name[i]);
+            wid->setValue(msg.link_position[i]);
+            double qmin = _urdf->getJoint(msg.name[i])->limits->lower;
+            double qmax = _urdf->getJoint(msg.name[i])->limits->upper;
             wid->setRange(qmin, qmax);
         }
         else if(barplot_wid->getFieldType() == "motor position")
         {
-            auto wid = barplot_wid->wid_map.at(msg->name[i]);
-            wid->setValue(msg->motor_position[i]);
-            double qmin = _urdf->getJoint(msg->name[i])->limits->lower;
-            double qmax = _urdf->getJoint(msg->name[i])->limits->upper;
+            auto wid = barplot_wid->wid_map.at(msg.name[i]);
+            wid->setValue(msg.motor_position[i]);
+            double qmin = _urdf->getJoint(msg.name[i])->limits->lower;
+            double qmax = _urdf->getJoint(msg.name[i])->limits->upper;
             wid->setRange(qmin, qmax);
         }
         else if(barplot_wid->getFieldType() == "link velocity")
         {
-            auto wid = barplot_wid->wid_map.at(msg->name[i]);
-            double vel = msg->link_velocity[i];
+            auto wid = barplot_wid->wid_map.at(msg.name[i]);
+            double vel = msg.link_velocity[i];
             wid->setValue(std::fabs(vel), vel);
-            double qdmax = _urdf->getJoint(msg->name[i])->limits->velocity;
+            double qdmax = _urdf->getJoint(msg.name[i])->limits->velocity;
             wid->setRange(0, qdmax);
         }
         else if(barplot_wid->getFieldType() == "motor velocity")
         {
-            auto wid = barplot_wid->wid_map.at(msg->name[i]);
-            double vel = msg->motor_velocity[i];
+            auto wid = barplot_wid->wid_map.at(msg.name[i]);
+            double vel = msg.motor_velocity[i];
             wid->setValue(std::fabs(vel), vel);
-            double qdmax = _urdf->getJoint(msg->name[i])->limits->velocity;
+            double qdmax = _urdf->getJoint(msg.name[i])->limits->velocity;
             wid->setRange(0, qdmax);
         }
         else if(barplot_wid->getFieldType() == "stiffness")
         {
-            auto wid = barplot_wid->wid_map.at(msg->name[i]);
-            wid->setValue(msg->stiffness[i]);
+            auto wid = barplot_wid->wid_map.at(msg.name[i]);
+            wid->setValue(msg.stiffness[i]);
             wid->setRange(0, 5000);
         }
         else if(barplot_wid->getFieldType() == "damping")
         {
-            auto wid = barplot_wid->wid_map.at(msg->name[i]);
-            wid->setValue(msg->damping[i]);
+            auto wid = barplot_wid->wid_map.at(msg.name[i]);
+            wid->setValue(msg.damping[i]);
             wid->setRange(0, 100);
         }
     }
 }
 
-void JointMonitorWidget::on_fault_recv(xbot_msgs::FaultConstPtr msg)
+void JointMonitorWidget::on_fault_recv(const xbot_msgs::msg::Fault & msg)
 {
     // widget not started yet, do nothing
     if(!_widget_started)
@@ -487,23 +488,23 @@ void JointMonitorWidget::on_fault_recv(xbot_msgs::FaultConstPtr msg)
         return;
     }
 
-    for(size_t i = 0; i < msg->name.size(); i++)
+    for(size_t i = 0; i < msg.name.size(); i++)
     {
         // set red color to barplot green square
-        auto wid = barplot_wid->wid_map.at(msg->name[i]);
+        auto wid = barplot_wid->wid_map.at(msg.name[i]);
         wid->setDanger();
-        wid->setStatus(QString::fromStdString(msg->fault[i]));
+        wid->setStatus(QString::fromStdString(msg.fault[i]));
 
         // if joint state widget is showing this joint, set fault
         // string
-        if(msg->name[i] == jstate_wid->getJointName().toStdString())
+        if(msg.name[i] == jstate_wid->getJointName().toStdString())
         {
-            jstate_wid->setStatus(msg->fault[i]);
+            jstate_wid->setStatus(msg.fault[i]);
         }
     }
 }
 
-void JointMonitorWidget::on_aux_recv(xbot_msgs::CustomStateConstPtr msg)
+void JointMonitorWidget::on_aux_recv(const xbot_msgs::msg::CustomState &msg)
 {
     // widget not started yet, do nothing
     if(!_widget_started)
@@ -511,41 +512,37 @@ void JointMonitorWidget::on_aux_recv(xbot_msgs::CustomStateConstPtr msg)
         return;
     }
 
-
-
     // update jointstate ui and charts
-    for(size_t i = 0; i < msg->name.size(); i++)
+    for(size_t i = 0; i < msg.name.size(); i++)
     {
-        QString aux_field_name = QString::fromStdString(msg->type[i]);
+        QString aux_field_name = QString::fromStdString(msg.type[i]);
 
         // if joint state widget is showing this joint, set fault
         // string
-        if(msg->name[i] == jstate_wid->getJointName().toStdString())
+        if(msg.name[i] == jstate_wid->getJointName().toStdString())
         {
             jstate_wid->setAux(aux_field_name,
-                               msg->value[i]);
+                               msg.value[i]);
         }
 
         // update chart
-        _chart->addPoint(QString::fromStdString(msg->name[i]) + "/aux/" + aux_field_name,
-                         msg->header.stamp.toSec(),
-                         msg->value[i]);
+        _chart->addPoint(QString::fromStdString(msg.name[i]) + "/aux/" + aux_field_name,
+                         msg.header.stamp.toSec(),
+                         msg.value[i]);
 
 
         // add new field to barplot
-        barplot_wid->addAuxType(msg->type[i]);
+        barplot_wid->addAuxType(msg.type[i]);
 
         // update bar
-        if(barplot_wid->getFieldType() ==  "aux/" + msg->type[i])
+        if(barplot_wid->getFieldType() ==  "aux/" + msg.type[i])
         {
-            auto wid = barplot_wid->wid_map.at(msg->name[i]);
-            wid->setValue(std::fabs(msg->value[i]), msg->value[i]);
+            auto wid = barplot_wid->wid_map.at(msg.name[i]);
+            wid->setValue(std::fabs(msg.value[i]), msg.value[i]);
             wid->setRange(0, 60);
 
         }
     }
-
-
 }
 
 

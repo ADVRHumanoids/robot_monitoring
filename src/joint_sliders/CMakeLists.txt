@@ -1,12 +1,15 @@
-include_directories(../../include/)
-
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 find_package(Qt5UiTools  REQUIRED)
 find_package(Qt5Widgets  REQUIRED)
 find_package(Qt5Quick   REQUIRED)
-find_package(XBotInterface REQUIRED)
+find_package(xbot2_interface REQUIRED)
+find_package(rclcpp REQUIRED) 
+find_package(xbot_msgs REQUIRED) 
+find_package(sensor_msgs REQUIRED) 
+
+include_directories(../../include/)
 
 add_definitions(-DXBOT_MSGS_SUPPORT)
 
@@ -20,8 +23,10 @@ add_library(sliders_widget STATIC
 target_link_libraries(sliders_widget PUBLIC 
                         Qt5::Widgets 
                         Qt5::UiTools
-                        ${catkin_LIBRARIES}
-                        XBotInterface::XBotInterface)
+                        ${xbot_msgs_TARGETS}
+                        ${sensor_msgs_TARGETS}
+                        rclcpp::rclcpp
+                        xbot2_interface::xbot2_interface)
 
 
 ## Compile main
@@ -34,9 +39,10 @@ target_link_libraries(joint_state_sliders PRIVATE
 set_target_properties(joint_state_sliders PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 install(TARGETS joint_state_sliders
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+  EXPORT export_${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 
 ## Compile Sliders RViz Panel

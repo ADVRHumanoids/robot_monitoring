@@ -1,21 +1,22 @@
-cmake_minimum_required(VERSION 3.0)
-project(robot_monitoring VERSION 1.0)
+cmake_minimum_required(VERSION 3.14.4)
+project(robot_monitoring VERSION 1.2)
 
-# std c++14 flags
-set(CMAKE_CXX_STANDARD 14)
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
+endif()
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# avoid installing catkin-related files
-set(CATKIN_BUILD_BINARY_PACKAGE TRUE)
-
-# find required packages
-find_package(catkin REQUIRED COMPONENTS
-    roscpp
-    rviz
-    roslib
-    xbot_msgs
-    )
+find_package(ament_cmake_ros REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rviz2 REQUIRED)
+#find_package(roslib REQUIRED)
+find_package(xbot_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
 
 # set qt to automatically run MOC and RCC pre-compilers
 set(CMAKE_AUTOMOC ON)
@@ -34,33 +35,29 @@ find_package(Qt5PrintSupport REQUIRED)
 
 # robotinterfaceros is needed just to construct
 # xbotinterface from ros parameters (could be avoided)
-find_package(RobotInterfaceROS REQUIRED)
+#find_package(RobotInterfaceROS REQUIRED)
+
 include_directories(include/
-    src/
-    ${RobotInterfaceROS_INCLUDE_DIRS}
-    ${catkin_INCLUDE_DIRS})
-
-
-# generate catkin package, but don't let it export
-# any target
-catkin_package(
-    INCLUDE_DIRS include
-    LIBRARIES robot_monitoring
-    )
+     src/
+     ${RobotInterfaceROS_INCLUDE_DIRS})
 
 add_subdirectory(src/robot_monitoring/)
 add_subdirectory(src/chart/)
 add_subdirectory(src/joint_state_gui/)
 add_subdirectory(src/joint_sliders/)
-add_subdirectory(src/imu)
-add_subdirectory(src/aux)
-add_subdirectory(src/maintenance)
-add_subdirectory(src/ft)
-add_subdirectory(src/gripper)
-add_subdirectory(src/rviz/)
+#add_subdirectory(src/imu)
+#add_subdirectory(src/aux)
+#add_subdirectory(src/maintenance)
+#add_subdirectory(src/ft)
+#add_subdirectory(src/gripper)
+#add_subdirectory(src/rviz/)
 add_subdirectory(src/qcustomplot)
 
 include(cmake/GenerateDeb.cmake)
 
 install(DIRECTORY include/robot_monitoring
 DESTINATION include)
+
+#ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
+
+ament_package()

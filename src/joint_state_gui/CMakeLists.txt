@@ -5,21 +5,23 @@ set(CMAKE_AUTORCC ON)
 find_package(Qt5UiTools REQUIRED)
 find_package(Qt5Widgets REQUIRED)
 find_package(Qt5Quick   REQUIRED)
-find_package(XBotInterface REQUIRED)
-find_package(ec_srvs REQUIRED)
-find_package(catkin REQUIRED COMPONENTS roscpp urdf)
+find_package(xbot2_interface REQUIRED)
+#find_package(ec_srvs REQUIRED)
+find_package(rclcpp REQUIRED) 
+find_package(xbot_msgs REQUIRED) 
+find_package(urdf REQUIRED)
 
 include_directories(../../include)
 
 add_library(joint_bar_ui STATIC
-    bar_plot_widget.cpp
-    bringup_widget.cpp
-    load_plugin_wid.cpp
-    top_right_tab.cpp
-    joint_bar_widget.cpp
-    joint_state_widget.cpp
+    #bar_plot_widget.cpp
+    #bringup_widget.cpp
+    #load_plugin_wid.cpp
+    #top_right_tab.cpp
+    #joint_bar_widget.cpp
+    #joint_state_widget.cpp
     joint_monitor_widget.cpp
-    circle_widget.cpp
+    #circle_widget.cpp
     xbot2_wid.cpp
     xbot2_plugin_wid.cpp
     xbot2_status_wid.cpp
@@ -32,8 +34,10 @@ target_link_libraries(joint_bar_ui
     qcustom_chart
     Qt5::Widgets
     Qt5::UiTools
-    XBotInterface::XBotInterface
-    ${catkin_LIBRARIES}
+    xbot2_interface::xbot2_interface
+    ${xbot_msgs_TARGETS}
+	rclcpp::rclcpp
+    urdf::urdf
     yaml-cpp)
 
 target_include_directories(joint_bar_ui

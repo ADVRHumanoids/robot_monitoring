@@ -1,13 +1,13 @@
 #include "xbot2_wid.h"
 
-#include <xbot_msgs/Statistics2.h>
-#include <xbot_msgs/GetPluginList.h>
-#include <xbot_msgs/LifecycleEvent.h>
-#include <xbot_msgs/SetControlMask.h>
-#include <xbot_msgs/JointDeviceInfo.h>
-#include <std_srvs/SetBool.h>
-#include <std_srvs/Trigger.h>
-#include <rosgraph_msgs/Log.h>
+#include <xbot_msgs/msg/statistics2.hpp>
+#include <xbot_msgs/srv/get_plugin_list.hpp>
+#include <xbot_msgs/msg/lifecycle_event.hpp>
+#include <xbot_msgs/srv/set_control_mask.hpp>
+#include <xbot_msgs/msd/joint_device_info.hpp>
+#include <std_srvs/srv/set_bool.hpp>
+#include <std_srvs/srv/trigger.hpp>
+//#include <rosgraph_msgs/Log.h>
 
 #include <QUiLoader>
 #include <QFile>
@@ -89,9 +89,9 @@ protected:
     }
 };
 
-XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent) :
+XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::SharedPtr node) :
     QWidget(parent),
-    _nh("xbotcore")
+    _node(node)
 {
     /* Create GUI layout */
     auto * ui = ::LoadUiFile(this);
@@ -284,7 +284,7 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent) :
     using clock = std::chrono::high_resolution_clock;
     using namespace std::chrono_literals;
     static auto last_load_upd = clock::now();
-    auto on_stats_recv = [this](xbot_msgs::Statistics2ConstPtr msg)
+    auto on_stats_recv = [this](const xbot_msgs::msg::statistics & msg)
     {
         auto now = clock::now();
         bool load_upd_done = false;
@@ -327,7 +327,7 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent) :
         if(load_upd_done) last_load_upd = now;
     };
 
-    _stats_sub = _nh.subscribe<xbot_msgs::Statistics2>("statistics",
+    _stats_sub = _node->subscribe<xbot_msgs::msg::statistics2>("/xbotcore/statistics",
                                                       1,
                                                       on_stats_recv);
 
@@ -338,7 +338,7 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent) :
          safeBtn,
          mediumBtn,
          fastBtn]
-        (const xbot_msgs::JointDeviceInfoConstPtr& msg)
+        (const xbot_msgs::msg::joint_device_info & msg)
     {
 
         if(msg->filter_active &&
@@ -388,8 +388,8 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent) :
         }
     };
 
-    _jdinfo_sub = _nh.subscribe<xbot_msgs::JointDeviceInfo>(
-        "joint_device_info",
+    _jdinfo_sub = _node.subscription<xbot_msgs::msg::joint_device_info>(
+        "/xbotcore/joint_device_info",
         1,
         on_jdinfo_recv);
 
@@ -422,7 +422,7 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent) :
     };
 
 
-    _stderr_sub = _nh.subscribe<rosgraph_msgs::Log>("d/stderr", 100, stderr_cb);
+    //_stderr_sub = _node.subscription<rosgraph_msgs::msg::log>("d/stderr", 100, stderr_cb);
 
 }
 

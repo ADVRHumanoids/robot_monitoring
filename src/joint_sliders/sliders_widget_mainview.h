@@ -2,8 +2,10 @@
 #define IMPEDANCEWIDGETMAINVIEW_H
 
 #include "sliders_widget.h"
-#include <XBotInterface/XBotInterface.h>
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
+#include <xbot2_interface/xbotinterface2.h>
+#include <xbot_msgs/msg/joint_state.hpp>
+#include <sensor_msgs/msg/joint_state.hpp>
 
 namespace cartesio_gui
 {
@@ -28,7 +30,8 @@ public:
     };
 
     explicit SlidersWidgetMainView(Options opt = Options(),
-                                   QWidget * parent = nullptr);
+                                   QWidget * parent = nullptr
+                                   rclcpp::Node::SharedPtr node = nullptr);
 
     void contextMenuEvent(QContextMenuEvent * event) override;
 
@@ -70,8 +73,8 @@ private:
 
     void print_status_msg(QString msg);
 
-    ros::NodeHandle _nh;
-    ros::Publisher _pub;
+    rclcpp::Node::SharedPtr _node;
+    rclcpp::Publisher<xbot_msgs::msg::JointState>::SharedPtr _pub;
 };
 
 }

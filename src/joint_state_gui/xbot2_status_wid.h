@@ -7,7 +7,13 @@
 #include <QLabel>
 #include <QMainWindow>
 
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
+#include <std_msgs/msg/string.hpp>
+#include <std_msgs/msg/float32.hpp>
+#include <xbot_msgs/srv/start_process.hpp>
+#include <xbot_msgs/srv/stop_process.hpp>
+
+using namespace std::chrono_literals;
 
 class XBot2StatusWidget : public QWidget
 {
@@ -17,7 +23,8 @@ class XBot2StatusWidget : public QWidget
 public:
 
     XBot2StatusWidget(QMainWindow * mw,
-                      QWidget * parent = nullptr);
+                      QWidget * parent = nullptr,
+                      rclcpp::Node::SharedPtr node = nullptr);
 
     void update();
 
@@ -26,19 +33,22 @@ signals:
     void xbot2Started();
 
 private:
-
+    
+    rclcpp::Node::SharedPtr _node;
     void handleStatusLabel();
 
-    ros::Time _last_status_recv;
+    rclcpp::Time _last_status_recv;
 
     QMainWindow * _mw;
     QLCDNumber * _lcd;
     QLabel * _status_label;
     QPushButton * _cmd_button;
 
-    ros::NodeHandle _nh;
-    ros::Subscriber _status_sub, _vbatt_sub;
-    ros::ServiceClient _srv_start, _srv_stop;
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr _status_sub;
+    rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr _vbatt_sub;
+    
+    rclcpp::Client<xbot_msgs::srv::StartProcess>::SharedPtr _srv_start;
+    rclcpp::Client<xbot_msgs::srv::StopProcess>::SharedPtr _srv_stop;
 
     std::string _hw_type;
 };

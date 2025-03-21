@@ -6,7 +6,7 @@
 #endif
 
 #include <xbot2_interface/robotinterface2.h>
-//#include <RobotInterfaceROS/ConfigFromParam.h>
+#include <xbot2_interface/ros2/config_from_param.hpp>
 
 namespace
 {
@@ -98,11 +98,11 @@ cartesio_gui::SlidersWidgetMainView::SlidersWidgetMainView (Options opt,
 
 void cartesio_gui::SlidersWidgetMainView::makeJointVisible(QString jointname)
 {
-    for(auto& cpair : _robot->getChainMap())
+    for(const auto& ch : _robot->getChainNames())
     {
-        if(cpair.second->hasJoint(jointname.toStdString()))
+        if(_robot->getChain(ch)->hasJoint(jointname.toStdString()))
         {
-            int id = _chain_select->findText(QString::fromStdString(cpair.first));
+            int id = _chain_select->findText(QString::fromStdString(ch));
 
             if(id != -1)
             {
@@ -167,9 +167,9 @@ void cartesio_gui::SlidersWidgetMainView::on_reload()
     for(auto ch : _robot->getChainNames())
     {
         Eigen::VectorXd q, k, d, zero;
-        _robot->getChainMap().at(ch)->getMotorPosition(q);
-        _robot->getChainMap().at(ch)->getStiffness(k);
-        _robot->getChainMap().at(ch)->getDamping(d);
+        _robot->getChain(ch)->getMotorPosition(q);
+        _robot->getChain(ch)->getStiffness(k);
+        _robot->getChain(ch)->getDamping(d);
         zero.setZero(q.size());
 
         _wid_p_map.at(ch)->setInitialValue(::eigen_to_std(q));
@@ -208,22 +208,22 @@ void cartesio_gui::SlidersWidgetMainView::pos_callback(std::string jname, double
 {
     if(_opt.message_type == "sensor_msgs")
     {
-        sensor_msgs::JointState msg;
-        msg.header.stamp = ros::Time::now();
+        sensor_msgs::msg::JointState msg;
+        msg.header.stamp = _node->get_clock()->now();
         msg.name.push_back(jname);
         msg.position.push_back(value);
-        _pub.publish(msg);
+        _pub_ros->publish(msg);
     }
     else
     {
 #ifdef XBOT_MSGS_SUPPORT
-        xbot_msgs::JointCommand msg;
-        msg.header.stamp = ros::Time::now();
+        xbot_msgs::msg::JointCommand msg;
+        msg.header.stamp = _node->get_clock()->now();
         msg.header.seq = 0;
         msg.name.push_back(jname);
         msg.position.push_back(value);
         msg.ctrl_mode.push_back(1);
-        _pub.publish(msg);
+        _pub_xbot->publish(msg);
 #endif
     }
 }
@@ -232,22 +232,22 @@ void cartesio_gui::SlidersWidgetMainView::vel_callback(std::string jname, double
 {
     if(_opt.message_type == "sensor_msgs")
     {
-        sensor_msgs::JointState msg;
-        msg.header.stamp = ros::Time::now();
+        sensor_msgs::msg::JointState msg;
+        msg.header.stamp = _node->get_clock()->now();
         msg.name.push_back(jname);
         msg.velocity.push_back(value);
-        _pub.publish(msg);
+        _pub_ros->publish(msg);
     }
     else
     {
 #ifdef XBOT_MSGS_SUPPORT
-        xbot_msgs::JointCommand msg;
-        msg.header.stamp = ros::Time::now();
+        xbot_msgs::msg::JointCommand msg;
+        msg.header.stamp = _node->get_clock()->now();
         msg.header.seq = 0;
         msg.name.push_back(jname);
         msg.velocity.push_back(value);
         msg.ctrl_mode.push_back(2);
-        _pub.publish(msg);
+        _pub_xbot->publish(msg);
 #endif
     }
     
@@ -258,22 +258,22 @@ void cartesio_gui::SlidersWidgetMainView::tau_callback(std::string jname, double
 {
     if(_opt.message_type == "sensor_msgs")
     {
-        sensor_msgs::JointState msg;
-        msg.header.stamp = ros::Time::now();
+        sensor_msgs::msg::JointState msg;
+        msg.header.stamp = _node->get_clock()->now();
         msg.name.push_back(jname);
         msg.effort.push_back(value);
-        _pub.publish(msg);
+        _pub_ros->publish(msg);
     }
     else
     {
 #ifdef XBOT_MSGS_SUPPORT
-        xbot_msgs::JointCommand msg;
-        msg.header.stamp = ros::Time::now();
+        xbot_msgs::msg::JointCommand msg;
+        msg.header.stamp = _node->get_clock()->now();
         msg.header.seq = 0;
         msg.name.push_back(jname);
         msg.effort.push_back(value);
         msg.ctrl_mode.push_back(4);
-        _pub.publish(msg);
+        _pub_xbot->publish(msg);
 #endif
     }
     
@@ -284,13 +284,13 @@ void cartesio_gui::SlidersWidgetMainView::k_callback(std::string jname, double v
 {
     
 #ifdef XBOT_MSGS_SUPPORT
-    xbot_msgs::JointCommand msg;
-    msg.header.stamp = ros::Time::now();
+    xbot_msgs::msg::JointCommand msg;
+    msg.header.stamp = _node->get_clock()->now();
     msg.header.seq = 0;
     msg.name.push_back(jname);
     msg.stiffness.push_back(value);
     msg.ctrl_mode.push_back(8);
-    _pub.publish(msg);
+    _pub_xbot->publish(msg);
 #endif
     
 }
@@ -300,13 +300,13 @@ void cartesio_gui::SlidersWidgetMainView::d_callback(std::string jname, double v
 {
     
 #ifdef XBOT_MSGS_SUPPORT
-    xbot_msgs::JointCommand msg;
-    msg.header.stamp = ros::Time::now();
+    xbot_msgs::msg::JointCommand msg;
+    msg.header.stamp = _node->get_clock()->now();
     msg.header.seq = 0;
     msg.name.push_back(jname);
     msg.damping.push_back(value);
     msg.ctrl_mode.push_back(16);
-    _pub.publish(msg);
+    _pub_xbot->publish(msg);
 #endif
     
 }
@@ -322,14 +322,14 @@ cartesio_gui::SlidersWidgetMainView::~SlidersWidgetMainView()
 
 }
 
-void connected(const ros::SingleSubscriberPublisher&) {}
-void disconnected(const ros::SingleSubscriberPublisher&) {}
+//void connected(const ros::SingleSubscriberPublisher&) {}
+//void disconnected(const ros::SingleSubscriberPublisher&) {}
 
 void cartesio_gui::SlidersWidgetMainView::make_publisher()
 {
     if(_opt.message_type == "sensor_msgs")
     {
-       //_pub = _node->create_publisher<sensor_msgs::msg::JointState>(_opt.command_topic, 10);
+       _pub_ros = _node->create_publisher<sensor_msgs::msg::JointState>(_opt.command_topic, 10);
     }
     else if(_opt.message_type == "xbot_msgs")
     {
@@ -342,7 +342,7 @@ void cartesio_gui::SlidersWidgetMainView::make_publisher()
         //                                                            ros::VoidPtr(), 
         //                                                            NULL);
         // op.has_header = false; 
-        _pub = _node->create_publisher<xbot_msgs::msg::JointState>(opt.command_topic, 10);
+        _pub_xbot = _node->create_publisher<xbot_msgs::msg::JointState>(_opt.command_topic, 10);
 #else
         throw std::runtime_error("Widget was compiled without -DXBOT_MSGS_SUPPORT");
 #endif
@@ -368,7 +368,7 @@ void cartesio_gui::SlidersWidgetMainView::try_construct()
 void cartesio_gui::SlidersWidgetMainView::construct()
 {
     // load an xbotinterface from param server 
-    auto opt = XBot::ConfigOptionsFromParamServer(_nh);
+    auto opt = XBot::ConfigOptionsFromParams(_node);
     _robot = std::make_shared<XBot::XBotInterface>();
     _robot->init(opt);
 
@@ -389,15 +389,15 @@ void cartesio_gui::SlidersWidgetMainView::construct()
     for(auto ch : _robot->getChainNames())
     {
         Eigen::VectorXd zero, ones, q, k, d, qmin, qmax, qdotmax, taumax;
-        _robot->getChainMap().at(ch)->getJointLimits(qmin, qmax);
-        _robot->getChainMap().at(ch)->getVelocityLimits(qdotmax);
-        _robot->getChainMap().at(ch)->getEffortLimits(taumax);
-        _robot->getChainMap().at(ch)->getMotorPosition(q);
-        _robot->getChainMap().at(ch)->getStiffness(k);
-        _robot->getChainMap().at(ch)->getDamping(d);
+        _robot->getChain(ch)->getJointLimits(qmin, qmax);
+        _robot->getChain(ch)->getVelocityLimits(qdotmax);
+        _robot->getChain(ch)->getEffortLimits(taumax);
+        _robot->getChain(ch)->getMotorPosition(q);
+        _robot->getChain(ch)->getStiffness(k);
+        _robot->getChain(ch)->getDamping(d);
         zero.setZero(q.size());
         ones.setOnes(q.size());
-        auto j_list = _robot->getChainMap().at(ch)->getJointNames();
+        auto j_list = _robot->getChain(ch)->getJointNames();
 
         auto * tab_wid = new QTabWidget;
 
@@ -595,7 +595,7 @@ void cartesio_gui::SlidersWidgetMainView::set_ros_namespace()
     if (ok && !text.isEmpty())
     {
         _opt.ns = text.toStdString();
-        _nh = ros::NodeHandle(_opt.ns);
+        //_nh = ros::NodeHandle(_opt.ns);
         make_publisher();
     }
 }

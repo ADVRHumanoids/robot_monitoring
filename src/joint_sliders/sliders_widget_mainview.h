@@ -30,7 +30,7 @@ public:
     };
 
     explicit SlidersWidgetMainView(Options opt = Options(),
-                                   QWidget * parent = nullptr
+                                   QWidget * parent = nullptr,
                                    rclcpp::Node::SharedPtr node = nullptr);
 
     void contextMenuEvent(QContextMenuEvent * event) override;
@@ -74,7 +74,8 @@ private:
     void print_status_msg(QString msg);
 
     rclcpp::Node::SharedPtr _node;
-    rclcpp::Publisher<xbot_msgs::msg::JointState>::SharedPtr _pub;
+    rclcpp::Publisher<xbot_msgs::msg::JointState>::SharedPtr _pub_xbot;
+    rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr _pub_ros;
 };
 
 }

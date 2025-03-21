@@ -2,8 +2,8 @@
 
 #include <QApplication>
 
-#include <XBotInterface/RobotInterface.h>
-#include <RobotInterfaceROS/ConfigFromParam.h>
+#include <xbot2_interface/robotinterface2.h>
+#include <xbot2_interface/ros2/config_from_param.hpp>
 
 int main(int argc, char *argv[])
 {

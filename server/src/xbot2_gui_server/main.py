@@ -89,8 +89,9 @@ def main():
             from .launcher import Launcher
             ext = Launcher(srv, cfg.get('launcher', {}))
             extensions.append(ext)
+            print(ext)
         except ModuleNotFoundError:
-            pass
+            print('launcher extension not found')
         except BaseException as e:
             print('Exception ', type(e), e)  
 

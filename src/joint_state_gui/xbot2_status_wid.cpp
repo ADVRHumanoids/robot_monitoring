@@ -1,5 +1,5 @@
 #include "xbot2_status_wid.h"
-#include "bringup_widget.h"
+//#include "bringup_widget.h"
 
 #include <QUiLoader>
 #include <QFile>
@@ -42,19 +42,19 @@ QWidget * LoadUiFile(QWidget * parent)
     return formWidget;
 }
 
-QWidget * LoadUiFileBringup(QWidget * parent)
-{
-    xbot2_status_widget_qrc_init();
-    QUiLoader loader;
+// QWidget * LoadUiFileBringup(QWidget * parent)
+// {
+//     xbot2_status_widget_qrc_init();
+//     QUiLoader loader;
 
-    QFile file(":/bringup.ui");
-    file.open(QFile::ReadOnly);
+//     QFile file(":/bringup.ui");
+//     file.open(QFile::ReadOnly);
 
-    QWidget *formWidget = loader.load(&file, parent);
-    file.close();
+//     QWidget *formWidget = loader.load(&file, parent);
+//     file.close();
 
-    return formWidget;
-}
+//     return formWidget;
+// }
 
 }
 
@@ -75,15 +75,15 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
     _status_label->setToolTip("xbot2 process status from topic 'xbotcore/status'");
     _status_label->setText("Inactive");
 
-    auto on_status_recv = [this](const std_msgs::msg::string& msg)
+    auto on_status_recv = [this](const std_msgs::msg::String& msg)
     {
-        _status_label->setText(QString::fromStdString(msg->data));
-        _last_status_recv = ros::Time::now();
+        _status_label->setText(QString::fromStdString(msg.data));
+        _last_status_recv = _node->get_clock()->now();
         handleStatusLabel();
 
     };
 
-    _status_sub = _node->subscription<std_msgs::msg::string>("/xbotcore/status", 1, on_status_recv);
+    _status_sub = _node->create_subscription<std_msgs::msg::String>("/xbotcore/status", 1, on_status_recv);
 
     // cmd button
     _cmd_button = findChild<QPushButton*>("cmdBtn");
@@ -98,17 +98,17 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
     {
         if(_cmd_button->text() == "Start")
         {
-            xbot_msgs::srv::start_process srv;
+            auto request = std::make_shared<xbot_msgs::srv::StartProcess::Request>();
 
             if(!_hw_type.empty())
             {
-                srv.request.args.push_back("--hw");
-                srv.request.args.push_back(_hw_type);
+                request->args.push_back("--hw");
+                request->args.push_back(_hw_type);
             }
 
             if(_hw_type == "sim" || _hw_type == "gz")
             {
-                srv.request.args.push_back("--simtime");
+                request->args.push_back("--simtime");
             }
 
             if(!_srv_start->wait_for_service(1s))
@@ -120,7 +120,7 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
                 return;
             }
 
-            auto result = _srv_start->async_send_request(srv)
+            auto result = _srv_start->async_send_request(request);
 
             if (rclcpp::spin_until_future_complete(_node, result) !=
                 rclcpp::FutureReturnCode::SUCCESS)
@@ -146,7 +146,7 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
         }
         else if(_cmd_button->text() == "Stop")
         {
-            xbot_msgs::srv::stop_process srv;
+            auto request = std::make_shared<xbot_msgs::srv::StopProcess::Request>();
 
             if(!_srv_stop->wait_for_service(1s))
             {
@@ -157,9 +157,9 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
                 return;
             }
 
-            auto result = client->async_send_request(request);
+            auto result = _srv_stop->async_send_request(request);
 
-            if (rclcpp::spin_until_future_complete(node, result) !=
+            if (rclcpp::spin_until_future_complete(_node, result) !=
                 rclcpp::FutureReturnCode::SUCCESS)
             {
                 QMessageBox msgBox;
@@ -168,14 +168,11 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
                 msgBox.exec();
                 return;
 
-            } else {
-                RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to call service add_two_ints");
-
             } else if (!result.get()->success) {
 
                 QMessageBox msgBox;
                 msgBox.setText("Stop service returned false: " +
-                               QString::fromStdString(srv.response.message));
+                               QString::fromStdString(result.get()->message));
                 msgBox.exec();
                 return;
             }
@@ -187,10 +184,11 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
     connect(kill_btn, &QPushButton::released,
             [this]()
     {
-        auto cli = _nh.serviceClient<std_srvs::Trigger>("d/kill");
+        auto cli = _node->create_client<std_srvs::srv::Trigger>("d/kill");
 
-        std_srvs::Trigger srv;
-        if(!cli.waitForExistence(ros::Duration(1.0)))
+        auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
+
+        if(!cli->wait_for_service(1s))
         {
             QMessageBox msgBox;
             msgBox.setIcon(QMessageBox::Warning);
@@ -200,7 +198,10 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
             return;
         }
 
-        if(!cli.call(srv))
+        auto result = cli->async_send_request(request);
+
+        if(rclcpp::spin_until_future_complete(_node, result) !=
+            rclcpp::FutureReturnCode::SUCCESS)
         {
             QMessageBox msgBox;
             msgBox.setIcon(QMessageBox::Warning);
@@ -208,14 +209,13 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
                            "xbot2-launcher daemon is up and running");
             msgBox.exec();
             return;
-        }
 
-        if(!srv.response.success)
+        } else if(!result.get()->success)
         {
             QMessageBox msgBox;
             msgBox.setIcon(QMessageBox::Warning);
             msgBox.setText("Kill service returned false: \n" +
-                           QString::fromStdString(srv.response.message));
+                           QString::fromStdString(result.get()->message));
             msgBox.exec();
             return;
         }
@@ -223,21 +223,21 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
     });
 
     // vbatt lcd
-    auto on_vbatt_recv = [this](const std_msgs::msg::float32& msg)
+    auto on_vbatt_recv = [this](const std_msgs::msg::Float32& msg)
     {
-        if(msg->data > 100)
+        if(msg.data > 100)
         {
             _lcd->display("H1");
         }
-        else if (msg->data < 0) {
+        else if (msg.data < 0) {
             _lcd->display("L0");
         }
         else {
-            _lcd->display(QString("%1").arg(msg->data, 0, 'f', 1));
+            _lcd->display(QString("%1").arg(msg.data, 0, 'f', 1));
         }
     };
 
-    _vbatt_sub = _node->subscription<std_msgs::msg::float32>("/xbotcore/vbatt", 1, on_vbatt_recv);
+    _vbatt_sub = _node->create_subscription<std_msgs::msg::Float32>("/xbotcore/vbatt", 1, on_vbatt_recv);
 
     _lcd = findChild<QLCDNumber*>("voltLcd");
     _lcd->setStyleSheet("border: 0px");
@@ -247,62 +247,87 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
     findChild<QLabel*>("voltLabel")->setStyleSheet("font-size: 24px");
 
     // bringup
-    auto bringupBtn = findChild<QPushButton*>("bringupBtn");
-    auto bringupBtnClicked = [this]()
-    {
-        auto bringupWid = new BringupWidget(QString::fromStdString(_hw_type),
-                                            this);
+    // auto bringupBtn = findChild<QPushButton*>("bringupBtn");
+    // auto bringupBtnClicked = [this]()
+    // {
+    //     auto bringupWid = new BringupWidget(QString::fromStdString(_hw_type),
+    //                                         this);
 
-        if(bringupWid->exec() == QDialog::Accepted)
-        {
-            emit xbot2Started();
-        }
+    //     if(bringupWid->exec() == QDialog::Accepted)
+    //     {
+    //         emit xbot2Started();
+    //     }
 
-    };
-    connect(bringupBtn, &QPushButton::released, bringupBtnClicked);
+    // };
+    // connect(bringupBtn, &QPushButton::released, bringupBtnClicked);
 
     // shutdown
     auto shutdownBtn = findChild<QPushButton*>("shutdownBtn");
     auto shutdownBtnClicked = [this]()
     {
-        xbot_msgs::StopProcess srv_xbot;
-        srv_xbot.request.signum = 0;
-        bool xb_stop_ok = ros::service::call("/xbotcore/d/stop", srv_xbot);
+        rclcpp::Client<xbot_msgs::srv::StopProcess>::SharedPtr cli_stop =
+            _node->create_client<xbot_msgs::srv::StopProcess>("/xbotcore/d/stop");
+
+        auto request_stop = std::make_shared<xbot_msgs::srv::StopProcess::Request>();
+        request_stop->signum = 0;
+
+        while (!cli_stop->wait_for_service(1s)) {
+            if (!rclcpp::ok()) {
+                RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Interrupted while waiting for the service. Exiting.");
+                return 0;
+            }
+            RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "service not available, waiting again...");
+        }
+
+        auto result_stop = cli_stop->async_send_request(request_stop);
         QString xb_str;
-        if(xb_stop_ok && srv_xbot.response.success)
+
+        if (rclcpp::spin_until_future_complete(_node, result_stop) ==
+            rclcpp::FutureReturnCode::SUCCESS)
         {
-            xb_str = "<span style=\"color: green;\">xbot2 was stopped succesfully: </span>";
-        }
-        else
-        {
-            xb_str = "<span style=\"color: red;\">xbot2 could not be stopped: </span>";
+            if (result_stop.get()->success) {
+                xb_str = "<span style=\"color: green;\">xbot2 was stopped succesfully: </span>";
+            } else {
+                xb_str = "<span style=\"color: red;\">xbot2 could not be stopped: </span>";
+            }
+            
+        } else {
+            xb_str = "<span style=\"color: red;\">service failed: </span>";
         }
 
-        if(!xb_stop_ok)
-        {
-            srv_xbot.response.message = "service failed";
+        xb_str += QString::fromStdString(result_stop.get()->message);
+
+
+        rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr cli_kill =
+            _node->create_client<std_srvs::srv::Trigger>("/ecat/d/kill");
+
+        auto request_kill = std::make_shared<std_srvs::srv::Trigger::Request>();
+
+        while (!cli_kill->wait_for_service(1s)) {
+            if (!rclcpp::ok()) {
+                RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Interrupted while waiting for the service. Exiting.");
+                return 0;
+            }
+            RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "service not available, waiting again...");
         }
 
-        xb_str += QString::fromStdString(srv_xbot.response.message);
-
-        std_srvs::Trigger srv_ec;
-        bool ec_stop_ok = ros::service::call("/ecat/d/kill", srv_ec);
+        auto result_kill = cli_kill->async_send_request(request_kill);
         QString ec_str;
-        if(ec_stop_ok && srv_ec.response.success)
+
+        if (rclcpp::spin_until_future_complete(_node, result_kill) ==
+            rclcpp::FutureReturnCode::SUCCESS)
         {
-            ec_str = "<span style=\"color: green;\">ecat master was stopped succesfully: </span>";
-        }
-        else
-        {
-            ec_str = "<span style=\"color: red;\">ecat master could not be stopped: </span>";
+            if (result_kill.get()->success) {
+                ec_str = "<span style=\"color: green;\">ecat master was stopped succesfully: </span>";
+            } else {
+                ec_str = "<span style=\"color: red;\">ecat master could not be stopped: </span>";
+            }
+            
+        } else {
+            ec_str = "<span style=\"color: red;\">service failed: </span>";
         }
 
-        if(!ec_stop_ok)
-        {
-            srv_ec.response.message = "service failed";
-        }
-
-        ec_str += QString::fromStdString(srv_ec.response.message);
+        ec_str += QString::fromStdString(result_kill.get()->message);
 
         QMessageBox msgBox;
         msgBox.setIcon(QMessageBox::Information);
@@ -320,7 +345,7 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
 
 void XBot2StatusWidget::update()
 {
-    if(ros::Time::now() - _last_status_recv > ros::Duration(0.5))
+    if( _node->get_clock()->now() - _last_status_recv > rclcpp::Duration(0, 0.5e9))
     {
         _status_label->setText("Inactive");
         handleStatusLabel();

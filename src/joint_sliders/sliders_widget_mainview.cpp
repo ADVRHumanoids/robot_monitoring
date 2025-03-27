@@ -93,6 +93,28 @@ cartesio_gui::SlidersWidgetMainView::SlidersWidgetMainView (Options opt,
     /* Start disabled */
     on_disable_enable();
 
+    if (_opt.message_type == "sensor_msgs") {
+
+        _ros_js_sub = _node->create_subscription<sensor_msgs::msg::JointState>(
+            _opt.joint_state_topic, 
+            rclcpp::SensorDataQoS().keep_last(1),
+            [this](const sensor_msgs::msg::JointState msg) -> void {
+                _ros_js = msg;
+            }
+        );
+        
+
+    } else if (_opt.message_type == "xbot_msgs") {
+
+        _xbot_js_sub = _node->create_subscription<xbot_msgs::msg::JointState>(
+            _opt.joint_state_topic, 
+            rclcpp::SensorDataQoS().keep_last(1),
+            [this](const xbot_msgs::msg::JointState msg) -> void {
+                _xbot_js = msg;
+            }
+        );
+    
+    }
 
 }
 
@@ -100,7 +122,8 @@ void cartesio_gui::SlidersWidgetMainView::makeJointVisible(QString jointname)
 {
     for(const auto& ch : _robot->getChainNames())
     {
-        if(_robot->getChain(ch)->hasJoint(jointname.toStdString()))
+        auto names = _robot->getChain(ch)->getJointNames();
+        if(std::find(names.begin(), names.end(), jointname.toStdString()) != names.end())
         {
             int id = _chain_select->findText(QString::fromStdString(ch));
 
@@ -167,9 +190,13 @@ void cartesio_gui::SlidersWidgetMainView::on_reload()
     for(auto ch : _robot->getChainNames())
     {
         Eigen::VectorXd q, k, d, zero;
-        _robot->getChain(ch)->getMotorPosition(q);
-        _robot->getChain(ch)->getStiffness(k);
-        _robot->getChain(ch)->getDamping(d);
+        _robot->getChain(ch)->getJointPosition(q);
+        k = Eigen::VectorXd::Ones(q.size()) * 99;
+        d = Eigen::VectorXd::Ones(q.size()) * 1;
+        //TODO 
+        //_robot->getChain(ch)->getMotorPosition(q);
+        //_robot->getChain(ch)->getStiffness(k);
+        //_robot->getChain(ch)->getDamping(d);
         zero.setZero(q.size());
 
         _wid_p_map.at(ch)->setInitialValue(::eigen_to_std(q));
@@ -219,7 +246,6 @@ void cartesio_gui::SlidersWidgetMainView::pos_callback(std::string jname, double
 #ifdef XBOT_MSGS_SUPPORT
         xbot_msgs::msg::JointCommand msg;
         msg.header.stamp = _node->get_clock()->now();
-        msg.header.seq = 0;
         msg.name.push_back(jname);
         msg.position.push_back(value);
         msg.ctrl_mode.push_back(1);
@@ -243,7 +269,6 @@ void cartesio_gui::SlidersWidgetMainView::vel_callback(std::string jname, double
 #ifdef XBOT_MSGS_SUPPORT
         xbot_msgs::msg::JointCommand msg;
         msg.header.stamp = _node->get_clock()->now();
-        msg.header.seq = 0;
         msg.name.push_back(jname);
         msg.velocity.push_back(value);
         msg.ctrl_mode.push_back(2);
@@ -269,7 +294,6 @@ void cartesio_gui::SlidersWidgetMainView::tau_callback(std::string jname, double
 #ifdef XBOT_MSGS_SUPPORT
         xbot_msgs::msg::JointCommand msg;
         msg.header.stamp = _node->get_clock()->now();
-        msg.header.seq = 0;
         msg.name.push_back(jname);
         msg.effort.push_back(value);
         msg.ctrl_mode.push_back(4);
@@ -286,7 +310,6 @@ void cartesio_gui::SlidersWidgetMainView::k_callback(std::string jname, double v
 #ifdef XBOT_MSGS_SUPPORT
     xbot_msgs::msg::JointCommand msg;
     msg.header.stamp = _node->get_clock()->now();
-    msg.header.seq = 0;
     msg.name.push_back(jname);
     msg.stiffness.push_back(value);
     msg.ctrl_mode.push_back(8);
@@ -302,7 +325,6 @@ void cartesio_gui::SlidersWidgetMainView::d_callback(std::string jname, double v
 #ifdef XBOT_MSGS_SUPPORT
     xbot_msgs::msg::JointCommand msg;
     msg.header.stamp = _node->get_clock()->now();
-    msg.header.seq = 0;
     msg.name.push_back(jname);
     msg.damping.push_back(value);
     msg.ctrl_mode.push_back(16);
@@ -342,7 +364,7 @@ void cartesio_gui::SlidersWidgetMainView::make_publisher()
         //                                                            ros::VoidPtr(), 
         //                                                            NULL);
         // op.has_header = false; 
-        _pub_xbot = _node->create_publisher<xbot_msgs::msg::JointState>(_opt.command_topic, 10);
+        _pub_xbot = _node->create_publisher<xbot_msgs::msg::JointCommand>(_opt.command_topic, 10);
 #else
         throw std::runtime_error("Widget was compiled without -DXBOT_MSGS_SUPPORT");
 #endif
@@ -369,8 +391,7 @@ void cartesio_gui::SlidersWidgetMainView::construct()
 {
     // load an xbotinterface from param server 
     auto opt = XBot::ConfigOptionsFromParams(_node);
-    _robot = std::make_shared<XBot::XBotInterface>();
-    _robot->init(opt);
+    _robot = XBot::RobotInterface::getRobot(opt);
 
     // remove all widgets
     for(int i = _wid_stack->count() - 1; i >= 0; i--)
@@ -392,9 +413,13 @@ void cartesio_gui::SlidersWidgetMainView::construct()
         _robot->getChain(ch)->getJointLimits(qmin, qmax);
         _robot->getChain(ch)->getVelocityLimits(qdotmax);
         _robot->getChain(ch)->getEffortLimits(taumax);
-        _robot->getChain(ch)->getMotorPosition(q);
-        _robot->getChain(ch)->getStiffness(k);
-        _robot->getChain(ch)->getDamping(d);
+        //TODO 
+        // _robot->getChain(ch)->getMotorPosition(q);
+        //_robot->getChain(ch)->getStiffness(k);
+        //_robot->getChain(ch)->getDamping(d);
+        _robot->getChain(ch)->getJointPosition(q);
+        k.setConstant(q.size(), 99);
+        d.setConstant(q.size(), 1);
         zero.setZero(q.size());
         ones.setOnes(q.size());
         auto j_list = _robot->getChain(ch)->getJointNames();
@@ -474,11 +499,7 @@ bool cartesio_gui::SlidersWidgetMainView::sense()
 
     if(_opt.message_type == "sensor_msgs")
     {
-        auto msg = ros::topic::waitForMessage<sensor_msgs::JointState>(_opt.joint_state_topic,
-                                                                       _nh,
-                                                                       ros::Duration(1.0));
-
-        if(!msg || msg->name.empty())
+        if(_ros_js.name.empty())
         {
             print_status_msg("Unable to receive joint states");
             return false;
@@ -486,12 +507,13 @@ bool cartesio_gui::SlidersWidgetMainView::sense()
 
         XBot::JointNameMap qmap;
 
-        for(int i = 0; i < msg->name.size(); i++)
+        for(size_t i = 0; i < _ros_js.name.size(); i++)
         {
-            qmap[msg->name[i]] = msg->position.at(i);
+            qmap[_ros_js.name[i]] = _ros_js.position.at(i);
         }
 
-        _robot->setMotorPosition(qmap);
+        //TODO 
+        // _robot->setMotorPosition(qmap);
 
     }
 
@@ -499,11 +521,8 @@ bool cartesio_gui::SlidersWidgetMainView::sense()
 
     if(_opt.message_type == "xbot_msgs")
     {
-        auto msg = ros::topic::waitForMessage<xbot_msgs::JointState>(_opt.joint_state_topic,
-                                                                     _nh,
-                                                                     ros::Duration(1.0));
 
-        if(!msg || msg->name.empty())
+        if(_xbot_js.name.empty())
         {
             print_status_msg("Unable to receive joint states");
             return false;
@@ -511,16 +530,16 @@ bool cartesio_gui::SlidersWidgetMainView::sense()
 
         XBot::JointNameMap qmap, kmap, dmap;
 
-        for(int i = 0; i < msg->name.size(); i++)
+        for(size_t i = 0; i < _xbot_js.name.size(); i++)
         {
-            qmap[msg->name[i]] = msg->position_reference.at(i);
-            kmap[msg->name[i]] = msg->stiffness.at(i);
-            dmap[msg->name[i]] = msg->damping.at(i);
+            qmap[_xbot_js.name[i]] = _xbot_js.position_reference.at(i);
+            kmap[_xbot_js.name[i]] = _xbot_js.stiffness.at(i);
+            dmap[_xbot_js.name[i]] = _xbot_js.damping.at(i);
         }
 
-        _robot->setMotorPosition(qmap);
-        _robot->setStiffness(kmap);
-        _robot->setDamping(dmap);
+        //_robot->setMotorPosition(qmap);
+        //_robot->setStiffness(kmap);
+        //_robot->setDamping(dmap);
 
     }
 

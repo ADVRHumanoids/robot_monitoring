@@ -17,6 +17,7 @@ find_package(rviz2 REQUIRED)
 #find_package(roslib REQUIRED)
 find_package(xbot_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
 
 # set qt to automatically run MOC and RCC pre-compilers
 set(CMAKE_AUTOMOC ON)

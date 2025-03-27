@@ -4,7 +4,7 @@
 #include <xbot_msgs/srv/get_plugin_list.hpp>
 #include <xbot_msgs/msg/lifecycle_event.hpp>
 #include <xbot_msgs/srv/set_control_mask.hpp>
-#include <xbot_msgs/msd/joint_device_info.hpp>
+#include <xbot_msgs/msg/joint_device_info.hpp>
 #include <std_srvs/srv/set_bool.hpp>
 #include <std_srvs/srv/trigger.hpp>
 //#include <rosgraph_msgs/Log.h>
@@ -111,27 +111,27 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
     /* Connect filter buttons */
     auto enableFilterCheck = findChild<QCheckBox*>("enableFilter");
 
-    auto enable_filt_srv = _nh.serviceClient<std_srvs::SetBool>(
+    auto enable_filt_srv = _node->create_client<std_srvs::srv::SetBool>(
         "enable_joint_filter");
 
     connect(enableFilterCheck, &QCheckBox::clicked,
             [enable_filt_srv](bool checked) mutable
             {
-                std_srvs::SetBool srv_data;
+                std_srvs::srv::SetBool srv_data;
                 srv_data.request.data = checked;
                 enable_filt_srv.call(srv_data);
             });
 
     auto safeBtn = findChild<QRadioButton*>("safeBtn");
-    auto filt_safe_srv = _nh.serviceClient<std_srvs::Trigger>(
+    auto filt_safe_srv = _node->create_client<std_srvs::srv::Trigger>(
         "set_filter_profile_safe");
 
     auto mediumBtn = findChild<QRadioButton*>("mediumBtn");
-    auto filt_mid_srv = _nh.serviceClient<std_srvs::Trigger>(
+    auto filt_mid_srv = _node->create_client<std_srvs::srv::Trigger>(
         "set_filter_profile_medium");
 
     auto fastBtn = findChild<QRadioButton*>("fastBtn");
-    auto filt_fast_srv = _nh.serviceClient<std_srvs::Trigger>(
+    auto filt_fast_srv = _node->create_client<std_srvs::srv::Trigger>(
         "set_filter_profile_fast");
 
     safeBtn->setEnabled(false);
@@ -143,7 +143,7 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
             {
                 if(!checked) return;
 
-                std_srvs::Trigger srv_data;
+                std_srvs::srv::Trigger srv_data;
                 filt_safe_srv.call(srv_data);
             });
 
@@ -152,7 +152,7 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
             {
                 if(!checked) return;
 
-                std_srvs::Trigger srv_data;
+                std_srvs::srv::Trigger srv_data;
                 filt_mid_srv.call(srv_data);
             });
 
@@ -161,7 +161,7 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
             {
                 if(!checked) return;
 
-                std_srvs::Trigger srv_data;
+                std_srvs::srv::Trigger srv_data;
                 filt_fast_srv.call(srv_data);
             });
 
@@ -207,7 +207,7 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
 
     /* Add plugins */
     auto pluginsLayout = findChild<QVBoxLayout *>("pluginsLayout");
-    auto srv = _nh.serviceClient<xbot_msgs::GetPluginList>("get_plugin_list");
+    auto srv = _node->create_client<xbot_msgs::GetPluginList>("get_plugin_list");
     xbot_msgs::GetPluginList srv_data;
     srv.call(srv_data);
 
@@ -222,7 +222,7 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
         _pl_map[plname] = pl;
 
         // connect buttons
-        auto switch_srv = _nh.serviceClient<std_srvs::SetBool>(
+        auto switch_srv = _node->create_client<std_srvs::srv::SetBool>(
             plname + "/switch");
 
         switch_srvs.push_back(switch_srv);
@@ -232,12 +232,12 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
         connect(pl, &XBot2PluginWidget::startStopPressed,
                 [switch_srv](bool start) mutable
                 {
-                    std_srvs::SetBool srv_data;
+                    std_srvs::srv::SetBool srv_data;
                     srv_data.request.data = start;
                     switch_srv.call(srv_data);
                 });
 
-        auto abort_srv = _nh.serviceClient<std_srvs::Trigger>(
+        auto abort_srv = _node->create_client<std_srvs::srv::Trigger>(
             plname + "/abort");
 
         abort_srvs.push_back(abort_srv);
@@ -247,7 +247,7 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
         connect(pl, &XBot2PluginWidget::abortPressed,
                 [abort_srv]() mutable
                 {
-                    std_srvs::Trigger srv_data;
+                    std_srvs::srv::Trigger srv_data;
                     abort_srv.call(srv_data);
                 });
     }
@@ -259,7 +259,7 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
     connect(stopAllBtn, &QPushButton::released,
             [switch_srvs]() mutable
             {
-                std_srvs::SetBool srv_data;
+                std_srvs::srv::SetBool srv_data;
                 srv_data.request.data = false;
                 for(auto& srv : switch_srvs)
                 {
@@ -272,7 +272,7 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
     connect(abortAllBtn, &QPushButton::released,
             [abort_srvs]() mutable
             {
-                std_srvs::Trigger srv_data;
+                std_srvs::srv::Trigger srv_data;
                 for(auto& srv : abort_srvs)
                 {
                     srv.call(srv_data);

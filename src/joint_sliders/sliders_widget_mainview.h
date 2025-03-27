@@ -5,6 +5,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <xbot2_interface/xbotinterface2.h>
 #include <xbot_msgs/msg/joint_state.hpp>
+#include <xbot_msgs/msg/joint_command.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 
 namespace cartesio_gui
@@ -74,8 +75,13 @@ private:
     void print_status_msg(QString msg);
 
     rclcpp::Node::SharedPtr _node;
-    rclcpp::Publisher<xbot_msgs::msg::JointState>::SharedPtr _pub_xbot;
+    rclcpp::Publisher<xbot_msgs::msg::JointCommand>::SharedPtr _pub_xbot;
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr _pub_ros;
+
+    rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr _ros_js_sub;
+    rclcpp::Subscription<xbot_msgs::msg::JointState>::SharedPtr _xbot_js_sub;
+    sensor_msgs::msg::JointState _ros_js;
+    xbot_msgs::msg::JointState _xbot_js;
 };
 
 }

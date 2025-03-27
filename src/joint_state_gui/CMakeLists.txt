@@ -9,6 +9,7 @@ find_package(xbot2_interface REQUIRED)
 #find_package(ec_srvs REQUIRED)
 find_package(rclcpp REQUIRED) 
 find_package(xbot_msgs REQUIRED) 
+find_package(std_srvs REQUIRED) 
 find_package(urdf REQUIRED)
 
 include_directories(../../include)
@@ -36,6 +37,7 @@ target_link_libraries(joint_bar_ui
     Qt5::UiTools
     xbot2_interface::xbot2_interface
     ${xbot_msgs_TARGETS}
+    ${std_srvs_TARGETS}
 	rclcpp::rclcpp
     urdf::urdf
     yaml-cpp)

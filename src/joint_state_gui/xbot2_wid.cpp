@@ -327,7 +327,7 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
         if(load_upd_done) last_load_upd = now;
     };
 
-    _stats_sub = _node->subscribe<xbot_msgs::msg::statistics2>("/xbotcore/statistics",
+    _stats_sub = _node->create_subscription<xbot_msgs::msg::Statistics2>("/xbotcore/statistics",
                                                       1,
                                                       on_stats_recv);
 
@@ -388,7 +388,7 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
         }
     };
 
-    _jdinfo_sub = _node.subscription<xbot_msgs::msg::joint_device_info>(
+    _jdinfo_sub = _node->create_subscription<xbot_msgs::msg::joint_device_info>(
         "/xbotcore/joint_device_info",
         1,
         on_jdinfo_recv);

@@ -29,7 +29,7 @@ JointMonitorWidget::JointMonitorWidget(int argc,
     create_menu();
 ;
 
-    _jstate_sub = _node->create_subscription(
+    _jstate_sub = _node->create_subscription<xbot_msgs::msg::JointState>(
         "/xbotcore/joint_states",
         10,
         std::bind(&JointMonitorWidget::on_jstate_recv, this, _1));
@@ -38,7 +38,7 @@ JointMonitorWidget::JointMonitorWidget(int argc,
     int attempts = 100;
     while(!_valid_msg_recv && attempts--)
     {
-        ros::spinOnce();
+        rclcpp::spin(_node);
         usleep(10000);
     }
 
@@ -90,12 +90,12 @@ JointMonitorWidget::JointMonitorWidget(int argc,
     // if joint state received, go on constructing the whole gui
 
     // subscribers to fault and aux
-    _fault_sub = _node->create_subscription(
+    _fault_sub = _node->create_subscription<xbot_msgs::msg::Fault>(
         "/xbotcore/fault",
         10,
         std::bind(&JointMonitorWidget::on_fault_recv, this, _1));
 
-    _aux_sub = _node->create_subscription(
+    _aux_sub = _node->create_subscription<xbot_msgs::msg::CustomState>(
         "/xbotcore/aux",
         10,
         std::bind(&JointMonitorWidget::on_aux_recv, this, _1));
@@ -114,9 +114,9 @@ JointMonitorWidget::JointMonitorWidget(int argc,
     _urdf = urdf::parseURDF(urdf_str);
 
     // try to load a joint id map
-    // std::string jidmap_str = nh.param<std::string>("joint_id_map", "");
-    // if(!jidmap_str.empty())
-    // {
+    std::string jidmap_str = nh.param<std::string>("joint_id_map", "");
+    if(!jidmap_str.empty())
+    {
         try
         {
             auto jidmap_yaml = YAML::Load(jidmap_str);
@@ -129,7 +129,7 @@ JointMonitorWidget::JointMonitorWidget(int argc,
         {
             fprintf(stderr, "Unable to get joint IDs: %s \n", e.what());
         }
-   // }
+   }
 
     // create sliders widget
     cartesio_gui::SlidersWidgetMainView::Options opt;
@@ -282,7 +282,7 @@ void JointMonitorWidget::create_menu()
 void JointMonitorWidget::on_timer_event()
 {
     // receive callbacks
-    _node->spin_all();
+    rclcpp::spin(_node);
 
     // update joint state widget
     jstate_wid->updateStatus();
@@ -314,10 +314,10 @@ void JointMonitorWidget::on_jstate_recv(const xbot_msgs::msg::JointState & msg)
         return;
     }
 
-    auto now = msg.header.stamp;
+    rclcpp::Time now = msg.header.stamp;
 
     // parse message
-    for(int i = 0; i < msg.name.size(); i++)
+    for(size_t i = 0; i < msg.name.size(); i++)
     {
 
         // some variables for convenience
@@ -329,47 +329,47 @@ void JointMonitorWidget::on_jstate_recv(const xbot_msgs::msg::JointState & msg)
 
         // add a point to all chars lines
         _chart->addPoint(QString::fromStdString(msg.name[i]) + "/link_pos",
-                         now.toSec(),
+                         now.seconds(),
                          msg.link_position[i]);
 
         _chart->addPoint(QString::fromStdString(msg.name[i]) + "/motor_pos",
-                         now.toSec(),
+                         now.seconds(),
                          msg.motor_position[i]);
 
         _chart->addPoint(QString::fromStdString(msg.name[i]) + "/pos_ref",
-                         now.toSec(),
+                         now.seconds(),
                          msg.position_reference[i]);
 
         _chart->addPoint(QString::fromStdString(msg.name[i]) + "/link_vel",
-                         now.toSec(),
+                         now.seconds(),
                          msg.link_velocity[i]);
 
         _chart->addPoint(QString::fromStdString(msg.name[i]) + "/motor_vel",
-                         now.toSec(),
+                         now.seconds(),
                          msg.motor_velocity[i]);
 
         _chart->addPoint(QString::fromStdString(msg.name[i]) + "/vel_ref",
-                         now.toSec(),
+                         now.seconds(),
                          msg.velocity_reference[i]);
 
         _chart->addPoint(QString::fromStdString(msg.name[i]) + "/torque",
-                         now.toSec(),
+                         now.seconds(),
                          msg.effort[i]);
 
         _chart->addPoint(QString::fromStdString(msg.name[i]) + "/torque_ffwd",
-                         now.toSec(),
+                         now.seconds(),
                          msg.effort_reference[i]);
 
         _chart->addPoint(QString::fromStdString(msg.name[i]) + "/torque_imp",
-                         now.toSec(),
+                         now.seconds(),
                          tauref_imp);
 
         _chart->addPoint(QString::fromStdString(msg.name[i]) + "/driver_temp",
-                         now.toSec(),
+                         now.seconds(),
                          msg.temperature_driver[i]);
 
         _chart->addPoint(QString::fromStdString(msg.name[i]) + "/motor_temp",
-                         now.toSec(),
+                         now.seconds(),
                          msg.temperature_motor[i]);
 
 
@@ -526,9 +526,10 @@ void JointMonitorWidget::on_aux_recv(const xbot_msgs::msg::CustomState &msg)
         }
 
         // update chart
+        rclcpp::Time tim = msg.header.stamp;
         _chart->addPoint(QString::fromStdString(msg.name[i]) + "/aux/" + aux_field_name,
-                         msg.header.stamp.toSec(),
-                         msg.value[i]);
+                        tim.seconds(),
+                        msg.value[i]);
 
 
         // add new field to barplot

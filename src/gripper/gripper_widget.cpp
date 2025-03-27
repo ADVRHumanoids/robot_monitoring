@@ -115,7 +115,7 @@ bool GripperWidget::init(CustomQtWidget::Args& args)
 
         };
 
-        auto sub = _nh.subscribe<sensor_msgs::JointState>(
+        auto sub = _node->create_subscription<sensor_msgs::JointState>(
                     topic.toStdString(),
                     1,
                     cb);

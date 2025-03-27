@@ -108,7 +108,7 @@ FtWidget::FtWidget(int i)
 
         };
 
-        auto sub = _nh.subscribe<geometry_msgs::WrenchStamped>(
+        auto sub = _node->create_subscription<geometry_msgs::WrenchStamped>(
                     topic.toStdString(),
                     1,
                     cb);

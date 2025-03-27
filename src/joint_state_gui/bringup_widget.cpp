@@ -171,7 +171,7 @@ BringupWidget::BringupWidget(QString hw, QWidget * parent):
     };
 
     _nh.setCallbackQueue(&_cbq);
-    _stderr_sub = _nh.subscribe<rosgraph_msgs::Log>("xbotcore/d/stderr", 100,
+    _stderr_sub = _node->create_subscription<rosgraph_msgs::Log>("xbotcore/d/stderr", 100,
                                                     stderr_cb);
 
     // ros sub timer

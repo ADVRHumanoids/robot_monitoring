@@ -139,7 +139,7 @@ bool ImuWidget::init(CustomQtWidget::Args& args)
 
         };
 
-        auto sub = _nh.subscribe<sensor_msgs::Imu>(topic.toStdString(),
+        auto sub = _node->create_subscription<sensor_msgs::Imu>(topic.toStdString(),
                                                    1,
                                                    cb);
         _subs.push_back(sub);

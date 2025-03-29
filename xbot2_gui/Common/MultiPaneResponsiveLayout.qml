@@ -129,6 +129,7 @@ Item {
                     required property int index
                     property string name: root.columnItems[index].iconText
                     property string iconText: root.columnItems[index].iconChar
+                    property bool show: true
                 }
             }
         }

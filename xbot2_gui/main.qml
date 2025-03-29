@@ -166,7 +166,7 @@ ApplicationWindow {
             iconFont: syms.font.family
             active: client.robotConnected || mainWindow.dbg || true
             sizeFactor: 1.1
-            visible: requestedPages.indexOf(name) > -1
+            show: requestedPages.indexOf(name) > -1
         }
 
         PageItem {
@@ -175,7 +175,7 @@ ApplicationWindow {
             iconText: MaterialSymbolNames.tune
             iconFont: syms.font.family
             active: true
-            visible: true
+            show: true
         }
 
         PageItem {
@@ -184,7 +184,7 @@ ApplicationWindow {
             iconText: MaterialSymbolNames.tools
             iconFont: syms.font.family
             active: true
-            visible: requestedPages.indexOf(name) > -1
+            show: requestedPages.indexOf(name) > -1
         }
 
         PageItem {
@@ -192,7 +192,7 @@ ApplicationWindow {
             page: "/qt/qml/TestThings/Linfa.qml"
             iconSource: '/Icons/icons/alberobotics100x100.png'
             active: true
-            visible: requestedPages.indexOf(name) > -1
+            show: requestedPages.indexOf(name) > -1
         }
 
         PageItem {
@@ -202,7 +202,7 @@ ApplicationWindow {
             iconFont: syms.font.family
             active: true
             sizeFactor: 1.2
-            visible: requestedPages.indexOf(name) > -1
+            show: requestedPages.indexOf(name) > -1
         }
 
         PageItem {
@@ -212,7 +212,7 @@ ApplicationWindow {
             iconFont: syms.font.family
             active: true
             sizeFactor: 1.1
-            visible: requestedPages.indexOf(name) > -1
+            show: requestedPages.indexOf(name) > -1
         }
 
         PageItem {
@@ -221,7 +221,7 @@ ApplicationWindow {
             iconSource: '/Icons/icons/brick_wall_white.png'
             active: true
             sizeFactor: 1.
-            visible: requestedPages.indexOf(name) > -1
+            show: requestedPages.indexOf(name) > -1
         }
 
         PageItem {
@@ -230,7 +230,7 @@ ApplicationWindow {
             iconText: MaterialSymbolNames.weight
             iconFont: syms.font.family
             active: true
-            visible: requestedPages.indexOf(name) > -1 
+            show: requestedPages.indexOf(name) > -1 
             sizeFactor: 1.1
         }
 
@@ -241,7 +241,7 @@ ApplicationWindow {
             iconFont: syms.font.family
             active: true
             sizeFactor: 1.1
-            visible: requestedPages.indexOf(name) > -1
+            show: requestedPages.indexOf(name) > -1
         }
 
     }
@@ -362,7 +362,8 @@ ApplicationWindow {
 
                 Layout.fillHeight: true
                 Layout.fillWidth: true
-
+                // asynchronous: true
+                // visible: status === Loader.Ready
                 active: pagesStack.currentIndex === index
 
                 onLoaded: {

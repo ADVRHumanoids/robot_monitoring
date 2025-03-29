@@ -8,6 +8,7 @@ import Common
 import Menu
 import Font
 import Audio
+import Monitoring
 
 ApplicationWindow {
 
@@ -46,19 +47,19 @@ ApplicationWindow {
         appData.keepScreenOn(true)
     }
 
-    MouseArea {
-        z: 100
-        height: 50
-        width: 50
-        anchors {
-            left: parent.left
-            bottom: parent.bottom
-        }
-        onDoubleClicked: {
-            console.log('taking screenshot')
-            appData.screenshot(mainWindow, `xbot2_gui_${Date()}`)
-        }
-    }
+    // MouseArea {
+    //     z: 100
+    //     height: 50
+    //     width: 50
+    //     anchors {
+    //         left: parent.left
+    //         bottom: parent.bottom
+    //     }
+    //     onDoubleClicked: {
+    //         console.log('taking screenshot')
+    //         appData.screenshot(mainWindow, `xbot2_gui_${Date()}`)
+    //     }
+    // }
 
     DelayButtonRound {
         id: softEmergency
@@ -73,6 +74,18 @@ ApplicationWindow {
         height: 70
         opacity: 0.8
     }
+
+    MonWidget {
+        expanded: layout.expanded
+        anchors {
+            left: parent.left
+            top: parent.top
+            margins: 8
+        }
+        z: 200
+        opacity: 0.8
+    }
+
 
     MaterialSymbols {
         id: syms

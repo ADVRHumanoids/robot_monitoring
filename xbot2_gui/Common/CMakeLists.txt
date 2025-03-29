@@ -29,6 +29,7 @@ qt_add_qml_module(xbot2_gui_common
     ResizableRectangle.qml
     QML_FILES DelayButtonRound.qml
     QML_FILES DoubleSpinBox1.qml
+    QML_FILES MultiColumnLayout1.qml
 )
 
 target_link_libraries(xbot2_gui PRIVATE xbot2_gui_commonplugin)

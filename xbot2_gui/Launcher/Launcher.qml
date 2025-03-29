@@ -23,19 +23,20 @@ MultiPaneResponsiveLayout {
 
         id: leftScroll
 
-        contentHeight: leftGrid.height
+        contentHeight: leftColumn.height
         contentWidth: availableWidth
 
-        MultiColumnLayout {
+        Column {
 
-            id: leftGrid
+            id: leftColumn
             width: leftScroll.contentWidth
+            spacing: 8
 
-            columns: root.layoutHelper.compact ? 1 : 2
+            // columns: root.layoutHelper.compact ? 1 : 2
 
             SectionHeader {
 
-                property int columnSpan: leftGrid.columns
+                width: parent.width
 
                 iconText: dashboard.visible ? '\uf077' : '\uf078'
 
@@ -50,7 +51,7 @@ MultiPaneResponsiveLayout {
 
                 onClicked: {
                     dashboard.visible = !dashboard.visible
-                    leftGrid.computeLayout()
+                    // leftGrid.computeLayout()
                 }
 
             }
@@ -58,12 +59,21 @@ MultiPaneResponsiveLayout {
             Dashboard {
                 id: dashboard
                 client: root.client
-                property int columnSpan: leftGrid.columns
+                width: parent.width
+            }
+
+            Item {
+
+                // spacer
+                width: parent.width
+
+                height: 16
+                visible: dashboard.visible
             }
 
             SectionHeader {
 
-                property int columnSpan: leftGrid.columns
+                width: parent.width
 
                 text: 'Process launcher'
 
@@ -71,7 +81,7 @@ MultiPaneResponsiveLayout {
                     id: showAllChk
                     text: 'Show All'
                     checked: false
-                    onCheckedChanged: Qt.callLater(leftGrid.computeLayout)
+                    onCheckedChanged: Qt.callLater(processLayout.computeLayout)
                 }
 
                 Button {
@@ -80,54 +90,63 @@ MultiPaneResponsiveLayout {
                 }
 
                 onClicked: {
-                    processRepeater.visible = !processRepeater.visible
+                    processLayout.visible = !processLayout.visible
                     leftGrid.computeLayout()
                 }
 
-                iconText: processRepeater.visible ? '\uf077' : '\uf078'
+                iconText: processLayout.visible ? '\uf077' : '\uf078'
 
             }
 
-            Repeater {
+            MultiColumnLayout1 {
 
-                id: processRepeater
+                id: processLayout
 
-                ProcessCard {
+                width: parent.width
+                columns: root.layoutHelper.compact ? 1 : 2
 
-                    visible: (showAllChk.checked || modelData.visible) && processRepeater.visible
+                Repeater {
 
-                    processName: modelData.name
-                    processState: modelData.status
-                    processConfig: modelData.cmdline
+                    id: processRepeater
 
-                    objectName: `pcard_${processName}`
+                    ProcessCard {
 
-                    onStart: Logic.processCmd(processName, 'start', processOptions)
-                    onStop: Logic.processCmd(processName, 'stop', {})
-                    onKill: Logic.processCmd(processName, 'kill', {})
+                        visible: (showAllChk.checked || modelData.visible) && processRepeater.visible
+
+                        processName: modelData.name
+                        processState: modelData.status
+                        processConfig: modelData.cmdline
+
+                        objectName: `pcard_${processName}`
+
+                        onStart: Logic.processCmd(processName, 'start', processOptions)
+                        onStop: Logic.processCmd(processName, 'stop', {})
+                        onKill: Logic.processCmd(processName, 'kill', {})
+                    }
+
                 }
 
-            }
+                CustoCommand {
+                    id: customCmd
+                    pageItem: root
+                    onSubmitCommand: Logic.customCommand(machine, command, timeout)
+                    // visible: processRepeater.visible
+                }
 
-            CustoCommand {
-                id: customCmd
-                pageItem: root
-                onSubmitCommand: Logic.customCommand(machine, command, timeout)
-                visible: processRepeater.visible
             }
 
             Item {
 
                 // spacer
-                property int columnSpan: leftGrid.columns
+                width: parent.width
 
                 height: 16
-                visible: processRepeater.visible
+                visible: processLayout.visible
             }
 
             SectionHeader {
 
-                property int columnSpan: leftGrid.columns
+                width: parent.width
 
                 text: 'Plugin launcher'
 
@@ -139,29 +158,39 @@ MultiPaneResponsiveLayout {
                 }
 
                 onClicked: {
-                    pluginRepeater.visible = !pluginRepeater.visible
-                    leftGrid.computeLayout()
+                    pluginLayout.visible = !pluginLayout.visible
+                    // leftGrid.computeLayout()
                 }
 
-                iconText: pluginRepeater.visible ? '\uf077' : '\uf078'
+                iconText: pluginLayout.visible ? '\uf077' : '\uf078'
             }
 
-            Repeater {
+            MultiColumnLayout1 {
 
-                id: pluginRepeater
+                id: pluginLayout
 
-                PluginCard {
-                    visible: pluginRepeater.visible
-                    pluginName: modelData
-                    onStart: Logic.pluginCmd(pluginName, 'start')
-                    onStop: Logic.pluginCmd(pluginName, 'stop')
-                    onAbort: Logic.pluginCmd(pluginName, 'abort')
+                width: parent.width
+                columns: root.layoutHelper.compact ? 1 : 2
+
+                Repeater {
+
+                    id: pluginRepeater
+
+                    PluginCard {
+                        visible: pluginRepeater.visible
+                        pluginName: modelData
+                        onStart: Logic.pluginCmd(pluginName, 'start')
+                        onStop: Logic.pluginCmd(pluginName, 'stop')
+                        onAbort: Logic.pluginCmd(pluginName, 'abort')
+                    }
+
                 }
 
             }
         }
     }
 
+    // end left col
 
 
     LauncherConsoleItem {

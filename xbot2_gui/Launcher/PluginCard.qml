@@ -27,7 +27,7 @@ Item {
 
     id: root
 
-    enabled: pluginState !== ''
+    enabled: pluginState !== '' && pluginState !== 'InitFailed'
 
     property var colorMap: {
         'Aborted': CommonProperties.colors.err,
@@ -35,7 +35,8 @@ Item {
         'Stopping': CommonProperties.colors.warn,
         'Running': Qt.lighter(CommonProperties.colors.ok),
         'Initialized': card.defaultBackground,
-        'Stopped': card.defaultBackground
+        'Stopped': card.defaultBackground,
+        '': card.defaultBackground
     }
 
     implicitWidth: card.implicitWidth

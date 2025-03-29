@@ -44,6 +44,14 @@ Control {
 
         columnSpacing: 16
 
+        Text {
+            text: 'No operation mode defined'
+            color: palette.disabled.text
+            visible: root.stateNames.length === 0
+            font.pixelSize: CommonProperties.font.h3
+            enabled: false
+        }
+
         Repeater {
 
             model: root.stateNames
@@ -126,6 +134,7 @@ Control {
             id: startStopBtn
             property color backgroundColor
             text: root.activeState === 'inactive' ? 'Start' : 'Stop'
+            visible: root.stateNames.length > 0
 
             Layout.fillHeight: true
             Layout.fillWidth: true

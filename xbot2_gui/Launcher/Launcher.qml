@@ -30,7 +30,7 @@ MultiPaneResponsiveLayout {
 
             id: leftColumn
             width: leftScroll.contentWidth
-            spacing: 8
+            spacing: 4
 
             // columns: root.layoutHelper.compact ? 1 : 2
 
@@ -91,7 +91,6 @@ MultiPaneResponsiveLayout {
 
                 onClicked: {
                     processLayout.visible = !processLayout.visible
-                    leftGrid.computeLayout()
                 }
 
                 iconText: processLayout.visible ? '\uf077' : '\uf078'

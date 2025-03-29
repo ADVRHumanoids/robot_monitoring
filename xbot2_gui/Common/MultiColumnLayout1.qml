@@ -107,13 +107,21 @@ Control {
         }
         catch(e) {
             console.log(`Exception during computeLayout: ${e}`)
-            Qt.callLater(computeLayout)
+            computeLayoutDeferred.start()
         }
         finally {
             _layout_in_progress = false
             console.log('computeLayout END')
         }
 
+    }
+
+    Timer {
+        id: computeLayoutDeferred
+        interval: 333
+        onTriggered: root.computeLayout()
+        running: false
+        repeat: false
     }
 
     // onColumnsChanged: Qt.callLater(computeLayout)

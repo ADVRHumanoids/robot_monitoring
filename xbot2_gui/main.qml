@@ -63,9 +63,9 @@ ApplicationWindow {
 
     DelayButtonRound {
         id: softEmergency
-        visible: false
+        visible: CommonProperties.config.showSoftEmergency
         anchors {
-            left: parent.left
+            right: parent.right
             bottom: parent.bottom
             margins: 16
         }
@@ -73,10 +73,17 @@ ApplicationWindow {
         width: 70
         height: 70
         opacity: 0.8
+
+        Label {
+            text: MaterialSymbolNames.emergency
+            font.family: syms.font.family
+            font.pixelSize: 60
+            anchors.centerIn: parent
+        }
     }
 
     MonWidget {
-        expanded: layout.expanded
+        expanded: false
         anchors {
             left: parent.left
             top: parent.top
@@ -84,6 +91,7 @@ ApplicationWindow {
         }
         z: 200
         opacity: 0.8
+        visible: CommonProperties.config.showMonWidget
     }
 
 

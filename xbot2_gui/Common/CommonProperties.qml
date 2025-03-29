@@ -2,7 +2,7 @@ pragma Singleton
 
 import QtQuick
 import QtQuick.Controls.Material
-
+import QtCore
 
 Item {
 
@@ -94,5 +94,16 @@ Item {
 
     property Item globalLivePlot
 
+    property Item config: Item {
+        id: config
+        property bool showSoftEmergency: false
+        property bool showMonWidget: false
+    }
+
+    Settings {
+        category: 'configuration_general'
+        property alias showSoftEmergency: config.showSoftEmergency
+        property alias showMonWidget: config.showMonWidget
+    }
 
 }

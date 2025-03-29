@@ -1,6 +1,9 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import QtCore
+
+import Common
 
 GridLayout {
 
@@ -8,11 +11,27 @@ GridLayout {
     uniformCellHeights: true
 
     Label {
-        text: 'DontKnow'
+        text: 'Show Soft Emergency Stop'
     }
 
     Switch {
-
+        checked: CommonProperties.config.showSoftEmergency
+        onClicked: {
+            CommonProperties.config.showSoftEmergency = checked
+        }
     }
+
+    Label {
+        text: 'Show Monitoring Widget'
+    }
+
+    Switch {
+        checked: CommonProperties.config.showMonWidget
+        onClicked: {
+            CommonProperties.config.showMonWidget = checked
+        }
+    }
+
+
 
 }

@@ -12,9 +12,10 @@ JointMonitorWidget::JointMonitorWidget(int argc,
                                        QWidget *parent,
                                        rclcpp::Node::SharedPtr node) :
     QMainWindow(parent),
+    _node(node),
     _valid_msg_recv(false),
-    _widget_started(false),
-    _node(node)
+    _widget_started(false)
+
 {
     /* Create context */
     _ctx = std::make_shared<XBot::Ui::Context>();
@@ -114,7 +115,8 @@ JointMonitorWidget::JointMonitorWidget(int argc,
     _urdf = urdf::parseURDF(urdf_str);
 
     // try to load a joint id map
-    std::string jidmap_str = nh.param<std::string>("joint_id_map", "");
+    _node->declare_parameter("joint_id_map", "");
+    std::string jidmap_str = _node->get_parameter("joint_id_map").as_string();
     if(!jidmap_str.empty())
     {
         try

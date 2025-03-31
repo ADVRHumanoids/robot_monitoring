@@ -66,7 +66,7 @@ class ClickableConsoleWidget : public QWidget
 
 public:
 
-    ClickableConsoleWidget(QWidget * parent)
+    ClickableConsoleWidget(QWidget * parent) : QWidget(parent)
     {
         _console = LoadConsoleUiFile(this);
         auto l = new QVBoxLayout;
@@ -115,12 +115,19 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
         "enable_joint_filter");
 
     connect(enableFilterCheck, &QCheckBox::clicked,
-            [enable_filt_srv](bool checked) mutable
+        [enable_filt_srv, &_node = _node](bool checked) mutable
+        {
+            auto srv_data = std::make_shared<std_srvs::srv::SetBool::Request>();
+            srv_data->data = checked;
+            auto result = enable_filt_srv->async_send_request(srv_data);
+            // Wait for the result.
+            if (rclcpp::spin_until_future_complete(_node, result) ==
+                rclcpp::FutureReturnCode::SUCCESS)
             {
-                std_srvs::srv::SetBool srv_data;
-                srv_data.request.data = checked;
-                enable_filt_srv.call(srv_data);
-            });
+            } else {
+                RCLCPP_ERROR(_node->get_logger(), "Failed to call service enable_joint_filter");
+            }
+        });
 
     auto safeBtn = findChild<QRadioButton*>("safeBtn");
     auto filt_safe_srv = _node->create_client<std_srvs::srv::Trigger>(
@@ -137,83 +144,135 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
     safeBtn->setEnabled(false);
     mediumBtn->setEnabled(false);
     fastBtn->setEnabled(false);
-
     connect(safeBtn, &QRadioButton::clicked,
-            [filt_safe_srv](bool checked) mutable
-            {
-                if(!checked) return;
+        [filt_safe_srv, &_node = _node](bool checked) mutable
+        {
+            if(!checked) return;
 
-                std_srvs::srv::Trigger srv_data;
-                filt_safe_srv.call(srv_data);
-            });
+            auto srv_data = std::make_shared<std_srvs::srv::Trigger::Request>();
+            auto result = filt_safe_srv->async_send_request(srv_data);
+            if (rclcpp::spin_until_future_complete(_node, result) !=
+                rclcpp::FutureReturnCode::SUCCESS)
+            {
+                RCLCPP_ERROR(_node->get_logger(), "Failed to call service set_filter_profile_safe");
+            }
+        });
 
     connect(mediumBtn, &QRadioButton::clicked,
-            [filt_mid_srv](bool checked) mutable
-            {
-                if(!checked) return;
+        [filt_mid_srv, &_node = _node](bool checked) mutable
+        {
+            if(!checked) return;
 
-                std_srvs::srv::Trigger srv_data;
-                filt_mid_srv.call(srv_data);
-            });
+            auto srv_data = std::make_shared<std_srvs::srv::Trigger::Request>();
+            auto result = filt_mid_srv->async_send_request(srv_data);
+            if (rclcpp::spin_until_future_complete(_node, result) !=
+                rclcpp::FutureReturnCode::SUCCESS)
+            {
+                RCLCPP_ERROR(_node->get_logger(), "Failed to call service set_filter_profile_medium");
+            }
+        });
 
     connect(fastBtn, &QRadioButton::clicked,
-            [filt_fast_srv](bool checked) mutable
-            {
-                if(!checked) return;
+        [filt_fast_srv, &_node = _node](bool checked) mutable
+        {
+            if(!checked) return;
 
-                std_srvs::srv::Trigger srv_data;
-                filt_fast_srv.call(srv_data);
-            });
+            auto srv_data = std::make_shared<std_srvs::srv::Trigger::Request>();
+            auto result = filt_fast_srv->async_send_request(srv_data);
+            if (rclcpp::spin_until_future_complete(_node, result) !=
+                rclcpp::FutureReturnCode::SUCCESS)
+            {
+                RCLCPP_ERROR(_node->get_logger(), "Failed to call service set_filter_profile_fast");
+            }
+        });
 
 
     /* Connect joint disable button */
     auto disableEnableBtn = findChild<QPushButton*>("disableEnableBtn");
 
+    auto setmask_srv = _node->create_client<xbot_msgs::srv::SetControlMask>(
+        "/joint_master/set_control_mask");
+    //setmask_srv.waitForExistence();
 
-    ros::NodeHandle nh = _nh;
     connect(disableEnableBtn, &QPushButton::released,
-            [disableEnableBtn, nh]() mutable
+        [disableEnableBtn, setmask_srv, &_node = _node]() mutable
+        {
+            auto srv_data = std::make_shared<xbot_msgs::srv::SetControlMask::Request>();
+
+            if(disableEnableBtn->text().replace('&', "") == "Disable device")
             {
-                auto setmask_srv = nh.serviceClient<xbot_msgs::SetControlMask>(
-                    "joint_master/set_control_mask");
-
-                setmask_srv.waitForExistence();
-
-                xbot_msgs::SetControlMask srv_data;
-
-                if(disableEnableBtn->text().replace('&', "") == "Disable device")
+                srv_data->ctrl_mask = 0;
+                auto result = setmask_srv->async_send_request(srv_data);
+                if (rclcpp::spin_until_future_complete(_node, result) ==
+                    rclcpp::FutureReturnCode::SUCCESS &&
+                    result.get()->success)
                 {
-                    srv_data.request.ctrl_mask = 0;
-                    if(setmask_srv.call(srv_data) &&
-                        srv_data.response.success)
-                    {
-//                        disableEnableBtn->setText("Enable device");
-                    }
-                }
-                else if(disableEnableBtn->text().replace('&', "") == "Enable device")
+                    // disableEnableBtn->setText("Enable device");
+                } 
+                else
                 {
-                    srv_data.request.ctrl_mask = 31;
-                    if(setmask_srv.call(srv_data) &&
-                        srv_data.response.success)
-                    {
-//                        disableEnableBtn->setText("Disable device");
-                    }
+                    RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to disable the device");
                 }
-                else {
-                    disableEnableBtn->setEnabled(false);
+            }
+            else if(disableEnableBtn->text().replace('&', "") == "Enable device")
+            {
+                srv_data->ctrl_mask = 31;
+                auto result = setmask_srv->async_send_request(srv_data);
+                if (rclcpp::spin_until_future_complete(_node, result) ==
+                    rclcpp::FutureReturnCode::SUCCESS &&
+                    result.get()->success)
+                {
+                    // disableEnableBtn->setText("Disable device");
                 }
-            });
+                else
+                {
+                    RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to enable the device");
+                }
+            }
+            else {
+                disableEnableBtn->setEnabled(false);
+
+                srv_data->ctrl_mask = 31;
+                auto result = setmask_srv->async_send_request(srv_data);
+                if (rclcpp::spin_until_future_complete(_node, result) ==
+                    rclcpp::FutureReturnCode::SUCCESS &&
+                    result.get()->success)
+                {
+                    // disableEnableBtn->setText("Disable device");
+                }
+                else
+                {
+                    RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to enable the device");
+                }
+            }
+        });
 
 
     /* Add plugins */
     auto pluginsLayout = findChild<QVBoxLayout *>("pluginsLayout");
-    auto srv = _node->create_client<xbot_msgs::GetPluginList>("get_plugin_list");
-    xbot_msgs::GetPluginList srv_data;
-    srv.call(srv_data);
+    auto client = _node->create_client<xbot_msgs::srv::GetPluginList>("get_plugin_list");
+    auto request = std::make_shared<xbot_msgs::srv::GetPluginList::Request>();
 
-    std::vector<ros::ServiceClient> switch_srvs;
-    std::vector<ros::ServiceClient> abort_srvs;
-    for(auto plname : srv_data.response.plugins)
+    auto srv_data = client->async_send_request(request);
+    while (!client->wait_for_service(1s)) {
+        if (!rclcpp::ok()) {
+          RCLCPP_ERROR(_node->get_logger(), "Interrupted while waiting for the service. Exiting.");
+          throw std::runtime_error("Service interrupted while waiting for get_plugin_list");
+        }
+        RCLCPP_INFO(_node->get_logger(), "service not available, waiting again...");
+      }
+
+    // Wait for the result.
+    if (rclcpp::spin_until_future_complete(node, srv_data) !=
+        rclcpp::FutureReturnCode::SUCCESS)
+    {
+        RCLCPP_ERROR(_node->get_logger(), "Failed to call service get_plugin_list");
+    }
+
+    std::vector<std::shared_ptr<rclcpp::Client<std_srvs::srv::SetBool>>> switch_srvs;
+    std::vector<std::shared_ptr<rclcpp::Client<std_srvs::srv::Trigger>>> abort_srvs;    
+
+    for(const auto &plname : srv_data.get()->plugins)
     {
         auto pl = new XBot2PluginWidget(QString::fromStdString(plname), this);
         pl->setMaximumWidth(500);
@@ -227,28 +286,51 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
 
         switch_srvs.push_back(switch_srv);
 
-        switch_srv.waitForExistence();
+        while (!switch_srv->wait_for_service(1s)) {
+            if (!rclcpp::ok()) {
+                RCLCPP_ERROR(_node->get_logger(), "Interrupted while waiting for the service switch_srv. Exiting.");
+                throw(std::runtime_error("Interrupted while waiting for the service switch_srv. Exiting."));
+            }
+            RCLCPP_INFO(_node->get_logger(), "service switch_srv not available, waiting again...");
+        }
 
         connect(pl, &XBot2PluginWidget::startStopPressed,
-                [switch_srv](bool start) mutable
+            [switch_srv, &_node = _node](bool start) mutable
+            {
+                auto srv_data = std::make_shared<std_srvs::srv::SetBool::Request>();
+                srv_data->data = start;
+                auto result = switch_srv->async_send_request(srv_data);
+                if (rclcpp::spin_until_future_complete(_node, result) !=
+                    rclcpp::FutureReturnCode::SUCCESS)
                 {
-                    std_srvs::srv::SetBool srv_data;
-                    srv_data.request.data = start;
-                    switch_srv.call(srv_data);
-                });
+                    RCLCPP_ERROR(_node->get_logger(), "Failed to call service switch");
+                }
+            }
+        );
 
         auto abort_srv = _node->create_client<std_srvs::srv::Trigger>(
             plname + "/abort");
 
         abort_srvs.push_back(abort_srv);
 
-        abort_srv.waitForExistence();
+        while (!abort_srv->wait_for_service(1s)) {
+            if (!rclcpp::ok()) {
+                RCLCPP_ERROR(_node->get_logger(), "Interrupted while waiting for the service abort_srv. Exiting.");
+                throw(std::runtime_error("Interrupted while waiting for the service abort_srv. Exiting."));
+            }
+            RCLCPP_INFO(_node->get_logger(), "service abort_srv not available, waiting again...");
+        }
 
         connect(pl, &XBot2PluginWidget::abortPressed,
-                [abort_srv]() mutable
+                [abort_srv, &_node = _node]() mutable
                 {
-                    std_srvs::srv::Trigger srv_data;
-                    abort_srv.call(srv_data);
+                    auto srv_data = std::make_shared<std_srvs::srv::Trigger::Request>();
+                    auto result = abort_srv->async_send_request(srv_data);
+                    if (rclcpp::spin_until_future_complete(_node, result) !=
+                        rclcpp::FutureReturnCode::SUCCESS)
+                    {
+                        RCLCPP_ERROR(_node->get_logger(), "Failed to call service abort");
+                    }
                 });
     }
 
@@ -257,141 +339,143 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
     /* Stop all */
     auto stopAllBtn = findChild<QPushButton*>("stopAllBtn");
     connect(stopAllBtn, &QPushButton::released,
-            [switch_srvs]() mutable
+        [switch_srvs, &_node = _node]() mutable
+        {
+            for(auto& srv : switch_srvs)
             {
-                std_srvs::srv::SetBool srv_data;
-                srv_data.request.data = false;
-                for(auto& srv : switch_srvs)
+                auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
+                request->data = false;
+                auto result = srv->async_send_request(request);
+                if (rclcpp::spin_until_future_complete(_node, result) != rclcpp::FutureReturnCode::SUCCESS)
                 {
-                    srv.call(srv_data);
+                    RCLCPP_ERROR(_node->get_logger(), "Failed to call service stopAll");
                 }
-            });
+            }
+        });
 
     /* Abort all */
     auto abortAllBtn = findChild<QPushButton*>("abortAllBtn");
     connect(abortAllBtn, &QPushButton::released,
-            [abort_srvs]() mutable
+        [abort_srvs, &_node = _node]() mutable
+        {
+            for(auto& srv : abort_srvs)
             {
-                std_srvs::srv::Trigger srv_data;
-                for(auto& srv : abort_srvs)
+                auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
+                auto result = srv->async_send_request(request);
+                if (rclcpp::spin_until_future_complete(_node, result) != rclcpp::FutureReturnCode::SUCCESS)
                 {
-                    srv.call(srv_data);
+                    RCLCPP_ERROR(_node->get_logger(), "Failed to call service abortAll");
                 }
-            });
+            }
+        });
 
     /* Listen to statistics */
     using namespace std::chrono;
-    using clock = std::chrono::high_resolution_clock;
+    //using clock = std::chrono::high_resolution_clock;
     using namespace std::chrono_literals;
-    static auto last_load_upd = clock::now();
-    auto on_stats_recv = [this](const xbot_msgs::msg::statistics & msg)
-    {
-        auto now = clock::now();
-        bool load_upd_done = false;
+    static auto last_load_upd = _node->get_clock()->now();
+    auto on_stats_recv = 
 
-        for(auto task_stats : msg->task_stats)
+    _stats_sub = _node->create_subscription<xbot_msgs::msg::Statistics2>(
+        "/xbotcore/statistics",
+        1,
+        [this](const xbot_msgs::msg::Statistics2::SharedPtr msg)
         {
-            auto it = _pl_map.find(task_stats.name);
+            auto now = _node->get_clock()->now();
+            bool load_upd_done = false;
 
-            if(it == _pl_map.end())
+            for(auto task_stats : msg->task_stats)
             {
-                continue;
+                auto it = _pl_map.find(task_stats.name);
+
+                if(it == _pl_map.end())
+                {
+                    continue;
+                }
+
+                it->second->setStatus(QString::fromStdString(
+                    task_stats.state));
+
+                if(now < last_load_upd + 1s) continue;
+
+                auto th_name = task_stats.thread;
+
+                auto th_it = std::find_if(msg->thread_stats.begin(),
+                                        msg->thread_stats.end(),
+                                        [th_name](const auto& item)
+                                        {
+                                            return item.name == th_name;
+                                        });
+
+                if(th_it != msg->thread_stats.end())
+                {
+                    double load = task_stats.run_time /
+                                th_it->expected_period;
+
+                    it->second->setLoad(load, task_stats.run_time*1000);
+                }
+
+                load_upd_done = true;
+
             }
 
-            it->second->setStatus(QString::fromStdString(
-                task_stats.state));
-
-            if(now < last_load_upd + 1s) continue;
-
-            auto th_name = task_stats.thread;
-
-            auto th_it = std::find_if(msg->thread_stats.begin(),
-                                      msg->thread_stats.end(),
-                                      [th_name](const auto& item)
-                                      {
-                                          return item.name == th_name;
-                                      });
-
-            if(th_it != msg->thread_stats.end())
-            {
-                double load = task_stats.run_time /
-                              th_it->expected_period;
-
-                it->second->setLoad(load, task_stats.run_time*1000);
-            }
-
-            load_upd_done = true;
-
+            if(load_upd_done) last_load_upd = now;
         }
+    );
 
-        if(load_upd_done) last_load_upd = now;
-    };
 
-    _stats_sub = _node->create_subscription<xbot_msgs::msg::Statistics2>("/xbotcore/statistics",
-                                                      1,
-                                                      on_stats_recv);
-
-    /* Listen to joint dev info */
-    auto on_jdinfo_recv =
-        [enableFilterCheck,
-         disableEnableBtn,
-         safeBtn,
-         mediumBtn,
-         fastBtn]
-        (const xbot_msgs::msg::joint_device_info & msg)
-    {
-
-        if(msg->filter_active &&
-            !enableFilterCheck->isChecked())
-        {
-            enableFilterCheck->setChecked(true);
-        }
-
-        if(!msg->filter_active &&
-            enableFilterCheck->isChecked())
-        {
-            enableFilterCheck->setChecked(false);
-        }
-
-        safeBtn->setEnabled(msg->filter_active);
-        mediumBtn->setEnabled(msg->filter_active);
-        fastBtn->setEnabled(msg->filter_active);
-
-        if(msg->mask == 0 &&
-            disableEnableBtn->text().replace('&', "") == "Disable device")
-        {
-            disableEnableBtn->setText("Enable device");
-            disableEnableBtn->setStyleSheet(
-                "background-color: red;"
-                "color: white;");
-        }
-        else if(msg->mask > 0 &&
-                 disableEnableBtn->text().replace('&', "") == "Enable device")
-        {
-            disableEnableBtn->setText("Disable device");
-            disableEnableBtn->setStyleSheet("");
-        }
-
-        if(msg->filter_cutoff_hz < 3.0)
-        {
-            if(!safeBtn->isChecked())
-                safeBtn->setChecked(true);
-        }
-        else if(msg->filter_cutoff_hz < 10.0)
-        {
-            if(!mediumBtn->isChecked())
-                mediumBtn->setChecked(true);
-        }
-        else if(!fastBtn->isChecked())
-        {
-            fastBtn->setChecked(true);
-        }
-    };
-
-    _jdinfo_sub = _node->create_subscription<xbot_msgs::msg::joint_device_info>(
+    _jdinfo_sub = _node->create_subscription<xbot_msgs::msg::JointDeviceInfo>(
         "/xbotcore/joint_device_info",
         1,
-        on_jdinfo_recv);
+        [enableFilterCheck, disableEnableBtn, safeBtn, mediumBtn, fastBtn] (const xbot_msgs::msg::JointDeviceInfo::SharedPtr msg)
+        {
+            if(msg->filter_active &&
+                !enableFilterCheck->isChecked())
+            {
+                enableFilterCheck->setChecked(true);
+            }
+
+            if(!msg->filter_active &&
+                enableFilterCheck->isChecked())
+            {
+                enableFilterCheck->setChecked(false);
+            }
+
+            safeBtn->setEnabled(msg->filter_active);
+            mediumBtn->setEnabled(msg->filter_active);
+            fastBtn->setEnabled(msg->filter_active);
+
+            if(msg->mask == 0 &&
+                disableEnableBtn->text().replace('&', "") == "Disable device")
+            {
+                disableEnableBtn->setText("Enable device");
+                disableEnableBtn->setStyleSheet(
+                    "background-color: red;"
+                    "color: white;");
+            }
+            else if(msg->mask > 0 &&
+                    disableEnableBtn->text().replace('&', "") == "Enable device")
+            {
+                disableEnableBtn->setText("Disable device");
+                disableEnableBtn->setStyleSheet("");
+            }
+
+            if(msg->filter_cutoff_hz < 3.0)
+            {
+                if(!safeBtn->isChecked())
+                    safeBtn->setChecked(true);
+            }
+            else if(msg->filter_cutoff_hz < 10.0)
+            {
+                if(!mediumBtn->isChecked())
+                    mediumBtn->setChecked(true);
+            }
+            else if(!fastBtn->isChecked())
+            {
+                fastBtn->setChecked(true);
+            }
+        }
+    );
 
     /* Error messages */
     auto btmRowLayout = findChild<QHBoxLayout*>("btmRowLayout");
@@ -402,24 +486,24 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
     btmRowLayout->setStretch(0, 0);
     btmRowLayout->setStretch(1, 1);
 
-    auto console = findChild<QTextEdit*>("textEdit");
+    // auto console = findChild<QTextEdit*>("textEdit");
 
-    auto stderr_cb = [console, console_wid](rosgraph_msgs::LogConstPtr msg)
-    {
-        QDateTime stamp;
-        stamp.setMSecsSinceEpoch(msg->header.stamp.toSec()*1000);
+    // auto stderr_cb = [console, console_wid](rosgraph_msgs::LogConstPtr msg)
+    // {
+    //     QDateTime stamp;
+    //     stamp.setMSecsSinceEpoch(msg->header.stamp.toSec()*1000);
 
-        console->moveCursor(QTextCursor::End);
-        console->insertPlainText(QString("[%1]").arg(stamp.toString("hh:mm:ss")));
-        console->insertPlainText("[xbot2]");
-        console->insertPlainText(QString::fromStdString(msg->msg));
-        console->insertPlainText("\n");
+    //     console->moveCursor(QTextCursor::End);
+    //     console->insertPlainText(QString("[%1]").arg(stamp.toString("hh:mm:ss")));
+    //     console->insertPlainText("[xbot2]");
+    //     console->insertPlainText(QString::fromStdString(msg->msg));
+    //     console->insertPlainText("\n");
 
-        console_wid->setStyleSheet("background-color: #ff4500;");
+    //     console_wid->setStyleSheet("background-color: #ff4500;");
 
-        QCoreApplication::processEvents();
+    //     QCoreApplication::processEvents();
 
-    };
+    // };
 
 
     //_stderr_sub = _node.subscription<rosgraph_msgs::msg::log>("d/stderr", 100, stderr_cb);

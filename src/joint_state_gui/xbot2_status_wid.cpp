@@ -335,6 +335,7 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
         msgBox.setInformativeText(xb_str + "<br><br>" + ec_str);
         msgBox.exec();
 
+        return 0;
 
     };
     connect(shutdownBtn, &QPushButton::released, shutdownBtnClicked);

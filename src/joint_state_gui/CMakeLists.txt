@@ -15,14 +15,14 @@ find_package(urdf REQUIRED)
 include_directories(../../include)
 
 add_library(joint_bar_ui STATIC
-    #bar_plot_widget.cpp
+    bar_plot_widget.cpp
     #bringup_widget.cpp
-    #load_plugin_wid.cpp
-    #top_right_tab.cpp
-    #joint_bar_widget.cpp
-    #joint_state_widget.cpp
+    load_plugin_wid.cpp
+    top_right_tab.cpp
+    joint_bar_widget.cpp
+    joint_state_widget.cpp
     joint_monitor_widget.cpp
-    #circle_widget.cpp
+    circle_widget.cpp
     xbot2_wid.cpp
     xbot2_plugin_wid.cpp
     xbot2_status_wid.cpp

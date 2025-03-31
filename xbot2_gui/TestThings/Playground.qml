@@ -16,31 +16,33 @@ Item {
 
     id: root
 
-    TabBar {
-        id: bar
-        anchors.top: parent.top
-        width: parent.width
-        visible: false
+    MultiColumnLayout1 {
+        anchors.fill: parent
 
-        TabButton {
-            text: 'Motion'
-        }
+        columns: Math.ceil(width / 300)
 
-        TabButton {
-            text: 'Calibration'
-        }
-    }
+        Repeater {
 
-    StackLayout {
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        width: parent.width
+            model: spin.value
 
-        MotionTab {
-            client: root.client
+            AnimatedRectangle {
+                required property int index
+                color: 'green'
+                width: 200
+                height: 200
+                Text {
+                    anchors.centerIn: parent
+                    text: `${index}/${spin.value}`
+                }
+            }
+
         }
     }
 
-
-
+    SpinBox {
+        id: spin
+        from: 0
+        to: 20
+        value: 10
+    }
 }

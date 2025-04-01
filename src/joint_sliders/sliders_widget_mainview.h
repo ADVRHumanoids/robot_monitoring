@@ -4,6 +4,7 @@
 #include "sliders_widget.h"
 #include <rclcpp/rclcpp.hpp>
 #include <xbot2_interface/xbotinterface2.h>
+#include <xbot2_interface/robotinterface2.h>
 #include <xbot_msgs/msg/joint_state.hpp>
 #include <xbot_msgs/msg/joint_command.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
@@ -46,7 +47,8 @@ private:
     void try_construct();
     void construct();
     
-    XBot::XBotInterface::Ptr _robot;
+    XBot::ModelInterface::Ptr _model;
+    XBot::RobotInterface::Ptr _robot;
 
     std::map<std::string, cartesio_gui::SlidersWidget *> _wid_p_map, _wid_k_map, _wid_d_map;
     QStackedWidget * _wid_stack;

@@ -120,9 +120,9 @@ cartesio_gui::SlidersWidgetMainView::SlidersWidgetMainView (Options opt,
 
 void cartesio_gui::SlidersWidgetMainView::makeJointVisible(QString jointname)
 {
-    for(const auto& ch : _robot->getChainNames())
+    for(const auto& ch : _model->getChainNames())
     {
-        auto names = _robot->getChain(ch)->getJointNames();
+        auto names = _model->getChain(ch)->getJointNames();
         if(std::find(names.begin(), names.end(), jointname.toStdString()) != names.end())
         {
             int id = _chain_select->findText(QString::fromStdString(ch));
@@ -187,17 +187,27 @@ void cartesio_gui::SlidersWidgetMainView::on_reload()
     }
 
     // set sliders to sensed values
-    for(auto ch : _robot->getChainNames())
+    for(auto ch : _model->getChainNames())
     {
-        Eigen::VectorXd q, k, d, zero;
-        _robot->getChain(ch)->getJointPosition(q);
-        k = Eigen::VectorXd::Ones(q.size()) * 99;
-        d = Eigen::VectorXd::Ones(q.size()) * 1;
-        //TODO 
-        //_robot->getChain(ch)->getMotorPosition(q);
-        //_robot->getChain(ch)->getStiffness(k);
-        //_robot->getChain(ch)->getDamping(d);
-        zero.setZero(q.size());
+        Eigen::VectorXd q, k, d;
+        _model->getChain(ch)->getJointPosition(q);
+
+        //TODO as today no gets on the chains so I do it the hard way
+        //_model->getChain(ch)->getStiffness(k);
+        //_model->getChain(ch)->getDamping(d);
+        auto names = _model->getJointNames();
+        auto chain_names = _model->getChain(ch)->getJointNames();
+        Eigen::VectorXd all_k, all_d;
+        _robot->getStiffness(all_k);
+        _robot->getDamping(all_d);
+        k.resize(names.size());
+        d.resize(names.size());
+        for (size_t i = 0; i<names.size(); i++) {
+            if (std::find(chain_names.begin(), chain_names.end(), names.at(i)) != chain_names.end()) {
+                k(i) = all_k(i);
+                d(i) = all_d(i);
+            }
+        }
 
         _wid_p_map.at(ch)->setInitialValue(::eigen_to_std(q));
         _wid_k_map.at(ch)->setInitialValue(::eigen_to_std(k));
@@ -392,6 +402,7 @@ void cartesio_gui::SlidersWidgetMainView::construct()
     // load an xbotinterface from param server 
     auto opt = XBot::ConfigOptionsFromParams(_node, "xbotcore/");
     _robot = XBot::RobotInterface::getRobot(opt);
+    _model = XBot::ModelInterface::getModel(opt);
 
     // remove all widgets
     for(int i = _wid_stack->count() - 1; i >= 0; i--)
@@ -407,22 +418,34 @@ void cartesio_gui::SlidersWidgetMainView::construct()
     } 
 
     // construct all widgets 
-    for(auto ch : _robot->getChainNames())
+    for(auto ch : _model->getChainNames())
     {
         Eigen::VectorXd zero, ones, q, k, d, qmin, qmax, qdotmax, taumax;
-        _robot->getChain(ch)->getJointLimits(qmin, qmax);
-        _robot->getChain(ch)->getVelocityLimits(qdotmax);
-        _robot->getChain(ch)->getEffortLimits(taumax);
-        //TODO 
-        // _robot->getChain(ch)->getMotorPosition(q);
-        //_robot->getChain(ch)->getStiffness(k);
-        //_robot->getChain(ch)->getDamping(d);
-        _robot->getChain(ch)->getJointPosition(q);
-        k.setConstant(q.size(), 99);
-        d.setConstant(q.size(), 1);
+        _model->getChain(ch)->getJointLimits(qmin, qmax);
+        _model->getChain(ch)->getVelocityLimits(qdotmax);
+        _model->getChain(ch)->getEffortLimits(taumax);
+        _model->getChain(ch)->getJointPosition(q);
+
+        //TODO as today no gets on the chains so I do it the hard way
+        //_model->getChain(ch)->getStiffness(k);
+        //_model->getChain(ch)->getDamping(d);
+        auto names = _model->getJointNames();
+        auto chain_names = _model->getChain(ch)->getJointNames();
+        Eigen::VectorXd all_k, all_d;
+        _robot->getStiffness(all_k);
+        _robot->getDamping(all_d);
+        k.resize(names.size());
+        d.resize(names.size());
+        for (size_t i = 0; i<names.size(); i++) {
+            if (std::find(chain_names.begin(), chain_names.end(), names.at(i)) != chain_names.end()) {
+                k(i) = all_k(i);
+                d(i) = all_d(i);
+            }
+        }
+
         zero.setZero(q.size());
         ones.setOnes(q.size());
-        auto j_list = _robot->getChain(ch)->getJointNames();
+        auto j_list = _model->getChain(ch)->getJointNames();
 
         auto * tab_wid = new QTabWidget;
 
@@ -454,7 +477,7 @@ void cartesio_gui::SlidersWidgetMainView::construct()
 
         auto * k_wid = new cartesio_gui::SlidersWidget(ch, j_list);
         k_wid->setInitialValue(::eigen_to_std(k));
-        k_wid->setRange(::eigen_to_std(zero), ::eigen_to_std(ones * 2000));
+        k_wid->setRange(::eigen_to_std(zero), ::eigen_to_std(ones * 10000));
         k_wid->setCallback(std::bind(&SlidersWidgetMainView::k_callback,
                                      this,
                                      pl::_1, pl::_2));
@@ -512,8 +535,7 @@ bool cartesio_gui::SlidersWidgetMainView::sense()
             qmap[_ros_js.name[i]] = _ros_js.position.at(i);
         }
 
-        //TODO 
-        // _robot->setMotorPosition(qmap);
+        _model->setJointPosition(qmap);
 
     }
 
@@ -536,10 +558,11 @@ bool cartesio_gui::SlidersWidgetMainView::sense()
             kmap[_xbot_js.name[i]] = _xbot_js.stiffness.at(i);
             dmap[_xbot_js.name[i]] = _xbot_js.damping.at(i);
         }
-
-        //_robot->setMotorPosition(qmap);
-        //_robot->setStiffness(kmap);
-        //_robot->setDamping(dmap);
+        
+        _model->setJointPosition(qmap);
+        //TODO check if this is fine
+        _robot->setStiffness(kmap);
+        _robot->setDamping(dmap);
 
     }
 

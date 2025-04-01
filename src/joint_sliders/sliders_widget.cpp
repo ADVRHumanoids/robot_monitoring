@@ -67,7 +67,7 @@ SlidersWidget::SlidersWidget (std::string group_name,
     setLayout(layout);
 
     /* Initialize and connect max stiffness spinbox */
-    double max_stiffness = 8000.0;
+    double max_stiffness = 10000.0;
     _max_stiffness_spinbox = findChild<QDoubleSpinBox *>("maxStiffnessSpinbox");
     _max_stiffness_spinbox->setMinimum(0.0);
     _max_stiffness_spinbox->setMaximum(max_stiffness);
@@ -78,7 +78,7 @@ SlidersWidget::SlidersWidget (std::string group_name,
 
 
     /* Create array of joint sliders */
-    for(int i = 0; i < 10 && i < joint_names.size(); i++)
+    for(size_t i = 0; i < 10 && i < joint_names.size(); i++)
     {
         _widget_vec.emplace_back(this, i + 1);
         

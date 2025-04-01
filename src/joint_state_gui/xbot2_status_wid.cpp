@@ -62,7 +62,7 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
                                      QWidget* parent,
                                      rclcpp::Node::SharedPtr node) :
     QWidget (parent),
-    _node(node),
+    _node(std::move(node)),
     _mw(mw)
 {
     auto layout = new QVBoxLayout;
@@ -75,15 +75,17 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
     _status_label->setToolTip("xbot2 process status from topic 'xbotcore/status'");
     _status_label->setText("Inactive");
 
-    auto on_status_recv = [this](const std_msgs::msg::String& msg)
-    {
-        _status_label->setText(QString::fromStdString(msg.data));
-        _last_status_recv = _node->get_clock()->now();
-        handleStatusLabel();
-
-    };
-
-    _status_sub = _node->create_subscription<std_msgs::msg::String>("/xbotcore/status", 1, on_status_recv);
+    _last_status_recv = _node->get_clock()->now(); //initialization
+    auto status_sub = _node->create_subscription<std_msgs::msg::String>(
+        "/xbotcore/status", 
+        rclcpp::SensorDataQoS().keep_last(1), 
+        [this](const std_msgs::msg::String msg) -> void
+        {
+            _status_label->setText(QString::fromStdString(msg.data));
+            _last_status_recv = _node->get_clock()->now();
+            handleStatusLabel();
+        }
+    );
 
     // cmd button
     _cmd_button = findChild<QPushButton*>("cmdBtn");
@@ -276,7 +278,7 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
                 RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Interrupted while waiting for the service. Exiting.");
                 return 0;
             }
-            RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "service not available, waiting again...");
+            RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "service /xbotcore/d/stop not available, waiting again...");
         }
 
         auto result_stop = cli_stop->async_send_request(request_stop);
@@ -308,7 +310,7 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
                 RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Interrupted while waiting for the service. Exiting.");
                 return 0;
             }
-            RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "service not available, waiting again...");
+            RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "service /ecat/d/kill not available , waiting again...");
         }
 
         auto result_kill = cli_kill->async_send_request(request_kill);

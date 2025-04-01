@@ -390,7 +390,7 @@ void cartesio_gui::SlidersWidgetMainView::try_construct()
 void cartesio_gui::SlidersWidgetMainView::construct()
 {
     // load an xbotinterface from param server 
-    auto opt = XBot::ConfigOptionsFromParams(_node);
+    auto opt = XBot::ConfigOptionsFromParams(_node, "xbotcore/");
     _robot = XBot::RobotInterface::getRobot(opt);
 
     // remove all widgets

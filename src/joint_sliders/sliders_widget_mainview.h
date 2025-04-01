@@ -30,9 +30,9 @@ public:
         Options();
     };
 
-    explicit SlidersWidgetMainView(Options opt = Options(),
-                                   QWidget * parent = nullptr,
-                                   rclcpp::Node::SharedPtr node = nullptr);
+    explicit SlidersWidgetMainView(Options opt,
+                                   QWidget * parent,
+                                   rclcpp::Node::SharedPtr node);
 
     void contextMenuEvent(QContextMenuEvent * event) override;
 

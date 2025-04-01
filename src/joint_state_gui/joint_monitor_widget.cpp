@@ -12,7 +12,7 @@ JointMonitorWidget::JointMonitorWidget(int argc,
                                        QWidget *parent,
                                        rclcpp::Node::SharedPtr node) :
     QMainWindow(parent),
-    _node(node),
+    _node(std::move(node)),
     _valid_msg_recv(false),
     _widget_started(false)
 
@@ -28,18 +28,18 @@ JointMonitorWidget::JointMonitorWidget(int argc,
     _menu_bar = new QMenuBar;
     setMenuBar(_menu_bar);
     create_menu();
-;
 
     _jstate_sub = _node->create_subscription<xbot_msgs::msg::JointState>(
         "/xbotcore/joint_states",
-        10,
-        std::bind(&JointMonitorWidget::on_jstate_recv, this, _1));
+        rclcpp::SensorDataQoS().keep_last(10),
+        std::bind(&JointMonitorWidget::on_jstate_recv, this, _1)
+    );
 
     // wait for a first valid joint state message
     int attempts = 100;
     while(!_valid_msg_recv && attempts--)
     {
-        rclcpp::spin(_node);
+        rclcpp::spin_some(_node);
         usleep(10000);
     }
 
@@ -47,7 +47,7 @@ JointMonitorWidget::JointMonitorWidget(int argc,
     if(!_valid_msg_recv)
     {
         // main layout
-        _xbot2_status = new XBot2StatusWidget(this);
+        _xbot2_status = new XBot2StatusWidget(this, nullptr, _node);
         _xbot2_status->setMinimumSize(600, 200);
         _xbot2_status->layout()->setContentsMargins(6, 6, 6, 6);
         setCentralWidget(_xbot2_status);
@@ -101,18 +101,23 @@ JointMonitorWidget::JointMonitorWidget(int argc,
         10,
         std::bind(&JointMonitorWidget::on_aux_recv, this, _1));
 
-    // get robot description
-    std::string urdf_str;
-    // TODO how to get params now?
-    // nh.getParam("robot_description", urdf_str);
+    // get robot description with topic in ros2
+    std::string urdf_string;
+    auto urdf_sub = _node->create_subscription<std_msgs::msg::String>(
+        "/xbotcore/robot_description",
+        rclcpp::ParametersQoS().transient_local(),
+        [&urdf_string](std_msgs::msg::String::ConstSharedPtr msg) {
+            urdf_string = msg->data;
+        }
+    );
 
-    if(urdf_str.empty())
-    {
-        throw std::runtime_error("Unable to read robot_description from parameter server");
+    while(urdf_string.empty()) {
+        RCLCPP_INFO(_node->get_logger(), "Waiting /xbotcore/robot_description");
+        rclcpp::spin_some(_node);        
+        usleep(10000);
     }
 
-    // parse urdf
-    _urdf = urdf::parseURDF(urdf_str);
+    _urdf = urdf::parseURDF(urdf_string);
 
     // try to load a joint id map
     _node->declare_parameter("joint_id_map", "");
@@ -137,7 +142,7 @@ JointMonitorWidget::JointMonitorWidget(int argc,
     cartesio_gui::SlidersWidgetMainView::Options opt;
     opt.message_type = "xbot_msgs";
     opt.ns = "xbotcore";
-    _sliders = new cartesio_gui::SlidersWidgetMainView(opt);
+    _sliders = new cartesio_gui::SlidersWidgetMainView(opt, nullptr, _node);
     _sliders->setFixedWidth(400);
 
     // create joint state widget
@@ -201,7 +206,7 @@ JointMonitorWidget::JointMonitorWidget(int argc,
     // left vertical layout
     auto lsplitter = new QSplitter;
     lsplitter->setOrientation(Qt::Orientation::Vertical);
-    _xbot2 = new XBot2Widget(this);
+    _xbot2 = new XBot2Widget(this, nullptr, _node);
     lsplitter->addWidget(_xbot2);
     lsplitter->setStretchFactor(0, 0);
     lsplitter->addWidget(barplot_wid);
@@ -284,7 +289,7 @@ void JointMonitorWidget::create_menu()
 void JointMonitorWidget::on_timer_event()
 {
     // receive callbacks
-    rclcpp::spin(_node);
+    rclcpp::spin_some(_node);
 
     // update joint state widget
     jstate_wid->updateStatus();

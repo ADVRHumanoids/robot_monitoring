@@ -91,7 +91,7 @@ protected:
 
 XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::SharedPtr node) :
     QWidget(parent),
-    _node(node)
+    _node(std::move(node))
 {
     /* Create GUI layout */
     auto * ui = ::LoadUiFile(this);
@@ -100,7 +100,8 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
     setLayout(lay);
 
     /* Add status widget */
-    _status_wid = new XBot2StatusWidget(mw);
+    _status_wid = new XBot2StatusWidget(mw, nullptr, _node);
+
     auto status_box = findChild<QGroupBox*>("statusBox");
     auto status_layout = new QVBoxLayout;
     status_layout->setMargin(0);
@@ -247,10 +248,9 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
             }
         });
 
-
     /* Add plugins */
     auto pluginsLayout = findChild<QVBoxLayout *>("pluginsLayout");
-    auto client = _node->create_client<xbot_msgs::srv::GetPluginList>("get_plugin_list");
+    auto client = _node->create_client<xbot_msgs::srv::GetPluginList>("/xbotcore/get_plugin_list");
     auto request = std::make_shared<xbot_msgs::srv::GetPluginList::Request>();
 
     auto srv_data = client->async_send_request(request);
@@ -259,20 +259,22 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
           RCLCPP_ERROR(_node->get_logger(), "Interrupted while waiting for the service. Exiting.");
           throw std::runtime_error("Service interrupted while waiting for get_plugin_list");
         }
-        RCLCPP_INFO(_node->get_logger(), "service not available, waiting again...");
+        RCLCPP_INFO(_node->get_logger(), "service /xbotcore/get_plugin_list not available, waiting again...");
       }
 
     // Wait for the result.
-    if (rclcpp::spin_until_future_complete(node, srv_data) !=
+    if (rclcpp::spin_until_future_complete(_node, srv_data) !=
         rclcpp::FutureReturnCode::SUCCESS)
     {
         RCLCPP_ERROR(_node->get_logger(), "Failed to call service get_plugin_list");
+        throw std::runtime_error("Failed to call service get_plugin_list");
     }
 
     std::vector<std::shared_ptr<rclcpp::Client<std_srvs::srv::SetBool>>> switch_srvs;
     std::vector<std::shared_ptr<rclcpp::Client<std_srvs::srv::Trigger>>> abort_srvs;    
+    auto plugin_names = srv_data.get()->plugins; //keep auto here for sake Christ!
 
-    for(const auto &plname : srv_data.get()->plugins)
+    for(const auto& plname : plugin_names)
     {
         auto pl = new XBot2PluginWidget(QString::fromStdString(plname), this);
         pl->setMaximumWidth(500);
@@ -282,7 +284,7 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
 
         // connect buttons
         auto switch_srv = _node->create_client<std_srvs::srv::SetBool>(
-            plname + "/switch");
+            "/xbotcore/" + plname + "/switch");
 
         switch_srvs.push_back(switch_srv);
 
@@ -291,7 +293,7 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
                 RCLCPP_ERROR(_node->get_logger(), "Interrupted while waiting for the service switch_srv. Exiting.");
                 throw(std::runtime_error("Interrupted while waiting for the service switch_srv. Exiting."));
             }
-            RCLCPP_INFO(_node->get_logger(), "service switch_srv not available, waiting again...");
+            RCLCPP_INFO(_node->get_logger(), "service %s/switch not available, waiting again...", plname.c_str());
         }
 
         connect(pl, &XBot2PluginWidget::startStopPressed,
@@ -309,7 +311,7 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
         );
 
         auto abort_srv = _node->create_client<std_srvs::srv::Trigger>(
-            plname + "/abort");
+             "/xbotcore/" + plname + "/abort");
 
         abort_srvs.push_back(abort_srv);
 
@@ -318,7 +320,7 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
                 RCLCPP_ERROR(_node->get_logger(), "Interrupted while waiting for the service abort_srv. Exiting.");
                 throw(std::runtime_error("Interrupted while waiting for the service abort_srv. Exiting."));
             }
-            RCLCPP_INFO(_node->get_logger(), "service abort_srv not available, waiting again...");
+            RCLCPP_INFO(_node->get_logger(),  "service %s/abort not available, waiting again...", plname.c_str());
         }
 
         connect(pl, &XBot2PluginWidget::abortPressed,

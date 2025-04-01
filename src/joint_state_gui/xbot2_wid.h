@@ -21,8 +21,8 @@ class XBot2Widget : public QWidget
 
 public:
 
-    explicit XBot2Widget(QMainWindow * mw, QWidget * parent = nullptr, 
-        rclcpp::Node::SharedPtr node = nullptr);
+    explicit XBot2Widget(QMainWindow * mw, QWidget * parent, 
+        rclcpp::Node::SharedPtr node);
 
     void update();
 

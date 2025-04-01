@@ -31,10 +31,10 @@ class JointMonitorWidget : public QMainWindow
 
 public:
 
-    explicit JointMonitorWidget(int argc = 0,
-                                char ** argv = nullptr,
-                                QWidget *parent = nullptr, 
-                                rclcpp::Node::SharedPtr node = nullptr);
+    explicit JointMonitorWidget(int argc,
+                                char ** argv,
+                                QWidget *parent, 
+                                rclcpp::Node::SharedPtr node);
 
     /**
      * @brief barplot_wid is the bar plot for the joint state
@@ -107,7 +107,6 @@ private:
     void on_jstate_recv(const xbot_msgs::msg::JointState & msg);
     void on_fault_recv(const xbot_msgs::msg::Fault & msg);
     void on_aux_recv(const xbot_msgs::msg::CustomState &msg);
-
     std::map<std::string, int> _jidmap;
 
 };

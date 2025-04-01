@@ -23,8 +23,8 @@ class XBot2StatusWidget : public QWidget
 public:
 
     XBot2StatusWidget(QMainWindow * mw,
-                      QWidget * parent = nullptr,
-                      rclcpp::Node::SharedPtr node = nullptr);
+                      QWidget * parent,
+                      rclcpp::Node::SharedPtr node);
 
     void update();
 

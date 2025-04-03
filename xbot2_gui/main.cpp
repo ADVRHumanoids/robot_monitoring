@@ -54,6 +54,20 @@ public:
 
     Q_INVOKABLE QString getDateTime() const;
 
+    Q_INVOKABLE bool copyToClipboard(QString text)
+    {
+        auto clipboard = QGuiApplication::clipboard();
+
+        if(!clipboard)
+        {
+            qWarning("could not get clipboard");
+            return false;
+        }
+
+        clipboard->setText(text);
+        return true;
+    }
+
     Q_INVOKABLE static QUrl fromUserInput(const QString& userInput)
     {
         if (userInput.isEmpty())
@@ -179,6 +193,19 @@ int main(int argc, char *argv[])
     // initialize internal browser
     QtWebView::initialize();
 #endif
+
+    // list all qrc files
+    // QDirIterator it(":", QDirIterator::Subdirectories);
+    // while (it.hasNext()) {
+    //     qDebug() << it.next();
+    //     auto info = it.fileInfo();
+    //     if(info.baseName() == "qmldir")
+    //     {
+    //         QFile f(info.absolutePath());
+    //         f.open(QIODeviceBase::ReadOnly);
+    //         qDebug() << f.readAll().toStdString();
+    //     }
+    // }
 
 
     // register appdata

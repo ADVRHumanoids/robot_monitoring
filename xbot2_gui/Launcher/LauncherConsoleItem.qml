@@ -1,8 +1,8 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
-// import QtDataVisualization
 
+import Font
 import "../Common"
 
 Item {
@@ -18,7 +18,7 @@ Item {
             i = processNames.indexOf(procName)
         }
 
-        let color = 'white' //theme.baseColors[(i+1) % theme.baseColors.length].color
+        let color = colors[(i+1) % colors.length]
 
         text = `<font color="${color}">` + text + '</font>'
 
@@ -42,35 +42,15 @@ Item {
 
     implicitHeight: card.implicitHeight
 
-    // // https://doc.qt.io/qt-6/qml-color.html
-    // Theme3D {
-    //     id: theme
-    //     type: Q3DTheme.ThemeUserDefined
-    //     baseColors: [
-    //         ThemeColor {
-    //             color: 'white'
-    //         },
-    //         ThemeColor {
-    //             color: 'aquamarine'
-    //         },
-    //         ThemeColor {
-    //             color: 'darkkhaki'
-    //         },
-    //         ThemeColor {
-    //             color: 'mediumspringgreen'
-    //         },
-    //         ThemeColor {
-    //             color: 'greenyellow'
-    //         },
-    //         ThemeColor {
-    //             color: 'lightpink'
-    //         },
-    //         ThemeColor {
-    //             color: 'lightseagreen'
-    //         }
-
-    //     ]
-    // }
+    property list<string> colors: [
+        '#4DADF7',
+        '#22E3A4',
+        '#D27CFF',
+        '#FF9F45',
+        '#33FFD0',
+        '#FF77A8',
+        '#B388FF'
+    ]
 
     Card1 {
         id: card
@@ -79,6 +59,14 @@ Item {
         name: 'Console Output'
 
         toolButtons: [
+            Button {
+                text: 'Copy'
+                onClicked: {
+                    let txt = consoleRepeater.itemAt(consoleCombo.currentIndex).getText()
+                    appData.copyToClipboard(txt)
+                }
+            },
+
             Button {
                 text: 'Clear'
                 onClicked: {

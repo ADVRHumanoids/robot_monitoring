@@ -245,7 +245,7 @@ ApplicationWindow {
             iconText: MaterialSymbolNames.weight
             iconFont: syms.font.family
             active: true
-            show: requestedPages.indexOf(name) > -1 
+            show: requestedPages.indexOf(name) > -1
             sizeFactor: 1.1
         }
 
@@ -325,6 +325,8 @@ ApplicationWindow {
 
         id: pagesStack
 
+        property int previousIndex: -1
+
         anchors {
             right: parent.right
             top: parent.top
@@ -339,6 +341,11 @@ ApplicationWindow {
 
         onCurrentIndexChanged: {
 
+            try {
+                itemAt(previousIndex).item.isCurrentPage = false
+            }catch(err){}
+
+            previousIndex = currentIndex
 
             try {
                 itemAt(currentIndex).item.numErrors = 0
@@ -346,6 +353,10 @@ ApplicationWindow {
 
             try {
                 itemAt(currentIndex).item.pageSelected()
+            }catch(err){}
+
+            try {
+                itemAt(currentIndex).item.isCurrentPage = true
             }catch(err){}
 
             nav.setBadgeNumber(currentIndex, 0)
@@ -370,61 +381,79 @@ ApplicationWindow {
             model: pagesModel.children
 
             // lazy-loading of active page
-            Loader {
-
-                id: stackPageLoader
-                property string pageName: ''
+            Item {
 
                 Layout.fillHeight: true
                 Layout.fillWidth: true
-                // asynchronous: true
-                // visible: status === Loader.Ready
-                active: pagesStack.currentIndex === index
 
-                onLoaded: {
-
-                    console.log(`${modelData.name} loaded`)
-
-                    active = true
-
-                    items[modelData.name.toLowerCase()] = item
-
-                    try {
-                        item.pageSelected()
-                    }
-                    catch(err){}
-
-                    item.pageName = modelData.name
-
-                    pageName = modelData.name
-
+                LoadingPage {
+                    id: loadingPage
+                    anchors.fill: parent
+                    z: 1
                 }
 
-                Component.onCompleted: {
-                    // this is the "constructor"
-                    // each page has a .client elem
-                    setSource(modelData.page, {'client': client})
-                }
+                Loader {
 
-                Connections {
-                    target: stackPageLoader.item
-                    ignoreUnknownSignals: true
+                    id: stackPageLoader
+                    property string pageName: ''
 
-                    function onRestartUi() {
-                        console.log('onRestartUi: calling pagesStackRepeater.reloadAll()')
-                        pagesStackRepeater.reloadAll()
-                    }
+                    anchors.fill: parent
 
-                    function onNumErrorsChanged() {
-                        if(index !== pagesStack.currentIndex) {
-                            nav.setBadgeNumber(index, stackPageLoader.item.numErrors)
+                    asynchronous: true
+                    // visible: status === Loader.Ready
+                    active: pagesStack.currentIndex === index
+
+                    onLoaded: {
+
+                        loadingPage.opacity = 0
+
+                        console.log(`${modelData.name} loaded`)
+
+                        active = true
+
+                        items[modelData.name.toLowerCase()] = item
+
+                        try {
+                            item.pageSelected()
                         }
-                        else {
-                            item.numErrors = 0
+                        catch(err){}
+
+                        try {
+                            item.isCurrentPage = true
+                        }
+                        catch(err){}
+
+                        item.pageName = modelData.name
+
+                        pageName = modelData.name
+
+                    }
+
+                    Component.onCompleted: {
+                        // this is the "constructor"
+                        // each page has a .client elem
+                        setSource(modelData.page, {'client': client})
+                    }
+
+                    Connections {
+                        target: stackPageLoader.item
+                        ignoreUnknownSignals: true
+
+                        function onRestartUi() {
+                            console.log('onRestartUi: calling pagesStackRepeater.reloadAll()')
+                            pagesStackRepeater.reloadAll()
+                        }
+
+                        function onNumErrorsChanged() {
+                            if(index !== pagesStack.currentIndex) {
+                                nav.setBadgeNumber(index, stackPageLoader.item.numErrors)
+                            }
+                            else {
+                                item.numErrors = 0
+                            }
                         }
                     }
                 }
-
 
             }
         }
@@ -517,43 +546,43 @@ ApplicationWindow {
         }
 
         onConnected: client.doRequestAsync('GET', '/requested_pages', '')
-                                      .then(function(msg) {
-                                          requestedPages = msg['requested_pages']
-                                          nav.construct()
-                                          navBar.construct()
-                                      })
-    }
-
-    // audio
-    Connections {
-
-        target: AudioBroadcaster
-
-        function onReadyRead() {
-
-            if(AudioBroadcaster.bytesAvailable < 2048 ||
-                    !AudioBroadcaster.enableSend)
-            {
-                return
-            }
-
-            let data = AudioBroadcaster.readBase64(2048)
-
-            let msg = {
-                'type': 'speech',
-                'data': data
-            }
-
-            client.sendTextMessage(JSON.stringify(msg))
+        .then(function(msg) {
+            requestedPages = msg['requested_pages']
+            nav.construct()
+            navBar.construct()
+        })
         }
-    }
 
-    Settings {
-        category: 'layout'
-        property alias x: mainWindow.x
-        property alias y: mainWindow.y
-        property alias width: mainWindow.width
-        property alias height: mainWindow.height
-    }
+            // audio
+            Connections {
 
-}
+                target: AudioBroadcaster
+
+                function onReadyRead() {
+
+                    if(AudioBroadcaster.bytesAvailable < 2048 ||
+                            !AudioBroadcaster.enableSend)
+                    {
+                        return
+                    }
+
+                    let data = AudioBroadcaster.readBase64(2048)
+
+                    let msg = {
+                        'type': 'speech',
+                        'data': data
+                    }
+
+                    client.sendTextMessage(JSON.stringify(msg))
+                }
+            }
+
+            Settings {
+                category: 'layout'
+                property alias x: mainWindow.x
+                property alias y: mainWindow.y
+                property alias width: mainWindow.width
+                property alias height: mainWindow.height
+            }
+
+        }

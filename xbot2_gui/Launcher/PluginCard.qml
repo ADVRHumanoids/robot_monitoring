@@ -42,13 +42,13 @@ Item {
     implicitWidth: card.implicitWidth
     implicitHeight: card.implicitHeight
 
-    height: card.height
-
     Card1 {
 
         id: card
 
         width: parent.width
+        height: parent.height
+        verticalMargins: -6
 
         name: root.pluginName
         nameFont.bold: root.pluginRunning

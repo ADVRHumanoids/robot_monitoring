@@ -33,6 +33,7 @@ Control {
 
                 required property int index
 
+                Layout.preferredWidth: 1
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.alignment: Qt.AlignTop
@@ -68,7 +69,7 @@ Control {
 
         try {
 
-        console.log('computeLayout START')
+        // console.log('computeLayout START')
         _layout_in_progress = true
 
         for(let i = 0; i < content.children.length; i++) {
@@ -101,7 +102,7 @@ Control {
             // item.anchors.left = parent.left
             // item.anchors.right = parent.right
             item.Layout.fillWidth = true
-            item.Layout.preferredHeight = Qt.binding(() => { return item.height })
+            // item.Layout.preferredHeight = Qt.binding(() => { return item.height })
         }
 
         }
@@ -111,7 +112,7 @@ Control {
         }
         finally {
             _layout_in_progress = false
-            console.log('computeLayout END')
+            // console.log('computeLayout END')
         }
 
     }

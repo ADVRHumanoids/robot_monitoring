@@ -13,6 +13,8 @@ Item {
 
     property string name: 'CardName'
 
+    property int verticalMargins: 4
+
     property int margins: CommonProperties.geom.spacing
 
     property color backgroundColor: defaultBackground
@@ -61,12 +63,12 @@ Item {
     implicitWidth: flip.implicitWidth
     implicitHeight: flip.implicitHeight
 
-    height: flip.height
+    // height: flip.height
     clip: true
 
     property bool _collapsed_before_flip: true
 
-    Behavior on height {
+    Behavior on implicitHeight {
         NumberAnimation {
             duration: 333
             easing.type: Easing.OutQuad
@@ -81,22 +83,29 @@ Item {
         implicitHeight: root.flipped ? backSide.implicitHeight : frontSide.implicitHeight
 
         width: parent.width
-        height: root.flipped ? backSide.height : frontSide.height
+        height: parent.height
 
         // front side is rendered as a rectangle whose content is layed out in a column
         // with header (card title and tool buttons) and content (item)
-        property Item frontSide: Rectangle {
+        property Item frontSide: Control {
 
             property alias contentItemWrapper: frontContentWrapper
 
             id: frontSideRoot
             width: flip.width
-            height: frontColumn.height
-            color: root.backgroundColor
-            radius: CommonProperties.geom.cardRadius
+            height: flip.height
+            // padding: root.margins
+            leftPadding: root.margins
+            rightPadding: root.margins
+            bottomPadding: root.margins * !root.collapsed
 
-            implicitHeight: frontColumn.implicitHeight
-            implicitWidth: frontColumn.implicitWidth
+            background: Rectangle {
+                color: root.backgroundColor
+                radius: CommonProperties.geom.cardRadius
+            }
+
+            // implicitHeight: frontColumn.implicitHeight
+            // implicitWidth: frontColumn.implicitWidth
 
             Component.onCompleted: {
                 for(let i = 0; i < root.toolButtons.length; i++) {
@@ -106,24 +115,20 @@ Item {
             }
 
             // column holding banner (title + toolbuttons) and content
-            Column {
+            contentItem: ColumnLayout {
 
                 id: frontColumn
-                width: parent.width
-                spacing: root.margins
+                // width: parent.width
+                // spacing: root.margins
 
                 // row with tool buttons
                 RowLayout {
 
                     id: toolBtnRow
 
-                    height: root.bannerHeight > 0 ? root.bannerHeight : implicitHeight
+                    // Layout.preferredHeight: root.bannerHeight > 0 ? root.bannerHeight : implicitHeight
 
-                    anchors {
-                        left: parent.left
-                        right: parent.right
-                        margins: root.margins
-                    }
+                    Layout.fillWidth: true
 
                     spacing: 0
 
@@ -141,9 +146,12 @@ Item {
                         Layout.minimumWidth: 6
                     }
 
-                    RowLayout {
-                        id: toolBtnRowInner
+                    Control {
+                        padding: root.verticalMargins
                         Layout.alignment: Qt.AlignVCenter
+                        contentItem: RowLayout {
+                            id: toolBtnRowInner
+                        }
                     }
 
                     // configuration button
@@ -183,13 +191,16 @@ Item {
 
                     id: frontItemWrapper
 
-                    anchors {
-                        left: parent.left
-                        right: parent.right
-                        margins: root.margins
-                    }
+                    Layout.fillHeight: true
+                    Layout.fillWidth: true
 
-                    height: root.collapsed ? 0 : (frontContentWrapper.height + root.margins)
+                    // anchors {
+                    //     left: parent.left
+                    //     right: parent.right
+                    //     margins: root.margins
+                    // }
+
+                    Layout.preferredHeight: root.collapsed ? 0 : implicitHeight
 
                     implicitHeight: frontContentWrapper.implicitHeight
 
@@ -197,8 +208,7 @@ Item {
 
                     Item {
                         id: frontContentWrapper
-                        width: parent.width
-                        height: children.length > 0 ? children[0].height : 0
+                        anchors.fill: parent
                         implicitHeight: children.length > 0 ? children[0].implicitHeight : 0
                     }
 
@@ -211,12 +221,7 @@ Item {
             property alias contentItemWrapper: backItemWrapper
 
             width: flip.width
-            height: backHeaderRow.height + backItemWrapper.height + cfgOkBtn.height + 2*root.margins
-
-
-            implicitWidth: backColumn.implicitWidth
-
-            implicitHeight: backColumn.implicitHeight
+            height: flip.height
 
             background: Rectangle {
                 color: root.backgroundColor

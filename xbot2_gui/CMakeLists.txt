@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.16)
 project(xbot2_gui)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -72,7 +72,7 @@ if(NOT EMSCRIPTEN)
     target_link_libraries(xbot2_gui
         PUBLIC
         Qt6::WebView
-        mesh_geometry
+        # mesh_geometry
     )
 
 endif()
@@ -123,8 +123,6 @@ add_subdirectory(Joy)
 
 add_subdirectory(Video)
 
-add_subdirectory(Viewer3D)
-
 add_subdirectory(ViewerQuick3D)
 
 
@@ -141,13 +139,13 @@ add_subdirectory(ViewerQuick3D)
 # robot model
 add_subdirectory(RobotModel/)
 
-# quick3d
-if(NOT EMSCRIPTEN)
-add_library(mesh_geometry STATIC
-    ViewerQuick3D/meshgeometry.cpp)
+# # quick3d
+# if(NOT EMSCRIPTEN)
+# add_library(mesh_geometry STATIC
+#     ViewerQuick3D/meshgeometry.cpp)
 
-target_link_libraries(mesh_geometry PUBLIC Qt${QT_VERSION_MAJOR}::Quick3D)
-endif()
+# target_link_libraries(mesh_geometry PUBLIC Qt${QT_VERSION_MAJOR}::Quick3D)
+# endif()
 
 # deploy
 if(NOT ANDROID AND NOT EMSCRIPTEN)

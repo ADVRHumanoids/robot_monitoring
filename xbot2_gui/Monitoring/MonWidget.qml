@@ -153,6 +153,10 @@ Control {
         repeat: true
         onTriggered: {
             let js = SharedData.latestJointState
+            if(js === undefined) {
+                return
+            }
+
             root.vBatt = js.vbatt
             root.maxTempMot = Math.max( ...js.motorTemp )
             root.maxTempDri = Math.max( ...js.driverTemp )

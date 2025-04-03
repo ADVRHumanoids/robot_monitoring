@@ -61,8 +61,9 @@ ApplicationWindow {
     //     }
     // }
 
-    DelayButtonRound {
+    SoftSafetyButton {
         id: softEmergency
+        client: client
         visible: CommonProperties.config.showSoftEmergency
         anchors {
             right: parent.right
@@ -73,13 +74,6 @@ ApplicationWindow {
         width: 70
         height: 70
         opacity: 0.8
-
-        Label {
-            text: MaterialSymbolNames.emergency
-            font.family: syms.font.family
-            font.pixelSize: 60
-            anchors.centerIn: parent
-        }
     }
 
     MonWidget {

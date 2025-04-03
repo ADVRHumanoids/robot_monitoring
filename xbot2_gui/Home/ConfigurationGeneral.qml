@@ -11,6 +11,11 @@ GridLayout {
     uniformCellHeights: true
 
     Label {
+        Layout.columnSpan: 2
+        text: 'GUI Overlay'
+    }
+
+    Label {
         text: 'Show Soft Emergency Stop'
     }
 
@@ -30,6 +35,11 @@ GridLayout {
         onClicked: {
             CommonProperties.config.showMonWidget = checked
         }
+    }
+
+    Label {
+        Layout.columnSpan: 2
+        text: 'Launcher'
     }
 
 

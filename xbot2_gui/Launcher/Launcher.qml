@@ -36,6 +36,8 @@ MultiPaneResponsiveLayout {
 
             SectionHeader {
 
+                visible: CommonProperties.config.showLauncherDashboard
+
                 width: parent.width
 
                 iconText: dashboard.visible ? '\uf077' : '\uf078'
@@ -60,6 +62,8 @@ MultiPaneResponsiveLayout {
                 id: dashboard
                 client: root.client
                 width: parent.width
+                visible: CommonProperties.config.showLauncherDashboard
+                enabled: visible
             }
 
             Item {

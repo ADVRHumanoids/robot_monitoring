@@ -21,7 +21,7 @@ Item {
     property Item geom: Item {
         property int mobileBreakpoint: 576
         property int cardRadius: 4
-        property int spacing: 16
+        property int spacing: 8
         property int margins: compactLayout ? 16 : 24
         property bool compactLayout: false
         property bool mediumLayout: false
@@ -98,6 +98,7 @@ Item {
         id: config
         property bool showSoftEmergency: false
         property bool showMonWidget: false
+        property bool showLauncherDashboard: false
     }
 
     Settings {

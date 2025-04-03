@@ -44,9 +44,9 @@ Control {
 
         columnSpacing: 16
 
-        Text {
+        Label {
             text: 'No operation mode defined'
-            color: palette.disabled.text
+            // color: palette.disabled.text
             visible: root.stateNames.length === 0
             font.pixelSize: CommonProperties.font.h3
             enabled: false

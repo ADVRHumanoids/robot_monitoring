@@ -48,6 +48,8 @@ public:
 
     QList<QString> jointNames();
 
+    Q_INVOKABLE QString parentJointName(QString linkName) const;
+
     ~RobotModel();
 
 signals:

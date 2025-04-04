@@ -48,7 +48,8 @@ class JointStateHandler:
         self.srv.add_route('POST', '/joint_command/goto/stop', self.stop_handler, 'stop')
         
         # joint state subscriber
-        self.js_sub = ros_handle.create_subscription(JointState, 'xbotcore/joint_states', self.on_js_recv, queue_size=1, best_effort=True)
+        self.js_sub = ros_handle.create_subscription(JointState, 'xbotcore/joint_states', 
+                                                     self.on_js_recv, queue_size=1, best_effort=True)
         self.fault_sub = ros_handle.create_subscription(Fault, 'xbotcore/fault', self.on_fault_recv, queue_size=20)
         self.msg = None
         self.last_js_msg = None
@@ -158,11 +159,11 @@ class JointStateHandler:
         # get urdf
         print('retrieving robot description..')
         urdf = ros_handle.get_urdf()
-        urdf = urdf.replace('<texture/>', '')
         if urdf is None:
             joint_info['message'] = 'unable to get robot description'
             joint_info['success'] = False
             return web.Response(text=json.dumps(joint_info))
+        urdf = urdf.replace('<texture/>', '')
 
         # parse urdf
         print('parsing urdf..')

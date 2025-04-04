@@ -5,6 +5,7 @@ import functools
 import base64
 import math
 import time
+import numpy as np
 
 # ros handle
 from . import ros_utils
@@ -39,6 +40,7 @@ class JointStateHandler:
         # save server object, register our handlers
         self.srv = srv
         self.srv.schedule_task(self.run())
+        self.srv.register_ws_coroutine(self.handle_ws_msg)
         self.srv.add_route('GET', '/joint_states/info', self.get_joint_info_handler, 'get_joint_info')
         self.srv.add_route('GET', '/joint_states/urdf', self.get_urdf_handler, 'get_urdf')
         self.srv.add_route('GET', '/joint_states/connected', self.robot_connected_handler, 'get_connected')
@@ -268,17 +270,29 @@ class JointStateHandler:
 
             self.cmd_should_stop = False
             
-            qf = float(req.rel_url.query['qref'])
+            qf = np.array(list(map(float, req.rel_url.query['qref'].split(';'))))
             trj_time = float(req.rel_url.query['time'])
-            joint_name = req.match_info['joint_name']
+            try:
+                ctrl = req.rel_url.query['ctrl']
+            except KeyError:
+                ctrl = 'Position'
+            joint_name = req.match_info['joint_name'].split(';')
 
             time = ros_handle.now()
             t0 = time
             dt = 0.01
-            jidx = self.last_js_msg.name.index(joint_name)
-            q0 = self.last_js_msg.position_reference[jidx]
+            jidx = [self.last_js_msg.name.index(jn) for jn in joint_name]
+
+            if ctrl == 'Position':
+                q0 = np.array(self.last_js_msg.position_reference)[jidx]
+            elif ctrl == 'Stiffness':
+                q0 = np.array(self.last_js_msg.stiffness)[jidx]
+            elif ctrl == 'Damping':
+                q0 = np.array(self.last_js_msg.damping)[jidx]
+            else:
+                raise ValueError(f'unknown control mode {ctrl}')
             
-            print(f'commanding joint {joint_name} from q0 = {q0} to qf = {qf} in {trj_time} s')
+            print(f'commanding {ctrl} joint {joint_name} from q0 = {q0} to qf = {qf} in {trj_time} s')
             
             while time.to_sec() <= t0.to_sec() + trj_time \
                 and not self.cmd_should_stop:
@@ -287,9 +301,16 @@ class JointStateHandler:
                 alpha = ((6*tau - 15)*tau + 10)*tau**3
                 qref = q0*(1 - alpha) + qf*alpha
                 msg = JointCommand()
-                msg.name = [joint_name]
-                msg.ctrl_mode = [1]
-                msg.position = [qref]
+                msg.name = joint_name
+                if ctrl == 'Position':
+                    msg.ctrl_mode = [1]*len(joint_name)
+                    msg.position = qref.tolist()
+                elif ctrl == 'Stiffness':
+                    msg.ctrl_mode = [8]*len(joint_name)
+                    msg.stiffness = qref.tolist()
+                elif ctrl == 'Damping':
+                    msg.ctrl_mode = [16]*len(joint_name)
+                    msg.damping = qref.tolist()
                 self.cmd_pub.publish(msg)
                 await asyncio.sleep(dt)
                 time = ros_handle.now()
@@ -371,3 +392,18 @@ class JointStateHandler:
                 js_msg_dict['aux_types'].append(k)
         
         return js_msg_dict
+
+
+    async def handle_ws_msg(self, msg, proto, ws):
+        if msg['type'] == 'joint_cmd':
+            cmdmsg = JointCommand()
+            cmdmsg.name = msg['joint_names']
+            if msg['ctrl'] == 'Velocity':
+                cmdmsg.ctrl_mode = [2]*len(cmdmsg.name)
+                cmdmsg.velocity = msg['command']
+            elif msg['ctrl'] == 'Effort':
+                cmdmsg.ctrl_mode = [4]*len(cmdmsg.name)
+                cmdmsg.effort = msg['command']
+            else:
+                raise ValueError(f'unknown control mode {msg["ctrl"]}')
+            self.cmd_pub.publish(cmdmsg)

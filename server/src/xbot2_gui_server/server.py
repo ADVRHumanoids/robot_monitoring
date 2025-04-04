@@ -365,8 +365,14 @@ class Xbot2WebServer(ServerBase):
 
                 # handle general messages
                 if msg != 'udp_discovery':
+                    
+                    try:
+                        msg = json.loads(msg)
+                    except BaseException as e:
+                        print(f'error decoding udp message: {e}')
+                        print('msg was: ', msg)
+                        continue
 
-                    msg = json.loads(msg)
 
                     # invoke registered callbacks
                     for wcoro in self.ws_callbacks:

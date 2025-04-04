@@ -30,7 +30,7 @@ class HorizonHandler:
         self.srv.register_ws_coroutine(self.handle_ws_msg)
         self.srv.schedule_task(self.run())
 
-        self.srv.add_route('POST', '/horizon/walk/switch',
+        self.srv.add_route('POST', '/horizon/{gait}/switch',
                            self.walk_switch_handler,
                            'horizon_walk_switch_handler')
         
@@ -45,9 +45,11 @@ class HorizonHandler:
     @utils.handle_exceptions
     async def walk_switch_handler(self, req):
 
+        gait = req.match_info['gait']
+
         active = utils.str2bool(req.rel_url.query['active'])
 
-        srv = rospy.ServiceProxy('/horizon/walk/switch', SetBool)
+        srv = rospy.ServiceProxy(f'/horizon/{gait}/switch', SetBool)
 
         res = await utils.to_thread(srv, data=active)
 

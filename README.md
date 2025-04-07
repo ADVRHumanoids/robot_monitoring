@@ -205,11 +205,7 @@ This step runs the user-facing graphical interface.
 1.  **Open a *New* Terminal:** This terminal generally *doesn't* strictly need the ROS environment sourced unless the GUI client itself uses ROS libraries for discovery (which is less common if it only connects to the GUI server).
 2.  **Navigate to the Executable:** Change directory to where the `xbot2_gui` executable is located. This location depends on how `robot_monitoring` was built and installed. It might be in a `bin` directory within the build/install space of the package or workspace.
     ```bash
-    # IMPORTANT: Adjust this path to your actual executable location!
-    # Example path - YOURS WILL LIKELY DIFFER:
-    cd ~/xbot2_ws/devel/lib/robot_monitoring/ # Or maybe install/lib/...
-    # Or potentially a specific release directory like:
-    # cd ~/xbot2_gui_client_x86_64/bin
+        # cd ~/xbot2_gui_client_x86_64/bin
     ```
 3.  **Run the GUI Client:** Execute the client application.
     ```bash

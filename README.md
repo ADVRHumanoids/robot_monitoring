@@ -45,7 +45,7 @@ Before launching the system, ensure the following are correctly set up:
         ```bash
         pip install concert_launcher
         ```
-4.  **Docker (Alternative Setup):** A Docker-based setup is available, providing a containerized environment with dependencies pre-installed. Refer to the Docker configuration within the `kyon_config` repository for details: [kyon_config Docker](https://github.com/ADVRHumanoids/kyon_config/tree/master/docker/kyon-cetc-focal-ros1).
+4.  **Docker (Raccomanded Setup):** A Docker-based setup is available, providing a containerized environment with dependencies pre-installed. Refer to the Docker configuration within the `kyon_config` repository for details: [kyon_config Docker](https://github.com/ADVRHumanoids/kyon_config/tree/master/docker/kyon-cetc-focal-ros1).
 5.  **System Dependencies:** Ensure all package dependencies within the `xbot2_ws` are installed:
     
     **For the xbot2 server components:**
@@ -67,12 +67,6 @@ Before launching the system, ensure the following are correctly set up:
     ```bash
     # Required by robot_monitoring GUI elements
     sudo apt-get install libxcb-cursor0
-    ```
-    
-    You can also use `rosdep` to install package dependencies automatically:
-    ```bash
-    # Example using rosdep from workspace root:
-    rosdep install --from-paths src --ignore-src -r -y
     ```
 
 ## Repository Structure (Kyon Example)

@@ -30,7 +30,7 @@ The xbot2 system launch, demonstrated with the Kyon simulation, involves four ma
 
 You can set up the xbot2 system in two ways: using Docker (recommended for quick setup) or installing components manually.
 
-### Docker Setup (Recommended)
+### Docker Setup (Recommended for Server Components)
 
 **Docker (Comprehensive Solution):** Using Docker is the recommended approach for setting up the xbot2 system as it eliminates the need to install and configure numerous dependencies individually.
 
@@ -40,8 +40,9 @@ The provided Docker containers have **all dependencies pre-installed and configu
 * Required workspace structure
 * forest package manager
 * concert_launcher
-* All necessary system libraries
 * Properly configured environment variables
+
+One of the key advantages of using Docker is that you don't need to install any of these dependencies on your host system, as they are all contained within the Docker container.
 
 To use the Docker setup:
 ```bash
@@ -55,22 +56,8 @@ cd kyon_config/docker/kyon-cetc-focal-ros1
 
 Refer to the Docker configuration within the `kyon_config` repository for detailed instructions: [kyon_config Docker](https://github.com/ADVRHumanoids/kyon_config/tree/master/docker/kyon-cetc-focal-ros1).
 
-### Manual Installation (Alternative)
-
-If you prefer not to use Docker, you can manually install all required components:
-
-1.  **ROS Noetic:** The example is built upon ROS Noetic.
-    * Installation: Follow the [Official ROS Noetic Installation Guide](http://wiki.ros.org/noetic/Installation).
-2.  **xbot2 Workspace (`xbot2_ws`):** The core components reside within a Catkin workspace, typically named `~/xbot2_ws`. This workspace must be built using `forest`. Refer to the `forest` repository for details: [https://github.com/ADVRHumanoids/forest](https://github.com/ADVRHumanoids/forest).
-3.  **Concert Launcher:** The `concert_launcher` Python package is required for managing processes. Refer to the `concert_launcher` repository for details: [https://github.com/ADVRHumanoids/concert_launcher](https://github.com/ADVRHumanoids/concert_launcher)
-    * Installation: [https://github.com/ADVRHumanoids/concert_launcher](https://github.com/ADVRHumanoids/concert_launcher)
-    * Install via pip:
-        ```bash
-        pip install concert_launcher
-        ```
-4. **System Dependencies:** You'll need to install various system dependencies:
+**System Dependencies:** You'll need to install various system dependencies:
     
-    **For the xbot2 server components:**
     ```bash
     # Terminal multiplexer required by concert_launcher
     sudo apt-get update && sudo apt-get install -y tmux
@@ -83,12 +70,46 @@ If you prefer not to use Docker, you can manually install all required component
     
     # Scientific computing library for numerical operations
     pip install scipy
-    ```
 
-    **For the GUI client components:**
+### GUI Client Installation (Required for Both Approaches)
+
+The xbot2 GUI client must be installed separately on your host system, regardless of which method you use for the server components:
+
+1. Visit the [robot_monitoring GitHub releases page](https://github.com/ADVRHumanoids/robot_monitoring/releases)
+2. Download the appropriate package for your system (e.g., "Linux App" which is around 250MB)
+3. Extract the downloaded package to a convenient location
+4. Install the required dependency for the GUI client:
+   ```bash
+   # Required by robot_monitoring GUI elements
+   sudo apt-get install libxcb-cursor0
+   ```
+
+### Manual Installation (Alternative for Server Components)
+
+If you prefer not to use Docker, you can manually install all required components directly on your host system:
+
+1.  **ROS Noetic:** The example is built upon ROS Noetic.
+    * Installation: Follow the [Official ROS Noetic Installation Guide](http://wiki.ros.org/noetic/Installation).
+2.  **xbot2 Workspace (`xbot2_ws`):** The core components reside within a Catkin workspace, typically named `~/xbot2_ws`. This workspace must be built using `forest`. Refer to the `forest` repository for details: [https://github.com/ADVRHumanoids/forest](https://github.com/ADVRHumanoids/forest).
+3.  **Concert Launcher:** The `concert_launcher` Python package is required for managing processes. Refer to the `concert_launcher` repository for details: [https://github.com/ADVRHumanoids/concert_launcher](https://github.com/ADVRHumanoids/concert_launcher)
+    * Install via pip:
+        ```bash
+        pip install concert_launcher
+        ```
+4. **System Dependencies:** You'll need to install various system dependencies:
+    
     ```bash
-    # Required by robot_monitoring GUI elements
-    sudo apt-get install libxcb-cursor0
+    # Terminal multiplexer required by concert_launcher
+    sudo apt-get update && sudo apt-get install -y tmux
+    
+    # XML processing library for configuration handling
+    python3 -m pip install lxml
+    
+    # Graphics libraries needed for visualization
+    sudo apt-get update && sudo apt-get install -y libglfw3-dev
+    
+    # Scientific computing library for numerical operations
+    pip install scipy
     ```
 
 ## Repository Structure (Kyon Example)

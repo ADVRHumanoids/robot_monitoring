@@ -260,7 +260,7 @@ This step runs the user-facing graphical interface.
 1.  **Open a *New* Terminal:** .
 2.  **Navigate to the Executable:** Change directory to where the `xbot2_gui` executable is located. .
     ```bash
-    # cd ~/xbot2_gui_client_x86_64/bin
+    cd ~/xbot2_gui_client_x86_64/bin
     ```
 3.  **Run the GUI Client:** Execute the client application.
     ```bash

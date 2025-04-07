@@ -56,7 +56,7 @@ cd kyon_config/docker/kyon-cetc-focal-ros1
 
 Refer to the Docker configuration within the `kyon_config` repository for detailed instructions: [kyon_config Docker](https://github.com/ADVRHumanoids/kyon_config/tree/master/docker/kyon-cetc-focal-ros1).
 
-**System Dependencies:** You'll need to install various system dependencies:
+**System Dependencies:** You could need to install various system dependencies also in the Container built:
     
     ```bash
     # Terminal multiplexer required by concert_launcher

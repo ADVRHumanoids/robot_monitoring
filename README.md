@@ -46,13 +46,33 @@ Before launching the system, ensure the following are correctly set up:
         pip install concert_launcher
         ```
 4.  **Docker (Alternative Setup):** A Docker-based setup is available, providing a containerized environment with dependencies pre-installed. Refer to the Docker configuration within the `kyon_config` repository for details: [kyon_config Docker](https://github.com/ADVRHumanoids/kyon_config/tree/master/docker/kyon-cetc-focal-ros1).
-5.  **System Dependencies:** Ensure all package dependencies within the `xbot2_ws` are installed (e.g., using `rosdep`). Specific GUI components ([robot_monitoring v2.5.8+](https://github.com/ADVRHumanoids/robot_monitoring/releases/tag/v2.5.8)) require `libxcb-cursor0`:
+5.  **System Dependencies:** Ensure all package dependencies within the `xbot2_ws` are installed:
+    
+    **For the xbot2 server components:**
     ```bash
-    sudo apt-get update
-    sudo apt-get install libxcb-cursor0 # Required for robot_monitoring GUI elements
-    # Install other dependencies using rosdep or apt-get as needed
+    # Terminal multiplexer required by concert_launcher
+    sudo apt-get update && sudo apt-get install -y tmux
+    
+    # XML processing library for configuration handling
+    python3 -m pip install lxml
+    
+    # Graphics libraries needed for visualization
+    sudo apt-get update && sudo apt-get install -y libglfw3-dev
+    
+    # Scientific computing library for numerical operations
+    pip install scipy
+    ```
+
+    **For the GUI client components:**
+    ```bash
+    # Required by robot_monitoring GUI elements
+    sudo apt-get install libxcb-cursor0
+    ```
+    
+    You can also use `rosdep` to install package dependencies automatically:
+    ```bash
     # Example using rosdep from workspace root:
-    # rosdep install --from-paths src --ignore-src -r -y
+    rosdep install --from-paths src --ignore-src -r -y
     ```
 
 ## Repository Structure (Kyon Example)

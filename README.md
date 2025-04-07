@@ -28,25 +28,47 @@ The xbot2 system launch, demonstrated with the Kyon simulation, involves four ma
 
 ## Prerequisites
 
-Before launching the system, ensure the following are correctly set up:
+You can set up the xbot2 system in two ways: using Docker (recommended for quick setup) or installing components manually.
+
+### Docker Setup (Recommended)
+
+**Docker (Comprehensive Solution):** Using Docker is the recommended approach for setting up the xbot2 system as it eliminates the need to install and configure numerous dependencies individually.
+
+The provided Docker containers have **all dependencies pre-installed and configured**, including:
+* ROS Noetic
+* xbot2 framework
+* Required workspace structure
+* forest package manager
+* concert_launcher
+* All necessary system libraries
+* Properly configured environment variables
+
+To use the Docker setup:
+```bash
+# Clone the repository for Docker configuration
+git clone https://github.com/ADVRHumanoids/kyon_config.git
+cd kyon_config/docker/kyon-cetc-focal-ros1
+
+# Build and run the Docker container
+./setup.sh
+```
+
+Refer to the Docker configuration within the `kyon_config` repository for detailed instructions: [kyon_config Docker](https://github.com/ADVRHumanoids/kyon_config/tree/master/docker/kyon-cetc-focal-ros1).
+
+### Manual Installation (Alternative)
+
+If you prefer not to use Docker, you can manually install all required components:
 
 1.  **ROS Noetic:** The example is built upon ROS Noetic.
     * Installation: Follow the [Official ROS Noetic Installation Guide](http://wiki.ros.org/noetic/Installation).
 2.  **xbot2 Workspace (`xbot2_ws`):** The core components reside within a Catkin workspace, typically named `~/xbot2_ws`. This workspace must be built using `forest`. Refer to the `forest` repository for details: [https://github.com/ADVRHumanoids/forest](https://github.com/ADVRHumanoids/forest).
-    * Ensure the workspace is built and sourced:
-        ```bash
-        cd ~/xbot2_ws
-        catkin build # Or your preferred build command
-        source devel/setup.bash # Or install/setup.bash if you installed
-        ```
-3.  **Concert Launcher:** The `concert_launcher` Python package is required for managing processes.Refer to the `concert_launcher` repository for details: [https://github.com/ADVRHumanoids/concert_launcher](https://github.com/ADVRHumanoids/concert_launcher)
+3.  **Concert Launcher:** The `concert_launcher` Python package is required for managing processes. Refer to the `concert_launcher` repository for details: [https://github.com/ADVRHumanoids/concert_launcher](https://github.com/ADVRHumanoids/concert_launcher)
     * Installation: [https://github.com/ADVRHumanoids/concert_launcher](https://github.com/ADVRHumanoids/concert_launcher)
     * Install via pip:
         ```bash
         pip install concert_launcher
         ```
-4.  **Docker (Raccomanded Setup):** A Docker-based setup is available in repository [kyon_config Docker](https://github.com/ADVRHumanoids/kyon_config/tree/master/docker/kyon-cetc-focal-ros1), providing a containerized environment with dependencies pre-installed. Refer to the `kyon_config` repository for details: [kyon_config Docker](https://github.com/ADVRHumanoids/kyon_config).
-5.  **System Dependencies:** Ensure all package dependencies within the `xbot2_ws` are installed:
+4. **System Dependencies:** You'll need to install various system dependencies:
     
     **For the xbot2 server components:**
     ```bash
@@ -79,11 +101,13 @@ This guide uses the `kyon` robot configuration as a reference example for launch
     * `launcher/gui_server_config_2.yaml`: Configuration for the `xbot2_gui_server`.
     * `kyon_basic.yaml`: Core configuration file for `xbot2-core` specific to Kyon.
     * Repository: [https://github.com/ADVRHumanoids/kyon_config](https://github.com/ADVRHumanoids/kyon_config)
-* **`concert_launcher`**: The process manager tool. While typically installed via pip.
+* **`concert_launcher`**: The process manager tool. While typically installed via pip, understanding its configuration format might be helpful.
     * Repository: [https://github.com/ADVRHumanoids/concert_launcher](https://github.com/ADVRHumanoids/concert_launcher)
 * **`xbot2_gui_server`**: The GUI backend application package. Source code might be located in `~/xbot2_ws/src/xbot2_gui_server/` or similar, depending on your `forest` setup.
 * **`robot_monitoring` (contains `xbot2_gui`)**: The package containing the GUI client application (`xbot2_gui`).
     * Repository (proto branch mentioned): [https://github.com/ADVRHumanoids/robot_monitoring/tree/proto](https://github.com/ADVRHumanoids/robot_monitoring/tree/proto)
+
+*(Note: Ensure these repositories are checked out to compatible versions)*
 
 ## Launch Process (Step-by-Step)
 
@@ -112,7 +136,7 @@ This step initializes the main backend processes, including ROS Master, RViz, an
 2.  **Run the Launcher Script:** Execute the `kyon_launcher.bash` script with the `sim` argument. Use the full path or ensure the script is executable and in your `PATH`.
 
     ```bash
-    ~/xbot2_ws/src/iit-kyon-ros-pkg/kyon_config/launcher/kyon_launcher.bash sim
+    ~/xbot2_ws/src/kyon_config/launcher/kyon_launcher.bash sim
     ```
 
 **What happens during this step?**
@@ -195,7 +219,7 @@ This step starts the backend service for the user interface.
 2.  **Run the GUI Server:** Execute the `xbot2_gui_server` command, providing the path to its specific configuration file.
 
     ```bash
-    xbot2_gui_server ~/xbot2_ws/src/iit-kyon-ros-pkg/kyon_config/launcher/gui_server_config_2.yaml
+    xbot2_gui_server ~/xbot2_ws/src/kyon_config/launcher/gui_server_config_2.yaml
     ```
 
 **What happens during this step?**
@@ -217,7 +241,11 @@ This step runs the user-facing graphical interface.
 1.  **Open a *New* Terminal:** This terminal generally *doesn't* strictly need the ROS environment sourced unless the GUI client itself uses ROS libraries for discovery (which is less common if it only connects to the GUI server).
 2.  **Navigate to the Executable:** Change directory to where the `xbot2_gui` executable is located. This location depends on how `robot_monitoring` was built and installed. It might be in a `bin` directory within the build/install space of the package or workspace.
     ```bash
-        cd ~/xbot2_gui_client_x86_64/bin
+    # IMPORTANT: Adjust this path to your actual executable location!
+    # Example path - YOURS WILL LIKELY DIFFER:
+    cd ~/xbot2_ws/devel/lib/robot_monitoring/ # Or maybe install/lib/...
+    # Or potentially a specific release directory like:
+    # cd ~/xbot2_gui_client_x86_64/bin
     ```
 3.  **Run the GUI Client:** Execute the client application.
     ```bash
@@ -268,15 +296,15 @@ The `kyon_launcher.bash` script wraps `concert_launcher` commands to manage the 
 
 * **Check Status:** See the status of processes managed by this `concert_launcher` instance:
     ```bash
-    ~/xbot2_ws/src/iit-kyon-ros-pkg/kyon_config/launcher/kyon_launcher.bash status
+    ~/xbot2_ws/src/kyon_config/launcher/kyon_launcher.bash status
     ```
 * **Monitor:** Attach an interactive monitoring console (if supported by `concert_launcher`):
     ```bash
-    ~/xbot2_ws/src/iit-kyon-ros-pkg/kyon_config/launcher/kyon_launcher.bash monitor
+    ~/xbot2_ws/src/kyon_config/launcher/kyon_launcher.bash monitor
     ```
 * **Stop All Processes:** Terminate all processes managed by this `concert_launcher` instance:
     ```bash
-    ~/xbot2_ws/src/iit-kyon-ros-pkg/kyon_config/launcher/kyon_launcher.bash kill
+    ~/xbot2_ws/src/kyon_config/launcher/kyon_launcher.bash kill
     ```
 
 ## Stopping the System
@@ -287,7 +315,7 @@ Follow these steps to shut down the system cleanly:
 2.  **Stop the GUI Server:** Stop the `xbot2_gui_server` process in Terminal 3 (usually `Ctrl+C`).
 3.  **Stop Core Server/Simulation:** Use the `kill` command provided by the launcher script in Terminal 2.
     ```bash
-    ~/xbot2_ws/src/iit-kyon-ros-pkg/kyon_config/launcher/kyon_launcher.bash kill
+    ~/xbot2_ws/src/kyon_config/launcher/kyon_launcher.bash kill
     ```
     This instructs `concert_launcher` to terminate `roscore`, `rviz`, `xbot2_sim`, and any other managed processes gracefully.
 4.  **Stop the MuJoCo Simulation:** Return to Terminal 1 and stop the MuJoCo simulation (usually `Ctrl+C`).

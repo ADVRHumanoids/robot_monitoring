@@ -30,22 +30,22 @@ The xbot2 system launch, demonstrated with the Kyon simulation, involves four ma
 
 Before launching the system, ensure the following are correctly set up:
 
-1.  **ROS Noetic:** The system is built upon ROS Noetic.
+1.  **ROS Noetic:** The example is built upon ROS Noetic.
     * Installation: Follow the [Official ROS Noetic Installation Guide](http://wiki.ros.org/noetic/Installation).
-2.  **xbot2 Workspace (`xbot2_ws`):** The core components reside within a Catkin workspace, typically named `~/xbot2_ws`. This workspace must be built using `forest`. Refer to: [https://github.com/ADVRHumanoids/forest](https://github.com/ADVRHumanoids/forest).
+2.  **xbot2 Workspace (`xbot2_ws`):** The core components reside within a Catkin workspace, typically named `~/xbot2_ws`. This workspace must be built using `forest`. Refer to the `forest` repository for details: [https://github.com/ADVRHumanoids/forest](https://github.com/ADVRHumanoids/forest).
     * Ensure the workspace is built and sourced:
         ```bash
         cd ~/xbot2_ws
         catkin build # Or your preferred build command
         source devel/setup.bash # Or install/setup.bash if you installed
         ```
-3.  **Concert Launcher:** The `concert_launcher` Python package is required for managing processes.
+3.  **Concert Launcher:** The `concert_launcher` Python package is required for managing processes.Refer to the `concert_launcher` repository for details: [https://github.com/ADVRHumanoids/concert_launcher](https://github.com/ADVRHumanoids/concert_launcher)
     * Installation: [https://github.com/ADVRHumanoids/concert_launcher](https://github.com/ADVRHumanoids/concert_launcher)
     * Install via pip:
         ```bash
         pip install concert_launcher
         ```
-4.  **Docker (Raccomanded Setup):** A Docker-based setup is available, providing a containerized environment with dependencies pre-installed. Refer to the Docker configuration within the `kyon_config` repository for details: [kyon_config Docker](https://github.com/ADVRHumanoids/kyon_config/tree/master/docker/kyon-cetc-focal-ros1).
+4.  **Docker (Raccomanded Setup):** A Docker-based setup is available in repository [kyon_config Docker](https://github.com/ADVRHumanoids/kyon_config/tree/master/docker/kyon-cetc-focal-ros1), providing a containerized environment with dependencies pre-installed. Refer to the `kyon_config` repository for details: [kyon_config Docker](https://github.com/ADVRHumanoids/kyon_config).
 5.  **System Dependencies:** Ensure all package dependencies within the `xbot2_ws` are installed:
     
     **For the xbot2 server components:**
@@ -79,13 +79,11 @@ This guide uses the `kyon` robot configuration as a reference example for launch
     * `launcher/gui_server_config_2.yaml`: Configuration for the `xbot2_gui_server`.
     * `kyon_basic.yaml`: Core configuration file for `xbot2-core` specific to Kyon.
     * Repository: [https://github.com/ADVRHumanoids/kyon_config](https://github.com/ADVRHumanoids/kyon_config)
-* **`concert_launcher`**: The process manager tool. While typically installed via pip, understanding its configuration format might be helpful.
+* **`concert_launcher`**: The process manager tool. While typically installed via pip.
     * Repository: [https://github.com/ADVRHumanoids/concert_launcher](https://github.com/ADVRHumanoids/concert_launcher)
 * **`xbot2_gui_server`**: The GUI backend application package. Source code might be located in `~/xbot2_ws/src/xbot2_gui_server/` or similar, depending on your `forest` setup.
 * **`robot_monitoring` (contains `xbot2_gui`)**: The package containing the GUI client application (`xbot2_gui`).
     * Repository (proto branch mentioned): [https://github.com/ADVRHumanoids/robot_monitoring/tree/proto](https://github.com/ADVRHumanoids/robot_monitoring/tree/proto)
-
-*(Note: Ensure these repositories are checked out to compatible versions)*
 
 ## Launch Process (Step-by-Step)
 

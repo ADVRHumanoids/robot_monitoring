@@ -107,8 +107,6 @@ This guide uses the `kyon` robot configuration as a reference example for launch
 * **`robot_monitoring` (contains `xbot2_gui`)**: The package containing the GUI client application (`xbot2_gui`).
     * Repository (proto branch mentioned): [https://github.com/ADVRHumanoids/robot_monitoring/tree/proto](https://github.com/ADVRHumanoids/robot_monitoring/tree/proto)
 
-*(Note: Ensure these repositories are checked out to compatible versions)*
-
 ## Launch Process (Step-by-Step)
 
 ### Step 1: Launch Robot Model in Simulation Environment
@@ -238,13 +236,9 @@ This step starts the backend service for the user interface.
 
 This step runs the user-facing graphical interface.
 
-1.  **Open a *New* Terminal:** This terminal generally *doesn't* strictly need the ROS environment sourced unless the GUI client itself uses ROS libraries for discovery (which is less common if it only connects to the GUI server).
-2.  **Navigate to the Executable:** Change directory to where the `xbot2_gui` executable is located. This location depends on how `robot_monitoring` was built and installed. It might be in a `bin` directory within the build/install space of the package or workspace.
+1.  **Open a *New* Terminal:** .
+2.  **Navigate to the Executable:** Change directory to where the `xbot2_gui` executable is located. .
     ```bash
-    # IMPORTANT: Adjust this path to your actual executable location!
-    # Example path - YOURS WILL LIKELY DIFFER:
-    cd ~/xbot2_ws/devel/lib/robot_monitoring/ # Or maybe install/lib/...
-    # Or potentially a specific release directory like:
     # cd ~/xbot2_gui_client_x86_64/bin
     ```
 3.  **Run the GUI Client:** Execute the client application.

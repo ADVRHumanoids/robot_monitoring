@@ -10,7 +10,9 @@ GridLayout {
     columns: 3
     // uniformCellHeights: true
 
+
     Label {
+        topPadding: 4
         Layout.columnSpan: 3
         text: 'General'
         font.pixelSize: CommonProperties.font.h4

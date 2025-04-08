@@ -1,6 +1,6 @@
-add_library(xbot2_gui_monitoring_bar_plot STATIC)
+add_library(bar_plot STATIC)
 
-qt_add_qml_module(xbot2_gui_monitoring_bar_plot
+qt_add_qml_module(bar_plot
     URI Monitoring.BarPlot
     VERSION 1.0
     QML_FILES
@@ -14,4 +14,4 @@ qt_add_qml_module(xbot2_gui_monitoring_bar_plot
     TwoSideBarForm.ui.qml
 )
 
-target_link_libraries(xbot2_gui PRIVATE xbot2_gui_monitoring_bar_plotplugin)
+target_link_libraries(xbot2_gui PRIVATE bar_plotplugin)

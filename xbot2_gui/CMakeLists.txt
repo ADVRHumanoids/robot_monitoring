@@ -1,8 +1,8 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.20)
 project(xbot2_gui)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt6 COMPONENTS
@@ -18,7 +18,6 @@ find_package(Qt6 COMPONENTS
     ShaderTools
     DataVisualization
     TextToSpeech
-    StateMachine
     Charts
     REQUIRED)
 
@@ -32,7 +31,6 @@ if(NOT EMSCRIPTEN)
 endif()
 
 qt_standard_project_setup(REQUIRES 6.6)
-
 
 ## ui main
 qt_add_executable(xbot2_gui main.cpp)
@@ -54,6 +52,10 @@ qt_add_qml_module(xbot2_gui
 target_compile_definitions(xbot2_gui
     PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
 
+if(WIN32)
+    target_compile_options(xbot2_gui PRIVATE "-Wa,-mbig-obj")
+endif()
+
 target_link_libraries(xbot2_gui
     PUBLIC
     Qt6::DataVisualization
@@ -63,7 +65,6 @@ target_link_libraries(xbot2_gui
     Qt6::QuickControls2
     Qt6::Widgets
     Qt6::TextToSpeech
-    Qt6::StateMachine
     Qt6::Quick3D
 )
 
@@ -72,7 +73,6 @@ if(NOT EMSCRIPTEN)
     target_link_libraries(xbot2_gui
         PUBLIC
         Qt6::WebView
-        # mesh_geometry
     )
 
 endif()
@@ -123,6 +123,8 @@ add_subdirectory(Joy)
 
 add_subdirectory(Video)
 
+add_subdirectory(Viewer3D)
+
 add_subdirectory(ViewerQuick3D)
 
 
@@ -138,14 +140,6 @@ add_subdirectory(ViewerQuick3D)
 
 # robot model
 add_subdirectory(RobotModel/)
-
-# # quick3d
-# if(NOT EMSCRIPTEN)
-# add_library(mesh_geometry STATIC
-#     ViewerQuick3D/meshgeometry.cpp)
-
-# target_link_libraries(mesh_geometry PUBLIC Qt${QT_VERSION_MAJOR}::Quick3D)
-# endif()
 
 # deploy
 if(NOT ANDROID AND NOT EMSCRIPTEN)

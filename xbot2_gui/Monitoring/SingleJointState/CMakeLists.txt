@@ -1,6 +1,6 @@
-add_library(xbot2_gui_monitoring_single_joint STATIC)
+add_library(single_joint STATIC)
 
-qt_add_qml_module(xbot2_gui_monitoring_single_joint
+qt_add_qml_module(single_joint
     URI Monitoring.SingleJointState
     VERSION 1.0
     QML_FILES
@@ -16,4 +16,4 @@ qt_add_qml_module(xbot2_gui_monitoring_single_joint
     SingleJointState1.qml
 )
 
-target_link_libraries(xbot2_gui PRIVATE xbot2_gui_monitoring_single_jointplugin)
+target_link_libraries(xbot2_gui PRIVATE single_jointplugin)

@@ -248,7 +248,7 @@ This step starts the backend service for the user interface.
     * The dashboard layout and possible system `states` (`inactive`, `ready`, etc.).
     * Crucially, it likely references `launcher_config.yaml` (via the `launcher_config` key). This tells the GUI server *which* `concert_launcher` configuration describes the underlying system processes started in Step 2.
 * The GUI server uses this information to monitor the status of processes defined in `launcher_config.yaml` (like `xbot2_sim`), possibly by interacting with ROS or `concert_launcher` itself.
-* It opens a network port (typically TCP/IP on localhost, port details might be in the config or server logs) to listen for connections from the GUI Client (`xbot2_gui`).
+* It opens a network port (typically TCP/IP on localhost) to listen for connections from the GUI Client (`xbot2_gui`).
 
 **Keep this terminal open.**
 

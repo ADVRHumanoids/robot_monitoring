@@ -123,8 +123,6 @@ add_subdirectory(Joy)
 
 add_subdirectory(Video)
 
-add_subdirectory(Viewer3D)
-
 add_subdirectory(ViewerQuick3D)
 
 

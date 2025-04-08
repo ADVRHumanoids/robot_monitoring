@@ -116,7 +116,7 @@ If you prefer not to use Docker, you can manually install all required component
 
 This guide uses the `kyon` robot configuration as a reference example for launching xbot2 with its GUI in a MuJoCo simulation. The key repositories and components involved are structured as follows (assuming they are cloned within your `~/xbot2_ws/src`):
 
-* **`kyon_config`**: Contains Kyon-specific configuration files and the main launch script.
+* **`kyon_config`**: Contains Kyon-specific configuration files and the main launch script. **Could be required for the moment to copy the launcher folder with its configuration file from this repository: [https://github.com/ADVRHumanoids/iit-kyon-ros-pkg/tree/master/kyon_config/launcher](https://github.com/ADVRHumanoids/iit-kyon-ros-pkg/tree/master/kyon_config/launcher)**
     * `launcher/kyon_launcher.bash`: The primary script for starting/managing the server/simulation.
     * `launcher/launcher_config.yaml`: Defines processes managed by `concert_launcher` for the core system (used by `kyon_launcher.bash`).
     * `launcher/gui_server_config_2.yaml`: Configuration for the `xbot2_gui_server`.

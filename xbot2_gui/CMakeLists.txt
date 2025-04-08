@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(xbot2_gui)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt6 COMPONENTS
@@ -32,7 +32,6 @@ endif()
 
 qt_standard_project_setup(REQUIRES 6.6)
 
-
 ## ui main
 qt_add_executable(xbot2_gui main.cpp)
 
@@ -52,6 +51,10 @@ qt_add_qml_module(xbot2_gui
 
 target_compile_definitions(xbot2_gui
     PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
+
+if(WIN32)
+    target_compile_options(xbot2_gui PRIVATE "-Wa,-mbig-obj")
+endif()
 
 target_link_libraries(xbot2_gui
     PUBLIC
@@ -138,14 +141,6 @@ add_subdirectory(ViewerQuick3D)
 
 # robot model
 add_subdirectory(RobotModel/)
-
-# quick3d
-if(NOT EMSCRIPTEN)
-add_library(mesh_geometry STATIC
-    ViewerQuick3D/meshgeometry.cpp)
-
-target_link_libraries(mesh_geometry PUBLIC Qt${QT_VERSION_MAJOR}::Quick3D)
-endif()
 
 # deploy
 if(NOT ANDROID AND NOT EMSCRIPTEN)

@@ -120,8 +120,7 @@ This guide uses the `kyon` robot configuration as a reference example for launch
     * `launcher/kyon_launcher.bash`: The primary script for starting/managing the server/simulation.
     * `launcher/launcher_config.yaml`: Defines processes managed by `concert_launcher` for the core system (used by `kyon_launcher.bash`).
     * `launcher/gui_server_config_2.yaml`: Configuration for the `xbot2_gui_server`.
-    * `kyon_basic.yaml`: Core configuration file for `xbot2-core` specific to Kyon.
-    * Repository: [https://github.com/ADVRHumanoids/kyon_config](https://github.com/ADVRHumanoids/kyon_config)
+    * `kyon_basic.yaml`: Core configuration file for `xbot2-core` specific to Kyon Repository: [https://github.com/ADVRHumanoids/kyon_config/tree/master/xbot2](https://github.com/ADVRHumanoids/kyon_config/tree/master/xbot2)
 * **`concert_launcher`**: The process manager tool. While typically installed via pip, understanding its configuration format might be helpful.
     * Repository: [https://github.com/ADVRHumanoids/concert_launcher](https://github.com/ADVRHumanoids/concert_launcher)
 * **`xbot2_gui_server`**: The GUI backend application package. Source code might be located in `~/xbot2_ws/src/xbot2_gui_server/` or similar, depending on your `forest` setup.
@@ -249,7 +248,7 @@ This step starts the backend service for the user interface.
     * The dashboard layout and possible system `states` (`inactive`, `ready`, etc.).
     * Crucially, it likely references `launcher_config.yaml` (via the `launcher_config` key). This tells the GUI server *which* `concert_launcher` configuration describes the underlying system processes started in Step 2.
 * The GUI server uses this information to monitor the status of processes defined in `launcher_config.yaml` (like `xbot2_sim`), possibly by interacting with ROS or `concert_launcher` itself.
-* It opens a network port (typically TCP/IP on localhost, port details might be in the config or server logs) to listen for connections from the GUI Client (`xbot2_gui`).
+* It opens a network port (typically TCP/IP on localhost) to listen for connections from the GUI Client (`xbot2_gui`).
 
 **Keep this terminal open.**
 

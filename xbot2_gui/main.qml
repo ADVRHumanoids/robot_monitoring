@@ -77,7 +77,7 @@ ApplicationWindow {
     }
 
     MonWidget {
-        expanded: false
+        expanded: layout.expanded
         anchors {
             left: parent.left
             top: parent.top
@@ -124,15 +124,6 @@ ApplicationWindow {
             active: true
         }
 
-        // PageItem {
-        //     name: "Dashboard"
-        //     page: "/qt/qml/Launcher/Dashboard.qml"
-        //     iconText: MaterialSymbolNames.dashboard
-        //     iconFont: syms.font.family
-        //     active: true
-        //     visible: requestedPages.indexOf(name) > -1
-        // }
-
         PageItem {
             name: "Process"
             page: "/qt/qml/Launcher/Launcher.qml"
@@ -164,6 +155,7 @@ ApplicationWindow {
             iconText: MaterialSymbolNames.playground
             iconFont: syms.font.family
             active: true
+            show: false
         }
 
         PageItem {
@@ -381,31 +373,34 @@ ApplicationWindow {
             model: pagesModel.children
 
             // lazy-loading of active page
-            Item {
+            Loader {  // Item {
 
                 Layout.fillHeight: true
                 Layout.fillWidth: true
 
-                LoadingPage {
-                    id: loadingPage
-                    anchors.fill: parent
-                    z: 1
-                }
+                // LoadingPage {
+                //     id: loadingPage
+                //     anchors.fill: parent
+                //     z: 1
+                // }
 
-                Loader {
+                // Loader {
 
                     id: stackPageLoader
                     property string pageName: ''
 
                     anchors.fill: parent
 
-                    asynchronous: true
-                    // visible: status === Loader.Ready
+                    // asynchronous: true
                     active: pagesStack.currentIndex === index
+
+                    onStatusChanged: {
+                        active = true
+                    }
 
                     onLoaded: {
 
-                        loadingPage.opacity = 0
+                        // loadingPage.opacity = 0
 
                         console.log(`${modelData.name} loaded`)
 
@@ -455,7 +450,7 @@ ApplicationWindow {
                     }
                 }
 
-            }
+            // }
         }
     }
 

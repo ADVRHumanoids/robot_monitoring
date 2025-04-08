@@ -1,13 +1,6 @@
 .import "/qt/qml/Main/sharedData.js" as SharedData
 
-let cmdFields = ['posRef', 'k', 'd']
-let cmdFieldsLong = ['Position', 'Stiffness', 'Damping']
-
-let cmdFieldsShortToLong = {
-    'posRef': 'Position',
-    'k': 'Stiffness',
-    'd': 'Damping'
-}
+let cmdFieldsLong = ['Position', 'Velocity', 'Effort', 'Stiffness', 'Damping']
 
 function sendCommand(ctrlJoints, cmdField, ref, trjtime) {
 
@@ -18,6 +11,20 @@ function sendCommand(ctrlJoints, cmdField, ref, trjtime) {
                           `/joint_command/goto/${jointNames}?qref=${cmd}&time=${trjtime}&ctrl=${cmdField}`)
     .then((response) => trjCmdBtn.running = false)
     .catch((err) => console.error(err))
+
+}
+
+function sendContinuousCommand(ctrlJoints, cmdField, ref) {
+
+    let msg = Object()
+    msg.type = 'joint_cmd'
+    msg.joint_names = ctrlJoints
+    msg.command = Array(ctrlJoints.length).fill(ref)
+    msg.ctrl = cmdField
+
+    client.sendTextMessageUdp(JSON.stringify(msg))
+
+    console.log(JSON.stringify(msg))
 
 }
 
@@ -43,19 +50,31 @@ function sliderRange(ctrlJoints, cmdField) {
         let qmax = idx.map(i => SharedData.qmax[i])
         qmin = Math.max(...qmin)
         qmax = Math.min(...qmax)
-        console.log(`Range for ${ctrlJoints} is ${qmin} ${qmax}`)
         return [qmin, qmax]
+    }
+
+    if(cmdField === 'Velocity') {
+        let vmax = idx.map(i => SharedData.vmax[i])
+        vmax = Math.min(...vmax)
+        return [-vmax, vmax]
+    }
+
+    if(cmdField === 'Effort') {
+        let taumax = idx.map(i => SharedData.taumax[i])
+        taumax = Math.min(...taumax)
+        taumax = Math.min(taumax, 50.0)
+        return [-taumax, taumax]
     }
 
     if(cmdField === 'Stiffness') {
         let k = idx.map(i => SharedData.latestJointState.k[i])
-        let kmax = Math.min(...k) * 10.0
+        let kmax = Math.max(Math.min(...k) * 10.0, 100.0)
         return [0, kmax]
     }
 
     if(cmdField === 'Damping') {
         let d = idx.map(i => SharedData.latestJointState.d[i])
-        let dmax = Math.min(...d) * 10.0
+        let dmax = Math.max(Math.min(...d) * 10.0, 50.0)
         return [0, dmax]
     }
 }
@@ -76,6 +95,14 @@ function currentValue(ctrlJoints, cmdField) {
 
     if(cmdField === 'Position') {
         return SharedData.latestJointState.posRef[idx]
+    }
+
+    if(cmdField === 'Velocity') {
+        return 0.0
+    }
+
+    if(cmdField === 'Effort') {
+        return 0.0
     }
 
     if(cmdField === 'Stiffness') {

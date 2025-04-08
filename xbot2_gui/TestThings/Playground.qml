@@ -13,36 +13,91 @@ import Joy
 Item {
 
     property ClientEndpoint client
+    property bool isCurrentPage
 
     id: root
 
-    MultiColumnLayout1 {
+    // lazy-loading of active page
+    property Component pageLoader: Loader {
+
+        id: stackPageLoader
+        property string pageName: ''
+
+        SplitView.fillHeight: true
+        SplitView.fillWidth: true
+        SplitView.preferredHeight: modelData.pageHeight
+        active: true
+
+        onLoaded: {
+
+            console.log(`${modelData.name} loaded`)
+
+            // items[modelData.name.toLowerCase()] = item
+
+            try {
+                item.pageSelected()
+            }
+            catch(err){}
+
+            try {
+                item.isCurrentPage = Qt.binding(() => root.isCurrentPage)
+            }
+            catch(err){}
+
+            item.pageName = modelData.name
+
+            pageName = modelData.name
+
+        }
+
+        Component.onCompleted: {
+            // this is the "constructor"
+            // each page has a .client elem
+            setSource(modelData.page, {'client': root.client})
+        }
+
+    }
+
+    SplitView {
+
         anchors.fill: parent
 
-        columns: Math.ceil(width / 300)
+        SplitView {
+            // left split
+            SplitView.preferredWidth: 2/3 * root.width
+            orientation: Qt.Vertical
+            Repeater {
 
-        Repeater {
 
-            model: spin.value
+                delegate: pageLoader
 
-            AnimatedRectangle {
-                required property int index
-                color: 'green'
-                width: 200
-                height: 200
-                Text {
-                    anchors.centerIn: parent
-                    text: `${index}/${spin.value}`
-                }
+                model: [
+                    {name: 'Launcher', page: '/qt/qml/Launcher/Launcher.qml', pageHeight: root.height/3*2},
+                    {name: 'Joy', page: '/qt/qml/Joy/Joy.qml', pageHeight: root.height/3}
+                ]
+
             }
 
         }
-    }
 
-    SpinBox {
-        id: spin
-        from: 0
-        to: 20
-        value: 10
+        SplitView {
+            // right split
+            orientation: Qt.Vertical
+            SplitView.preferredWidth: 1/3 * root.width
+            Repeater {
+
+
+
+                delegate: pageLoader
+
+                model: [
+                    {name: 'Monitoring', page: '/qt/qml/Monitoring/Monitoring.qml', pageHeight: root.width/3}
+                ]
+
+            }
+        }
+
+
+
     }
 }

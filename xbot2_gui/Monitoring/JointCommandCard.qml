@@ -36,6 +36,7 @@ Card1 {
     // private
     id: root
     name: 'Joint Command'
+    property bool continuousPublishMode: activeCtrl === 'Velocity' || activeCtrl === 'Effort'
     configurable: true
 
     onCtrlJointsChanged: {
@@ -134,7 +135,19 @@ Card1 {
             Layout.columnSpan: 1
             Layout.fillWidth: true
             text: running ? 'Stop' : 'Send'
+            onPressed: {
+                if(root.continuousPublishMode) {
+                    velTorTimer.start()
+                }
+            }
+
             onReleased: {
+
+                if(root.continuousPublishMode) {
+                    velTorTimer.stop()
+                    return
+                }
+
                 if(running) {
                     Logic.stopCommand()
                 }
@@ -160,6 +173,17 @@ Card1 {
 
         Item {
             Layout.fillHeight: true
+        }
+
+        Timer {
+            id: velTorTimer
+            interval: 20
+            repeat: true
+            onTriggered: {
+                Logic.sendContinuousCommand(root.ctrlJoints,
+                                            root.activeCtrl,
+                                            slider.value)
+            }
         }
     }
 

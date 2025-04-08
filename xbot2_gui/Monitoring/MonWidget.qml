@@ -28,12 +28,13 @@ Control {
 
     background: Rectangle {
         id: bg
-        color: Qt.rgba(
+        property color baseColor: Qt.rgba(
                    (1-danger)*okColor.r + danger*badColor.r,
                    (1-danger)*okColor.g + danger*badColor.g,
                    (1-danger)*okColor.b + danger*badColor.b,
                    1.0
                    )
+        color: mouse.containsMouse ? Qt.lighter(baseColor, 1.25) : baseColor
         radius: root.expanded ? 4 : width/2
     }
 
@@ -56,11 +57,13 @@ Control {
         }
 
         MouseArea {
+            id: mouse
             anchors.fill: parent
             onClicked: {
                 root.expanded = !root.expanded
             }
             z: 1
+            hoverEnabled: true
         }
 
         Rectangle {

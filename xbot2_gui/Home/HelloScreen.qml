@@ -83,15 +83,16 @@ MultiPaneResponsiveLayout {
     Popup {
         id: configPopup
         anchors.centerIn: Overlay.overlay
-        width: Overlay.overlay.width * 0.8
-        height: Overlay.overlay.height * 0.8
+        width: Overlay.overlay.width * (layout.expanded ? 0.8 : 1.0)
+        height: Overlay.overlay.height * (layout.expanded ? 0.8 : 1.0)
         Configuration {
             anchors.fill: parent
+            onClosed: configPopup.close()
         }
         modal: true
         focus: true
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
-        padding: 16
+        padding: layout.expanded ? 16 : 4
         clip: true
     }
 

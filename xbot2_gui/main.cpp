@@ -7,6 +7,7 @@
 #include <QtWidgets/QApplication>
 #include <QtQml/qqmlregistration.h>
 #include <QtQuickWidgets/QtQuickWidgets>
+#include <QCryptographicHash>
 
 #include "Video/videostreampainter.h"
 #include "RobotModel/robot_model.h"
@@ -53,6 +54,13 @@ public:
     Q_INVOKABLE uint64_t getTimeNs() const;
 
     Q_INVOKABLE QString getDateTime() const;
+
+    Q_INVOKABLE QString cryptoHash(QString text) const
+    {
+        QCryptographicHash hasher(QCryptographicHash::Algorithm::Sha256);
+        hasher.addData(text.toUtf8());
+        return QString(hasher.result().toBase64());
+    }
 
     Q_INVOKABLE bool copyToClipboard(QString text)
     {

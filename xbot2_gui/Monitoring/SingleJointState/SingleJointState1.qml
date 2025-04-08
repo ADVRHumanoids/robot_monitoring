@@ -291,6 +291,8 @@ Item {
                                 target: updTimer
                                 function onTriggered() {
 
+
+
                                     if(shortName === '') {
                                         return
                                     }

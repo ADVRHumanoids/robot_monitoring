@@ -38,6 +38,10 @@ Item {
     //
     id: root
 
+    Component.onCompleted: {
+
+    }
+
     implicitWidth: card.implicitWidth
 
     implicitHeight: card.implicitHeight
@@ -48,8 +52,9 @@ Item {
         '#D27CFF',
         '#FF9F45',
         '#33FFD0',
-        '#FF77A8',
-        '#B388FF'
+        '#82E0AA',
+        '#B388FF',
+        '#5EEAD4'
     ]
 
     Card1 {
@@ -64,6 +69,15 @@ Item {
                 onClicked: {
                     let txt = consoleRepeater.itemAt(consoleCombo.currentIndex).getText()
                     appData.copyToClipboard(txt)
+                }
+                onDoubleClicked: {
+                    if(!CommonProperties.config.testing) {
+                        return
+                    }
+
+                    for(let i = 0; i < 10000; i++) {
+                        appendText('launcher', i+'Example text Example text Example text Example text Example text Example text Example text Example text Example text Example text Example text Example text Example text ')
+                    }
                 }
             },
 
@@ -138,68 +152,5 @@ Item {
         }
 
     }
-
-
-    // Item {
-    //     property string textAggregated
-    //     property var textMap
-    // }
-
-    // ColumnLayout {
-
-    //     anchors.fill: parent
-
-    //     SectionHeader {
-
-    //         text: 'Console Output'
-
-    //         Layout.fillWidth: true
-
-    //         Button {
-    //             text: 'C'
-    //             onClicked: {
-    //                 cfg.visible = !cfg.visible
-    //             }
-    //         }
-
-    //         ComboBox {
-    //             model: ['All']
-    //         }
-
-    //         CheckBox {
-    //             text: 'Autoscroll'
-    //             checked: true
-    //             id: autoscrollCheck
-    //         }
-
-    //     }
-
-
-    //     Item {
-
-    //         id: cfg
-    //         clip: true
-
-    //         Layout.fillWidth: true
-    //         Layout.fillHeight: true
-    //         Layout.preferredHeight: implicitHeight
-    //         implicitHeight: grid.implicitHeight
-    //         implicitWidth: grid.implicitWidth
-
-    //         GridLayout {
-    //             id: grid
-    //             anchors.fill: parent
-    //             Repeater {
-    //                 model: root.processNames
-    //                 CheckBox {
-    //                     text: modelData
-    //                 }
-    //             }
-    //         }
-    //     }
-
-
-
-
 
 }

@@ -96,9 +96,11 @@ Item {
 
     property Item config: Item {
         id: config
+        property bool testing: true
         property bool showSoftEmergency: false
         property bool showMonWidget: false
         property bool showLauncherDashboard: false
+        property bool adminPwdOk: false
     }
 
     Settings {

@@ -34,7 +34,9 @@ Item {
             text: jointName
             background: Rectangle {
                 border.color: "red"
-                color: _statusOk ? Qt.rgba(0.9, 0.9, 0.9, labelColorAlpha) : Qt.rgba(1, 0, 0, labelColorAlpha)
+                color: _statusOk ?
+                           Qt.rgba(0.9, 0.9, 0.9, labelColorAlpha) :
+                           Qt.rgba(1, 0, 0, labelColorAlpha)
                 radius: 3
                 border.width: _statusOk ? 0 : 1
             }
@@ -47,8 +49,10 @@ Item {
                 id: labelMouseArea
                 anchors.fill: parent
                 hoverEnabled: true
+                preventStealing: true
 
                 onHoveredChanged: {
+                    console.log(jointName)
                     if(labelMouseArea.containsMouse)
                     {
                         labelColorAlpha = 0.6
@@ -59,7 +63,9 @@ Item {
                     }
                 }
 
-                onClicked:  jointClicked(jointName)
+                onClicked: {
+                    jointClicked(jointName)
+                }
             }
         }
 

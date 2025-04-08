@@ -83,7 +83,7 @@ Item {
                                                           'sizeFactor': (obj.sizeFactor || 1.0) * root.sizeFactor,
                                                           'enabled': Qt.binding(() => { return obj.active })
                                                       })
-            console.log(`created button ${btn.text} ${btn.iconChar}`)
+            // console.log(`created button ${btn.text} ${btn.iconChar}`)
             buttonItems.push(btn)
         }
 
@@ -129,7 +129,7 @@ Item {
 
     Flickable {
         id: hScroll
-        width: Math.min(contentWidth, parent.width - 100)
+        width: Math.min(contentWidth, parent.width - 40)
         height: parent.height
         anchors.centerIn: visible ? parent : undefined
         contentHeight: height

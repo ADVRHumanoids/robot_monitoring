@@ -2,7 +2,8 @@ import asyncio
 from aiohttp import web
 import json
 
-import rospy
+import rclpy
+from rclpy.node import Node
 from std_srvs.srv import SetBool, Trigger
 from std_msgs.msg import String
 from geometry_msgs.msg import TwistStamped, Twist
@@ -54,7 +55,8 @@ class DashboardHandler:
                            'dashboard_start')
         
         # subscribe to stats
-        self.stats_sub = rospy.Subscriber('xbotcore/statistics', Statistics2, self.on_stats_recv)
+        self.node = rclpy.create_node('dashboard')
+        self.stats_sub = self.node.create_subscription(Statistics2, 'xbotcore/statistics', self.on_stats_recv, 10)
         self.stats: Statistics2 = None
 
         # launcher
@@ -210,7 +212,8 @@ class DashboardHandler:
     
 
     async def plugin_switch(self, plugin_name, switch_flag):
-        switch = rospy.ServiceProxy(f'xbotcore/{plugin_name}/switch', service_class=SetBool)
+        self.cli = self.create_client(AddTwoInts, 'add_two_ints')
+        switch = self.node.create_client(SetBool, f'xbotcore/{plugin_name}/switch')
         await utils.to_thread(switch.wait_for_service, timeout=1.0)
         res = await utils.to_thread(switch, switch_flag)
         return res.success

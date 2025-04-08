@@ -94,7 +94,7 @@ def main():
         except ModuleNotFoundError:
             pass
         except BaseException as e:
-            print('Exception ', type(e), e)  
+            print('Launcher Exception ', type(e), e)  
 
         # cartesian
         try:
@@ -113,7 +113,7 @@ def main():
         except ModuleNotFoundError:
             pass
         except BaseException as e:
-            print('Exception ', type(e), e)  
+            print('SpeechHandler Exception ', type(e), e)  
 
 
         # visual
@@ -123,7 +123,7 @@ def main():
             extensions.append(ext)
             print(ext)
         except BaseException as e:
-            print('Exception ', type(e), e)  
+            print('VisualHandler Exception ', type(e), e)  
 
         # concert
         if 'concert' in cfg.keys():
@@ -133,7 +133,7 @@ def main():
                 extensions.append(ext)
                 print(ext)    
             except BaseException as e:
-                print('Exception ', type(e), e)  
+                print('ConcertHandler Exception ', type(e), e)  
 
         # ecat
         if 'ecat' in cfg.keys():
@@ -154,7 +154,7 @@ def main():
             extensions.append(ext)
             print(ext)
         except BaseException as e:
-            print('Exception ', type(e), e)
+            print('DashboardHandler Exception ', type(e), e)
 
         try:
             from .parameters import ParameterHandler
@@ -162,7 +162,7 @@ def main():
             extensions.append(ext)
             print(ext)
         except BaseException as e:
-            print('Exception ', type(e), e)
+            print('ParameterHandler Exception ', type(e), e)
 
         srv.extensions = extensions
 

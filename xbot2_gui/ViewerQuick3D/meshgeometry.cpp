@@ -44,7 +44,7 @@ void MeshGeometry::updateData()
     //     UINT16    – Attribute byte count      -  2 bytes
     // end
 
-    qInfo("mesh size = %d bytes", m_meshFile.size());
+    // qInfo("mesh size = %d bytes", m_meshFile.size());
 
     if(m_meshFile.size() < 84)
     {
@@ -64,7 +64,7 @@ void MeshGeometry::updateData()
     auto bnumTriangles = m_meshFile.sliced(readIdx, sizeof(float));
     readIdx += sizeof(float);
     uint32_t numTriangles = *reinterpret_cast<uint32_t*>(bnumTriangles.data());
-    qInfo("mesh triangles = %d", numTriangles);
+    // qInfo("mesh triangles = %d", numTriangles);
 
     QByteArray vertices;
 

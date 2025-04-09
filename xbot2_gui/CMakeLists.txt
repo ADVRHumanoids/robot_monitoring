@@ -73,7 +73,6 @@ if(NOT EMSCRIPTEN)
     target_link_libraries(xbot2_gui
         PUBLIC
         Qt6::WebView
-        mesh_geometry
     )
 
 endif()
@@ -123,8 +122,6 @@ add_subdirectory(TestThings)
 add_subdirectory(Joy)
 
 add_subdirectory(Video)
-
-add_subdirectory(Viewer3D)
 
 add_subdirectory(ViewerQuick3D)
 

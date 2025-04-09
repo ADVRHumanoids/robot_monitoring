@@ -11,17 +11,15 @@ let vbattCurrentThreshold = 49.5
 
 function jsCallback(js) {
 
-    if(root.isCurrentPage) {
-        robotViewer.updateRobotState(js,
-                                     robotViewer.robotState,
-                                     'linkPos')
+    barPlot.setJointStateMessage(js)
 
-        barPlot.setJointStateMessage(js)
-
-        jointState.setJointStateMessage(js)
-    }
+    jointState.setJointStateMessage(js)
 
     addJointStatePoint(livePlot, js)
+
+    // robotViewer.updateRobotState(js,
+    //                              robotViewer.robotState,
+    //                              'linkPos')
 
     for(let aux of js.aux_types) {
         barPlot.addAuxType(aux)
@@ -64,6 +62,15 @@ function objCallback(obj) {
     }
 }
 
+function construct() {
+    client.jointStateReceived.connect(jsCallback)
+    client.objectReceived.connect(objCallback)
+}
+
+function destroy() {
+    client.jointStateReceived.disconnect(jsCallback)
+    client.objectReceived.disconnect(objCallback)
+}
 
 function addJointStateSeries(livePlot, jName, fieldName) {
 
@@ -149,10 +156,7 @@ function setFilterProfile(profile) {
                      })
 }
 
-function setSafetyState(ok, cli=undefined) {
-
-    let client = cli ? cli : root.client
-
+function setSafetyState(ok) {
     client.doRequest('POST', '/joint/safety/set_enabled?enabled=' + ok,
                      '',
                      (msg) =>

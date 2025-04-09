@@ -1,8 +1,8 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
-import QtDataVisualization
 
+import Font
 import "../Common"
 
 Item {
@@ -18,7 +18,7 @@ Item {
             i = processNames.indexOf(procName)
         }
 
-        let color = theme.baseColors[(i+1) % theme.baseColors.length].color
+        let color = colors[(i+1) % colors.length]
 
         text = `<font color="${color}">` + text + '</font>'
 
@@ -38,39 +38,24 @@ Item {
     //
     id: root
 
+    Component.onCompleted: {
+
+    }
+
     implicitWidth: card.implicitWidth
 
     implicitHeight: card.implicitHeight
 
-    // https://doc.qt.io/qt-6/qml-color.html
-    Theme3D {
-        id: theme
-        type: Q3DTheme.ThemeUserDefined
-        baseColors: [
-            ThemeColor {
-                color: 'white'
-            },
-            ThemeColor {
-                color: 'aquamarine'
-            },
-            ThemeColor {
-                color: 'darkkhaki'
-            },
-            ThemeColor {
-                color: 'mediumspringgreen'
-            },
-            ThemeColor {
-                color: 'greenyellow'
-            },
-            ThemeColor {
-                color: 'lightpink'
-            },
-            ThemeColor {
-                color: 'lightseagreen'
-            }
-
-        ]
-    }
+    property list<string> colors: [
+        '#4DADF7',
+        '#22E3A4',
+        '#D27CFF',
+        '#FF9F45',
+        '#33FFD0',
+        '#82E0AA',
+        '#B388FF',
+        '#5EEAD4'
+    ]
 
     Card1 {
         id: card
@@ -79,6 +64,23 @@ Item {
         name: 'Console Output'
 
         toolButtons: [
+            Button {
+                text: 'Copy'
+                onClicked: {
+                    let txt = consoleRepeater.itemAt(consoleCombo.currentIndex).getText()
+                    appData.copyToClipboard(txt)
+                }
+                onDoubleClicked: {
+                    if(!CommonProperties.config.testing) {
+                        return
+                    }
+
+                    for(let i = 0; i < 10000; i++) {
+                        appendText('launcher', i+'Example text Example text Example text Example text Example text Example text Example text Example text Example text Example text Example text Example text Example text ')
+                    }
+                }
+            },
+
             Button {
                 text: 'Clear'
                 onClicked: {
@@ -150,68 +152,5 @@ Item {
         }
 
     }
-
-
-    // Item {
-    //     property string textAggregated
-    //     property var textMap
-    // }
-
-    // ColumnLayout {
-
-    //     anchors.fill: parent
-
-    //     SectionHeader {
-
-    //         text: 'Console Output'
-
-    //         Layout.fillWidth: true
-
-    //         Button {
-    //             text: 'C'
-    //             onClicked: {
-    //                 cfg.visible = !cfg.visible
-    //             }
-    //         }
-
-    //         ComboBox {
-    //             model: ['All']
-    //         }
-
-    //         CheckBox {
-    //             text: 'Autoscroll'
-    //             checked: true
-    //             id: autoscrollCheck
-    //         }
-
-    //     }
-
-
-    //     Item {
-
-    //         id: cfg
-    //         clip: true
-
-    //         Layout.fillWidth: true
-    //         Layout.fillHeight: true
-    //         Layout.preferredHeight: implicitHeight
-    //         implicitHeight: grid.implicitHeight
-    //         implicitWidth: grid.implicitWidth
-
-    //         GridLayout {
-    //             id: grid
-    //             anchors.fill: parent
-    //             Repeater {
-    //                 model: root.processNames
-    //                 CheckBox {
-    //                     text: modelData
-    //                 }
-    //             }
-    //         }
-    //     }
-
-
-
-
 
 }

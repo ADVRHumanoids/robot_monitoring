@@ -10,6 +10,7 @@ Pane {
     property alias joyYEnabled: chkY.checked
     property alias maxSpeed: maxSpeedLinearSpinBox.value
     property alias alwaysWalk: enableSwitch.checked
+    property alias gaitType: gaitCombo.currentText
 
     //
     id: root
@@ -17,11 +18,29 @@ Pane {
     contentItem: ColumnLayout {
 
         Switch {
+            visible: false
             id: enableSwitch
             text: 'Enable'
             onCheckedChanged: {
 
             }
+        }
+
+        Item {
+            visible: false
+            width: parent.width
+            height: 3
+        }
+
+        Label {
+            text: ' gait'
+            font.pointSize: 10
+        }
+
+        ComboBox {
+            id: gaitCombo
+            Layout.fillWidth: true
+            model: ['Trot', 'Walk', 'Crawl']
         }
 
         Item {
@@ -34,15 +53,14 @@ Pane {
             font.pointSize: 10
         }
 
-        DoubleSpinBox {
+        DoubleSpinBox1 {
             Layout.fillWidth: true
             width: parent.width
             id: maxSpeedLinearSpinBox
             from: 0.0
-            to: 0.40
-            stepSize: 0.05
-            value: 0.2
+            to: 2.0
             decimals: 2
+            value: 0.2
         }
 
         Item {

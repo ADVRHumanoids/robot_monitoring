@@ -3,7 +3,7 @@ function makeModel(linkToUri) {
     let model = []
 
     for (const [key, value] of Object.entries(linkToUri)) {
-        console.log(`${key}: ${JSON.stringify(value)}`);
+        // console.log(`${key}: ${JSON.stringify(value)}`);
         let obj = {}
         obj.linkName = key
         obj.filename = value.filename
@@ -62,12 +62,12 @@ function getPose(model, linkName) {
 
 function updateQ(q) {
 
-    if(q.length !== model.ndof) {
-        console.error(`q.length !== model.ndof (${q.length} !== ${model.ndof})`)
+    if(q.length !== robotModel.ndof) {
+        console.error(`q.length !== model.ndof (${q.length} !== ${robotModel.ndof})`)
         return
     }
 
-    model.setJointPosition(q)
+    robotModel.setJointPosition(q)
 
     for(let i = 0; i < visualRepeater.count; i++) {
 
@@ -75,7 +75,7 @@ function updateQ(q) {
 
         let linkName = visualRepeater.model[i].linkName || ''
 
-        let pose = model.getPose(linkName)
+        let pose = robotModel.getPose(linkName)
 
         obj.position = Qt.vector3d(pose.translation[0]*100,
                                       pose.translation[1]*100,
@@ -95,16 +95,16 @@ function createViewer() {
     visualRepeater.model = 0
 
     // get mesh and then robot
-    client.doRequestAsync('GET', '/visual/get_mesh_entities', '')
+    client.doRequestAsync('GET', '/joint_states/urdf', '')
     .then((response) =>
           {
-              visualRepeater.model = makeModel(response)
+              robotModel.setUrdf(response.urdf, false)
 
-              return client.doRequestAsync('GET', '/joint_states/urdf', '')
+              return client.doRequestAsync('GET', '/visual/get_mesh_entities', '')
           })
     .then((response) =>
           {
-              model.setUrdf(response.urdf, false)
+              visualRepeater.model = makeModel(response)
           })
 
     .catch((err) => { console.error(err) })

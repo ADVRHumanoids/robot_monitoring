@@ -23,17 +23,21 @@ Item {
         model.clear()
     }
 
+    function getText() {
+        let txt = ''
+        for(let i = 0; i < model.count; i++) {
+            txt = txt + model.get(i).txt + '\n'
+        }
+        return txt
+
+    }
+
     id: root
     implicitHeight: view.implicitHeight
     implicitWidth: view.implicitWidth
 
     property Component delegate: Component {
         TextEdit {
-
-            MouseArea {
-                anchors.fill: parent
-                z: 1
-            }
 
             // placeholderText: name
             font.pixelSize: 14

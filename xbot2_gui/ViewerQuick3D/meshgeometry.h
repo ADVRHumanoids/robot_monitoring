@@ -6,7 +6,7 @@
 class MeshGeometry : public QQuick3DGeometry
 {
     Q_OBJECT
-    QML_NAMED_ELEMENT(MeshGeometry)
+    QML_ELEMENT
     Q_PROPERTY(QByteArray meshFile READ meshFile WRITE setMeshFile NOTIFY meshFileChanged)
 
 public:

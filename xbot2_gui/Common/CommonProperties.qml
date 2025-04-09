@@ -2,7 +2,7 @@ pragma Singleton
 
 import QtQuick
 import QtQuick.Controls.Material
-
+import QtCore
 
 Item {
 
@@ -21,7 +21,7 @@ Item {
     property Item geom: Item {
         property int mobileBreakpoint: 576
         property int cardRadius: 4
-        property int spacing: 16
+        property int spacing: 8
         property int margins: compactLayout ? 16 : 24
         property bool compactLayout: false
         property bool mediumLayout: false
@@ -94,5 +94,19 @@ Item {
 
     property Item globalLivePlot
 
+    property Item config: Item {
+        id: config
+        property bool testing: true
+        property bool showSoftEmergency: false
+        property bool showMonWidget: false
+        property bool showLauncherDashboard: false
+        property bool adminPwdOk: false
+    }
+
+    Settings {
+        category: 'configuration_general'
+        property alias showSoftEmergency: config.showSoftEmergency
+        property alias showMonWidget: config.showMonWidget
+    }
 
 }

@@ -23,6 +23,8 @@ public:
 
     QList<QString> jointNames;
 
+    QString parentJointName(QString linkName) const;
+
 private:
 
     RigidBodyDynamics::Model _model;
@@ -66,6 +68,11 @@ int RobotModel::ndof()
 QList<QString> RobotModel::jointNames()
 {
     return i ? i->jointNames : QList<QString>();
+}
+
+QString RobotModel::parentJointName(QString linkName) const
+{
+    return i->parentJointName(linkName);
 }
 
 void RobotModel::Impl::setJointPosition(QList<qreal> q)
@@ -123,9 +130,9 @@ Pose RobotModel::Impl::getPose(QString frame)
 
 QList<QString> RobotModel::Impl::getJointNames()
 {
-    std::cout << "_model.mJoints.size() " << _model.mJoints.size() << "\n";
-    std::cout << "_model.mBodies.size() " << _model.mBodies.size() << "\n";
-    std::cout << "_model.dof_count " << _model.dof_count << "\n";
+    // std::cout << "_model.mJoints.size() " << _model.mJoints.size() << "\n";
+    // std::cout << "_model.mBodies.size() " << _model.mBodies.size() << "\n";
+    // std::cout << "_model.dof_count " << _model.dof_count << "\n";
 
     QList<QString> ret(_model.dof_count);
 
@@ -165,6 +172,25 @@ QList<QString> RobotModel::Impl::getJointNames()
     }
 
     return ret;
+}
+
+QString RobotModel::Impl::parentJointName(QString linkName) const
+{
+    auto link = _urdf->link_map[linkName.toStdString()];
+
+    if(!link)
+    {
+        return "";
+    }
+
+    auto joint = link->parent_joint;
+
+    if(!joint)
+    {
+        return "";
+    }
+
+    return QString::fromStdString(joint->name);
 }
 
 RobotModel::~RobotModel()

@@ -6,6 +6,10 @@ import Audio
 
 GridLayout {
 
+    signal closed()
+
+    id: root
+
     columns: 1
 
     TabBar {
@@ -37,6 +41,12 @@ GridLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
         }
+    }
+
+    Button {
+        text: 'Close'
+        onClicked: root.closed()
+        Layout.alignment: Qt.AlignRight
     }
 }
 

@@ -7,10 +7,6 @@ import Common
 
 Item {
 
-    PlotRebuilder {
-        id: rebuilder
-    }
-
     // public
     property Item plotterLegend
 
@@ -20,7 +16,11 @@ Item {
 
     property string axisRightTitle: ''
 
+    property string axisXTitle: 'time [s]'
+
     property alias interactive: mouseArea.enabled
+
+    signal doubleClicked()
 
     function addSeries(seriesName, seriesProps, useSecondaryValueAxis) {
         return  _addSeries(seriesName, seriesProps, useSecondaryValueAxis)
@@ -41,6 +41,9 @@ Item {
             axisValue.min = val - (axisValue.max - axisValue.min)*0.1
         }
 
+        valMax = Math.max(val, valMax)
+        valMin = Math.min(val, valMin)
+
         // remove old samples to avoid out of memory
         if(seriesData.series.count > 110000) {
             seriesData.series.removePoints(0, 10000)
@@ -48,6 +51,33 @@ Item {
 
         // save current time for autoscroll
         currTime = t
+    }
+
+    function setPoints(seriesData, t_list, val_list) {
+
+        // set points
+        rebuilder.setPoints(seriesData.series, t_list, val_list)
+        let valMax = Math.max(...val_list)
+        let valMin = Math.min(...val_list)
+
+        // handle autoscale
+        let axisValue = seriesData.axisValue
+
+        console.log(`min = ${valMin} max = ${valMax} -- ${axisValue.max} ${axisValue.min}`)
+
+        if(axisValue.max < valMax && chart.autoscale) {
+            axisValue.max = valMax + (axisValue.max - axisValue.min)*0.1
+        }
+
+        if(axisValue.min > valMin && chart.autoscale) {
+            axisValue.min = valMin - (axisValue.max - axisValue.min)*0.1
+        }
+    }
+
+    function setXRange(xmin, xmax) {
+        chart.autoscroll = false
+        axisTime.min = xmin
+        axisTime.max = xmax
     }
 
     function rebuild() {
@@ -113,7 +143,12 @@ Item {
 
     property bool _rebuilding: false
     property real currTime: 0
+    property real valMin: 1e9
+    property real valMax: -1e9
 
+    PlotRebuilder {
+        id: rebuilder
+    }
 
     function _addSeries(seriesName, seriesProps, useSecondaryValueAxis) {
 
@@ -315,13 +350,15 @@ Item {
                     rubberBand.visible = false
                 }
             }
+
+            onDoubleClicked: root.doubleClicked()
         }
 
         ValuesAxis {
             id: axisTime
             max: currTime
             min: Math.max(currTime - timeSpan, 0)
-            titleText: "<font color='white'>time [s]</font>"
+            titleText: `<font color='white'>${root.axisXTitle}</font>`
             labelsColor: CommonProperties.colors.primaryText
         }
 
@@ -355,7 +392,7 @@ Item {
         }
 
         Component.onCompleted: {
-            removeAllSeries()
+            // removeAllSeries()
         }
 
     }

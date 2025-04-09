@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+
+import Common
 import "BarPlot.js" as Logic
 
 // allow to scroll this widget if viewport height
@@ -8,9 +10,9 @@ import "BarPlot.js" as Logic
 Item {
 
     // main properties
-    property var jointNames: []
-    property var min: []
-    property var max: []
+    property list<string> jointNames: []
+    property list<real> min: []
+    property list<real> max: []
     property string fieldName: "tor"
     property string fieldNameRef: "torRef"
     property alias container: container

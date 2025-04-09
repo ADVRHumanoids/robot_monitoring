@@ -18,6 +18,8 @@ Rectangle {
     property alias robotCmd: robotCmd
     property alias showRobotCmd: showCmdChk.checked
 
+    signal jointClicked(string jointName)
+
     function updateRobotState(js, robot, fieldName) {
         Logic.updateViewerState(js, robot, fieldName)
     }
@@ -86,8 +88,14 @@ Rectangle {
 
             DirectionalLight {
                 ambientColor: Qt.rgba(0.5, 0.5, 0.5, 1.0)
-                brightness: 1.0
+                brightness: 1
                 eulerRotation.x: -25
+            }
+
+            DirectionalLight {
+                ambientColor: Qt.rgba(0.5, 0.5, 0.5, 1.0)
+                brightness: 1
+                eulerRotation.x: 25
             }
 
             RobotModelNode {
@@ -122,7 +130,7 @@ Rectangle {
 
         environment: SceneEnvironment {
                  backgroundMode: SceneEnvironment.Color
-                 clearColor: palette.active.base
+                 clearColor: palette.active.window
                  InfiniteGrid {
                      gridInterval: 30
                  }
@@ -136,10 +144,20 @@ Rectangle {
 
         MouseArea {
             anchors.fill: parent
+            property var lastPicked: undefined
             onClicked: (mouse) => {
+                try {
+                    lastPicked.isPicked = false
+                }
+                catch(err) {}
+
                 var result = view3d.pick(mouse.x, mouse.y);
                 var pickedObject = result.objectHit;
                 pickedObject.isPicked = !pickedObject.isPicked;
+                console.log(pickedObject.parentJointName)
+                root.jointClicked(pickedObject.parentJointName)
+
+                lastPicked = pickedObject
             }
         }
     }

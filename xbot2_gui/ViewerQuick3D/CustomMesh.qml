@@ -3,7 +3,6 @@ import QtQuick3D
 import QtQuick3D.Helpers
 import ViewerQuick3D
 import Main
-import Viewer3D as V
 
 Node {
 
@@ -23,6 +22,9 @@ Node {
     property real cylinderRadius
     property real cylinderLength
 
+    property string parentJointName
+
+
     // private
     id: root
 
@@ -39,12 +41,15 @@ Node {
             visible: true
             pickable: true
             property bool isPicked: false
+            property alias parentJointName: root.parentJointName
             materials: [
-                DefaultMaterial {
+                PrincipledMaterial {
                     id: material
-                    diffuseColor: model.isPicked ?
-                                      Qt.lighter(root.color) :
-                                      root.color
+                    baseColor: model.isPicked ?
+                                Qt.lighter(root.color) :
+                                root.color
+                    metalness: 0
+                    roughness: 0
                 }
             ]
         }
@@ -57,7 +62,7 @@ Node {
     }
 
 
-    V.CachedVisual {
+    CachedVisual {
 
         id: cachedVisual
 
@@ -88,19 +93,6 @@ Node {
                                  `http://${client.hostname}:${client.port}/visual/get_mesh/${encodeURIComponent(meshUri)}`)
 
 
-
-            // let callback = (msg) => {
-            //     console.log(`recv mesh ${meshUri}`)
-            //     geom.meshFile = msg
-            //     model.geometry = geom
-            // }
-
-            // let meshFilename = `/visual/get_mesh/${encodeURIComponent(meshUri)}`
-
-            // client.doRequestRaw('GET',
-            //                     meshFilename,
-            //                     '',
-            //                     callback)
         }
 
 

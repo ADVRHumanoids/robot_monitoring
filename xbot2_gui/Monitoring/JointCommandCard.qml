@@ -9,22 +9,50 @@ import "/qt/qml/Main/sharedData.js" as SharedData
 
 import "JointCommand.js" as Logic
 
-Card {
+Card1 {
 
     property ClientEndpoint client
     property RobotModelNode robotCmd
     signal resetCmd()
     signal cmdChanged()
-    function selectJoint(jname) {
-        nameCombo.currentIndex = nameCombo.find(jname)
+    property list<string> ctrlJoints
+    property alias activeCtrl: ctrlCombo.currentText
+
+    function selectJoint(jName) {
+        if(multiJointChk.checked) {
+            ctrlJoints.push(jName)
+            ctrlJoints = [...new Set(ctrlJoints)]
+        }
+        else {
+            ctrlJoints = [jName]
+        }
+    }
+
+    function removeJoint(jName) {
+        ctrlJoints = ctrlJoints.filter(n => n !== jName)
     }
 
 
     // private
     id: root
     name: 'Joint Command'
+    property bool continuousPublishMode: activeCtrl === 'Velocity' || activeCtrl === 'Effort'
     configurable: true
 
+    onCtrlJointsChanged: {
+        Qt.callLater( () => {
+            slider.value = Logic.currentValue(root.ctrlJoints, root.activeCtrl)
+        })
+        root.resetCmd()
+    }
+
+    toolButtons: [
+        ComboBox {
+            id: ctrlCombo
+            model: Logic.cmdFieldsLong
+            onCurrentIndexChanged: root.ctrlJointsChanged()
+        }
+    ]
 
     frontItem: GridLayout {
 
@@ -38,59 +66,95 @@ Card {
         rowSpacing: 16
 
 
-        ComboBox {
-            Layout.fillWidth: true
-            id: nameCombo
+        Flow {
+            spacing: 4
             Layout.columnSpan: 2
-            model: robotCmd.jointNames
-            onCurrentIndexChanged: {
-                root.resetCmd()
-                slider.value = robotCmd.q[currentIndex]
+            Layout.fillWidth: true
+            Repeater {
+                id: jointRepeater
+                model: root.ctrlJoints
+                Label {
+                    padding: 4
+                    text: modelData
+                    background: Rectangle {
+                        color: Qt.rgba(1, 1, 1, 0.1)
+                        radius: 2
+                    }
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: root.removeJoint(modelData)
+                    }
+                    Component.onCompleted: clearBtn.height = height
+                }
+            }
+            ToolButton {
+                id: clearBtn
+                text: 'X'
+                visible: jointRepeater.count > 1
+                onClicked: root.ctrlJoints = []
             }
         }
 
-        Slider {
+        RowLayout {
+
             Layout.fillWidth: true
-            id: slider
             Layout.columnSpan: 2
-            onMoved: {
-                robotCmd.q[nameCombo.currentIndex] = value
-                robotCmd.qChanged()
-                root.cmdChanged()
+
+            Slider {
+                enabled: root.ctrlJoints.length > 0
+                Layout.fillWidth: true
+                id: slider
+
+                onMoved: {
+                    if(root.activeCtrl === 'Position') {
+                        robotCmd.q = Logic.updateQ(robotCmd.q, root.ctrlJoints)
+                        robotCmd.qChanged()
+                        root.cmdChanged()
+                    }
+                }
+                from: Logic.sliderRange(root.ctrlJoints, root.activeCtrl)[0]
+                to: Logic.sliderRange(root.ctrlJoints, root.activeCtrl)[1]
+
             }
-            from: SharedData.qmin[SharedData.jointNames.indexOf(nameCombo.currentText)]
-            to: SharedData.qmax[SharedData.jointNames.indexOf(nameCombo.currentText)]
 
-            Rectangle {
-                anchors.centerIn: sliderLabel
-                width: sliderLabel.width + 8
-                height: sliderLabel.height + 8
-                color: Qt.rgba(0, 0, 0, 0.3)
-                radius: 4
-            }
-
-
-            Label {
+            TextField {
+                enabled: root.ctrlJoints.length > 0
                 id: sliderLabel
-                anchors.centerIn: parent
-                text: parent.value.toFixed(2)
-                z: 1
+                text: slider.value.toFixed(2)
+                onAccepted: {
+                    slider.value = parseFloat(text)
+                }
             }
+
         }
 
         Button {
             id: trjCmdBtn
             property bool running: false
+            enabled: root.ctrlJoints.length > 0
             Layout.columnSpan: 1
             Layout.fillWidth: true
             text: running ? 'Stop' : 'Send'
+            onPressed: {
+                if(root.continuousPublishMode) {
+                    velTorTimer.start()
+                }
+            }
+
             onReleased: {
+
+                if(root.continuousPublishMode) {
+                    velTorTimer.stop()
+                    return
+                }
+
                 if(running) {
                     Logic.stopCommand()
                 }
                 else {
                     running = true
-                    Logic.sendCommand(nameCombo.currentText,
+                    Logic.sendCommand(root.ctrlJoints,
+                                      root.activeCtrl,
                                       slider.value,
                                       trjTimeSpin.value)
                 }
@@ -98,25 +162,39 @@ Card {
         }
 
         Button {
+            enabled: root.ctrlJoints.length > 0
             Layout.columnSpan: 1
             Layout.fillWidth: true
             text: 'Reset'
             onReleased: {
-                root.resetCmd()
-                nameCombo.currentIndexChanged()
+                root.ctrlJointsChanged()
             }
         }
 
         Item {
             Layout.fillHeight: true
         }
+
+        Timer {
+            id: velTorTimer
+            interval: 20
+            repeat: true
+            onTriggered: {
+                Logic.sendContinuousCommand(root.ctrlJoints,
+                                            root.activeCtrl,
+                                            slider.value)
+            }
+        }
     }
 
     backItem: Control {
 
-        contentItem: Column {
+        contentItem: GridLayout {
 
-            spacing: 6
+            columns: 2
+
+            columnSpacing: 6
+            rowSpacing: 6
 
             Label {
                 text: 'Trajectory time'
@@ -128,6 +206,13 @@ Card {
                 to: 10.0
                 stepSize: 1.0
                 value: 5.0
+            }
+
+            CheckBox {
+                Layout.columnSpan: 2
+                id: multiJointChk
+                checked: false
+                text: 'Enable multiple joints'
             }
         }
 

@@ -9,4 +9,5 @@ Item {
     property url iconSource
     property real sizeFactor: 1.0
     property bool lazyLoad: true
+    property bool show: true
 }

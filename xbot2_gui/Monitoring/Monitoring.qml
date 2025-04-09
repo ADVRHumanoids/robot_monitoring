@@ -7,7 +7,7 @@ import Common
 import Main
 import Monitoring.BarPlot
 import Monitoring.SingleJointState
-import ViewerQuick3D as V
+import ViewerQuick3D
 
 import "Monitoring.js" as Logic
 
@@ -16,6 +16,7 @@ MultiPaneResponsiveLayout {
     property ClientEndpoint client
     property Item robotViewer: loader.item
     enabled: client.robotConnected
+    property bool isCurrentPage
 
     id: root
     property Item livePlot: CommonProperties.globalLivePlot
@@ -59,7 +60,7 @@ MultiPaneResponsiveLayout {
                     id: jointDevice
                     Layout.fillWidth: true
                     Layout.preferredWidth: 1
-                    Layout.preferredHeight: height
+                    // Layout.preferredHeight: height
                     bannerHeight: batt.height
                     collapsed: true
                     onSetSafetyState: Logic.setSafetyState(ok)
@@ -106,7 +107,7 @@ MultiPaneResponsiveLayout {
                 id: scroll1
 
                 width: parent.width
-                height: leftRoot.height - jointDeviceGrid.height - parent.spacing - parent.topPadding - parent.bottomPadding
+                height: leftRoot.height - jointDevice.height - parent.spacing - parent.topPadding - parent.bottomPadding
                 contentWidth: availableWidth
 
                 Column {
@@ -126,7 +127,6 @@ MultiPaneResponsiveLayout {
                                 id: barPlotCombo
                                 Layout.fillWidth: true
                                 model: barPlot.fieldNames
-                                width: implicitWidth
                                 wheelEnabled: true
                             }
 
@@ -186,18 +186,21 @@ MultiPaneResponsiveLayout {
             id: loader
             width: parent.width
             asynchronous: true
-            // visible: status === Loader.Ready
             active: true
 
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.preferredHeight: 200
 
-            sourceComponent: V.RobotModelViewer {
+            sourceComponent: RobotModelViewer {
                 id: robotViewer
                 client: root.client
                 color: Qt.transparent
-                // backgroundColor: 'transparent'
+
+                onJointClicked: function(jointName) {
+                    jointState.selectJoint(jointName)
+                    jointCommand.selectJoint(jointName)
+                }
 
             }
 

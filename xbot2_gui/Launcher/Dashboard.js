@@ -12,8 +12,6 @@ function refresh() {
 
             root.stateNames = tmp_stateNames
 
-            console.log(`${root.stateNames}`)
-
         })
 }
 

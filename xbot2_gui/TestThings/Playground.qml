@@ -10,98 +10,94 @@ import Font
 import Menu
 import Joy
 
-import QtQuick3D
-import QtQuick3D.Helpers
-
-Rectangle {
-
-    color: Qt.rgba(0.8, 0.8, 0.8, 1)
+Item {
 
     property ClientEndpoint client
+    property bool isCurrentPage
 
-    //
     id: root
 
-    // The root scene
-    Node {
+    // lazy-loading of active page
+    property Component pageLoader: Loader {
 
-        id: standAloneScene
+        id: stackPageLoader
+        property string pageName: ''
 
-        Node {
+        SplitView.fillHeight: true
+        SplitView.fillWidth: true
+        SplitView.preferredHeight: modelData.pageHeight
+        active: true
 
-            id: originNode
+        onLoaded: {
 
-            PerspectiveCamera {
-                id: cameraPerspectiveTwo
-                z: 200
-                clipNear: 1
+            console.log(`${modelData.name} loaded`)
+
+            // items[modelData.name.toLowerCase()] = item
+
+            try {
+                item.pageSelected()
             }
+            catch(err){}
 
-            x: 50
-            y: 100
-            z: 50
-            eulerRotation.y: 40
-            eulerRotation.x: -40
+            try {
+                item.isCurrentPage = Qt.binding(() => root.isCurrentPage)
+            }
+            catch(err){}
+
+            item.pageName = modelData.name
+
+            pageName = modelData.name
 
         }
 
-        Axes3D {
-
-        }
-
-        Node {
-
-            id: modelScene
-
-            DirectionalLight {
-                ambientColor: Qt.rgba(0.5, 0.5, 0.5, 1.0)
-                brightness: 1.0
-                eulerRotation.x: -25
-            }
-
-
-
-            RobotModelNode {
-                id: robot
-                client: root.client
-                eulerRotation.x: -90
-                y: 75
-                opacity: 0.5
-            }
-
+        Component.onCompleted: {
+            // this is the "constructor"
+            // each page has a .client elem
+            setSource(modelData.page, {'client': root.client})
         }
 
     }
 
-    View3D {
+    SplitView {
 
         anchors.fill: parent
-        id: view3d
-        importScene: standAloneScene
-        camera: cameraPerspectiveTwo
 
-        environment: SceneEnvironment {
-                 backgroundMode: SceneEnvironment.Color
-                 clearColor: Qt.rgba(0.8, 0.8, 0.8, 1)
-                 InfiniteGrid {
-                     gridInterval: 30
-                 }
-             }
+        SplitView {
+            // left split
+            SplitView.preferredWidth: 2/3 * root.width
+            orientation: Qt.Vertical
+            Repeater {
 
-        OrbitCameraController {
-            camera: cameraPerspectiveTwo
-            origin: originNode
-            anchors.fill: parent
+
+                delegate: pageLoader
+
+                model: [
+                    {name: 'Launcher', page: '/qt/qml/Launcher/Launcher.qml', pageHeight: root.height/3*2},
+                    {name: 'Joy', page: '/qt/qml/Joy/Joy.qml', pageHeight: root.height/3}
+                ]
+
+            }
+
         }
 
-        MouseArea {
-            anchors.fill: parent
-            onClicked: (mouse) => {
-                var result = view3d.pick(mouse.x, mouse.y);
-                var pickedObject = result.objectHit;
-                pickedObject.isPicked = !pickedObject.isPicked;
+        SplitView {
+            // right split
+            orientation: Qt.Vertical
+            SplitView.preferredWidth: 1/3 * root.width
+            Repeater {
+
+
+
+                delegate: pageLoader
+
+                model: [
+                    {name: 'Monitoring', page: '/qt/qml/Monitoring/Monitoring.qml', pageHeight: root.width/3}
+                ]
+
             }
         }
+
+
+
     }
 }
-

@@ -20,7 +20,7 @@ Item {
     signal stop()
     signal kill()
 
-    height: card.height
+    implicitHeight: card.implicitHeight
 
     // private
     property var colorMap: {
@@ -39,6 +39,8 @@ Item {
         id: card
 
         width: root.width
+        height: root.height
+        verticalMargins: -6
 
         name: root.processName
         nameFont.pixelSize: CommonProperties.font.h3

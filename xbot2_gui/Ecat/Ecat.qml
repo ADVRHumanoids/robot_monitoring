@@ -16,11 +16,14 @@ Control {
     //
     id: root
 
-    property list<string> sdoCmds: ['MOTOR_ON', 'MOTOR_OFF']
-    property list<string> allSdo: ['ciao_miao', 'gattoBello', 'zio_buOno']
-    property list<string> allId: ['ALL'].concat([...new Array(40).keys()].map(i => i.toString()))
+    property list<string> sdoCmds
+    property list<string> allSdo
+    property list<string> allId
     property list<string> selectedSdo
     property list<string> selectedId
+    property var sdoValues: Object()
+
+    onSelectedIdChanged: Logic.updateSdos()
 
     padding: 4
 
@@ -64,8 +67,10 @@ Control {
                         if(idCombo.currentText === 'ALL') {
                             selectedId = allId.slice(1)
                         } else {
-                            selectedId.push(idCombo.currentText)
-                            selectedId = [...new Set(selectedId)]
+                            let tmp = selectedId.slice()
+                            tmp.push(idCombo.currentText)
+                            tmp = [...new Set(tmp)]
+                            selectedId = tmp
                         }
 
                         content.updateGrid()
@@ -133,6 +138,9 @@ Control {
                     Layout.fillWidth: true
                     enabled: writeCheck.checked
                     Layout.columnSpan: layout.expanded ? 1 : 2
+                    onClicked: {
+                        Logic.sdoCmd([cmdId.currentText], cmdCombo.currentText)
+                    }
                 }
 
                 ToolSeparator {
@@ -148,21 +156,28 @@ Control {
                     rows: layout.expanded ? 1 : -1
                     columns: layout.expanded ? -1 : 1
                     Layout.columnSpan: mainGrid.columns
-                    Button {
-                        Layout.fillWidth: true
-                        text: 'Refresh'
-                    }
+                    // Button {
+                    //     Layout.fillWidth: true
+                    //     text: 'Refresh'
+                    // }
                     Button {
                         Layout.fillWidth: true
                         text: 'Clear IDs'
+                        onClicked: { selectedId = []; content.updateGrid() }
                     }
                     Button {
                         Layout.fillWidth: true
                         text: 'Clear SDOs'
+                        onClicked: { selectedSdo = []; content.updateGrid() }
                     }
                     Button {
                         Layout.fillWidth: true
                         text: 'Read all'
+                        onClicked: {
+                            for(const sdo of selectedSdo) {
+                                Logic.readSdo(selectedId, sdo)
+                            }
+                        }
                     }
                     Switch {
                         id: writeCheck
@@ -207,14 +222,14 @@ Control {
                     idHdr.createObject(sdoGrid, {'text': id})
 
                     for(const sdo of selectedSdo) {
-                        sdoDelegate.createObject(sdoGrid)
+                        sdoDelegate.createObject(sdoGrid, {'id': id, 'sdo': sdo})
                     }
 
                     if(selectedSdo.length === 0) {
                         sdoDelegate.createObject(sdoGrid, {'enabled': false})
                     }
 
-                    readBtn.createObject(sdoGrid)
+                    readBtn.createObject(sdoGrid, {'id': id})
 
                 }
             }
@@ -253,15 +268,44 @@ Control {
             }
 
             property Component sdoDelegate: TextField {
+                property string id
+                property string sdo
                 Layout.fillWidth: true
                 background.implicitHeight: 30
-                text: '--'
+                text: root.sdoValues?.[id]?.[sdo] ?? '--'
                 readOnly: !writeCheck.checked
+                onTextEdited: writeBtn.visible = true
+
+                ToolButton {
+                    id: writeBtn
+                    anchors.right: parent.right
+                    height: parent.height
+                    text: 'Write'
+                    z: 1
+                    onClicked: {
+                        Logic.writeSdo([parent.id], parent.sdo, parent.text)
+                        visible = false
+                    }
+                    visible: false
+                }
+
+                Connections {
+                    target: root
+                    function onSdoValuesChanged() {
+                        text = root.sdoValues?.[id]?.[sdo] ?? '--'
+                    }
+                }
             }
 
             property Component readBtn: Button {
+                property string id
                 background.implicitHeight: 30
-                text: writeCheck.checked ? 'Write' : 'Read'
+                text: 'Read'
+                onClicked: {
+                    for(const sdo of root.selectedSdo) {
+                        Logic.readSdo([id], sdo)
+                    }
+                }
             }
 
         }

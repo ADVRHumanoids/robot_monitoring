@@ -21,8 +21,19 @@ void MeshGeometry::setMeshFile(QByteArray meshFile)
 
 void MeshGeometry::setUrl(QUrl meshUrl)
 {
-    QFile mesh(meshUrl.path());
-    mesh.open(QFile::OpenModeFlag::ReadOnly);
+    QString path = meshUrl.path();
+
+    if(path.startsWith("/C:"))
+    {
+        path = path.sliced(1);
+    }
+
+    QFile mesh(path);
+    if(!mesh.open(QFile::OpenModeFlag::ReadOnly))
+    {
+        qCritical() << path << "open failed";
+    }
+
     setMeshFile(mesh.readAll());
 }
 

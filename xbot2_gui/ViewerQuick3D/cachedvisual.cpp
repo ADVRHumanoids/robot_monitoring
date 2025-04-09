@@ -20,6 +20,8 @@ void CachedVisual::clearCache()
 
 bool CachedVisual::addMesh(QString name, QString url)
 {
+    name.replace("%", "_");
+
     if(_download_in_progress)
     {
         qWarning() << "canceling in progress download";
@@ -36,6 +38,7 @@ bool CachedVisual::addMesh(QString name, QString url)
 
     // create file
     QString fileName = path + "/meshes/" + name;
+
 
     _file = std::make_unique<QFile>(fileName);
 

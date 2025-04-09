@@ -44,6 +44,10 @@ class EcatHandler:
         self.srv.add_route('GET', '/ecat/get_cmd_list',
                            self.get_cmd_list,
                            'ecat_get_cmd_list')
+        
+        self.srv.add_route('POST', '/ecat/write_sdo',
+                           self.write_sdo,
+                           'ecat_write_sdo')
 
 
     @utils.handle_exceptions
@@ -155,3 +159,32 @@ class EcatHandler:
                 ))
 
 
+    @utils.handle_exceptions
+    async def write_sdo(self, req: web.Request):
+
+        # get id parameter from request
+        ids = list(map(int, req.query['id'].split(',')))
+        
+        # handle cmd
+        cmd = req.query.get('cmd', None)
+        if cmd is not None:
+            self.ctx.exec_cmd(EcatArgs(id=ids, cmd=cmd))
+            return web.Response(text=json.dumps(
+                {
+                    'success': True,
+                    'message': f'successfully executed command {cmd} for ids {ids}',
+                }
+                ))
+
+        # handle write sdo
+        sdo = req.query['sdo']
+        value = req.query['value']
+
+        self.ctx.write_sdo(EcatArgs(id=ids, name=sdo, value=value))
+
+        return web.Response(text=json.dumps(
+                        {
+                            'success': True,
+                            'message': f'ok',
+                        }
+                        ))

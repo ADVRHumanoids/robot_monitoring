@@ -182,7 +182,7 @@ ApplicationWindow {
             iconText: MaterialSymbolNames.tune
             iconFont: syms.font.family
             active: true
-            show: true
+            show: requestedPages.indexOf(name) > -1
         }
 
         PageItem {

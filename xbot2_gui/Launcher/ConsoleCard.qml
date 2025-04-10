@@ -16,7 +16,7 @@ Item {
 
         model.append({'txt': text})
 
-        if(scrollOnOutput) view.positionViewAtEnd()
+        if(scrollOnOutput) Qt.callLater(view.positionViewAtEnd)
     }
 
     function clearText() {
@@ -36,20 +36,14 @@ Item {
     implicitHeight: view.implicitHeight
     implicitWidth: view.implicitWidth
 
-    property Component delegate: Component {
-        TextEdit {
-
-            // placeholderText: name
-            font.pixelSize: 14
-            width: view.width
-            wrapMode: Text.WrapAnywhere
-            readOnly: true
-            textFormat: TextEdit.RichText
-            text: txt
-            // visible: level >= root.verbosity
-            color: palette.text
-            // property list<color> levelToColor: [palette.text, CommonProperties.colors.warn, CommonProperties.colors.err]
-        }
+    property Component delegate: TextEdit {
+        font.pixelSize: 14
+        width: view.width
+        wrapMode: Text.WrapAnywhere
+        readOnly: true
+        textFormat: TextEdit.RichText
+        text: txt
+        color: palette.text
     }
 
     ListModel {
@@ -60,7 +54,7 @@ Item {
         id: view
         model: model
         delegate: root.delegate
-        implicitHeight: contentHeight
+        // implicitHeight: contentHeight  // note: breaks performance!!!!
         anchors.fill: parent
         spacing: 1
         clip: true

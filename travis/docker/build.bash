@@ -4,10 +4,6 @@ echo user | sudo -S chown user /home/user/build_output
 set -e
 touch /home/user/build_output/BUILD_IN_PROGRESS
 
-# tbd: from bashrc
-export ANDROID_SDK_ROOT=$HOME/Android/Sdk
-export ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/25.1.8937393
-
 # android
 mkdir build && cd build
 ~/Qt/$QT_VER/android_arm64_v8a/bin/qt-cmake -DCMAKE_BUILD_TYPE=Release ../robot_monitoring

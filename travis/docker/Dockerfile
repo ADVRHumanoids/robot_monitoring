@@ -1,4 +1,4 @@
-FROM hhcmhub/qt6dev
+FROM hhcmhub/qt6dev:690
 
 COPY --chown=1000:1000 context/robot_monitoring /home/user/robot_monitoring
 COPY --chown=1000:1000 build.bash /home/user/build.bash

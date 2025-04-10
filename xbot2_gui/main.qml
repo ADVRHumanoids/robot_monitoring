@@ -389,7 +389,7 @@ ApplicationWindow {
                     id: stackPageLoader
                     property string pageName: ''
 
-                    anchors.fill: parent
+                    // anchors.fill: parent
 
                     // asynchronous: true
                     active: pagesStack.currentIndex === index

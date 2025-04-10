@@ -58,7 +58,7 @@ Pane {
             id: maxSpeedLinearSpinBox
             from: 0.0
             to: 2.0
-            decimals: 2
+            decimals: 1
             value: 0.2
         }
 

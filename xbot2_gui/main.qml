@@ -151,11 +151,11 @@ ApplicationWindow {
 
         PageItem {
             name: "Playground"
-            page: "/qt/qml/TestThings/Playground.qml"
+            page: "/qt/qml/TestThings/Playground2.qml"
             iconText: MaterialSymbolNames.playground
             iconFont: syms.font.family
             active: true
-            show: false
+            show: CommonProperties.config.testing
         }
 
         PageItem {

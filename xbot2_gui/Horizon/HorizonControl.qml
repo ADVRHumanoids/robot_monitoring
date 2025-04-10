@@ -18,12 +18,9 @@ Pane {
     contentItem: ColumnLayout {
 
         Switch {
-            visible: false
+            visible: true
             id: enableSwitch
-            text: 'Enable'
-            onCheckedChanged: {
-
-            }
+            text: 'Enable gait'
         }
 
         Item {
@@ -33,12 +30,14 @@ Pane {
         }
 
         Label {
+            enabled: enableSwitch.checked
             text: ' gait'
             font.pointSize: 10
         }
 
         ComboBox {
             id: gaitCombo
+            enabled: enableSwitch.checked
             Layout.fillWidth: true
             model: ['Trot', 'Walk', 'Crawl']
         }

@@ -43,7 +43,6 @@ Item {
             right: parent.right
             margins: CommonProperties.geom.margins
         }
-        onAlwaysWalkChanged: Logic.walkSwitch(alwaysWalk)
     }
 
     DualJoy {
@@ -75,7 +74,7 @@ Item {
 
         onJoyPressedChanged: {
 
-            if(configPane.alwaysWalk) {
+            if(!configPane.alwaysWalk) {
                 return
             }
 

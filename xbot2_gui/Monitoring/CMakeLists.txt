@@ -19,12 +19,12 @@ qt_add_qml_module(xbot2_gui_monitoring
     Parameter/ParameterView.qml
     MonWidget.qml
     MonWidget.js
+    SoftSafetyButton.qml
     SOURCES
     Parameter/parameter_tree_item.h
     Parameter/parameter_tree_item.cpp
     Parameter/parameter_tree_model.h
     Parameter/parameter_tree_model.cpp
-    QML_FILES SoftSafetyButton.qml
 )
 
 target_include_directories(xbot2_gui_monitoring PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Parameter)

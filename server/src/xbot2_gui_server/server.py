@@ -19,6 +19,8 @@ import ssl
 from . import utils
 from . import mkcert
 
+from xbot2_gui_server.proto import generic_pb2, text_pb2
+
 
 class ServerBase:
 
@@ -115,11 +117,28 @@ class Xbot2WebServer(ServerBase):
         if len(clients) > 0 and isinstance(msg, dict):
             msg = json.dumps(msg)
 
+        # wrap with protobuf if needed
+        pbmsg = generic_pb2.Message()
+        
+        if isinstance(msg, generic_pb2.Message):
+            pbmsg = msg
+
+        elif isinstance(msg, dict):
+            msg = json.dumps(msg)
+            pbmsg.text.text = msg
+
+        elif isinstance(msg, str):
+            pbmsg = generic_pb2.Message()
+            pbmsg.text.text = msg
+
+        # serialize msg to bytes
+        msg = pbmsg.SerializeToString()
+
         # iterate over sockets (one per client)
         for ws in clients:
          
             try:
-                await ws.send_str(msg)  
+                await ws.send_bytes(msg)  
             except ConnectionResetError as e:
                 pass
             except BaseException as e:
@@ -141,8 +160,24 @@ class Xbot2WebServer(ServerBase):
     
     async def udp_send_to_all(self, msg: str, clients=None):
 
+        # wrap with protobuf if needed
+        pbmsg = generic_pb2.Message()
+        
+        if isinstance(msg, generic_pb2.Message):
+            pbmsg = msg
+
+        elif isinstance(msg, dict):
+            msg = json.dumps(msg)
+            pbmsg.text.text = msg
+
+        elif isinstance(msg, str):
+            pbmsg = generic_pb2.Message()
+            pbmsg.text.text = msg
+
+        # here we have a protobuf message
+
         # tunnel udp via ws for wasm clients
-        await self.ws_send_to_all(msg, self.ws_udp_tunnel)
+        await self.ws_send_to_all(pbmsg, self.ws_udp_tunnel)
         
         # send udp to normal clients
         if self.udp is None:
@@ -151,11 +186,16 @@ class Xbot2WebServer(ServerBase):
         if clients is None:
             clients = self.udp_clients
 
-        if len(clients) > 0 and isinstance(msg, dict):
-            msg = json.dumps(msg)
+        if len(clients) == 0:
+            return
+        
+        # serialize msg to bytes
+        msg = pbmsg.SerializeToString()
+
+        print(f'sending udp message of size {len(msg)} to {len(clients)} clients')
 
         for addr in clients:
-            self.udp.sendto(msg.encode(), addr)
+            self.udp.sendto(msg, addr)
 
         return True
 

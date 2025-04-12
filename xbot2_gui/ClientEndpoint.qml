@@ -5,11 +5,16 @@ import QtQml.WorkerScript
 
 import Common
 import Network
+import Protobuf
+
 import "ClientEndpoint.js" as Client
 import "sharedData.js" as SharedData
 
+import xbot2_gui.msgs
+
 Item
 {
+
     // note: the appData object is exposed by main.cpp
     // if running from web it contains the server address
 
@@ -116,11 +121,61 @@ Item
 
 
     // websocket for streaming data
-    WebSocket {
 
+    WebSocketWorker {
         id: socket
         url: "ws://" + hostname + ":" + port + "/ws"
         active: true
+
+        onBinaryMessageReceived: function (data) {
+            pb.processBinaryMessage(data)
+        }
+
+        onActiveChanged: console.log(`SOCKET ACTIVE ${active}`)
+
+        onConnected: {
+            CommonProperties.notifications.info('Server connected', 'webclient')
+
+            root.connected('Server connected')
+
+            root.isConnected = true
+
+            root.bytesRecv = 0
+            root.bytesSent = 0
+
+            if(appData.wasm) {
+                root.sendTextMessage(
+                            JSON.stringify(
+                                {
+                                    'type': 'request_ws_udp_tunnel'
+                                }
+                                )
+                            )
+            }
+            else {
+                root.doRequestAsync("GET", "/udp", "")
+                .then((response) => {
+                          udp.hostname = root.hostname
+                          udp.port = response.port
+                      })
+            }
+        }
+
+        onDisconnected: {
+            root.isConnected = false
+            root.isFinalized = false
+            udp.rebind()
+        }
+
+        onErrorOccurred: function(error) {
+            CommonProperties.notifications.error('Error: ' + error, 'webclient')
+            error(error)
+        }
+    }
+
+    ProtobufDeserialization {
+
+        id: pb
 
         onTextMessageReceived: function (message) {
 
@@ -135,70 +190,97 @@ Item
                 worker.sendMessage(message)
             }
 
-
-
         }
 
-        onStatusChanged: {
-
-            print(`status changed [url ${url}]: ${socket.status}`)
-
-            if (socket.status === WebSocket.Error) {
-
-                CommonProperties.notifications.error('Error: ' + socket.errorString, 'webclient')
-
-                error(socket.errorString)
-
-                active = false
-
-                isConnected = false
-
-                root.isFinalized = false
-
-            } else if (socket.status === WebSocket.Open) {
-
-                CommonProperties.notifications.info('Server connected', 'webclient')
-
-                connected('Server connected')
-
-                isConnected = true
-
-                root.bytesRecv = 0
-                root.bytesSent = 0
-
-                if(appData.wasm) {
-                    root.sendTextMessage(
-                                JSON.stringify(
-                                    {
-                                        'type': 'request_ws_udp_tunnel'
-                                    }
-                                    )
-                                )
-                }
-                else {
-                    doRequestAsync("GET", "/udp", "")
-                        .then((response) => {
-                                      udp.hostname = root.hostname
-                                      udp.port = response.port
-                                  })
-                }
-
-            } else if (socket.status === WebSocket.Closed) {
-                CommonProperties.notifications.error('Socket closed', 'webclient')
-                isConnected = false
-                active = false
-                root.isFinalized = false
-                udp.rebind()
-            }
+        onJointStateReceived: function(js) {
+            SharedData1.jointState = js
         }
+
     }
+
+    // WebSocket {
+
+    //     id: socket
+    //     url: "ws://" + hostname + ":" + port + "/ws"
+    //     active: true
+
+    //     onTextMessageReceived: function (message) {
+
+    //         root.bytesRecv += message.length
+
+    //         if(appData.wasm) {
+    //             // deserialize directly since workers have issues in wasm
+    //             Client.handleMessage(JSON.parse(message))
+    //         }
+    //         else {
+    //             // send to worker thread for deserialization
+    //             worker.sendMessage(message)
+    //         }
+
+
+
+    //     }
+
+    //     onStatusChanged: {
+
+    //         print(`status changed [url ${url}]: ${socket.status}`)
+
+    //         if (socket.status === WebSocket.Error) {
+
+    //             CommonProperties.notifications.error('Error: ' + socket.errorString, 'webclient')
+
+    //             error(socket.errorString)
+
+    //             active = false
+
+    //             isConnected = false
+
+    //             root.isFinalized = false
+
+    //         } else if (socket.status === WebSocket.Open) {
+
+    //             CommonProperties.notifications.info('Server connected', 'webclient')
+
+    //             connected('Server connected')
+
+    //             isConnected = true
+
+    //             root.bytesRecv = 0
+    //             root.bytesSent = 0
+
+    //             if(appData.wasm) {
+    //                 root.sendTextMessage(
+    //                             JSON.stringify(
+    //                                 {
+    //                                     'type': 'request_ws_udp_tunnel'
+    //                                 }
+    //                                 )
+    //                             )
+    //             }
+    //             else {
+    //                 doRequestAsync("GET", "/udp", "")
+    //                     .then((response) => {
+    //                                   udp.hostname = root.hostname
+    //                                   udp.port = response.port
+    //                               })
+    //             }
+
+    //         } else if (socket.status === WebSocket.Closed) {
+    //             CommonProperties.notifications.error('Socket closed', 'webclient')
+    //             isConnected = false
+    //             active = false
+    //             root.isFinalized = false
+    //             udp.rebind()
+    //         }
+    //     }
+    // }
 
     // udp socket to receive unreliable data
     UdpSocket {
         id: udp
-        onTextMessageReceived: function (message) {
-            root.bytesRecv += message.length
-            worker.sendMessage(message)
+        onBinaryMessageReceived: function (data) {
+            root.bytesRecv += data.length
+            pb.processBinaryMessage(data)
         }
     }
 

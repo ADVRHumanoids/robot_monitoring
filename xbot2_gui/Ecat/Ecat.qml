@@ -268,6 +268,7 @@ Control {
             }
 
             property Component sdoDelegate: TextField {
+                id: sdoTextField
                 property string id
                 property string sdo
                 Layout.fillWidth: true
@@ -293,6 +294,14 @@ Control {
                     target: root
                     function onSdoValuesChanged() {
                         text = root.sdoValues?.[id]?.[sdo] ?? '--'
+                    }
+                }
+
+                Shortcut {
+                    sequence: "Ctrl+C"
+                    onActivated: {
+                        console.log('AAA' + sdoTextField.text + 'AAA')
+                        appData.copyToClipboard(sdoTextField.text)
                     }
                 }
             }

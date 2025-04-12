@@ -37,6 +37,10 @@ qt_add_executable(xbot2_gui main.cpp)
 
 set_property(TARGET xbot2_gui APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/android)
 
+set_source_files_properties(SharedData1.qml PROPERTIES
+    QT_QML_SINGLETON_TYPE TRUE
+)
+
 qt_add_qml_module(xbot2_gui
     VERSION 1.0
     URI Main
@@ -47,6 +51,7 @@ qt_add_qml_module(xbot2_gui
     ClientEndpoint.js
     DeserializationWorker.js
     sharedData.js
+    SharedData1.qml
 )
 
 target_compile_definitions(xbot2_gui
@@ -111,11 +116,11 @@ add_subdirectory(Monitoring)
 
 add_subdirectory(Network)
 
-# if(NOT EMSCRIPTEN)
+if(NOT EMSCRIPTEN)
 
-#     add_subdirectory(Protobuf)
+    add_subdirectory(Protobuf)
 
-# endif()
+endif()
 
 add_subdirectory(TestThings)
 

@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+import "jointstate.proto";
+import "text.proto";
+
+message Message {
+
+    int32 seq = 1;
+    optional JointState jointstate = 2;
+    optional Text text = 3;
+}

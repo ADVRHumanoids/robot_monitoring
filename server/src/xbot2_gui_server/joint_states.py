@@ -16,7 +16,7 @@ from urdf_parser_py import urdf as urdf_parser
 from .server import ServerBase
 from . import utils
 
-# from .proto import joint_states_pb2
+from .proto import jointstate_pb2, generic_pb2
 
 ## limit float precision in json serialization
 class RoundingFloat(float):
@@ -225,6 +225,27 @@ class JointStateHandler:
 
             # send to all connected clients
             await self.srv.udp_send_to_all(js_str)
+
+            # pb tests
+            try:
+                msgpb = generic_pb2.Message()
+                msgpb.jointstate.linkPos.extend(self.msg.link_position)
+                msgpb.jointstate.motPos.extend(self.msg.motor_position)
+                msgpb.jointstate.motVel.extend(self.msg.motor_velocity)
+                msgpb.jointstate.velRef.extend(self.msg.velocity_reference)
+                msgpb.jointstate.torRef.extend(self.msg.effort_reference)
+                msgpb.jointstate.tor.extend(self.msg.effort)
+                msgpb.jointstate.posRef.extend(self.msg.position_reference)
+                msgpb.jointstate.k.extend(self.msg.stiffness)
+                msgpb.jointstate.d.extend(self.msg.damping)
+                msgpb.jointstate.motorTemp.extend(self.msg.temperature_motor)
+                msgpb.jointstate.driverTemp.extend(self.msg.temperature_driver)
+                await self.srv.udp_send_to_all(msgpb)
+            except Exception as e:
+                # print traceback
+                import traceback
+                traceback.print_exc()
+
 
             # clear to avoid sending duplicates
             self.msg = None

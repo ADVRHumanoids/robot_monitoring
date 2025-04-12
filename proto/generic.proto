@@ -3,6 +3,7 @@ syntax = "proto3";
 import "jointstate.proto";
 import "text.proto";
 import "process_output.proto";
+import "theora_packet.proto";
 
 message Message {
 
@@ -10,4 +11,6 @@ message Message {
     optional JointState jointstate = 2;
     optional Text text = 3;
     optional ProcessOutput process_output = 4;
+    optional TheoraPacket theora_packet = 5;
+
 }

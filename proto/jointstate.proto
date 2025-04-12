@@ -21,4 +21,7 @@ message JointState {
     repeated float d = 12;
 
     map<string, FloatArray> aux = 13;
+
+    float vbatt = 14;
+    float ibatt = 15;
 }

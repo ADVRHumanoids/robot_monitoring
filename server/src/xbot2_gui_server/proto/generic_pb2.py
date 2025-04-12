@@ -13,15 +13,16 @@ _sym_db = _symbol_database.Default()
 
 import jointstate_pb2 as jointstate__pb2
 import text_pb2 as text__pb2
+import process_output_pb2 as process__output__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rgeneric.proto\x1a\x10jointstate.proto\x1a\ntext.proto\"n\n\x07Message\x12\x0b\n\x03seq\x18\x01 \x01(\x05\x12$\n\njointstate\x18\x02 \x01(\x0b\x32\x0b.JointStateH\x00\x88\x01\x01\x12\x18\n\x04text\x18\x03 \x01(\x0b\x32\x05.TextH\x01\x88\x01\x01\x42\r\n\x0b_jointstateB\x07\n\x05_textb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rgeneric.proto\x1a\x10jointstate.proto\x1a\ntext.proto\x1a\x14process_output.proto\"\xae\x01\n\x07Message\x12\x0b\n\x03seq\x18\x01 \x01(\x05\x12$\n\njointstate\x18\x02 \x01(\x0b\x32\x0b.JointStateH\x00\x88\x01\x01\x12\x18\n\x04text\x18\x03 \x01(\x0b\x32\x05.TextH\x01\x88\x01\x01\x12+\n\x0eprocess_output\x18\x04 \x01(\x0b\x32\x0e.ProcessOutputH\x02\x88\x01\x01\x42\r\n\x0b_jointstateB\x07\n\x05_textB\x11\n\x0f_process_outputb\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'generic_pb2', globals())
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  _MESSAGE._serialized_start=47
-  _MESSAGE._serialized_end=157
+  _MESSAGE._serialized_start=70
+  _MESSAGE._serialized_end=244
 # @@protoc_insertion_point(module_scope)

@@ -9,6 +9,7 @@ from theora_image_transport.msg import Packet as TheoraPacket
 from .server import ServerBase
 from . import utils
 
+from .proto import generic_pb2
 
 class TheoraVideoHandler:
 
@@ -16,6 +17,7 @@ class TheoraVideoHandler:
 
         # save server object, register our handlers
         self.srv = srv
+        self.srv.register_ws_coroutine(self.handle_ws_msg)
         self.srv.add_route('GET', '/video/get_names', self.get_names_handler, 'video_get_names')
         self.srv.add_route('PUT', '/video/set_stream', self.set_stream_handler, 'video_set_stream')
 
@@ -27,6 +29,9 @@ class TheoraVideoHandler:
         self.img_data = dict()
         self.img_sub = None
         self.img_msg_to_send = {}
+        
+        # clients
+        self.clients = dict()
 
         # event loop
         self.loop = asyncio.get_event_loop()
@@ -94,7 +99,7 @@ class TheoraVideoHandler:
                 }))
 
         print('got headers')
-        
+
         self.srv.schedule_task(self.run(self.img_data[stream_name]))
 
         return web.Response(text=json.dumps({
@@ -109,6 +114,10 @@ class TheoraVideoHandler:
 
         # unpack
         stream_name, img_sub, img_hdr_pkt, img_msg_queue = stream_data
+        
+        # check if we have a client for this stream
+        if stream_name not in self.clients.keys():
+            self.clients[stream_name] = {'ws': set(), 'udp': set()}
 
         print(f'{stream_name} started')
 
@@ -117,11 +126,11 @@ class TheoraVideoHandler:
             # await for a new packet to be received from ros
             th_pkt = await img_msg_queue.get()
 
-            # serialize msg to json
-            msg_str = json.dumps(th_pkt)
-            
             # iterate over sockets (one per client)
-            await self.srv.ws_send_to_all(msg_str)
+            ws_clients = self.clients[stream_name]['ws']
+            udp_clients = self.clients[stream_name]['udp']
+            expired_udp = await self.srv.udp_send_to_all(msg=th_pkt, clients=udp_clients)
+            expired_ws = await self.srv.ws_send_to_all(msg=th_pkt, clients=ws_clients)
 
         print(f'{stream_name} exiting')
 
@@ -129,25 +138,51 @@ class TheoraVideoHandler:
     def on_th_pkt_recv(self, msg: TheoraPacket, stream_data):
 
         stream_name, img_sub, img_hdr_pkt, img_msg_queue = stream_data
-
-        th_pkt = dict()
-        th_pkt['type'] = 'theora'
-        th_pkt['stream_name'] = stream_name
-        th_pkt['data'] = base64.b64encode(msg.data).decode('ascii')
-        th_pkt['b_o_s'] = msg.b_o_s
-        th_pkt['e_o_s'] = msg.e_o_s
-        th_pkt['granulepos'] = msg.granulepos
-        th_pkt['packetno'] = msg.packetno
+        
+        pbmsg = generic_pb2.Message()
+        pbmsg.theora_packet.stream_name = stream_name
+        pbmsg.theora_packet.data = msg.data
+        pbmsg.theora_packet.b_o_s = msg.b_o_s
+        pbmsg.theora_packet.e_o_s = msg.e_o_s
+        pbmsg.theora_packet.granulepos = msg.granulepos
+        pbmsg.theora_packet.packetno = msg.packetno
+        
+        def json_msg():
+            th_pkt = dict()
+            th_pkt['type'] = 'theora'
+            th_pkt['streamName'] = stream_name
+            th_pkt['data'] = base64.b64encode(msg.data).decode('ascii')
+            th_pkt['bOS'] = msg.b_o_s
+            th_pkt['eOS'] = msg.e_o_s
+            th_pkt['granulepos'] = msg.granulepos
+            th_pkt['packetno'] = msg.packetno
+            return th_pkt
 
         if msg.b_o_s == 1:
-            img_hdr_pkt.append(th_pkt)
+            img_hdr_pkt.append(json_msg())
             print(f'got header {len(img_hdr_pkt)}/3')
             return 
 
         if msg.granulepos == 0:
-            img_hdr_pkt.append(th_pkt)
+            img_hdr_pkt.append(json_msg())
             print(f'got header {len(img_hdr_pkt)}/3')
             return
 
-        _ = asyncio.run_coroutine_threadsafe(img_msg_queue.put(th_pkt), self.loop)
+        _ = asyncio.run_coroutine_threadsafe(img_msg_queue.put(pbmsg), self.loop)
         
+        
+    async def handle_ws_msg(self, msg, proto, sock):
+        if msg['type'] == 'video_request':
+            stream_name = msg['stream_name']
+            op = msg.get('operation', 'connect')
+            if stream_name not in self.clients.keys():
+                self.clients[stream_name] = {'ws': set(), 'udp': set()}
+            if op == 'disconnect':
+                self.clients[stream_name]['ws'].discard(sock)
+                self.clients[stream_name]['udp'].discard(sock)
+                await self.srv.log(f'disconnected client from stream {stream_name}')
+            else:
+                self.clients[stream_name][proto].add(sock)
+                await self.srv.log(f'new client {proto} {sock} for stream {stream_name}')
+            
+            print(self.clients)

@@ -80,6 +80,7 @@ class Xbot2WebServer(ServerBase):
         self.udp : asyncudp.Socket = None
         self.udp_clients = set()  # set of pairs (addr, port)
         self.udp_clients_timeout = dict()
+        self.udp_msg_seq = 0
 
         # add routes
         routes = [
@@ -113,9 +114,11 @@ class Xbot2WebServer(ServerBase):
 
         if clients is None:
             clients = self.ws_clients
-
-        if len(clients) > 0 and isinstance(msg, dict):
-            msg = json.dumps(msg)
+        else:
+            clients = set(clients) & self.ws_clients
+            
+        if len(clients) == 0:
+            return
 
         # wrap with protobuf if needed
         pbmsg = generic_pb2.Message()
@@ -133,7 +136,11 @@ class Xbot2WebServer(ServerBase):
 
         # serialize msg to bytes
         msg = pbmsg.SerializeToString()
-
+        
+        # print(f'sending ws message size {len(msg)} to {len(clients)} clients')
+        
+        expired_clients = set(ws for ws in clients if ws not in self.ws_clients)
+        
         # iterate over sockets (one per client)
         for ws in clients:
          
@@ -143,6 +150,8 @@ class Xbot2WebServer(ServerBase):
                 pass
             except BaseException as e:
                 print(f'error: {e}')
+                
+        return expired_clients
 
 
     async def log(self, txt, sev=0):
@@ -177,7 +186,7 @@ class Xbot2WebServer(ServerBase):
         # here we have a protobuf message
 
         # tunnel udp via ws for wasm clients
-        await self.ws_send_to_all(pbmsg, self.ws_udp_tunnel)
+        # await self.ws_send_to_all(pbmsg, self.ws_udp_tunnel)
         
         # send udp to normal clients
         if self.udp is None:
@@ -185,19 +194,25 @@ class Xbot2WebServer(ServerBase):
         
         if clients is None:
             clients = self.udp_clients
+        else:
+            clients = set(clients) & self.udp_clients
 
         if len(clients) == 0:
             return
         
-        # serialize msg to bytes
+        # set sequence number and serialize msg to bytes
+        pbmsg.seq = self.udp_msg_seq
         msg = pbmsg.SerializeToString()
-
-        print(f'sending udp message of size {len(msg)} to {len(clients)} clients')
+        self.udp_msg_seq += 1
+        
+        # print(f'sending udp message size {len(msg)} to {len(clients)} clients')
+        
+        expired_clients = set(addr for addr in clients if addr not in self.udp_clients)
 
         for addr in clients:
             self.udp.sendto(msg, addr)
 
-        return True
+        return expired_clients
 
     
     def run_server(self, static='.', host='0.0.0.0', port=8080):
@@ -251,7 +266,7 @@ class Xbot2WebServer(ServerBase):
         
         """
         broadcast periodic heartbeat with server-relate lightweight data
-        note: this also cleans up close websockets
+        note: this also cleans up close websockets and udp clients
         """
 
         # serialize msg to json
@@ -262,7 +277,7 @@ class Xbot2WebServer(ServerBase):
         )
 
         while True:
-
+            
             # save disconnected sockets for later removal
             ws_to_remove = set()
             udp_to_remove = set()
@@ -285,12 +300,23 @@ class Xbot2WebServer(ServerBase):
                     print(f'error: {e}')
             
             for ws in ws_to_remove:
-                self.ws_clients.remove(ws)
-                self.ws_udp_tunnel.remove(ws)
+                try:
+                    self.ws_clients.remove(ws)
+                except KeyError:
+                    print('ws already removed')
+                
+                try:
+                    self.ws_udp_tunnel.remove(ws)
+                except KeyError:
+                    pass
 
             for addr in udp_to_remove:
                 self.udp_clients.remove(addr)
                 del self.udp_clients_timeout[addr]
+                    
+
+                    
+        
             
             # periodic loop at 10 Hz
             await asyncio.sleep(0.666)

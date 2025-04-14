@@ -208,23 +208,23 @@ class JointStateHandler:
             if self.msg is None:
                 continue
             
-            # convert to dict
-            js_msg_to_send = self.js_msg_to_dict(self.msg)
+            # # convert to dict
+            # js_msg_to_send = self.js_msg_to_dict(self.msg)
 
-            # test: avoid sending names to save bw
-            del js_msg_to_send['name']
+            # # test: avoid sending names to save bw
+            # del js_msg_to_send['name']
 
-            # add pow data and seq id
-            js_msg_to_send['vbatt'] = self.vbatt
-            js_msg_to_send['iload'] = self.iload
-            js_msg_to_send['seq'] = self.js_seq
-            self.js_seq += 1
+            # # add pow data and seq id
+            # js_msg_to_send['vbatt'] = self.vbatt
+            # js_msg_to_send['iload'] = self.iload
+            # js_msg_to_send['seq'] = self.js_seq
+            # self.js_seq += 1
 
-            # serialize msg to json
-            js_str = json.dumps(js_msg_to_send)      
+            # # serialize msg to json
+            # js_str = json.dumps(js_msg_to_send)      
 
-            # send to all connected clients
-            await self.srv.udp_send_to_all(js_str)
+            # # send to all connected clients
+            # await self.srv.udp_send_to_all(js_str)
 
             # pb tests
             try:
@@ -240,12 +240,14 @@ class JointStateHandler:
                 msgpb.jointstate.d.extend(self.msg.damping)
                 msgpb.jointstate.motorTemp.extend(self.msg.temperature_motor)
                 msgpb.jointstate.driverTemp.extend(self.msg.temperature_driver)
+                msgpb.jointstate.vbatt = self.vbatt
+                msgpb.jointstate.ibatt = self.iload
                 await self.srv.udp_send_to_all(msgpb)
             except Exception as e:
-                # print traceback
+                # print traceback  
                 import traceback
                 traceback.print_exc()
-
+                
 
             # clear to avoid sending duplicates
             self.msg = None

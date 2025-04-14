@@ -8,28 +8,10 @@ import "ConsoleCard.js" as Logic
 
 Item {
 
-    property string name
+    property alias listModel: view.model
 
-    property bool scrollOnOutput: true
-
-    function appendText(text) {
-
-        model.append({'txt': text})
-
-        if(scrollOnOutput) Qt.callLater(view.positionViewAtEnd)
-    }
-
-    function clearText() {
-        model.clear()
-    }
-
-    function getText() {
-        let txt = ''
-        for(let i = 0; i < model.count; i++) {
-            txt = txt + model.get(i).txt + '\n'
-        }
-        return txt
-
+    function scrollToEnd() {
+        Qt.callLater(view.positionViewAtEnd)
     }
 
     id: root
@@ -37,22 +19,19 @@ Item {
     implicitWidth: view.implicitWidth
 
     property Component delegate: TextEdit {
+        required property string txt
+        // required property color txtColor
         font.pixelSize: 14
         width: view.width
         wrapMode: Text.WrapAnywhere
         readOnly: true
         textFormat: TextEdit.RichText
         text: txt
-        color: palette.text
-    }
-
-    ListModel {
-        id: model
+        // color: txtColor
     }
 
     ListView {
         id: view
-        model: model
         delegate: root.delegate
         // implicitHeight: contentHeight  // note: breaks performance!!!!
         anchors.fill: parent
@@ -62,5 +41,4 @@ Item {
             active: true
         }
     }
-
 }

@@ -7,9 +7,9 @@ import "../Common"
 
 Item {
 
-    function appendText(procName, text) {
+    function appendText(procName: string, text: string) {
 
-        var i = 0
+        let i = 0
 
         if(procName === 'launcher') {
             i = -1
@@ -98,15 +98,73 @@ Item {
             width: parent.width
             height: root.height - 80
             currentIndex: consoleCombo.currentIndex
+
             Repeater {
+
                 id: consoleRepeater
+
                 model: ['all', 'launcher'].concat(root.processNames)
-                ConsoleCard {
+
+                Item {
                     required property int index
-                    name: modelData
+                    required property string modelData
+                    // property color txtColor: root.colors[index % root.colors.length]
+
+                    function appendText(txt) {
+                        // console.log(root.colors[index % root.colors.length])
+                        // console.log(txtColor)
+                        listModel.append({'txt': txt}) // , 'txtColor': txtColor})
+                        if(scrollOnOutputCheck.checked) {
+                            consoleLoader.item?.scrollToEnd()
+                        }
+                    }
+
+                    function clearText() {
+                        listModel.clear()
+                    }
+
+                    function getText() {
+                        let txt = ''
+                        for(let i = 0; i < listModel.count; i++) {
+                            txt = txt + listModel.get(i).txt + '\n'
+                        }
+                        return txt
+                    }
+
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    scrollOnOutput: scrollOnOutputCheck.checked
+                    implicitHeight: consoleLoader.implicitHeight
+                    implicitWidth: consoleLoader.implicitWidth
+
+                    Loader {
+
+                        id: consoleLoader
+
+                        active: index === consoleCombo.currentIndex
+
+                        anchors.fill: parent
+
+                        sourceComponent: ConsoleCard {
+                            id: cardInner
+                        }
+
+                        onLoaded: {
+                            item.listModel = listModel
+                            if(scrollOnOutputCheck.checked) {
+                                item.scrollToEnd()
+
+                            }
+                            console.log(`${modelData} loaded ${listModel.count} lines`)
+                        }
+
+
+
+                    }
+
+                    ListModel {
+                        id: listModel
+                    }
+
                 }
             }
         }

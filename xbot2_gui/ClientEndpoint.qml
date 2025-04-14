@@ -39,7 +39,7 @@ Item
     signal finalized()
 
     // triggered upon reception of a new joint state msg
-    signal jointStateReceived(var js)
+    signal jointStateReceived(jointState js)
 
     // receiving joint states
     property bool robotConnected: false
@@ -51,20 +51,22 @@ Item
     signal connected(var msg)
 
     // triggerd upon reception of a proc msg
-    signal procMessageReceived(var msg)
+    signal processOutputReceived(processOutput msg)
 
     // triggerd upon reception of a plugin stat msg
     signal pluginStatMessageReceived(var msg)
 
     // image received
     signal jpegReceived(var msg)
-    signal theoraPacketReceived(var msg)
+    signal theoraPacketReceived(theoraPacket msg)
 
     // generic message
     signal objectReceived(var msg)
 
     // bytes received counter
-    property int bytesRecv: 0
+    property alias bytesRecvCounters: pb.recvBytes
+    property alias numMsgCounters: pb.numMsg
+    property int bytesRecv: pb.recvBytes.all
     property int bytesSent: 0
     property real srvRtt: 0
     property int jsMsgRecv: 0
@@ -122,25 +124,26 @@ Item
 
     // websocket for streaming data
 
-    WebSocketWorker {
+    WebSocketAsync {
+
         id: socket
         url: "ws://" + hostname + ":" + port + "/ws"
         active: true
 
         onBinaryMessageReceived: function (data) {
+            // root.bytesRecv += data.byteLength
             pb.processBinaryMessage(data)
         }
 
-        onActiveChanged: console.log(`SOCKET ACTIVE ${active}`)
-
         onConnected: {
+
             CommonProperties.notifications.info('Server connected', 'webclient')
 
             root.connected('Server connected')
 
             root.isConnected = true
 
-            root.bytesRecv = 0
+            // root.bytesRecv = 0
             root.bytesSent = 0
 
             if(appData.wasm) {
@@ -167,9 +170,9 @@ Item
             udp.rebind()
         }
 
-        onErrorOccurred: function(error) {
-            CommonProperties.notifications.error('Error: ' + error, 'webclient')
-            error(error)
+        onErrorOccurred: function(err) {
+            CommonProperties.notifications.error('Error: ' + err, 'webclient')
+            root.error(err)
         }
     }
 
@@ -178,8 +181,6 @@ Item
         id: pb
 
         onTextMessageReceived: function (message) {
-
-            root.bytesRecv += message.length
 
             if(appData.wasm) {
                 // deserialize directly since workers have issues in wasm
@@ -193,93 +194,53 @@ Item
         }
 
         onJointStateReceived: function(js) {
-            SharedData1.jointState = js
+
+            root.robotConnected = true
+
+            robotConnectedTimer.restart()
+
+            SharedData.latestJointState = js
+
+            SharedData1.latestJointState = js
+
+            root.jointStateReceived(js)
+
+            root.jsMsgRecv += 1
+
+            // if(lastJsSeqId < 0) {
+            //     lastJsSeqId = obj.seq
+            // }
+            // else {
+            //     root.jsDropped += (obj.seq - lastJsSeqId - 1)
+            //     lastJsSeqId = obj.seq
+            // }
+
+            if(isConnected && !isFinalized)
+            {
+                client.active = true
+
+                doRequestAsync("GET", "/joint_states/info", "")
+                        .then((response) => {
+                              root.onInfoReceived(response)
+                          })
+            }
+        }
+
+        onProcessOutputReceived: function(po) {
+            root.processOutputReceived(po)
+        }
+
+        onTheoraPacketReceived: function(pkt) {
+            root.theoraPacketReceived(pkt)
         }
 
     }
-
-    // WebSocket {
-
-    //     id: socket
-    //     url: "ws://" + hostname + ":" + port + "/ws"
-    //     active: true
-
-    //     onTextMessageReceived: function (message) {
-
-    //         root.bytesRecv += message.length
-
-    //         if(appData.wasm) {
-    //             // deserialize directly since workers have issues in wasm
-    //             Client.handleMessage(JSON.parse(message))
-    //         }
-    //         else {
-    //             // send to worker thread for deserialization
-    //             worker.sendMessage(message)
-    //         }
-
-
-
-    //     }
-
-    //     onStatusChanged: {
-
-    //         print(`status changed [url ${url}]: ${socket.status}`)
-
-    //         if (socket.status === WebSocket.Error) {
-
-    //             CommonProperties.notifications.error('Error: ' + socket.errorString, 'webclient')
-
-    //             error(socket.errorString)
-
-    //             active = false
-
-    //             isConnected = false
-
-    //             root.isFinalized = false
-
-    //         } else if (socket.status === WebSocket.Open) {
-
-    //             CommonProperties.notifications.info('Server connected', 'webclient')
-
-    //             connected('Server connected')
-
-    //             isConnected = true
-
-    //             root.bytesRecv = 0
-    //             root.bytesSent = 0
-
-    //             if(appData.wasm) {
-    //                 root.sendTextMessage(
-    //                             JSON.stringify(
-    //                                 {
-    //                                     'type': 'request_ws_udp_tunnel'
-    //                                 }
-    //                                 )
-    //                             )
-    //             }
-    //             else {
-    //                 doRequestAsync("GET", "/udp", "")
-    //                     .then((response) => {
-    //                                   udp.hostname = root.hostname
-    //                                   udp.port = response.port
-    //                               })
-    //             }
-
-    //         } else if (socket.status === WebSocket.Closed) {
-    //             CommonProperties.notifications.error('Socket closed', 'webclient')
-    //             isConnected = false
-    //             active = false
-    //             root.isFinalized = false
-    //             udp.rebind()
-    //         }
-    //     }
-    // }
 
     // udp socket to receive unreliable data
     UdpSocket {
         id: udp
         onBinaryMessageReceived: function (data) {
-            root.bytesRecv += data.length
+            // root.bytesRecv += data.byteLength
             pb.processBinaryMessage(data)
         }
     }

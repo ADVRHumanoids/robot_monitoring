@@ -152,50 +152,14 @@ let lastJsSeqId = -1
 
 function handleMessage(obj) {
 
-    if(obj.type === "joint_states")
-    {
-        robotConnected = true
-
-        robotConnectedTimer.restart()
-
-        obj.name = SharedData.jointNames
-
-        SharedData.latestJointState = obj
-
-        jointStateReceived(obj)
-
-        root.jsMsgRecv += 1
-
-        if(lastJsSeqId < 0) {
-            lastJsSeqId = obj.seq
-        }
-        else {
-            root.jsDropped += (obj.seq - lastJsSeqId - 1)
-            lastJsSeqId = obj.seq
-        }
-
-        if(isConnected && !isFinalized)
-        {
-            client.active = true
-
-            doRequestAsync("GET", "/joint_states/info", "")
-                    .then((response) => {
-                          root.onInfoReceived(response)
-                      })
-        }
-    }
-    else if(obj.type === "proc")
-    {
-        procMessageReceived(obj)
-    }
-    else if(obj.type === "jpeg")
+    if(obj.type === "jpeg")
     {
         jpegReceived(obj)
     }
-    else if(obj.type === "theora")
-    {
-        theoraPacketReceived(obj)
-    }
+    // else if(obj.type === "theora")
+    // {
+    //     theoraPacketReceived(obj)
+    // }
     else if(obj.type === "plugin_stats")
     {
         pluginStatMessageReceived(obj)

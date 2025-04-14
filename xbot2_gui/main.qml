@@ -177,7 +177,7 @@ ApplicationWindow {
         }
 
         PageItem {
-            name: "Tuning"
+            name: "Parameters"
             page: "/qt/qml/Monitoring/Parameters.qml"
             iconText: MaterialSymbolNames.tune
             iconFont: syms.font.family

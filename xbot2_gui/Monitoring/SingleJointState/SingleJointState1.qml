@@ -13,7 +13,7 @@ Item {
     property list<string> jointNames: SharedData.jointNames
 
     function setJointStateMessage(js) {
-        for(let aux of js.aux_types) {
+        for(let aux of Object.keys(js.aux)) {
             if(auxTypes.indexOf(aux) < 0) {
                 fieldsModel.append(
                             {
@@ -290,8 +290,6 @@ Item {
                             Connections {
                                 target: updTimer
                                 function onTriggered() {
-
-
 
                                     if(shortName === '') {
                                         return

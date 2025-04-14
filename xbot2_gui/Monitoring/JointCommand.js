@@ -9,7 +9,10 @@ function sendCommand(ctrlJoints, cmdField, ref, trjtime) {
 
     client.doRequestAsync('PUT',
                           `/joint_command/goto/${jointNames}?qref=${cmd}&time=${trjtime}&ctrl=${cmdField}`)
-    .then((response) => trjCmdBtn.running = false)
+    .then((response) => {
+              trjCmdBtn.running = false
+              robotViewer.showRobotCmd = false
+          })
     .catch((err) => console.error(err))
 
 }

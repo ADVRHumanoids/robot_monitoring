@@ -23,7 +23,7 @@ function jsCallback(js) {
 
     addJointStatePoint(livePlot, js)
 
-    for(let aux of js.aux_types) {
+    for(let aux of Object.keys(js.aux)) {
         barPlot.addAuxType(aux)
     }
 
@@ -37,7 +37,7 @@ function jsCallback(js) {
     }
 
     vbatt = js.vbatt
-    iload = js.iload
+    iload = js.ibatt
 }
 
 

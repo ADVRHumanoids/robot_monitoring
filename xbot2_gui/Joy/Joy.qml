@@ -119,7 +119,7 @@ Item {
         Connections {
             target: client
             function onTheoraPacketReceived(msg) {
-                if(msg.stream_name === setupCard.videoStream) {
+                if(msg.streamName === setupCard.videoStream) {
                     video.setTheoraPacket(msg)
                 }
             }

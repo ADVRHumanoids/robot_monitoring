@@ -7,9 +7,27 @@
 
 #include <QProtobufSerializer>
 
-#include "jointstate.qpb.h"
 #include "generic.qpb.h"
-#include "text.qpb.h"
+
+class Counters {
+
+    Q_GADGET
+
+public:
+
+    Q_PROPERTY(int all MEMBER all);
+    Q_PROPERTY(int js MEMBER js);
+    Q_PROPERTY(int text MEMBER text);
+    Q_PROPERTY(int proc MEMBER proc);
+    Q_PROPERTY(int video MEMBER video);
+    QML_ELEMENT
+
+    int all = 0;
+    int js = 0;
+    int text = 0;
+    int proc = 0;
+    int video = 0;
+};
 
 class ProtobufDeserializationWorker : public QObject
 {
@@ -17,40 +35,21 @@ class ProtobufDeserializationWorker : public QObject
 
 public:
 
-    void processBinaryMessage(const QByteArray& msg)
-    {
-        if(!_msg.deserialize(&_serializer, msg))
-        {
-            qWarning().nospace() << "Unable to deserialize datagram ("
-                                 << qToUnderlying(_serializer.lastError()) << ")"
-                                 << _serializer.lastErrorString();
-            return;
-        }
-
-        _counters.msg++;
-
-        if(_msg.hasJointstate())
-        {
-            _counters.js++;
-            emit jointStateReceived(_msg.jointstate());
-        }
-        else if(_msg.hasText())
-        {
-            // qInfo() << "got text" << _msg.text().text();
-            emit textMessageReceived(_msg.text().text());
-            _counters.text++;
-        }
-        else
-        {
-            qWarning("empty protobuf msg received");
-        }
-    }
+    void processBinaryMessage(const QByteArray& msg);
 
 signals:
 
     void textMessageReceived(const QString&);
 
     void jointStateReceived(const JointState&);
+
+    void processOutputReceived(const ProcessOutput&);
+
+    void theoraPacketReceived(const TheoraPacket&);
+
+    void countersUpdated(Counters c);
+
+    void bytesRecvUpdated(Counters c);
 
 
 private:
@@ -60,17 +59,9 @@ private:
 
     Message _msg;
 
-    struct {
-        int msg = 0;
-        int js = 0;
-        int text = 0;
-    } _counters;
+    Counters _counters;
 
-    struct {
-        int msg = 0;
-        int js = 0;
-        int text = 0;
-    } _bytes_recv;
+    Counters _bytes_recv;
 
 };
 
@@ -81,26 +72,17 @@ class ProtobufDeserialization : public QObject
 
 public:
 
-    ProtobufDeserialization(QObject * parent = nullptr)
-    {
-        auto worker = new ProtobufDeserializationWorker;
+    ProtobufDeserialization(QObject * parent = nullptr);
 
-        connect(this, &ProtobufDeserialization::processBinaryMessage,
-                worker, &ProtobufDeserializationWorker::processBinaryMessage);
+    Q_PROPERTY(Counters recvBytes READ recvBytes NOTIFY recvBytesChanged FINAL)
 
-        connect(worker, &ProtobufDeserializationWorker::textMessageReceived,
-                this, &ProtobufDeserialization::textMessageReceived);
+    Q_PROPERTY(Counters numMsg READ numMsg NOTIFY numMsgChanged FINAL)
 
-        connect(worker, &ProtobufDeserializationWorker::jointStateReceived,
-                this, &ProtobufDeserialization::jointStateReceived);
+    ~ProtobufDeserialization();
 
-        worker->moveToThread(&_thread);
+    Counters recvBytes() const;
 
-        _thread.setServiceLevel(QThread::QualityOfService::Eco);
-
-        _thread.start(QThread::Priority::LowPriority);
-
-    }
+    Counters numMsg() const;
 
 
 signals:
@@ -111,9 +93,21 @@ signals:
 
     void jointStateReceived(const JointState&);
 
+    void processOutputReceived(const ProcessOutput&);
+
+    void theoraPacketReceived(const TheoraPacket&);
+
+    void recvBytesChanged();
+
+    void numMsgChanged();
+
 private:
 
     QThread _thread;
+
+    Counters _bytes_recv, _num_msg;
+
+
 
 
 

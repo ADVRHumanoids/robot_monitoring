@@ -102,6 +102,7 @@ Item {
                 id: consoleRepeater
                 model: ['all', 'launcher'].concat(root.processNames)
                 ConsoleCard {
+                    required property int index
                     name: modelData
                     Layout.fillWidth: true
                     Layout.fillHeight: true

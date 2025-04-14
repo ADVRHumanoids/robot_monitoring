@@ -76,6 +76,11 @@ public:
         return true;
     }
 
+    Q_INVOKABLE QByteArray base64ToBytes(QString b64)
+    {
+        return QByteArray::fromBase64(b64.toUtf8());
+    }
+
     Q_INVOKABLE static QUrl fromUserInput(const QString& userInput)
     {
         if (userInput.isEmpty())

@@ -128,6 +128,12 @@ MultiPaneResponsiveLayout {
                 width: scroll.availableWidth
             }
 
+            StatisticsCard {
+                client: root.client
+                width: scroll.availableWidth
+
+            }
+
         }
     }
 

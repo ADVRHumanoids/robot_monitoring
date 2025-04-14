@@ -8,6 +8,7 @@ Item {
 
     id: root
 
-    property var jointState
+    property jointState latestJointState
+    property list<string> jointNames
 
 }

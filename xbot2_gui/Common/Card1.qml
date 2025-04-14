@@ -140,6 +140,11 @@ Item {
                         verticalAlignment: Text.AlignVCenter
                         Layout.fillWidth: true
                         wrapMode: Text.Wrap
+                        MouseArea {
+                            enabled: root.collapsable
+                            anchors.fill: parent
+                            onDoubleClicked: root.collapsed = !root.collapsed
+                        }
                     }
 
                     Item {

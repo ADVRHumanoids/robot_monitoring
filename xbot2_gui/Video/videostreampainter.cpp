@@ -157,14 +157,14 @@ void theora2qimage(const th_ycbcr_buffer& ycbcr_buffer,
 
 using hrc = std::chrono::high_resolution_clock;
 
-void VideoStreamPainter::setTheoraPacket(const QByteArray &datab64,
+void VideoStreamPainter::setTheoraPacket(const QByteArray &data,
                                          int b_o_s,
                                          int e_o_s,
                                          long granulepos,
                                          long packetno)
 {
 
-    _decoder->addPacket(datab64, b_o_s, e_o_s, granulepos, packetno);
+    _decoder->addPacket(data, b_o_s, e_o_s, granulepos, packetno);
     packetReady();
 
 
@@ -423,7 +423,7 @@ void Decoder::onPacketReady()
         pkt = _q.dequeue();
 
 
-        if(pkt.datab64.size() == 0)
+        if(pkt.data.size() == 0)
         {
             return;
         }
@@ -434,14 +434,13 @@ void Decoder::onPacketReady()
     auto tic = hrc::now();
 
     // create ogg packet
-    auto data = QByteArray::fromBase64(pkt.datab64);
     ogg_packet oggpacket;
-    oggpacket.bytes      = data.size();
+    oggpacket.bytes      = pkt.data.size();
     oggpacket.b_o_s      = pkt.b_o_s;
     oggpacket.e_o_s      = pkt.e_o_s;
     oggpacket.granulepos = pkt.granulepos;
     oggpacket.packetno   = pkt.packetno;
-    oggpacket.packet = reinterpret_cast<unsigned char*>(data.data());
+    oggpacket.packet = reinterpret_cast<unsigned char*>(pkt.data.data());
 
     tic = hrc::now();
 

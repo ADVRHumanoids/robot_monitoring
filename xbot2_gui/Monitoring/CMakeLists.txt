@@ -1,5 +1,9 @@
 add_library(xbot2_gui_monitoring STATIC)
 
+# set_target_properties(xbot2_gui_monitoring PROPERTIES
+#     QT_QMLCACHEGEN_ARGUMENTS "--verbose"
+# )
+
 qt_add_qml_module(xbot2_gui_monitoring
     URI Monitoring
     VERSION 1.0

@@ -218,14 +218,19 @@ MultiPaneResponsiveLayout {
 
         target: root.client
 
-        function onProcMessageReceived(msg) {
-            Logic.onProcMessageReceived(processRepeater, consoleItem, msg)
+        function onProcessOutputReceived(msg) {
+            Logic.onProcessOutputReceived(processRepeater, consoleItem, msg)
         }
 
         function onPluginStatMessageReceived(msg) {
             Logic.onPluginMessageReceived(pluginRepeater, msg)
         }
 
+        function onObjectReceived(msg) {
+            if(msg.type === 'proc_status') {
+                Logic.onProcessStatusReceived(processRepeater, consoleItem, msg)
+            }
+        }
     }
 
 }

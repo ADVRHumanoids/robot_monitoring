@@ -4,7 +4,7 @@ context:
     verbose_flag: ''
 
 roscore:
-  cmd: ros1; roscore
+  cmd: roscore
 
 ecat: 
   cmd: watch ls
@@ -13,7 +13,7 @@ wait_ecat_online:
   cmd: watch ls
 
 xbot2:
-  cmd: ros1; xbot2-core --hw dummy -C $(rospack find kyon_config)/kyon_basic.yaml
+  cmd: xbot2-core --hw dummy -C $(rospack find kyon_config)/kyon_basic.yaml
   variants:
     verbose:
       params:
@@ -21,7 +21,7 @@ xbot2:
   ready_check: timeout 3 rostopic echo /xbotcore/status -n 1
 
 prova1:
-  cmd: watch ls
+  cmd: rostopic echo /xbotcore/statistics
 
 prova2:
-  cmd: watch ls
+  cmd: rostopic echo /xbotcore/joint_states

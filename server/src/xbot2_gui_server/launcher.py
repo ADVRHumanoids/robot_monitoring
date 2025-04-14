@@ -309,10 +309,10 @@ class Launcher:
                 'stderr': '',
             }
 
-            msg_str = json.dumps(msg)
-
-            await self.srv.ws_send_to_all(msg_str)
-
+            pbmsg = generic_pb2.Message()
+            pbmsg.process_output.name = 'launcher'
+            pbmsg.process_output.stdout = f'[{proc}] {text}'
+            await self.srv.ws_send_to_all(pbmsg)
         
         return await exe.execute_process(process=process, 
                                          cfg=self.cfg,
@@ -323,18 +323,10 @@ class Launcher:
     async def kill(self, process, graceful=True):
 
         async def on_launcher_event(proc, text):
-
-            msg = {
-                'type': 'proc',
-                'content': 'output',
-                'name': 'launcher',
-                'stdout': f'[{proc}] {text}',
-                'stderr': '',
-            }
-
-            msg_str = json.dumps(msg)
-
-            await self.srv.ws_send_to_all(msg_str)
+            pbmsg = generic_pb2.Message()
+            pbmsg.process_output.name = 'launcher'
+            pbmsg.process_output.stdout = f'[{proc}] {text}'
+            await self.srv.ws_send_to_all(pbmsg)
 
         return await exe.kill(process=process, 
                               cfg=self.cfg, 

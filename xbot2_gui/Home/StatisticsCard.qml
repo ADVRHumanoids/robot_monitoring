@@ -21,17 +21,19 @@ Card1 {
 
     name: 'Network Statistics'
 
-    frontItem: GridLayout {
-
-        id: grid
-
-        columns: 3
-
-        columnSpacing: 8
-        rowSpacing: 8
-
+    frontItem: Control {
+        topPadding: 6
         anchors.fill: parent
+        contentItem: GridLayout {
 
+            id: grid
+
+            columns: 3
+
+            columnSpacing: CommonProperties.geom.spacing
+            rowSpacing: CommonProperties.geom.spacing
+
+        }
     }
 
     toolButtons: [

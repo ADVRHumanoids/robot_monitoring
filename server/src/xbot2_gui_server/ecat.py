@@ -100,6 +100,13 @@ class EcatHandler:
             print('cache is empty, refreshing')
             self.ctx.update_cache()
 
+        for id in ids:
+            if id not in self.ctx.sdo_dict.keys():
+                print(f'esc id {id} not found in cache, refreshing...')
+                await utils.to_thread(self.ctx.update_cache)
+                print('...done')
+                break
+
         # fill sdo list
         sdos = []
         for id in ids:

@@ -25,10 +25,10 @@ MultiPaneResponsiveLayout {
     property real vbatt
     property real iload
 
-    LayoutClassHelper {
-        id: lay
-        targetWidth: root.width
-    }
+    // LayoutClassHelper {
+    //     id: lay
+    //     targetWidth: root.width
+    // }
 
     Item {
 
@@ -50,8 +50,8 @@ MultiPaneResponsiveLayout {
 
                 width: parent.width
 
-                rows: lay.compact ? -1 : 1
-                columns: lay.compact ? 1 : -1
+                rows: layout.compact ? -1 : 1
+                columns: layout.compact ? 1 : -1
 
                 rowSpacing: 8
                 columnSpacing: 8
@@ -141,6 +141,13 @@ MultiPaneResponsiveLayout {
                                                 jointState.selectJoint(jointName)
                                                 jointCommand.selectJoint(jointName)
                                             }
+
+                            onSelectedJointsChanged: {
+                                jointCommand.ctrlJoints = selectedJoints
+                                loader.item.selectedJoints = selectedJoints
+                            }
+
+                            enableMultipleSelection: jointCommand.enableMultipleSelection
                         }
 
                     }
@@ -199,8 +206,15 @@ MultiPaneResponsiveLayout {
 
                 onJointClicked: function(jointName) {
                     jointState.selectJoint(jointName)
-                    jointCommand.selectJoint(jointName)
+
                 }
+
+                onSelectedJointsChanged: {
+                    barPlot.selectedJoints = selectedJoints
+                    jointCommand.ctrlJoints = selectedJoints
+                }
+
+                enableMultipleSelection: jointCommand.enableMultipleSelection
 
             }
 
@@ -214,6 +228,11 @@ MultiPaneResponsiveLayout {
             onResetCmd: robotViewer.resetCmd()
             onCmdChanged: robotViewer.showRobotCmd = true
             enabled: jointDevice.jointActive
+            // ctrlJoints: loader.item.selectedJoints
+            onJointRemoved: {
+                barPlot.selectedJoints = ctrlJoints
+                loader.item.selectedJoints = ctrlJoints
+            }
         }
 
     }

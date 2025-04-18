@@ -166,6 +166,7 @@ int main(int argc, char *argv[])
     // set app properties
     QApplication app(argc, argv);
     auto font = app.font();
+    qInfo() << "FONT" <<  font;
     font.setPixelSize(12);
     app.setFont(font);
 

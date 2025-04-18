@@ -9,6 +9,10 @@ Item {
 
     property list<string> fieldNames
 
+    property list<string> selectedJoints
+
+    property bool enableMultipleSelection
+
     property alias currentIndex: stack.currentIndex
 
     function setJointStateMessage(js_msg) {
@@ -16,6 +20,7 @@ Item {
     }
 
     signal jointClicked(string jointName)
+
 
     function setStatus(jName, ok) {
         let idx = SharedData.jointNames.indexOf(jName)
@@ -99,7 +104,19 @@ Item {
 
         onJointClicked: function(jn) {
             root.jointClicked(jn)
+
+            if(root.selectedJoints.indexOf(jn) < 0) {
+                if(root.enableMultipleSelection) {
+                    root.selectedJoints.push(jn)
+                }
+                else {
+                    root.selectedJoints = [jn]
+                }
+            }
+
         }
+
+        selectedJoints: root.selectedJoints
 
     }
 

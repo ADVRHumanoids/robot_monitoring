@@ -86,6 +86,7 @@ ApplicationWindow {
         z: 200
         opacity: 0.8
         visible: CommonProperties.config.showMonWidget
+        width: expanded ? 94 : implicitWidth
     }
 
 

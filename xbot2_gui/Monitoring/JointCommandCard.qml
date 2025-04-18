@@ -15,8 +15,10 @@ Card1 {
     property RobotModelNode robotCmd
     signal resetCmd()
     signal cmdChanged()
+    signal jointRemoved()
     property list<string> ctrlJoints
     property alias activeCtrl: ctrlCombo.currentText
+    property alias enableMultipleSelection: multiJointChk.checked
 
     function selectJoint(jName) {
         if(multiJointChk.checked) {
@@ -30,6 +32,7 @@ Card1 {
 
     function removeJoint(jName) {
         ctrlJoints = ctrlJoints.filter(n => n !== jName)
+        jointRemoved()
     }
 
 
@@ -91,7 +94,7 @@ Card1 {
                 id: clearBtn
                 text: 'X'
                 visible: jointRepeater.count > 1
-                onClicked: root.ctrlJoints = []
+                onClicked: {root.ctrlJoints = []; root.jointRemoved()}
             }
         }
 

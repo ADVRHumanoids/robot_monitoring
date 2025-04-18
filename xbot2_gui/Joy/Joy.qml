@@ -14,10 +14,10 @@ Item {
 
     id: root
 
-    LayoutClassHelper {
-        id: layout
-        targetWidth: parent.width
-    }
+    // LayoutClassHelper {
+    //     id: layout
+    //     targetWidth: parent.width
+    // }
     property ClientEndpoint client
 
     JoyCartesianCard {

@@ -6,8 +6,9 @@ Item {
 
     property string jointName: "joint_name"
     property alias bar: bar
-    property real labelColorAlpha: 0.3
+    property real labelColorAlpha: isSelected ? 0.6 : 0.3
     property alias labelMouseArea: labelMouseArea
+    property bool isSelected: false
 
     signal jointClicked(string jName)
 
@@ -48,20 +49,20 @@ Item {
             MouseArea {
                 id: labelMouseArea
                 anchors.fill: parent
-                hoverEnabled: true
-                preventStealing: true
+                // hoverEnabled: true
+                // preventStealing: true
 
-                onHoveredChanged: {
-                    console.log(jointName)
-                    if(labelMouseArea.containsMouse)
-                    {
-                        labelColorAlpha = 0.6
-                    }
-                    else
-                    {
-                        labelColorAlpha = 0.3
-                    }
-                }
+                // onHoveredChanged: {
+                //     console.log(jointName)
+                //     if(labelMouseArea.containsMouse)
+                //     {
+                //         labelColorAlpha = 0.6
+                //     }
+                //     else
+                //     {
+                //         labelColorAlpha = 0.3
+                //     }
+                // }
 
                 onClicked: {
                     jointClicked(jointName)

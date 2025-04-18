@@ -23,6 +23,8 @@ Node {
 
     property var q: Array(ndof).fill(0.0)
 
+    property list<string> selectedJoints
+
     signal modelChanged()
 
     onQChanged: updateQ(q)
@@ -65,6 +67,7 @@ Node {
             visible: root.visible
             client: root.client
             axesVisible: root.axesVisible
+            isSelected: root.selectedJoints.indexOf(parentJointName) >= 0
         }
     }
 

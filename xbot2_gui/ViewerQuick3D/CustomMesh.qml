@@ -23,6 +23,7 @@ Node {
     property real cylinderLength
 
     property string parentJointName
+    property bool isSelected: false
 
 
     // private
@@ -40,13 +41,13 @@ Node {
             id: model
             visible: true
             pickable: true
-            property bool isPicked: false
             property alias parentJointName: root.parentJointName
+            property alias isSelected: root.isSelected
             materials: [
                 PrincipledMaterial {
                     id: material
-                    baseColor: model.isPicked ?
-                                Qt.lighter(root.color) :
+                    baseColor: root.isSelected ?
+                                Qt.lighter(root.color, 1.7) :
                                 root.color
                     metalness: 0
                     roughness: 0
@@ -91,8 +92,6 @@ Node {
 
             cachedVisual.addMesh(encodeURIComponent(meshUri),
                                  `http://${client.hostname}:${client.port}/visual/get_mesh/${encodeURIComponent(meshUri)}`)
-
-
         }
 
 

@@ -9,10 +9,10 @@ import "Horizon.js" as Logic
 
 Item {
 
-    LayoutClassHelper {
-        id: layout
-        targetWidth: parent.width
-    }
+    // LayoutClassHelper {
+    //     id: layout
+    //     targetWidth: parent.width
+    // }
 
     property ClientEndpoint client
 

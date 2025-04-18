@@ -93,7 +93,7 @@ Control {
                 }
 
                 Label {
-                    text: `${vBatt} V`
+                    text: `${vBatt.toFixed(1)} V`
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
 
@@ -118,6 +118,7 @@ Control {
                 Label {
                     text: root.jnameMaxTempDri
                     anchors.horizontalCenter: parent.horizontalCenter
+                    wrapMode: Text.WrapAnywhere
                     font.pointSize: 6
                 }
 
@@ -142,6 +143,7 @@ Control {
                 Label {
                     text: root.jnameMaxTempMot
                     anchors.horizontalCenter: parent.horizontalCenter
+                    wrapMode: Text.WrapAnywhere
                     font.pointSize: 6
                 }
 
@@ -155,7 +157,9 @@ Control {
         running: true
         repeat: true
         onTriggered: {
+
             let js = SharedData.latestJointState
+
             if(js === undefined) {
                 return
             }

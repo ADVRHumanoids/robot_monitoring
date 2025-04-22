@@ -120,6 +120,8 @@ Control {
                     anchors.horizontalCenter: parent.horizontalCenter
                     wrapMode: Text.WrapAnywhere
                     font.pointSize: 6
+                    width: parent.width
+                    horizontalAlignment: Text.AlignHCenter
                 }
 
             }
@@ -145,6 +147,8 @@ Control {
                     anchors.horizontalCenter: parent.horizontalCenter
                     wrapMode: Text.WrapAnywhere
                     font.pointSize: 6
+                    width: parent.width
+                    horizontalAlignment: Text.AlignHCenter
                 }
 
             }

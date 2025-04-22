@@ -124,7 +124,7 @@ Card1 {
                 enabled: root.ctrlJoints.length > 0
                 id: sliderLabel
                 text: slider.value.toFixed(2)
-                onAccepted: {
+                onTextEdited: {
                     slider.value = parseFloat(text)
                 }
             }

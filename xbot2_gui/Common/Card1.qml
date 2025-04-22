@@ -8,7 +8,6 @@ import Common
 Item {
 
 
-
     // public
 
     property string name: 'CardName'
@@ -56,8 +55,8 @@ Item {
     id: root
 
     Component.onCompleted: {
-        frontItem.parent = flip.frontSide.contentItemWrapper
-        backItem.parent = flip.backSide.contentItemWrapper
+        frontItem.parent = flip.front.contentItemWrapper
+        backItem.parent = flip.back.contentItemWrapper
     }
 
     implicitWidth: flip.implicitWidth
@@ -79,15 +78,16 @@ Item {
 
         id: flip
 
-        implicitWidth: root.flipped ? backSide.implicitWidth : frontSide.implicitWidth
-        implicitHeight: root.flipped ? backSide.implicitHeight : frontSide.implicitHeight
+        implicitWidth: root.flipped ? back.implicitWidth : front.implicitWidth
+        implicitHeight: root.flipped ? back.implicitHeight : front.implicitHeight
 
         width: parent.width
         height: parent.height
 
         // front side is rendered as a rectangle whose content is layed out in a column
         // with header (card title and tool buttons) and content (item)
-        property Item frontSide: Control {
+
+        front: Control {
 
             property alias contentItemWrapper: frontContentWrapper
 
@@ -141,6 +141,7 @@ Item {
                         Layout.fillWidth: true
                         wrapMode: Text.Wrap
                         MouseArea {
+                            id: mouse
                             enabled: root.collapsable
                             anchors.fill: parent
                             onDoubleClicked: root.collapsed = !root.collapsed
@@ -179,6 +180,7 @@ Item {
                     // expand/collpse button
                     SmallToolButton {
                         id: showHideBtn
+
                         visible: root.collapsable
                         Layout.alignment: Qt.AlignVCenter
                         text: root.collapsed ? '\uf078' : '\uf077'
@@ -221,7 +223,7 @@ Item {
             }
         }
 
-        property Item backSide: Control {
+        back: Control {
 
             property alias contentItemWrapper: backItemWrapper
 
@@ -235,7 +237,7 @@ Item {
 
             padding: root.margins
 
-            contentItem: Column {
+            contentItem: ColumnLayout {
 
                 id: backColumn
 
@@ -244,7 +246,7 @@ Item {
                 RowLayout {
 
                     id: backHeaderRow
-                    width: backColumn.width
+                    Layout.fillWidth: true
 
                     Label {
                         id: titleLabelBack
@@ -252,31 +254,6 @@ Item {
                         font: titleLabel.font
                         Layout.fillWidth: true
                     }
-
-                    // SmallToolButton {
-                    //     Layout.alignment: Qt.AlignVCenter
-                    //     text: '\uf013'
-                    //     font.family: CommonProperties.fontAwesome.solid.family
-                    //     font.pixelSize: CommonProperties.font.h3
-                    //     onClicked: {
-
-                    //     }
-
-                    //     DebugRectangle {
-                    //         target: parent
-                    //     }
-                    // }
-                    // SmallToolButton {
-
-                    //     Layout.alignment: Qt.AlignVCenter
-                    //     text: '\uf013'
-                    //     font.family: CommonProperties.fontAwesome.solid.family
-                    //     font.pixelSize: CommonProperties.font.h3
-
-                    //     onClicked: {
-
-                    //     }
-                    // }
                 }
 
                 Item {
@@ -285,21 +262,23 @@ Item {
                 }
 
                 Item {
+                    Layout.fillHeight: true
                     id: backItemWrapper
                     implicitWidth: children[0].implicitWidth
                     implicitHeight: children[0].implicitHeight
-                    width: parent.width
-                    height:  children.length > 0 ? children[0].height : 0
+                    // width: parent.width
+                    // height:  children.length > 0 ? children[0].height : 0
                     clip: true
                 }
 
-                Row {
+                RowLayout {
 
                     spacing: root.margins
 
                     Button {
                         id: cfgOkBtn
                         text: 'Ok'
+                        Layout.fillWidth: true
                         onReleased: {
                             root.flipped = false
                             root.collapsed = root._collapsed_before_flip
@@ -310,6 +289,7 @@ Item {
                     Button {
                         id: cfgCancelBtn
                         text: 'Cancel'
+                        Layout.fillWidth: true
                         onReleased: {
                             root.flipped = false
                             root.collapsed = root._collapsed_before_flip
@@ -321,10 +301,6 @@ Item {
             }
 
         }
-
-        front: frontSide
-
-        back: backSide
 
         transform: Rotation {
             id: rotation

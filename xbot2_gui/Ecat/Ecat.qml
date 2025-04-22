@@ -192,8 +192,8 @@ Control {
                 Layout.fillHeight: true
                 Layout.fillWidth: true
                 id: sdoGrid
-                columns: Math.max(1, selectedSdo.length) + 2
-                rowSpacing: -4
+                columns: Math.max(1, selectedSdo.length) + 1
+                // rowSpacing: -4
                 columnSpacing: 8
             }
 
@@ -210,7 +210,7 @@ Control {
                     sdoHdr.createObject(sdoGrid, {'text': '--', 'enabled': false})
                 }
 
-                empty.createObject(sdoGrid)
+                // empty.createObject(sdoGrid)
 
                 // some space
                 for(let i = 0; i < sdoGrid.columns; i++) {
@@ -229,7 +229,7 @@ Control {
                         sdoDelegate.createObject(sdoGrid, {'enabled': false})
                     }
 
-                    readBtn.createObject(sdoGrid, {'id': id})
+                    // readBtn.createObject(sdoGrid, {'id': id})
 
                 }
             }
@@ -277,6 +277,15 @@ Control {
                 readOnly: !writeCheck.checked
                 onTextEdited: writeBtn.visible = true
 
+                onFocusChanged: {
+                    if(focus) {
+                        readBtn.visible = !writeCheck.checked
+                    }
+                    else if(!readBtn.focus) {
+                        readBtn.visible = false
+                    }
+                }
+
                 ToolButton {
                     id: writeBtn
                     anchors.right: parent.right
@@ -285,6 +294,19 @@ Control {
                     z: 1
                     onClicked: {
                         Logic.writeSdo([parent.id], parent.sdo, parent.text)
+                        visible = false
+                    }
+                    visible: false
+                }
+
+                ToolButton {
+                    id: readBtn
+                    anchors.right: parent.right
+                    height: parent.height
+                    text: 'Read'
+                    z: 1
+                    onClicked: {
+                        Logic.readSdo([parent.id], parent.sdo)
                         visible = false
                     }
                     visible: false

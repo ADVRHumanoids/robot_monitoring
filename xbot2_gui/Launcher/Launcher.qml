@@ -106,7 +106,7 @@ MultiPaneResponsiveLayout {
                 id: processLayout
 
                 width: parent.width
-                columns: root.layoutHelper.compact ? 1 : 2
+                columns: Math.ceil(width / 400.0)
 
                 Repeater {
 
@@ -173,7 +173,7 @@ MultiPaneResponsiveLayout {
                 id: pluginLayout
 
                 width: parent.width
-                columns: root.layoutHelper.compact ? 1 : 2
+                columns: Math.ceil(width / 400.0)
 
                 Repeater {
 

@@ -9,6 +9,7 @@ import numpy as np
 
 
 import rospy 
+from sensor_msgs.msg import JointState as StdJointState
 from xbot_msgs.msg import JointState, Fault, JointCommand, CustomState
 from std_msgs.msg import Float32
 from urdf_parser_py import urdf as urdf_parser
@@ -40,6 +41,7 @@ class JointStateHandler:
         self.srv.schedule_task(self.run())
         self.srv.register_ws_coroutine(self.handle_ws_msg)
         self.srv.add_route('GET', '/joint_states/info', self.get_joint_info_handler, 'get_joint_info')
+        self.srv.add_route('GET', '/joint_states/grippers', self.get_grippers_handler, 'get_grippers')
         self.srv.add_route('GET', '/joint_states/urdf', self.get_urdf_handler, 'get_urdf')
         self.srv.add_route('GET', '/joint_states/connected', self.robot_connected_handler, 'get_connected')
         self.srv.add_route('PUT', '/joint_command/goto/{joint_name}', self.command_handler, 'command')
@@ -76,6 +78,11 @@ class JointStateHandler:
         self.cmd_guard = JointStateHandler.CommandGuard(self.command_acquire, self.command_release)
         self.cmd_should_stop = True
 
+        # grippers
+        self.gripper_state_sub = dict()
+        self.gripper_cmd_pub = dict()
+        self.gripper_state_msg = dict()
+
         # config
         self.rate = config.get('rate', 30.0)
 
@@ -101,7 +108,11 @@ class JointStateHandler:
             if not math.isnan(msg.value[i]):
                 aux[i] = msg.value[i]
 
-    
+
+    def on_gripper_state_recv(self, msg: StdJointState, gname):
+        self.gripper_state_msg[gname] = msg
+
+
     @utils.handle_exceptions
     async def get_urdf_handler(self, request: web.Request):
         print('retrieving robot description..')
@@ -184,6 +195,43 @@ class JointStateHandler:
         return web.Response(text=json.dumps(joint_info))
 
 
+    @utils.handle_exceptions
+    async def get_grippers_handler(self, req: web.Request):
+
+        # get topic names from ros master
+        topic_name_type_list = await utils.to_thread(rospy.get_published_topics)
+
+        # filter /xbotcore/gripper/GRIPPERNAME/state
+        gripper_names = set()
+        for tname, ttype in topic_name_type_list:
+            print(tname, ttype)
+            if ttype != 'sensor_msgs/JointState':
+                continue
+            tokens = tname.strip('/').split('/')
+            if len(tokens) == 4 and tokens[1] == 'gripper' and tokens[3] == 'state':
+                gripper_names.add(tokens[2])
+
+        # register topics
+        for gname in gripper_names:
+            state = f'xbotcore/gripper/{gname}/state'
+            cmd = f'xbotcore/gripper/{gname}/command'
+            self.gripper_state_msg[gname] = None
+            self.gripper_state_sub[gname] = rospy.Subscriber(state, StdJointState, 
+                self.on_gripper_state_recv, gname, queue_size=1)
+            self.gripper_cmd_pub[gname] = rospy.Publisher(cmd, StdJointState, queue_size=1)
+            print(f'connecting to gripper {gname}...')
+            
+        
+        # reply
+        res = {
+            'success': True,
+            'message': '',
+            'gripper_names': sorted(list(gripper_names))
+        }
+
+        return web.Response(text=json.dumps(res))
+            
+
     async def run(self):
 
         t0 = time.time()
@@ -207,26 +255,9 @@ class JointStateHandler:
             # check js received
             if self.msg is None:
                 continue
-            
-            # # convert to dict
-            # js_msg_to_send = self.js_msg_to_dict(self.msg)
 
-            # # test: avoid sending names to save bw
-            # del js_msg_to_send['name']
-
-            # # add pow data and seq id
-            # js_msg_to_send['vbatt'] = self.vbatt
-            # js_msg_to_send['iload'] = self.iload
-            # js_msg_to_send['seq'] = self.js_seq
-            # self.js_seq += 1
-
-            # # serialize msg to json
-            # js_str = json.dumps(js_msg_to_send)      
-
-            # # send to all connected clients
-            # await self.srv.udp_send_to_all(js_str)
-
-            # pb tests
+            # pb js
+            # TBD aux support
             try:
                 msgpb = generic_pb2.Message()
                 msgpb.jointstate.linkPos.extend(self.msg.link_position)
@@ -253,6 +284,18 @@ class JointStateHandler:
             self.msg = None
             for v in self.aux_map.values():
                 v.clear()
+
+            # grippers
+            for gname, gmsg in self.gripper_state_msg.items():
+                if gmsg is None:
+                    continue 
+                gmsg = {
+                    'type': 'gripper_state',
+                    'q': gmsg.position[0],
+                    'tau': gmsg.effort
+                }
+                await self.srv.ws_send_to_all(json.dumps(gmsg))
+                self.gripper_state_msg[gname] = None
 
     
     def command_acquire(self):
@@ -399,6 +442,7 @@ class JointStateHandler:
 
 
     async def handle_ws_msg(self, msg, proto, ws):
+
         if msg['type'] == 'joint_cmd':
             cmdmsg = JointCommand()
             cmdmsg.name = msg['joint_names']
@@ -411,3 +455,12 @@ class JointStateHandler:
             else:
                 raise ValueError(f'unknown control mode {msg["ctrl"]}')
             self.cmd_pub.publish(cmdmsg)
+
+        if msg['type'] == 'gripper_cmd':
+            cmdmsg = StdJointState()
+            gname = msg['name']
+            if msg['action'] == 'open':
+                cmdmsg.position = [0.0]
+            elif msg['action'] == 'close':
+                cmdmsg.effort = [msg['effort']]
+            self.gripper_cmd_pub[gname].publish(cmdmsg)

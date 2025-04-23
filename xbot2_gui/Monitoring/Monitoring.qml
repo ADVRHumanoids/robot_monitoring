@@ -25,10 +25,10 @@ MultiPaneResponsiveLayout {
     property real vbatt
     property real iload
 
-    // LayoutClassHelper {
-    //     id: lay
-    //     targetWidth: root.width
-    // }
+    LayoutClassHelper {
+        id: layout
+        targetWidth: root.width
+    }
 
     Item {
 

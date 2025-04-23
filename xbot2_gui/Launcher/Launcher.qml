@@ -16,6 +16,12 @@ MultiPaneResponsiveLayout {
 
     property int numErrors: 0
 
+
+    LayoutClassHelper {
+        id: layout
+        targetWidth: root.width
+    }
+
     ScrollView {
 
         property string iconText: 'Launcher'

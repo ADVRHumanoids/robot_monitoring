@@ -83,6 +83,7 @@ Control {
 
             Column {
 
+                Layout.alignment: Qt.AlignTop
                 Layout.fillWidth: true
                 Layout.columnSpan: 2
 
@@ -101,6 +102,7 @@ Control {
 
             Column {
 
+                Layout.alignment: Qt.AlignTop
                 Layout.preferredWidth: 40
                 Layout.fillWidth: true
 
@@ -128,6 +130,7 @@ Control {
 
             Column {
 
+                Layout.alignment: Qt.AlignTop
                 Layout.preferredWidth: 40
                 Layout.fillWidth: true
 

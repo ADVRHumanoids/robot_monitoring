@@ -222,6 +222,7 @@ MultiPaneResponsiveLayout {
 
         JointCommandCard {
             id: jointCommand
+            collapsed: true
             Layout.fillWidth: true
             client: root.client
             robotCmd: loader.item.robotCmd
@@ -233,6 +234,14 @@ MultiPaneResponsiveLayout {
                 barPlot.selectedJoints = ctrlJoints
                 loader.item.selectedJoints = ctrlJoints
             }
+        }
+
+        Gripper {
+
+            collapsed: true
+            Layout.fillWidth: true
+            visible: gripperNames.length > 0
+
         }
 
     }

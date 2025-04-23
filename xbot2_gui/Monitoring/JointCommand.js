@@ -116,3 +116,22 @@ function currentValue(ctrlJoints, cmdField) {
         return SharedData.latestJointState.d[idx]
     }
 }
+
+function updateGripperNames() {
+    client.doRequestAsync('GET',
+                          `/joint_states/grippers`)
+        .then((response) => gripperCombo.model = response.gripper_names)
+        .catch((err) => console.error(err))
+}
+
+function sendGripperCommand(name, action, effort=0) {
+    let msg = Object()
+    msg.type = 'gripper_cmd'
+    msg.name = name
+    msg.action = action
+    msg.effort = effort
+
+    client.sendTextMessage(JSON.stringify(msg))
+
+    console.log(JSON.stringify(msg))
+}

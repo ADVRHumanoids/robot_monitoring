@@ -51,7 +51,8 @@ git clone https://github.com/ADVRHumanoids/kyon_config.git
 cd kyon_config/docker/kyon-cetc-focal-ros1
 
 # Build and run the Docker container
-./setup.sh
+source ./setup.sh
+ros1
 ```
 
 Refer to the Docker configuration within the `kyon_config` repository for detailed instructions: [kyon_config Docker](https://github.com/ADVRHumanoids/kyon_config/tree/master/docker/kyon-cetc-focal-ros1).

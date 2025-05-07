@@ -216,7 +216,7 @@ class Launcher:
             
             pbmsg = generic_pb2.Message()
             pbmsg.process_output.name = process
-            pbmsg.process_output.stdout = ansi_escape.sub('', l.strip())
+            pbmsg.process_output.out = ansi_escape.sub('', l.strip())
 
             # throttle logic
             if time.time() - self.proc_stdout_prev_time > 1.0:
@@ -230,7 +230,7 @@ class Launcher:
             # too much data: send once, then skip for the rest of the window duration
             if self.proc_stdout_bytes*8/1000 > self.proc_stdout_max_kbps:  # kbps -> Bps
                 if self.proc_stdout_enabled:
-                    pbmsg.process_output.stdout = f'[launcher] process exceeding max output bandwith (max_bw = {self.proc_stdout_max_kbps}) over a 1 sec window'
+                    pbmsg.process_output.out = f'[launcher] process exceeding max output bandwith (max_bw = {self.proc_stdout_max_kbps}) over a 1 sec window'
                     self.proc_stdout_enabled = False
                 else:
                     return
@@ -311,7 +311,7 @@ class Launcher:
 
             pbmsg = generic_pb2.Message()
             pbmsg.process_output.name = 'launcher'
-            pbmsg.process_output.stdout = f'[{proc}] {text}'
+            pbmsg.process_output.out = f'[{proc}] {text}'
             await self.srv.ws_send_to_all(pbmsg)
         
         return await exe.execute_process(process=process, 
@@ -325,7 +325,7 @@ class Launcher:
         async def on_launcher_event(proc, text):
             pbmsg = generic_pb2.Message()
             pbmsg.process_output.name = 'launcher'
-            pbmsg.process_output.stdout = f'[{proc}] {text}'
+            pbmsg.process_output.out = f'[{proc}] {text}'
             await self.srv.ws_send_to_all(pbmsg)
 
         return await exe.kill(process=process, 

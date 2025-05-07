@@ -79,12 +79,12 @@ function onProcessOutputReceived(procRepeater, consoleItem, msg) {
     // handle output
     let prefix = '[' + msg.name + '] '
 
-    if(msg.stdout.length > 0) {
-        consoleItem.appendText(msg.name, prefix + msg.stdout)
+    if(msg.out.length > 0) {
+        consoleItem.appendText(msg.name, prefix + msg.out)
     }
 
-    if(msg.stderr.length > 0) {
-        consoleItem.appendText(msg.name, '<font color="red">' + prefix + msg.stderr + '</>')
+    if(msg.err.length > 0) {
+        consoleItem.appendText(msg.name, '<font color="red">' + prefix + msg.err + '</>')
         root.numErrors += 1
     }
 

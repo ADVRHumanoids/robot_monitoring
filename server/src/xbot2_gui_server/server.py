@@ -94,6 +94,10 @@ class Xbot2WebServer(ServerBase):
         for route in routes:
             self.app.router.add_route(method=route[0], path=route[1], handler=route[2], name=route[3])
 
+        webui_path = os.path.abspath(os.path.dirname(__file__)) + '/webui'
+
+        self.app.add_routes([web.static('/webui', webui_path)])
+
     
     def add_route(self, method, path, handler, name):
         try:
@@ -315,16 +319,13 @@ class Xbot2WebServer(ServerBase):
                 del self.udp_clients_timeout[addr]
                     
 
-                    
-        
-            
             # periodic loop at 10 Hz
             await asyncio.sleep(0.666)
     
 
     # root handler serves html for web app
     async def root_handler(self, request):
-        return aiohttp.web.HTTPFound('/next_ui.html')
+        return aiohttp.web.HTTPFound('/webui/xbot2_gui.html')
 
    
     # websocket handler

@@ -25,6 +25,7 @@ if(NOT EMSCRIPTEN)
 
     find_package(Qt6 COMPONENTS
         WebView
+        WebEngineQuick
         REQUIRED
     )
 

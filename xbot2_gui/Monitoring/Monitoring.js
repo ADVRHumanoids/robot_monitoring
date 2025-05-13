@@ -102,12 +102,12 @@ function addJointStatePoint(livePlot, msg) {
         }
 
         // recompute jIndex if needed
-        if(msg.name[props.jIndex] !== props.jName) {
-            props.jIndex = msg.name.indexOf(props.jName)
+        if(SharedData.jointNames[props.jIndex] !== props.jName) {
+            props.jIndex = SharedData.jointNames.indexOf(props.jName)
         }
 
         // compute relative time
-        let t = msg.stamp
+        let t = msg.stamp ?? appData.getTimeNs() * 1e-9
 
         if(livePlot.initialTime < 0) {
             livePlot.initialTime = t

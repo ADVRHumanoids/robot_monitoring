@@ -65,9 +65,17 @@ Control {
         }
     }
 
+    function clearColumns() {
+        for(let i = 0; i < row.visibleChildren.length; i++) {
+            row.visibleChildren[i].children = []
+        }
+    }
+
     function computeLayout() {
 
         try {
+
+            clearColumns()
 
         // console.log('computeLayout START')
         _layout_in_progress = true

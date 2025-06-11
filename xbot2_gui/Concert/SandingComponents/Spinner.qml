@@ -2,18 +2,20 @@ import QtQuick
 import QtQuick.Controls
 
 BusyIndicator {
-    id: taskBusyIndicator
+    id: loader
+    property color loaderColor: "#91d7e3"
     contentItem: Item {
-        implicitWidth: 50
-        implicitHeight: 50
+        implicitWidth: 200
+        implicitHeight: 200
 
         Item {
             id: item
-            x: parent.width / 2 - 25
-            y: parent.height / 2 - 25
-            width: 50
-            height: 50
-            opacity: taskBusyIndicator.running ? 1 : 0
+            // x: parent.width / 2 - (50)
+            // y: parent.height / 2 - (50)
+            width: parent.width
+            height: parent.width
+
+            opacity: loader.running ? 1 : 0
 
             Behavior on opacity {
                 OpacityAnimator {
@@ -23,11 +25,11 @@ BusyIndicator {
 
             RotationAnimator {
                 target: item
-                running: taskBusyIndicator.visible && taskBusyIndicator.running
+                running: loader.visible && loader.running
                 from: 0
                 to: 360
                 loops: Animation.Infinite
-                duration: 1500
+                duration: 1750
             }
 
             Repeater {
@@ -38,10 +40,10 @@ BusyIndicator {
                     id: delegate
                     x: item.width / 2 - width / 2
                     y: item.height / 2 - height / 2
-                    implicitWidth: 8
-                    implicitHeight: 8
-                    radius: 5
-                    color: "#8bd5ca"
+                    implicitWidth: 24
+                    implicitHeight: 24
+                    radius: 200
+                    color: loaderColor
 
                     required property int index
 
@@ -51,8 +53,8 @@ BusyIndicator {
                         },
                         Rotation {
                             angle: delegate.index / repeater.count * 360
-                            origin.x: 5
-                            origin.y: 5
+                            origin.x: delegate.implicitWidth / 2
+                            origin.y: delegate.implicitHeight / 2
                         }
                     ]
                 }

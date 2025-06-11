@@ -28,6 +28,8 @@ qt_add_resources(xbot2_gui_font "app_icons"
     icons/alberobotics.png
     icons/brick_wall_white.png
     icons/alberobotics100x100.png
+    icons/emergency_stop.png
+    icons/ko.png
 )
 
 target_link_libraries(xbot2_gui PRIVATE xbot2_gui_fontplugin)

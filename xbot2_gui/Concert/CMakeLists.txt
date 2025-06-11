@@ -20,6 +20,18 @@ qt_add_qml_module(xbot2_gui_concert
     TransportationTasks/AutonomousTasks.qml
     TaskBusyIndicator.qml
     PatternTab.qml
+    Sanding3D.qml
+    Sanding3D.js
+    SandingComponents/ScanButton.qml
+    SandingComponents/Spinner.qml
+    SandingComponents/SandingSendingButton.qml
+    SandingComponents/SandingSettings.qml
+    SandingComponents/SandingParams.qml
+    SandingComponents/SandingSlider.qml
+    RESOURCES
+        icons/bolt.png
+        icons/speed.png
+        QML_FILES SandingComponents/ResetButton.qml
 )
 
 target_link_libraries(xbot2_gui PRIVATE xbot2_gui_concertplugin)

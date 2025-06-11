@@ -9,6 +9,7 @@ import Menu
 import Font
 import Audio
 import Monitoring
+import Launcher
 
 ApplicationWindow {
 
@@ -73,7 +74,6 @@ ApplicationWindow {
         z: 200
         width: 70
         height: 70
-        opacity: 0.8
     }
 
     MonWidget {
@@ -89,6 +89,17 @@ ApplicationWindow {
         width: expanded ? 94 : implicitWidth
     }
 
+    // EmergencyButton {
+    //     id: safety
+    //     anchors {
+    //         left: parent.left
+    //         bottom: parent.bottom
+    //         margins: 16
+    //     }
+    //     z: 200
+    //     width: 70
+    //     height: 70
+    // }
 
     MaterialSymbols {
         id: syms
@@ -250,6 +261,26 @@ ApplicationWindow {
             active: true
             sizeFactor: 1.1
             show: requestedPages.indexOf(name) > -1
+        }
+
+        PageItem {
+            name: "Sanding3D"
+            page: "/qt/qml/Concert/Sanding3D.qml"
+            iconText: MaterialSymbolNames.beer
+            iconFont: syms.font.family
+            active: true
+            sizeFactor: 1.1
+            visible: true
+        }
+
+        PageItem {
+            name: "Emergency"
+            page: "/qt/qml/Launcher/EmergencyButton.qml"
+            iconText: MaterialSymbolNames.panic
+            iconFont: syms.font.family
+            active: true
+            sizeFactor: 1.1
+            visible: true
         }
 
     }

@@ -38,6 +38,8 @@ Item {
     property string netSettings: '\ueb2f'
     property string tune: '\ue429'
     property string emergency: '\ue82a'
+    property string beer: '\uf1f3'
+    property string panic: '\ue82a'
 
     property FontLoader filledFont: FontLoader {
         source: `/Font/materialsymbols/MaterialSymbolsOutlined[opsz,wght,FILL,GRAD@20,200,1,200].otf`

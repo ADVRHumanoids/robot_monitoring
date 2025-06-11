@@ -101,7 +101,18 @@ def main():
             ('xbot2_gui_server.horizon', 'HorizonHandler'),
             ('xbot2_gui_server.dashboard', 'DashboardHandler'),
             ('xbot2_gui_server.parameters', 'ParameterHandler')
+            ('xbot2_gui_server.sanding3d', 'Sanding3DHandler'),
+        
         ]
+        # sanding
+        # if 'sanding' in cfg.keys():
+        #     try:
+        #         from .sanding3d import Sanding3DHandler
+        #         ext = Sanding3DHandler(srv, cfg.get('sanding', {}))
+        #         extensions.append(ext)
+        #         print(ext)
+        #     except BaseException as e:
+        #         print('Exception ', type(e), e)
 
         # load extensions
         for module_name, class_name in ext_list:
@@ -110,6 +121,20 @@ def main():
         print('loaded extensions:')
         for ext in extensions:
             print(' ', ext)
+
+        # emergency
+        # try:
+        #     from .conda_cmd import CondaCMD
+        #     ext = CondaCMD(srv)
+        #     extensions.append(ext)
+        #     print(ext)
+        #     print('CONDAH COMMAND LOADED')
+        # except BaseException as e:
+        #     print('Exception ', type(e), e)
+
+        srv.extensions = extensions
+
+        print('load extensions completed', extensions)
 
     # schedule extension loading task
     srv.schedule_task(load_extensions())
@@ -133,4 +158,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

@@ -1,0 +1,252 @@
+import rospy
+from geometry_msgs.msg import TransformStamped, Transform, Quaternion, Pose
+import actionlib
+import json
+
+try:
+    from concert_sanding.msg import ScanAction
+    # from concert_bts.msg import DetectWallAction
+    from concert_sanding.msg import ScanGoal
+    # from concert_bts.msg import DetectWallGoal
+    from concert_sanding.msg import ScanActionFeedback
+    # from concert_bts.msg import DetectWallActionFeedback
+    from concert_sanding.msg import Wall
+    from concert_sanding.msg import ScanResult
+    # from concert_bts.msg import DetectWallResult
+    from concert_sanding.srv import GetWall
+
+except ModuleNotFoundError:
+    pass
+
+import asyncio
+from aiohttp import web
+import numpy as np
+from scipy.spatial.transform import Rotation as R
+
+from .server import ServerBase
+from . import utils
+
+
+class Sanding3DHandler:
+    def __init__(self, srv: ServerBase, config=dict()) -> None:
+        self.wall_poses = {}
+        self.requested_pages = ['Sanding3D']
+        self.rate = config.get('rate', 200.0)
+
+        self.srv = srv
+        self.srv.schedule_task(self.run())
+        self.srv.add_route('POST', '/sanding/start_scanning',
+                           self.start_scanning,
+                           'sanding_start_scanning')
+        self.srv.add_route('POST', '/sanding/upload_params',
+                           self.upload_params,
+                           'upload_params')
+
+        self.srv.add_route('POST', '/sanding/approach_wall',
+                           self.approach_wall,
+                           'approach_wall')
+
+        # self.srv.add_route('POST', '/sanding/start_mission',
+        #                    self.start_mission,
+        #                    'start_sanding_mission')
+
+        self.scanning_progress = None
+        self.wall_poses = dict()
+
+        # ToDo: load from config
+        self.map_sub = rospy.Subscriber(
+            "/concert_mapping/pose", TransformStamped, self.on_map_recv)
+        # self.map_pose = None
+        self.map_translation = None
+        self.map_rotation = None
+
+    async def run(self):
+
+        while True:
+            if self.map_translation is not None and self.map_rotation is not None:
+                msg = {
+                    'type': 'map',
+                    'transform': {
+                        'position': {
+                            'x': self.map_translation[0],
+                            'y': self.map_translation[1],
+                            'z': self.map_translation[2]
+                        },
+                        'orientation': {
+                            'x': self.map_rotation.as_quat()[0],
+                            'y': self.map_rotation.as_quat()[1],
+                            'z': self.map_rotation.as_quat()[2],
+                            'w': self.map_rotation.as_quat()[3]
+                        }
+                    }
+                }
+                # self.map_pose = None
+                self.map_translation = None
+                self.map_rotation = None
+                await self.srv.udp_send_to_all(msg)
+            await asyncio.sleep(1/self.rate)
+
+    def on_map_recv(self, msg: TransformStamped):
+        # self.map_pose = Transform() # msg.transform
+        qml_translation, qml_rotation = self.toQMLFrame(
+            msg.transform.translation, msg.transform.rotation)
+        self.map_translation = qml_translation
+        self.map_rotation = qml_rotation
+
+    @utils.handle_exceptions
+    async def start_scanning(self, req: web.Request):
+        client = actionlib.SimpleActionClient(
+            '/concert_sanding/scan', ScanAction)
+        print('[wall_detection] waiting for server...')
+        ok = await utils.to_thread(client.wait_for_server, timeout=rospy.Duration(3.0))
+        # print(ok)
+        goal = ScanGoal()
+        params = await req.json()
+        print(F'Angle: {params}')
+        goal.angle = params
+        fb_last: ScanActionFeedback = None
+
+        def on_feedback(fb: ScanActionFeedback):
+            nonlocal fb_last
+            fb_last = fb
+
+        client.send_goal(goal, feedback_cb=on_feedback)
+        scanning = True
+
+        while scanning:
+            if fb_last is not None:
+                await self.srv.udp_send_to_all({
+                    'type': 'scanning_progress',
+                    'progress': fb_last.progress
+                })
+                if fb_last.progress > 100:
+                    scanning = False
+            await asyncio.sleep(0.1)
+
+        client.wait_for_result()
+
+        result = client.get_result()
+        print(f'Mission success: {result.success}')
+        return web.Response(text=json.dumps(
+            {
+                'success': result.success,
+                'message': 'Scanning completed',
+            }))
+    
+        if result.success:
+            walls = []
+            for w in result.wall:
+                self.wall_poses[w.id] = w.pose
+                '''
+                current_orientation = np.array(
+                    [w.pose.orientation.x, w.pose.orientation.y, w.pose.orientation.z, w.pose.orientation.w])
+                print(
+                    f'Wall {w.id} Initial position: {w.pose.position.x}, {w.pose.position.y}, {w.pose.position.z}')
+                euler_angles = np.array([-90, 0, 0])
+                rotation_quaternion = R.from_euler(
+                    'xyz', euler_angles, degrees=True).as_quat()
+                new_orientation = R.from_quat(
+                    current_orientation) * R.from_quat(rotation_quaternion)
+                # new_orientation_quat = new_orientation.as_quat()
+                gazebo_position = np.array(
+                    [w.pose.position.x, w.pose.position.y, w.pose.position.z])
+                gazebo_orientation = np.array(
+                    [w.pose.orientation.x, w.pose.orientation.y, w.pose.orientation.z, w.pose.orientation.w])
+                gazebo_rotation = R.from_quat(gazebo_orientation)
+                # qml_rotation = R.from_euler("xyz", [0, 90, 90], degrees=True)
+                combined_rotation = R.from_euler(
+                    'z', 90, degrees=True) * R.from_euler('y', 90, degrees=True)
+
+                qml_position = combined_rotation.apply(gazebo_position)
+                qml_orietation = combined_rotation * gazebo_rotation
+                '''
+
+                qml_translation, qml_orietation = self.toQMLFrame(
+                    w.pose.position, w.pose.orientation)
+                print(f'GETTING INDEX {w.index}')
+                walls.append({
+                    'id': w.id,
+                    'index': w.index,
+                    'pose': {
+                        'position': {
+                            'x': qml_translation[0],  # w.pose.position.x,
+                            'y': qml_translation[1],  # w.pose.position.y,
+                            'z': qml_translation[2]  # w.pose.position.z
+                        },
+                        'orientation': {
+                            'x': qml_orietation.as_quat()[0],
+                            'y': qml_orietation.as_quat()[1],
+                            'z': qml_orietation.as_quat()[2],
+                            'w': qml_orietation.as_quat()[3]
+                        }
+                    },
+                    'length': w.length
+                })
+                print(f'Adding wall {w.id}')
+            msg = {
+                'type': 'wall_list',
+                'walls': walls
+            }
+            await self.srv.udp_send_to_all(msg)
+
+        return web.Response(text=json.dumps(
+            {
+                'success': True,
+                'message': 'Scanning started',
+            }))
+
+    @utils.handle_exceptions
+    async def upload_params(self, req: web.Request):
+        params = await req.json()
+        print(f'Parameters: {params}')
+        rospy.set_param('/sanding/force', params['force'])
+        rospy.set_param('/sanding/length', params['width'])
+        rospy.set_param('/sanding/height', params['height'])
+        rospy.set_param('/sanding/corner_y', params['x'])
+        rospy.set_param('/sanding/corner_z', params['y'])
+        rospy.set_param('/sanding/index', params['index'])
+        rospy.set_param('/sanding/type', "center")
+        rospy.set_param('/sanding/robot_type', "6dof-40")
+
+        await asyncio.sleep(1.0)
+
+        return web.Response(text=json.dumps(
+            {
+                'success': True,
+                'message': 'Ros Params Uploaded',
+            }))
+
+    @utils.handle_exceptions
+    async def approach_wall(self, req: web.Request):
+
+        client = rospy.ServiceProxy('/sanding/approach_wall', WallApproach)
+        ok = await utils.to_thread(client.wait_for_service, timeout=rospy.Duration(3.0))
+
+        id = await req.json()
+        print(f'Getting id {id} of type: {type(id)}')
+        target = self.wall_poses[id]
+        print(f'Target: {target}')
+
+        res = await utils.to_thread(client, target)
+
+        return web.Response(text=json.dumps(
+            {
+                'success': res.success,
+                'message': "Wall Approached",
+            }))
+
+    def toQMLFrame(self, inputPosition, inputRotation):
+
+        gazebo_position = np.array(
+            [inputPosition.x, inputPosition.y, inputPosition.z])
+        gazebo_rotation = np.array(
+            [inputRotation.x, inputRotation.y, inputRotation.z, inputRotation.w])
+        gazebo_rotation = R.from_quat(gazebo_rotation)
+
+        combined_rotation = R.from_euler(
+            'z', 90, degrees=True) * R.from_euler('y', 90, degrees=True)
+
+        qml_position = combined_rotation.apply(gazebo_position)
+        qml_rotation = combined_rotation * gazebo_rotation
+
+        return qml_position, qml_rotation

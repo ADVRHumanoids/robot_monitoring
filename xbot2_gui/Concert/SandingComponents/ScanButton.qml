@@ -42,11 +42,11 @@ GridLayout {
             opacity: 0
             onClicked: {
                 gridScanning.show = false
-                Logic.startScanning(gridScanning.angle)
+                Logic.startScanning(control.value)
                 scanningLoader.visible = true
                 scanningProgress.text = "0%"
                 // TODO add progress bar
-                console.log("Passing angle: ", gridScanning.angle )
+                console.log("Passing angle: ", control.value)
                 console.log("Scanning. . . ")
 
             }

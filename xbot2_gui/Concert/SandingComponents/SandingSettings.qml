@@ -244,8 +244,6 @@ Window {
                     if (distanceFromBot < 80) { y = bot.mapToItem(fullPanel, 0, 0).y - 80 }
 
                     patch.y =  (patch['index']+ 1) - ((y+5)/fullPanel.height) // .toFixed(2)
-                    console.log("Index: ", patch['index'])
-                    console.log("Corner y: ", patch.y)
                 }
                 MouseArea {
                     id: mouseTop

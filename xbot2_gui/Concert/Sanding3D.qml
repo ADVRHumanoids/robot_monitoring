@@ -27,6 +27,12 @@ Item {
         windowSettings.source = ""
     }
 
+    function removeWall() {
+        console.log("Removing Walls...")
+        wallList.clear()
+    }
+
+
     // property var wallList: []
     Node {
 
@@ -174,7 +180,7 @@ Item {
                     panel.isPicked = !panel.isPicked
                     // }
                     // wallModel.setState(panel.idx)
-                    console.log("Clicked panel: ", panel.idx)
+                    console.log("Clicked panel ID: ", panel.idx)
                     addSetting(panel)
                 }
                 else if (panel.isPicked && panel.parent.ready) {
@@ -247,7 +253,7 @@ Item {
     Connections {
         target: client
 
-        function jointStateReceived(js) {
+        function onJointStateReceived(js) {
             Logic.jsCallback(js)
         }
 
@@ -259,7 +265,7 @@ Item {
                 // progressBar.value = msg.progress
                 // progressBar.indeterminate = msg.progress < 0
                 scanningProgress.text = msg.progress + "%"
-                if(msg.progress > 100) {
+                if(msg.progress >= 100) {
                     // statusText.text = 'Completed'
                     scanningLoader.visible = false
                     // deactivate the panel
@@ -267,6 +273,7 @@ Item {
             }
             if (msg.type === 'wall_list') {
                 // wallList = []
+                console.log("Getting Wall List!")
                 for (let w of msg.walls) {
                     let obj = Logic.toQMLObject(w)
                     wallList.append(obj)

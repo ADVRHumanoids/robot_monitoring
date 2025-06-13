@@ -88,6 +88,15 @@ class Sanding3DHandler:
 
     def on_map_recv(self, msg: TransformStamped):
         # self.map_pose = Transform() # msg.transform
+
+        if np.linalg.norm([msg.transform.rotation.x, msg.transform.rotation.y,
+                           msg.transform.rotation.z, msg.transform.rotation.w]) < 0.01:
+            print('[wall_detection] Map pose is not set yet')
+            # setting zero for translation and rotation
+            # Better to None
+            self.map_translation = np.array([0.0, 0.0, 0.0])
+            self.map_rotation = R.from_quat([0.0, 0.0, 0.0, 1.0])
+            return
         qml_translation, qml_rotation = self.toQMLFrame(
             msg.transform.translation, msg.transform.rotation)
         self.map_translation = qml_translation
@@ -119,23 +128,26 @@ class Sanding3DHandler:
                     'type': 'scanning_progress',
                     'progress': fb_last.progress
                 })
-                if fb_last.progress > 100:
+                if fb_last.progress >= 100:
                     scanning = False
             await asyncio.sleep(0.1)
 
         client.wait_for_result()
 
         result = client.get_result()
-        print(f'Mission success: {result.success}')
-        return web.Response(text=json.dumps(
-            {
-                'success': result.success,
-                'message': 'Scanning completed',
-            }))
+        # print(f'Mission success: {result.success}')
+        # return web.Response(text=json.dumps(
+        #     {
+        #         'success': result.success,
+        #         'message': 'Scanning completed',
+        #     }))
     
         if result.success:
+            wallClient = rospy.ServiceProxy('/concert_sanding/get_wall', GetWall)
+            ok = await utils.to_thread(wallClient.wait_for_service, timeout=rospy.Duration(3.0))
+            wallResult = await utils.to_thread(wallClient)
             walls = []
-            for w in result.wall:
+            for w in wallResult.wall:
                 self.wall_poses[w.id] = w.pose
                 '''
                 current_orientation = np.array(
@@ -182,7 +194,6 @@ class Sanding3DHandler:
                     },
                     'length': w.length
                 })
-                print(f'Adding wall {w.id}')
             msg = {
                 'type': 'wall_list',
                 'walls': walls

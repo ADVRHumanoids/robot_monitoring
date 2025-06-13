@@ -1,3 +1,5 @@
+.import "/qt/qml/Main/sharedData.js" as SharedData
+
 function construct() {
     client.jointStateReceived.connect(jsCallback)
 }
@@ -12,6 +14,7 @@ function startScanning(angle) {
 }
 
 function upload(parameters) {
+    // Function starts after sendButton
     console.log("Width: ", parameters.width)
     console.log("Height: ", parameters.height)
     console.log("Velocity: ", parameters.velocity)
@@ -41,7 +44,7 @@ function updateConcertPose(input) {
 function toQMLObject(wall) {
     // todo adjust also
     wall.pose.position  = Qt.vector3d(wall.pose.position.x*100,
-                                      wall.pose.position.y*100 ,
+                                      (wall.pose.position.y+0.75)*100,
                                       wall.pose.position.z*100 )
 
     wall.pose.orientation = Qt.quaternion(wall.pose.orientation.w, wall.pose.orientation.x, wall.pose.orientation.y, wall.pose.orientation.z)
@@ -55,10 +58,6 @@ function toQMLObject(wall) {
 }
 
 function jsCallback(js) {
-
-    // root.updateConcertState(js,
-    //                         concertModel,
-    //                         'linkPos')
     concertModel.q = updateViewerQ(js,
                                    concertModel.jointNames,
                                    'linkPos',
@@ -68,9 +67,10 @@ function jsCallback(js) {
 
 function updateViewerQ(js, jointNames, fieldName, q) {
 
-    for(let i = 0; i < js.name.length; i++) {
+    let jsname = SharedData.jointNames
+    for(let i = 0; i < jsname.length; i++) {
 
-        let name = js.name[i]
+        let name = jsname[i]
         let idx = jointNames.indexOf(name)
         if(idx < 0)
         {
@@ -80,6 +80,6 @@ function updateViewerQ(js, jointNames, fieldName, q) {
         q[idx] = js[fieldName][i]
 
     }
-
+    // console.log("Updating Q")
     return q
 }

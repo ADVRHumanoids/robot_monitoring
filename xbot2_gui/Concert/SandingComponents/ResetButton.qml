@@ -40,6 +40,8 @@ Rectangle {
             scanningLoader.visible = false
             scanningButton.show = true
             scanningProgress.text = "0%"
+            reset()
+            removeWall()
             // TODO add progress bar
         }
     }

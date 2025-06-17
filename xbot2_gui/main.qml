@@ -280,7 +280,7 @@ ApplicationWindow {
             iconFont: syms.font.family
             active: true
             sizeFactor: 1.1
-            visible: true
+            visible: false // requestedPages.indexOf(name) > -1
         }
 
     }

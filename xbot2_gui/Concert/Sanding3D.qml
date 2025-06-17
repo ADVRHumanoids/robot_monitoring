@@ -180,7 +180,7 @@ Item {
                     panel.isPicked = !panel.isPicked
                     // }
                     // wallModel.setState(panel.idx)
-                    console.log("Clicked panel ID: ", panel.idx)
+
                     addSetting(panel)
                 }
                 else if (panel.isPicked && panel.parent.ready) {
@@ -203,8 +203,8 @@ Item {
                 windowSettings.item.panelWidth = panel.scale.x
                 windowSettings.item.patch["ID"] = panel.idx
                 windowSettings.item.patch["index"] = panel.index
-                windowSettings.item.patch["y"] = ++panel.index
-                console.log("Selecting Index: ", panel.index)
+                windowSettings.item.patch["y"] = panel.index + 1
+                console.log("Selecting panel ID: " + panel.idx + " with index: " + panel.index)
             }
         }
 
@@ -281,10 +281,12 @@ Item {
                     console.log("Position: ", obj.position)
                     console.log("Orientation: ", obj.orientation)
                     console.log("Length: ", obj.l)
+                    console.log("Index: ", obj.index)
                 }
             }
             if (msg.type === 'map') {
                 Logic.updateConcertPose(msg.transform)
+
             }
         }
     }

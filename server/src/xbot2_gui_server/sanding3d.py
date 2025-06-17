@@ -15,6 +15,10 @@ try:
     # from concert_bts.msg import DetectWallResult
     from concert_sanding.srv import GetWall
 
+    from concert_sanding.msg import ApproachWallAction
+    from concert_sanding.msg import ApproachWallFeedback
+    from concert_sanding.msg import ApproachWallGoal
+
 except ModuleNotFoundError:
     pass
 
@@ -104,6 +108,8 @@ class Sanding3DHandler:
 
     @utils.handle_exceptions
     async def start_scanning(self, req: web.Request):
+        # Clear wall dict
+        self.wall_poses = dict()
         client = actionlib.SimpleActionClient(
             '/concert_sanding/scan', ScanAction)
         print('[wall_detection] waiting for server...')
@@ -230,21 +236,33 @@ class Sanding3DHandler:
     @utils.handle_exceptions
     async def approach_wall(self, req: web.Request):
 
-        client = rospy.ServiceProxy('/sanding/approach_wall', WallApproach)
-        ok = await utils.to_thread(client.wait_for_service, timeout=rospy.Duration(3.0))
-
+        client = actionlib.SimpleActionClient(
+            '/concert_sanding/approach_wall', ApproachWallAction)
+        ok = await utils.to_thread(client.wait_for_server, timeout=rospy.Duration(3.0))
+        goal = ApproachWallGoal()
         id = await req.json()
-        print(f'Getting id {id} of type: {type(id)}')
         target = self.wall_poses[id]
-        print(f'Target: {target}')
 
-        res = await utils.to_thread(client, target)
+        goal.target = target
+        print(f'Reaching wall with id: {id}')
+        # fb_last: ApproachWallFeedback = None
+        def on_feedback(fb: ApproachWallFeedback):
+            pass
+        
+        client.send_goal(goal, feedback_cb=on_feedback)
+        
+        # non blocking wait for result
+        await utils.to_thread(client.wait_for_result, timeout=rospy.Duration(30.0))
+        # client.wait_for_result()
+        result = client.get_result()
+        if result.success:
+            print(f'Approached wall with id: {id}')
+            return web.Response(text=json.dumps(
+                {
+                    'success': True,
+                    'message': "Wall Approached",
+                }))
 
-        return web.Response(text=json.dumps(
-            {
-                'success': res.success,
-                'message': "Wall Approached",
-            }))
 
     def toQMLFrame(self, inputPosition, inputRotation):
 

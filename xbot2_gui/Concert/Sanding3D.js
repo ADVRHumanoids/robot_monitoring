@@ -7,9 +7,11 @@ function construct() {
 function startScanning(angle) {
     let radians = angle * 3.14/180
     console.log("Covering ", radians)
+    currentStatus = "Scanning..."
     client.doRequestAsync('POST', '/sanding/start_scanning', JSON.stringify(radians))
         .then((response) => {
                 console.log('Scan Completed')
+                currentStatus = "Scan Completed"
               })
 }
 
@@ -28,9 +30,33 @@ function upload(parameters) {
                           JSON.stringify(parameters))
     .then((response) => {
         console.log("Ros Parameter Loaded")
+              currentStatus = "Approaching Wall..."
               client.doRequestAsync('POST', '/sanding/approach_wall',
                                     JSON.stringify(parameters.ID))
+              .then((response) => {
+                        console.log("Approach Wall Completed")
+                        startSendingButton.readyToSand = true
+                        currentStatus = "Ready to Sand"
+                        console.log("Finished")
+                        windowSettings.source = ""
+              })
     })
+}
+
+function startMission() {
+    startSendingButton.readyToSand = false
+    currentStatus = "Preparing for Sanding..."
+    client.doRequestAsync('PUT', '/process/sanding/command/start',
+                          '').then((response) => {
+
+                                   })
+}
+
+function startTool() {
+    client.doRequestAsync('POST', '/concert/sanding/tool_started_ack', '')
+    .then((response) => {
+
+          })
 }
 
 function updateConcertPose(input) {
@@ -60,7 +86,7 @@ function toQMLObject(wall) {
 function jsCallback(js) {
     concertModel.q = updateViewerQ(js,
                                    concertModel.jointNames,
-                                   'linkPos',
+                                   'motPos',
                                    [...concertModel.q])
 }
 

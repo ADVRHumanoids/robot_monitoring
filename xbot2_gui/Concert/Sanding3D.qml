@@ -17,6 +17,7 @@ Item {
     property ClientEndpoint client
     property vector3d mapPosition
     property quaternion mapOrientation
+    property string currentStatus: "Ready to Scan"
 
     function reset() {
         for (var i = 0; i < wallRepeater.count; i++) {
@@ -29,6 +30,7 @@ Item {
 
     function removeWall() {
         console.log("Removing Walls...")
+        currentStatus = "Ready to Scan"
         wallList.clear()
     }
 
@@ -208,8 +210,32 @@ Item {
             }
         }
 
+        Text {
+            id: statusText
+            text: "Status: " + currentStatus
+            font.pixelSize: 27
+            font.letterSpacing: 1
+            // anchors to the top left corner
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.topMargin: 5
+            anchors.leftMargin: 5
+            color: "#cad3f5"
+        }
+
         ScanButton {
             id: scanningButton
+            anchors.centerIn: parent
+        }
+
+        StartSendingButton {
+            id: startSendingButton
+            anchors.centerIn: parent
+        }
+
+        StartToolButton {
+            id: startToolButton
+            visible: currentStatus === 'Waiting'
             anchors.centerIn: parent
         }
 
@@ -286,7 +312,14 @@ Item {
             }
             if (msg.type === 'map') {
                 Logic.updateConcertPose(msg.transform)
+            }
 
+            if (msg.type === 'concert_sanding_progress') {
+                currentStatus = msg.status
+                console.log("Current Status " + msg.status)
+                if (msg.progress >= 100) {
+                    currentStatus = "Completed"
+                }
             }
         }
     }

@@ -26,6 +26,8 @@ import asyncio
 from aiohttp import web
 import numpy as np
 from scipy.spatial.transform import Rotation as R
+from std_srvs.srv import SetBool, Trigger
+from std_msgs.msg import String, Int16
 
 from .server import ServerBase
 from . import utils
@@ -37,6 +39,8 @@ class Sanding3DHandler:
         self.requested_pages = ['Sanding3D']
         self.rate = config.get('rate', 200.0)
 
+        self.sanding_tool_activated_service = config['sanding_tool_activated_service']
+        
         self.srv = srv
         self.srv.schedule_task(self.run())
         self.srv.add_route('POST', '/sanding/start_scanning',
@@ -49,10 +53,10 @@ class Sanding3DHandler:
         self.srv.add_route('POST', '/sanding/approach_wall',
                            self.approach_wall,
                            'approach_wall')
-
-        # self.srv.add_route('POST', '/sanding/start_mission',
-        #                    self.start_mission,
-        #                    'start_sanding_mission')
+        
+        self.srv.add_route('POST', '/concert/sanding/tool_started_ack',
+                           self.sanding_tool_started_ack_handler,
+                           'concert_sanding_tool_started_ack_handler')
 
         self.scanning_progress = None
         self.wall_poses = dict()
@@ -64,9 +68,28 @@ class Sanding3DHandler:
         self.map_translation = None
         self.map_rotation = None
 
+        # sanding subscribers
+        self.sanding_status = None 
+        self.sanding_progress = None
+        self.sanding_status_sub = rospy.Subscriber(config['sanding_status_topic'], String, self.sanding_status_recv)
+        self.sanding_progress_sub = rospy.Subscriber(config['sanding_progress_topic'], Int16, self.sanding_progress_recv)
+
     async def run(self):
 
         while True:
+            
+            if self.sanding_progress is not None or self.sanding_status is not None:
+
+                msg = {
+                    'type': 'concert_sanding_progress',
+                    'progress': self.sanding_progress if self.sanding_progress is not None else -1,
+                    'status': self.sanding_status if self.sanding_status is not None else '--',
+                }
+
+                self.sanding_progress = None
+                self.sanding_status = None
+                await self.srv.udp_send_to_all(msg)
+
             if self.map_translation is not None and self.map_rotation is not None:
                 msg = {
                     'type': 'map',
@@ -279,3 +302,25 @@ class Sanding3DHandler:
         qml_rotation = combined_rotation * gazebo_rotation
 
         return qml_position, qml_rotation
+    
+    @utils.handle_exceptions
+    async def sanding_tool_started_ack_handler(self, req: web.Request):
+
+        print('drill tool has been started!!')
+
+        srv = rospy.ServiceProxy(self.sanding_tool_activated_service, 
+                                 Trigger)
+        
+        res = await utils.to_thread(srv)
+
+        return web.Response(text=json.dumps(
+            {
+                'success': res.success,
+                'message': res.message,
+            }))
+    
+    def sanding_status_recv(self, msg: String):
+        self.sanding_status = msg.data
+    
+    def sanding_progress_recv(self, msg: Int16):
+        self.sanding_progress = msg.data

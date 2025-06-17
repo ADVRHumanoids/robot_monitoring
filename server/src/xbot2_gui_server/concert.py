@@ -33,7 +33,7 @@ class ConcertHandler:
     def __init__(self, srv: ServerBase, config=dict()) -> None:
 
         # request ui page
-        self.requested_pages = ['Builder', 'Linfa', 'Drill Task', 'Transportation']
+        self.requested_pages = ['Builder', 'Linfa', 'Drill Task', 'Transportation', 'Sanding']
 
         # config
         self.rate = config.get('rate', 10.0)
@@ -87,6 +87,14 @@ class ConcertHandler:
         self.sanding_progress = None
         self.sanding_status_sub = rospy.Subscriber(config['sanding_status_topic'], String, self.sanding_status_recv)
         self.sanding_progress_sub = rospy.Subscriber(config['sanding_progress_topic'], Int16, self.sanding_progress_recv)
+        
+        # sanding configurations dict 
+        # NOTE: modify this to change the available configurations on the GUI 
+        self.sanding_configurations_breakpoints = {
+            # '6dof-40-40': [0., 1., 2., 2.4],
+            # '6dof-60-40-40': [1., 2., 3.],
+            '6dof-40': [0.4, 1., 2., 2.4]
+        }
 
         # drill action client
         self.autodrill_client = None
@@ -382,10 +390,7 @@ class ConcertHandler:
             {
                 'success': True,
                 'message': 'got sanding configuration',
-                'breakpoints': {
-                    '6dof-40-40': [0., 1., 2., 2.4],
-                    '6dof-60-40-40': [1., 2., 3.],
-                }
+                'breakpoints': self.sanding_configurations_breakpoints
             })) 
 
 
@@ -402,7 +407,15 @@ class ConcertHandler:
         rospy.set_param('/sanding/corner_y', -body['xmin'])
         rospy.set_param('/sanding/corner_z', body['ymax'])
         rospy.set_param('/sanding/type', body['type'])
+        rospy.set_param('/sanding/robot_type', body['robot_type'])
         rospy.set_param('/sanding/index', body['height_level'])
+        
+        #
+        selected_configuration_breakpoints = self.sanding_configurations_breakpoints[body['robot_type']]
+        wall_min_z = selected_configuration_breakpoints[0]
+        wall_max_z = selected_configuration_breakpoints[-1]
+        rospy.set_param('/sanding/wall_min_z', wall_min_z)
+        rospy.set_param('/sanding/wall_max_z', wall_max_z)
 
         await asyncio.sleep(1.0)
 

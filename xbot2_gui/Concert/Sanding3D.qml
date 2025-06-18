@@ -141,7 +141,7 @@ Item {
                 source: "#Cube"
                 // scale.x: 0.2
                 // scale.y: model.l
-                scale: Qt.vector3d(model.l, 0.2, 1)
+                scale: Qt.vector3d(model.l, 0.2, 1) // [lenght, depth, height]
                 pickable: true
 
                 materials: DefaultMaterial {

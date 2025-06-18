@@ -6,11 +6,10 @@ import QtQuick.Shapes
 import "../Sanding3D.js" as Logic
 
     Rectangle {
-        property bool isReady: true
         property color pulsingColor: "#5b6078"
 
         id: startToolButton
-        visible: isReady
+        visible: currentStatus === 'Waiting'
         width: 200
         height: 100
         color: pulsingColor
@@ -19,7 +18,7 @@ import "../Sanding3D.js" as Logic
 
         SequentialAnimation on pulsingColor {
             loops: Animation.Infinite
-            running: isReady
+            running: currentStatus === 'Waiting'
 
             ColorAnimation {
                 from: pulsingColor
@@ -27,7 +26,6 @@ import "../Sanding3D.js" as Logic
                 duration: 500
                 easing.type: Easing.InOutQuad
             }
-
 
             ColorAnimation {
                 from: "#f38ba8"

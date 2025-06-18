@@ -24,7 +24,7 @@ Item {
             wallRepeater.children[i].isPicked = false
         }
         wallRepeater.ready = false
-        // sendButton.show = false
+        startSendingButton.readyToSand = false
         windowSettings.source = ""
     }
 
@@ -135,6 +135,7 @@ Item {
                 property int index
                 property bool isPicked: false
                 property bool selected: false
+                property string type
 
                 id: panel
                 visible: true
@@ -157,6 +158,7 @@ Item {
                 index: model.index
                 position: model.position
                 rotation: model.orientation
+                type: model.type
                 // eulerRotation: Qt.vector3d(-90, 0, 0)
             }
         }
@@ -206,6 +208,7 @@ Item {
                 windowSettings.item.patch["ID"] = panel.idx
                 windowSettings.item.patch["index"] = panel.index
                 windowSettings.item.patch["y"] = panel.index + 1
+                windowSettings.item.patch["type"] = panel.type
                 console.log("Selecting panel ID: " + panel.idx + " with index: " + panel.index)
             }
         }
@@ -308,6 +311,7 @@ Item {
                     console.log("Orientation: ", obj.orientation)
                     console.log("Length: ", obj.l)
                     console.log("Index: ", obj.index)
+                    console.log("Type: ", obj.type)
                 }
             }
             if (msg.type === 'map') {

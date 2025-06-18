@@ -17,14 +17,16 @@ function startScanning(angle) {
 
 function upload(parameters) {
     // Function starts after sendButton
+    console.log("Uploading Params:")
     console.log("Width: ", parameters.width)
     console.log("Height: ", parameters.height)
     console.log("Velocity: ", parameters.velocity)
     console.log("Force: ", parameters.force)
     console.log("ID", parameters.ID)
-    console.log("x: ", parameters.x)
-    console.log("y: ", parameters.y)
-    console.log("index: ", parameters.index)
+    console.log("X: ", parameters.x)
+    console.log("Y: ", parameters.y)
+    console.log("Index: ", parameters.index)
+    console.log("Type: ", parameters.type)
 
     client.doRequestAsync('POST', '/sanding/upload_params',
                           JSON.stringify(parameters))
@@ -79,7 +81,8 @@ function toQMLObject(wall) {
         "position" : wall.pose.position,
         "orientation": wall.pose.orientation,
         "l": wall.length,
-        "index": wall.index
+        "index": wall.index,
+        "type": wall.type
     }
 }
 

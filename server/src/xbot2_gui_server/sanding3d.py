@@ -204,7 +204,6 @@ class Sanding3DHandler:
 
                 qml_translation, qml_orietation = self.toQMLFrame(
                     w.pose.position, w.pose.orientation)
-                print(f'GETTING INDEX {w.index}')
                 walls.append({
                     'id': w.id,
                     'index': w.index,
@@ -221,7 +220,8 @@ class Sanding3DHandler:
                             'w': qml_orietation.as_quat()[3]
                         }
                     },
-                    'length': w.length
+                    'length': w.length,
+                    'type': w.type,
                 })
             msg = {
                 'type': 'wall_list',
@@ -239,10 +239,16 @@ class Sanding3DHandler:
     async def upload_params(self, req: web.Request):
         params = await req.json()
         print(f'Parameters: {params}')
+        cornerY = params['x']
+        sanderRadius = 0.12
+        if params['type'] == 'left':
+            cornerY -= sanderRadius
+        
+
         rospy.set_param('/sanding/force', params['force'])
         rospy.set_param('/sanding/length', params['width'])
         rospy.set_param('/sanding/height', params['height'])
-        rospy.set_param('/sanding/corner_y', params['x'])
+        rospy.set_param('/sanding/corner_y', cornerY)
         rospy.set_param('/sanding/corner_z', params['y'])
         rospy.set_param('/sanding/index', params['index'])
         rospy.set_param('/sanding/type', "center")

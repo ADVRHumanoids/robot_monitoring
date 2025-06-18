@@ -30,7 +30,8 @@ Window {
         "x": 0.0,
         "y": 0.0,
         "ID": 0.0,
-        "index": 0.0
+        "index": 0.0,
+        "type": ""
     }
 
     function uploadData() {

@@ -76,15 +76,17 @@ function processCmd(name, cmd, opt) {
 
 function onProcessOutputReceived(procRepeater, consoleItem, msg) {
 
+    let muted = root.processMutedState[msg.name]
+
     // handle output
     let prefix = '[' + msg.name + '] '
 
     if(msg.out.length > 0) {
-        consoleItem.appendText(msg.name, prefix + msg.out)
+        consoleItem.appendText(msg.name, prefix + msg.out, muted)
     }
 
     if(msg.err.length > 0) {
-        consoleItem.appendText(msg.name, '<font color="red">' + prefix + msg.err + '</>')
+        consoleItem.appendText(msg.name, '<font color="red">' + prefix + msg.err + '</>', muted)
         root.numErrors += 1
     }
 

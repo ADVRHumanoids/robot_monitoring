@@ -16,6 +16,8 @@ MultiPaneResponsiveLayout {
 
     property int numErrors: 0
 
+    property var processMutedState: Object()
+
 
     LayoutClassHelper {
         id: layout
@@ -121,6 +123,7 @@ MultiPaneResponsiveLayout {
                     ProcessCard {
 
                         visible: (showAllChk.checked || modelData.visible) && processRepeater.visible
+                        muted: !modelData.visible
 
                         processName: modelData.name
                         processState: modelData.status
@@ -131,6 +134,8 @@ MultiPaneResponsiveLayout {
                         onStart: Logic.processCmd(processName, 'start', processOptions)
                         onStop: Logic.processCmd(processName, 'stop', {})
                         onKill: Logic.processCmd(processName, 'kill', {})
+
+                        onMutedChanged: root.processMutedState[processName] = muted
                     }
 
                 }

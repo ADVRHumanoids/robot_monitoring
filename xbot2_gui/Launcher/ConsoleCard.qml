@@ -14,14 +14,18 @@ Item {
         Qt.callLater(view.positionViewAtEnd)
     }
 
+    property int pixelSize: 14
+
     id: root
     implicitHeight: view.implicitHeight
     implicitWidth: view.implicitWidth
 
+
+
     property Component delegate: TextEdit {
         required property string txt
         // required property color txtColor
-        font.pixelSize: 14
+        font.pixelSize: root.pixelSize
         width: view.width
         wrapMode: Text.WrapAnywhere
         readOnly: true

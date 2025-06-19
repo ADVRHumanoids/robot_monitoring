@@ -31,7 +31,7 @@ if(NOT EMSCRIPTEN)
 
 endif()
 
-qt_standard_project_setup(REQUIRES 6.6)
+qt_standard_project_setup(REQUIRES 6.9)
 
 ## ui main
 qt_add_executable(xbot2_gui main.cpp)

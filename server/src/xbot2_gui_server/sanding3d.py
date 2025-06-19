@@ -291,6 +291,7 @@ class Sanding3DHandler:
 
         def on_feedback(fb: ApproachWallFeedback):
             nonlocal fb_last
+            
             fb_last = fb
             
         
@@ -300,6 +301,7 @@ class Sanding3DHandler:
         # await utils.to_thread(client.wait_for_result, timeout=rospy.Duration(30.0))
         completed = False
         while not completed:
+            print(f'client state: {client.get_state()}')
             if client.get_state() == 2:
                 return web.Response(text=json.dumps(
                     {
@@ -315,7 +317,8 @@ class Sanding3DHandler:
                     completed = True
             
             await asyncio.sleep(0.1)
-        # client.wait_for_result()
+            
+        client.wait_for_result()
         result = client.get_result()
         if result.success:
             print(f'Approached wall with id: {id}')

@@ -1,13 +1,14 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import QtCore
 
 import Font
 import "../Common"
 
 Item {
 
-    function appendText(procName: string, text: string) {
+    function appendText(procName: string, text: string, muted: bool) {
 
         let i = 0
 
@@ -24,7 +25,7 @@ Item {
 
         consoleRepeater.itemAt(i+2).appendText(text)
 
-        if(i >= 0 && !procCheckRepeater.itemAt(i).checked) {
+        if(i >= 0 && muted) {
             return
         }
 
@@ -64,8 +65,12 @@ Item {
         name: 'Console Output'
 
         toolButtons: [
-            Button {
-                text: 'Copy'
+            SmallToolButton {
+                text: MaterialSymbolNames.copy
+                font.family: 'Material Symbols Outlined'
+                font.variableAxes: {'opsz': 48}
+                font.pixelSize: 16
+
                 onClicked: {
                     let txt = consoleRepeater.itemAt(consoleCombo.currentIndex).getText()
                     appData.copyToClipboard(txt)
@@ -81,8 +86,12 @@ Item {
                 }
             },
 
-            Button {
-                text: 'Clear'
+            SmallToolButton {
+                text: MaterialSymbolNames.clean
+                font.family: 'Material Symbols Outlined'
+                font.variableAxes: {'opsz': 48}
+                font.pixelSize: 16
+
                 onClicked: {
                     consoleRepeater.itemAt(consoleCombo.currentIndex).clearText()
                 }
@@ -95,8 +104,8 @@ Item {
         ]
 
         frontItem: StackLayout {
-            width: parent.width
-            height: root.height - 80
+
+            anchors.fill: parent
             currentIndex: consoleCombo.currentIndex
 
             Repeater {
@@ -146,6 +155,7 @@ Item {
 
                         sourceComponent: ConsoleCard {
                             id: cardInner
+                            pixelSize: fontSizeSpin.value
                         }
 
                         onLoaded: {
@@ -156,8 +166,6 @@ Item {
                             }
                             console.log(`${modelData} loaded ${listModel.count} lines`)
                         }
-
-
 
                     }
 
@@ -195,21 +203,23 @@ Item {
             }
 
             Label {
-                text: 'Select the processes to show in the global console'
-                font.pixelSize: CommonProperties.font.h3
-                Layout.columnSpan: Math.max(1, grid.columns)
+                text: 'Font size'
             }
 
-            Repeater {
-                id: procCheckRepeater
-                model: root.processNames
-                CheckBox {
-                    text: modelData
-                    checked: root.hiddenProcessNames.indexOf(modelData) === -1
-                }
+            SpinBox {
+                id: fontSizeSpin
+                from: 1
+                to: 18
+                value: 12
             }
+
         }
 
+    }
+
+    Settings {
+        category: 'console'
+        property alias fontSize: fontSizeSpin.value
     }
 
 }

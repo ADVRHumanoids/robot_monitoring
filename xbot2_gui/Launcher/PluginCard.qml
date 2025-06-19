@@ -32,7 +32,7 @@ Item {
     property var colorMap: {
         'Aborted': CommonProperties.colors.err,
         'Starting': Qt.lighter(CommonProperties.colors.ok, 3),
-        'Stopping': CommonProperties.colors.warn,
+        'Stopping': CommonProperties.colors.err,
         'Running': Qt.lighter(CommonProperties.colors.ok),
         'Initialized': card.defaultBackground,
         'Stopped': card.defaultBackground,
@@ -57,7 +57,41 @@ Item {
         collapsed: true
         configurable: false
 
+        // color management
         backgroundColor: colorMap[pluginState]
+        borderWidth: 2
+        borderColor: pluginState === 'Aborted' ? Qt.darker(backgroundColor) : Qt.lighter(backgroundColor)
+
+        SequentialAnimation on backgroundColor {
+
+            loops: Animation.Infinite
+
+            running: root.pluginState === 'Starting' ||
+                     root.pluginState === 'Stopping'
+
+            alwaysRunToEnd: false
+
+            ColorAnimation {
+                from: colorMap[pluginState]
+                to: card.defaultBackground
+                duration: 555
+                easing {
+                    type: Easing.OutSine
+                }
+            }
+
+            ColorAnimation {
+                from: card.defaultBackground
+                to: colorMap[pluginState]
+                duration: 555
+                easing {
+                    type: Easing.InSine
+                }
+            }
+
+            onFinished: card.backgroundColor = Qt.binding(() => colorMap[pluginState])
+
+        }
 
         toolButtons: [
             SmallToolButton {

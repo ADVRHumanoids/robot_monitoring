@@ -93,6 +93,13 @@ function jsCallback(js) {
                                    [...concertModel.q])
 }
 
+function abort() {
+    client.doRequestAsync('PUT', '/process/sanding/command/kill', '')
+        .then((response) => {
+            client.doRequestAsync('POST', '/concert/sanding/kill_all', '')
+                  currentStatus = "Stopped"
+        })
+}
 
 function updateViewerQ(js, jointNames, fieldName, q) {
 

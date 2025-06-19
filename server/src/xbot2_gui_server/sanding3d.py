@@ -57,6 +57,10 @@ class Sanding3DHandler:
         self.srv.add_route('POST', '/concert/sanding/tool_started_ack',
                            self.sanding_tool_started_ack_handler,
                            'concert_sanding_tool_started_ack_handler')
+        
+        self.srv.add_route('POST', '/concert/sanding/kill_all',
+                            self.kill_all_handler,
+                            'concert_sanding_kill_all_handler')
 
         self.scanning_progress = None
         self.wall_poses = dict()
@@ -133,10 +137,10 @@ class Sanding3DHandler:
     async def start_scanning(self, req: web.Request):
         # Clear wall dict
         self.wall_poses = dict()
-        client = actionlib.SimpleActionClient(
+        scanClient = actionlib.SimpleActionClient(
             '/concert_sanding/scan', ScanAction)
         print('[wall_detection] waiting for server...')
-        ok = await utils.to_thread(client.wait_for_server, timeout=rospy.Duration(3.0))
+        ok = await utils.to_thread(scanClient.wait_for_server, timeout=rospy.Duration(3.0))
         # print(ok)
         goal = ScanGoal()
         params = await req.json()
@@ -148,10 +152,17 @@ class Sanding3DHandler:
             nonlocal fb_last
             fb_last = fb
 
-        client.send_goal(goal, feedback_cb=on_feedback)
+        scanClient.send_goal(goal, feedback_cb=on_feedback)
         scanning = True
 
         while scanning:
+            if scanClient.get_state() == 2:
+                return web.Response(text=json.dumps(
+                    {
+                        'success': False,
+                        'message': 'Scanning cancelled',
+                    }))
+
             if fb_last is not None:
                 await self.srv.udp_send_to_all({
                     'type': 'scanning_progress',
@@ -161,9 +172,10 @@ class Sanding3DHandler:
                     scanning = False
             await asyncio.sleep(0.1)
 
-        client.wait_for_result()
+        
+        scanClient.wait_for_result()
 
-        result = client.get_result()
+        result = scanClient.get_result()
         # print(f'Mission success: {result.success}')
         # return web.Response(text=json.dumps(
         #     {
@@ -264,7 +276,7 @@ class Sanding3DHandler:
 
     @utils.handle_exceptions
     async def approach_wall(self, req: web.Request):
-
+        
         client = actionlib.SimpleActionClient(
             '/concert_sanding/approach_wall', ApproachWallAction)
         ok = await utils.to_thread(client.wait_for_server, timeout=rospy.Duration(3.0))
@@ -274,14 +286,35 @@ class Sanding3DHandler:
 
         goal.target = target
         print(f'Reaching wall with id: {id}')
-        # fb_last: ApproachWallFeedback = None
+        
+        fb_last: ApproachWallFeedback = None
+
         def on_feedback(fb: ApproachWallFeedback):
-            pass
+            nonlocal fb_last
+            fb_last = fb
+            
         
         client.send_goal(goal, feedback_cb=on_feedback)
         
         # non blocking wait for result
-        await utils.to_thread(client.wait_for_result, timeout=rospy.Duration(30.0))
+        # await utils.to_thread(client.wait_for_result, timeout=rospy.Duration(30.0))
+        completed = False
+        while not completed:
+            if client.get_state() == 2:
+                return web.Response(text=json.dumps(
+                    {
+                        'success': False,
+                        'message': 'Approach cancelled',
+                    }))
+            if fb_last is not None:
+                await self.srv.udp_send_to_all({
+                    'type': 'approach_state',
+                    'status': fb_last.status
+                })
+                if fb_last.status == "completed":
+                    completed = True
+            
+            await asyncio.sleep(0.1)
         # client.wait_for_result()
         result = client.get_result()
         if result.success:
@@ -330,3 +363,22 @@ class Sanding3DHandler:
     
     def sanding_progress_recv(self, msg: Int16):
         self.sanding_progress = msg.data
+    
+    @utils.handle_exceptions
+    async def kill_all_handler(self, req: web.Request):
+
+        print('Cancelling all goals')
+        scanningClient = actionlib.SimpleActionClient(
+            '/concert_sanding/scan', ScanAction)
+        wallApproachClient = actionlib.SimpleActionClient(
+            '/concert_sanding/approach_wall', ApproachWallAction)
+        
+        scanningClient.cancel_all_goals()
+        wallApproachClient.cancel_all_goals()
+        print('All goals cancelled')
+        return web.Response(text=json.dumps(
+            {
+                'success': True,
+                'message': 'All goals cancelled',
+            }))
+    

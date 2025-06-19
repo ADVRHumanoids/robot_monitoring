@@ -18,6 +18,10 @@ Item {
 
     property color backgroundColor: defaultBackground
 
+    property color borderColor
+
+    property int borderWidth: 0
+
     readonly property color defaultBackground: CommonProperties.colors.cardBackground
 
     property alias nameFont: titleLabel.font
@@ -47,6 +51,8 @@ Item {
     }
 
     property list<Item> toolButtons
+
+    property alias statusIcon: statusIcon
 
     signal applyConfiguration()
 
@@ -102,6 +108,8 @@ Item {
             background: Rectangle {
                 color: root.backgroundColor
                 radius: CommonProperties.geom.cardRadius
+                border.color: root.borderColor
+                border.width: root.borderWidth
             }
 
             // implicitHeight: frontColumn.implicitHeight
@@ -138,7 +146,6 @@ Item {
                         text: root.name
                         font.pixelSize: CommonProperties.font.h2
                         verticalAlignment: Text.AlignVCenter
-                        Layout.fillWidth: true
                         wrapMode: Text.Wrap
                         MouseArea {
                             id: mouse
@@ -148,8 +155,17 @@ Item {
                         }
                     }
 
+                    Label {
+                        id: statusIcon
+                        visible: text !== ''
+                        verticalAlignment: Text.AlignVCenter
+                        leftPadding: 4
+                    }
+
                     Item {
+                        Layout.preferredWidth: 1
                         Layout.minimumWidth: 6
+                        Layout.fillWidth: true
                     }
 
                     Control {

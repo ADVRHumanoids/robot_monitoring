@@ -20,6 +20,7 @@ qt_add_resources(xbot2_gui_font "app_fonts"
     "materialsymbols/MaterialSymbolsOutlined[opsz,wght,FILL,GRAD@20,200,1,200].otf"
     "materialsymbols/MaterialSymbolsOutlined[opsz,wght,FILL,GRAD@20,200,0,200].otf"
     "materialsymbols/MaterialSymbolsOutlined[opsz,wght,FILL,GRAD@20,400,0,200].otf"
+    "materialsymbols/MaterialSymbolsOutlined-VariableFont_FILL,GRAD,opsz,wght.ttf"
 )
 
 qt_add_resources(xbot2_gui_font "app_icons"

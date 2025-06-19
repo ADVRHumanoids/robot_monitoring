@@ -38,6 +38,9 @@ Item {
     property string netSettings: '\ueb2f'
     property string tune: '\ue429'
     property string emergency: '\ue82a'
+    property string volumeOff: '\ue04f'
+    property string copy: '\ue14d'
+    property string clean: '\uf0ff'
 
     property FontLoader filledFont: FontLoader {
         source: `/Font/materialsymbols/MaterialSymbolsOutlined[opsz,wght,FILL,GRAD@20,200,1,200].otf`

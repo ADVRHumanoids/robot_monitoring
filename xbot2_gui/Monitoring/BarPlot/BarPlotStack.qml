@@ -113,6 +113,9 @@ Item {
                     root.selectedJoints = [jn]
                 }
             }
+            else {
+                root.selectedJoints = root.selectedJoints.filter(item => item !== jn)
+            }
 
         }
 

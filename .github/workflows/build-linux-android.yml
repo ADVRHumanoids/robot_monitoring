@@ -1,0 +1,22 @@
+name: Build Linux and Android
+
+on:
+  push:
+    branches: [ "2.0-master", "wasm_devel" ]
+  pull_request:
+    branches: [ "2.0-master" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install dependencies
+      run: bash travis/install_dependencies.bash
+    - name: Build client
+      run: bash travis/build_client.bash
+    - name: Build server
+      run: bash travis/build_and_deploy_server.bash

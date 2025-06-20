@@ -53,6 +53,7 @@ qt_add_qml_module(xbot2_gui
     DeserializationWorker.js
     sharedData.js
     SharedData1.qml
+    QML_FILES DeserializationWorker.qml
 )
 
 target_compile_definitions(xbot2_gui
@@ -91,7 +92,7 @@ target_compile_definitions(xbot2_gui PRIVATE -DXBOT2_GUI_VERSION_PATCH=${robot_m
 
 ## add modules
 
-add_subdirectory(Audio)
+
 
 add_subdirectory(Common)
 
@@ -117,9 +118,11 @@ add_subdirectory(Monitoring)
 
 add_subdirectory(Network)
 
+add_subdirectory(Protobuf)
+
+add_subdirectory(Audio)
 if(NOT EMSCRIPTEN)
 
-    add_subdirectory(Protobuf)
 
 endif()
 
@@ -130,16 +133,6 @@ add_subdirectory(Joy)
 add_subdirectory(Video)
 
 add_subdirectory(ViewerQuick3D)
-
-
-# ws receiver
-#add_library(WebsocketReceiver STATIC websocket_receiver.cpp)
-#qt_add_qml_module(xbot2_gui
-#    URI Common
-#    VERSION 1.0
-#    SOURCES
-#        websocket_receiver.cpp
-#)
 
 
 # robot model

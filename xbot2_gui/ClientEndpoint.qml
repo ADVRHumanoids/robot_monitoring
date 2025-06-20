@@ -1,7 +1,6 @@
 import QtQuick
 import QtWebSockets
 import QtCore
-import QtQml.WorkerScript
 
 import Common
 import Network
@@ -26,6 +25,9 @@ Item
 
     // alias for the underlying websocket's active property
     property alias active: socket.active
+
+    // deserialization worker
+    property alias worker: workerLoader.item
 
     //
     property bool isConnected: false
@@ -245,13 +247,14 @@ Item
         }
     }
 
-    WorkerScript {
+    Loader {
 
-        id: worker
-        source: "DeserializationWorker.js"
-        onMessage: function(msg) {
-            Client.handleMessage(msg)
-        }
+        source: "DeserializationWorker.qml"
+
+        id: workerLoader
+
+        active: !appData.wasm
+
     }
 
     property int _nattempt: 0

@@ -93,19 +93,23 @@ ProtobufDeserialization::ProtobufDeserialization(QObject *parent)
                 emit numMsgChanged();
             });
 
+#ifndef __EMSCRIPTEN__
     worker->moveToThread(&_thread);
 #if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
     _thread.setServiceLevel(QThread::QualityOfService::Eco);
 #endif
 
     _thread.start(QThread::Priority::LowPriority);
+#endif
 
 }
 
 ProtobufDeserialization::~ProtobufDeserialization()
 {
+#ifndef __EMSCRIPTEN__
     _thread.quit();
     _thread.wait();
+#endif
 }
 
 Counters ProtobufDeserialization::recvBytes() const

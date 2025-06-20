@@ -98,12 +98,14 @@ WebSocketAsync::WebSocketAsync(QObject *parent)
     // create worker
     auto worker = new WebSocketWorker;
 
+#ifndef __EMSCRIPTEN__
     // move worker to thread
     worker->moveToThread(&_thread);
 
     // initialize
     connect(&_thread, &QThread::started,
             worker, &WebSocketWorker::initialize);
+#endif
 
     // connect signals and slots
     connect(this, &WebSocketAsync::setUrlRequested, worker, &WebSocketWorker::setUrl);
@@ -135,10 +137,14 @@ WebSocketAsync::WebSocketAsync(QObject *parent)
 
 
     // start thread
+#ifndef __EMSCRIPTEN__
 #if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
     _thread.setServiceLevel(QThread::QualityOfService::Eco);
 #endif
     _thread.start(QThread::Priority::LowPriority);
+#else
+    worker->initialize();
+#endif
 }
 
 void WebSocketAsync::setUrl(QUrl _url)
@@ -163,6 +169,8 @@ bool WebSocketAsync::active() const
 
 WebSocketAsync::~WebSocketAsync()
 {
+#ifndef __EMSCRIPTEN__
     _thread.quit();
     _thread.wait();
+#endif
 }

@@ -1,5 +1,7 @@
 set -e
 
+source env/bin/activate
+
 cd server && sudo python3 -m build 
 
 if [ -z $TRAVIS_TAG ]

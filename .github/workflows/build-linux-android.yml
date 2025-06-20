@@ -17,6 +17,6 @@ jobs:
     - name: Install dependencies
       run: bash travis/install_dependencies.bash
     - name: Build client
-      run: travis/build_client.bash
+      run: bash travis/build_client.bash
     - name: Build server
-      run: travis/build_and_deploy_server.bash
+      run: bash travis/build_and_deploy_server.bash

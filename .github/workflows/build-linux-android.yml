@@ -24,6 +24,8 @@ jobs:
     - name: Install dependencies
       run: bash travis/install_dependencies.bash
     - name: Build client
+      env:
+        KEYSTORE_PWD: ${{ secrets.KEYSTORE_PWD }}
       run: bash travis/build_client.bash
     - name: Build server
       run: bash travis/build_and_deploy_server.bash

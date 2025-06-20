@@ -25,10 +25,17 @@ if(NOT EMSCRIPTEN)
 
     find_package(Qt6 COMPONENTS
         WebView
-        WebEngineQuick
         REQUIRED
     )
 
+endif()
+
+if(NOT EMSCRIPTEN AND NOT ANDROID)
+
+    find_package(Qt6 COMPONENTS
+        WebEngineQuick
+        REQUIRED
+    )
 endif()
 
 qt_standard_project_setup(REQUIRES 6.9)

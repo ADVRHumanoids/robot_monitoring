@@ -13,6 +13,7 @@ TabButton {
     property int textFixedWidth: -1
     property alias badgeNum: badge.num
     property real sizeFactor: 1.0
+    property alias containsMouse: mouseArea.containsMouse
 
     //
     id: root
@@ -158,23 +159,18 @@ TabButton {
         }
     }
 
-    background: Item {
-        //        implicitWidth: 30
-        //        implicitHeight: 30
-
-        Rectangle {
-            anchors.fill: parent
-            color: root.palette.active.highlight
-            radius: parent.height * 0.6
-            opacity: root.checked ? 1 : (mouseArea.containsMouse ? 0.2 : 0)
-            //            visible: root.checked || mouseArea.containsMouse
-            Behavior on opacity {
-                NumberAnimation {}
-            }
+    background: Rectangle {
+        color: root.palette.active.highlight
+        radius: parent.height * 0.6
+        opacity: root.checked ? 1 : (mouseArea.containsMouse ? 0.2 : 0)
+        //            visible: root.checked || mouseArea.containsMouse
+        Behavior on opacity {
+            NumberAnimation {}
         }
-
-
     }
+
+
+
 
     Behavior on width {
         NumberAnimation {

@@ -12,19 +12,22 @@ Control {
     signal clicked()
     property alias iconText: iconLabel.text
     property int pixelSize: CommonProperties.font.h2
+    property bool showBorderIfCompact: true
     default property alias data: moreItemsRow.data
 
+
+    //
+    id: root
+
     padding: 6
+
     background: Rectangle {
         border.color: Qt.rgba(1, 1, 1, 0.04)
-        border.width: 2
+        border.width: 2 * root.showBorderIfCompact
         color: 'transparent'
         radius: 4
         visible: grid.columns === 1
     }
-
-    //
-    id: root
 
     contentItem: GridLayout {
 

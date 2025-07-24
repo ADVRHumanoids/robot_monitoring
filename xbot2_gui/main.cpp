@@ -37,11 +37,16 @@ public:
 #ifdef __EMSCRIPTEN__
         wasm = true;
 #endif
+#ifdef XBOT2_GUI_USE_GAMEPAD
+        hasGamepadCapability = true;
+#endif
     }
 
     Q_PROPERTY(QList<int> version MEMBER version);
 
     Q_PROPERTY(QString hostname MEMBER hostname);
+
+    Q_PROPERTY(bool hasGamepadCapability MEMBER hasGamepadCapability);
 
     Q_PROPERTY(int port MEMBER port);
 
@@ -146,6 +151,7 @@ public:
     QString versionString;
     bool wasm = false;
     bool portFromCmdLine = false;
+    bool hasGamepadCapability = false;
 
 
 };

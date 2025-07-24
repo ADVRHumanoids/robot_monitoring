@@ -4,10 +4,12 @@ import QtQuick.Controls
 import QtCore
 
 import Common
+import Joy
 
 GridLayout {
 
     columns: 3
+    columnSpacing: 6
     // uniformCellHeights: true
 
 
@@ -99,6 +101,20 @@ GridLayout {
         }
     }
 
+    Item {}
 
+    Label {
+        topPadding: 4
+        Layout.columnSpan: 3
+        text: 'Gamepad'
+        font.pixelSize: CommonProperties.font.h4
+        font.bold: true
+    }
+
+    GamepadTest {
+        enabled: appData.hasGamepadCapability
+        Layout.columnSpan: 3
+        Layout.fillWidth: true
+    }
 
 }

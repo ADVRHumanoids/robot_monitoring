@@ -4,6 +4,8 @@ import QtQuick
 import QtQuick.Controls.Material
 import QtCore
 
+import Joy
+
 Item {
 
     property Item colors: Item {
@@ -96,11 +98,73 @@ Item {
 
     property Item config: Item {
         id: config
-        property bool testing: false
+        property bool testing: true
         property bool showSoftEmergency: false
         property bool showMonWidget: false
         property bool showLauncherDashboard: false
         property bool adminPwdOk: false
+    }
+
+    property Item gamepad: Item {
+
+        id: gamepad
+
+        function registerGamepad(name) {
+
+            if(_gamepadNames.indexOf(name) === -1) {
+                console.log(`Registering gamepad: ${name}`)
+                _gamepadNames.push(name)
+            }
+            else {
+                console.warn(`Gamepad name "${name}" already registered.`)
+
+            }
+
+            return gamepadRepeater.itemAt(_gamepadNames.indexOf(name))
+
+        }
+
+        function getEnabledGamepad() {
+            for(let i = 0; i < gamepadRepeater.count; i++) {
+                let g = gamepadRepeater.itemAt(i)
+                if(g.enabled) {
+                    return g
+                }
+            }
+            return null
+        }
+
+        property list<string> _gamepadNames: []
+
+        Repeater {
+            id: gamepadRepeater
+            model: gamepad._gamepadNames
+            delegate: GamepadInterface {
+                id: gamepadIfc
+                required property string modelData
+                property alias name: gamepadIfc.modelData
+                enabled: false
+
+                onEnabledChanged: {
+                    if(!enabled) {
+                        console.log(`Gamepad "${modelData}" disabled.`)
+                        return
+                    }
+
+                    console.log(`Gamepad "${modelData}" enabled.`)
+
+                    for(let i = 0; i < gamepadRepeater.count; i++) {
+                        if(gamepadRepeater.itemAt(i).name !== name) {
+                            gamepadRepeater.itemAt(i).enabled = false
+                        }
+                    }
+                }
+            }
+
+            onItemAdded: function(item) {
+                console.log(`Gamepad "${item.modelData}" added to repeater.`)
+            }
+        }
     }
 
     Settings {

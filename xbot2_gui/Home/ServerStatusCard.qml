@@ -105,6 +105,7 @@ Card1 {
             onAccepted: {
                 root.updateServerUrl()
             }
+            placeholderText: text === '' ? 'Enter server host' : ''
         }
 
 
@@ -115,10 +116,11 @@ Card1 {
         TextField {
             id: portField
             Layout.fillWidth: true
-            text: client.port
+            text: client.port > 0 ? client.port : ''
             onAccepted: {
                 root.updateServerUrl()
             }
+            placeholderText: text === '' ? 'Enter server port' : ''
         }
 
         Button {

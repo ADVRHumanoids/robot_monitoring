@@ -19,7 +19,10 @@ find_package(Qt6 COMPONENTS
     DataVisualization
     TextToSpeech
     Charts
-    REQUIRED)
+    REQUIRED
+)
+
+find_package(Qt6 COMPONENTS GamepadLegacy)
 
 if(NOT EMSCRIPTEN)
 
@@ -60,7 +63,9 @@ qt_add_qml_module(xbot2_gui
     DeserializationWorker.js
     sharedData.js
     SharedData1.qml
-    QML_FILES DeserializationWorker.qml
+    DeserializationWorker.qml
+    AppLauncher.qml
+    GuiPage.qml
 )
 
 target_compile_definitions(xbot2_gui
@@ -82,6 +87,20 @@ target_link_libraries(xbot2_gui
     Qt6::Quick3D
 )
 
+if(TARGET Qt6::GamepadLegacy)
+
+    target_link_libraries(xbot2_gui
+        PUBLIC
+        Qt6::GamepadLegacy
+    )
+
+    target_compile_definitions(xbot2_gui
+        PRIVATE
+        -DXBOT2_GUI_USE_GAMEPAD
+    )
+
+endif()
+
 if(NOT EMSCRIPTEN)
 
     target_link_libraries(xbot2_gui
@@ -98,9 +117,6 @@ target_compile_definitions(xbot2_gui PRIVATE -DXBOT2_GUI_VERSION_MINOR=${robot_m
 target_compile_definitions(xbot2_gui PRIVATE -DXBOT2_GUI_VERSION_PATCH=${robot_monitoring_VERSION_PATCH})
 
 ## add modules
-
-
-
 add_subdirectory(Common)
 
 add_subdirectory(Concert)

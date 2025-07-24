@@ -50,6 +50,7 @@ class Launcher:
         self.proc_stdout_max_kbps = 1000
         self.proc_stdout_enabled = True
 
+
     @utils.handle_exceptions
     async def process_get_list_handler(self, request):
         
@@ -69,8 +70,10 @@ class Launcher:
                 'status': status[p],
                 'cmdline': variants,
                 'machine': self.cfg[p].get('machine', 'local'),
-                'visible': self.cfg[p].get('show_ui', True)
+                'visible': self.cfg[p].get('show_ui', True),
+                'category': self.cfg[p].get('category', 'default'),
             })
+
 
         return web.Response(text=json.dumps(proc_data))
     

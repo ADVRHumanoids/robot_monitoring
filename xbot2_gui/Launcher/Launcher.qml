@@ -18,11 +18,10 @@ MultiPaneResponsiveLayout {
 
     property var processMutedState: Object()
 
+    property var categoryToProcessModel: Object()
 
-    LayoutClassHelper {
-        id: layout
-        targetWidth: root.width
-    }
+    property var processStatusMap: Object()
+
 
     ScrollView {
 
@@ -85,66 +84,149 @@ MultiPaneResponsiveLayout {
 
             SectionHeader {
 
+                id: procSectionHeader
+
+                property bool procVisible: true
+
                 width: parent.width
 
                 text: 'Process launcher'
 
-                CheckBox {
-                    id: showAllChk
-                    text: 'Show All'
-                    checked: false
-                    onCheckedChanged: Qt.callLater(processLayout.computeLayout)
+
+
+                // CheckBox {
+                //     id: showAllChk
+                //     text: 'Show All'
+                //     checked: false
+                // }
+
+                SmallToolButton {
+
+                    id: collapseAllBtn
+
+                    property bool collapseOnClick: true
+
+                    text: MaterialSymbolNames.collapseAll
+                    font.family: 'Material Symbols Outlined'
+                    font.variableAxes: {'opsz': 48}
+                    font.pixelSize: 16
+
+                    visible: Object.keys(categoryToProcessModel).length > 1
                 }
 
-                Button {
-                    text: 'Refresh'
-                    onClicked: Logic.requestProcessUpdate(processRepeater)
+                SmallToolButton {
+                    id: showAllChk
+                    text: MaterialSymbolNames.visibility
+                    font.family: 'Material Symbols Outlined'
+                    font.variableAxes: {'opsz': 48}
+                    font.pixelSize: 16
+                    checkable: true
+                }
+
+                SmallToolButton {
+                    text: MaterialSymbolNames.refresh
+                    font.family: 'Material Symbols Outlined'
+                    font.variableAxes: {'opsz': 48}
+                    font.pixelSize: 16
+                    onClicked: Logic.requestProcessUpdate()
                 }
 
                 onClicked: {
-                    processLayout.visible = !processLayout.visible
+                    procVisible = !procVisible
                 }
 
-                iconText: processLayout.visible ? '\uf077' : '\uf078'
+                iconText: procVisible ? '\uf077' : '\uf078'
 
             }
 
-            MultiColumnLayout1 {
+            Repeater {
 
-                id: processLayout
+                id: processMainRepeater
 
-                width: parent.width
-                columns: Math.ceil(width / 400.0)
+                // model is the list of categories
 
-                Repeater {
+                Column {
 
-                    id: processRepeater
+                    required property string modelData
 
-                    ProcessCard {
+                    visible: procSectionHeader.procVisible
 
-                        visible: (showAllChk.checked || modelData.visible) && processRepeater.visible
-                        muted: !modelData.visible
+                    width: parent.width
 
-                        processName: modelData.name
-                        processState: modelData.status
-                        processConfig: modelData.cmdline
-
-                        objectName: `pcard_${processName}`
-
-                        onStart: Logic.processCmd(processName, 'start', processOptions)
-                        onStop: Logic.processCmd(processName, 'stop', {})
-                        onKill: Logic.processCmd(processName, 'kill', {})
-
-                        onMutedChanged: root.processMutedState[processName] = muted
+                    Connections {
+                        target: showAllChk
+                        function onCheckedChanged() {
+                            Qt.callLater(processLayout.computeLayout)
+                        }
                     }
 
-                }
+                    Connections {
+                        target: collapseAllBtn
+                        function onClicked() {
+                            if(collapseAllBtn.collapseOnClick) {
+                                processLayout.visible = false
+                            }
+                            else {
+                                processLayout.visible = true
+                            }
+                        }
+                    }
 
-                CustoCommand {
-                    id: customCmd
-                    pageItem: root
-                    onSubmitCommand: Logic.customCommand(machine, command, timeout)
-                    // visible: processRepeater.visible
+                    SectionHeader {
+
+                        pixelSize: CommonProperties.font.h4
+
+                        visible: Object.keys(categoryToProcessModel).length > 1
+
+                        width: parent.width
+
+                        text: parent.modelData
+
+                        onClicked: {
+                            processLayout.visible = !processLayout.visible
+                        }
+
+                        iconText: processLayout.visible ? '\uf077' : '\uf078'
+
+                        showBorderIfCompact: false
+
+                    }
+
+
+                    MultiColumnLayout1 {
+
+                        id: processLayout
+
+                        width: parent.width
+                        columns: Math.ceil(width / 450.0)
+
+                        Repeater {
+
+                            id: processRepeater
+                            model: root.categoryToProcessModel[modelData]
+
+                            ProcessCard {
+
+                                visible: (showAllChk.checked || modelData.visible) && procSectionHeader.procVisible
+                                muted: !modelData.visible
+
+                                processName: modelData.name
+                                processState: processStatusMap[processName] ?? 'unknown'
+                                processConfig: modelData.cmdline
+
+                                objectName: `pcard_${processName}`
+
+                                onStart: Logic.processCmd(processName, 'start', processOptions)
+                                onStop: Logic.processCmd(processName, 'stop', {})
+                                onKill: Logic.processCmd(processName, 'kill', {})
+
+                                onMutedChanged: root.processMutedState[processName] = muted
+                            }
+
+                        }
+
+                    }
+
                 }
 
             }
@@ -155,7 +237,7 @@ MultiPaneResponsiveLayout {
                 width: parent.width
 
                 height: 16
-                visible: processLayout.visible
+                visible: processMainRepeater.visible
             }
 
             SectionHeader {
@@ -164,11 +246,14 @@ MultiPaneResponsiveLayout {
 
                 text: 'Plugin launcher'
 
-                Button {
-                    text: 'Refresh'
-                    onClicked: {
-                        Logic.requestPluginUpdate(pluginRepeater)
-                    }
+                enabled: client.robotConnected
+
+                SmallToolButton {
+                    text: MaterialSymbolNames.refresh
+                    font.family: 'Material Symbols Outlined'
+                    font.variableAxes: {'opsz': 48}
+                    font.pixelSize: 16
+                    onClicked: Logic.requestPluginUpdate(pluginRepeater)
                 }
 
                 onClicked: {
@@ -182,6 +267,8 @@ MultiPaneResponsiveLayout {
             MultiColumnLayout1 {
 
                 id: pluginLayout
+
+                enabled: client.robotConnected
 
                 width: parent.width
                 columns: Math.ceil(width / 400.0)
@@ -222,15 +309,14 @@ MultiPaneResponsiveLayout {
 
     }
 
-    Component.onCompleted: Logic.construct(processRepeater,
-                                           pluginRepeater)
+    Component.onCompleted: Logic.construct()
 
     Connections {
 
         target: root.client
 
         function onProcessOutputReceived(msg) {
-            Logic.onProcessOutputReceived(processRepeater, consoleItem, msg)
+            Logic.onProcessOutputReceived(consoleItem, msg)
         }
 
         function onPluginStatMessageReceived(msg) {
@@ -239,7 +325,13 @@ MultiPaneResponsiveLayout {
 
         function onObjectReceived(msg) {
             if(msg.type === 'proc_status') {
-                Logic.onProcessStatusReceived(processRepeater, consoleItem, msg)
+                Logic.onProcessStatusReceived(msg)
+            }
+        }
+
+        function onRobotConnectedChanged() {
+            if(client.robotConnected) {
+                Logic.requestPluginUpdate(pluginRepeater, true)
             }
         }
     }

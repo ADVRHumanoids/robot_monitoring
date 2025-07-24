@@ -1,20 +1,22 @@
 
 
-function construct(procRepeater, pluginRepeater) {
+function construct() {
 
-    requestProcessUpdate(procRepeater)
+    requestProcessUpdate()
 
-    requestPluginUpdate(pluginRepeater, true)
+    if(client.robotConnected) {
+        requestPluginUpdate(pluginRepeater, true)
+    }
 
 }
 
 
-function requestProcessUpdate(procRepeater) {
+function requestProcessUpdate() {
 
     // update process cards when available
     let onProcessListReceived = function (msg) {
 
-        procRepeater.model = msg
+        // procRepeater.model = msg
 
         let availableMachines = []
 
@@ -22,15 +24,29 @@ function requestProcessUpdate(procRepeater) {
 
         let hiddenProcessNames = []
 
+        let categoryNames = []
+
         for(let item of msg) {
+            let category = item.category ?? 'none'
             availableMachines.push(item.machine)
             processNames.push(item.name)
+            categoryNames.push(category)
             if(!item.visible) {
                 hiddenProcessNames.push(item.name)
             }
+
+            categoryToProcessModel[category] = categoryToProcessModel[category] ?? []
+            categoryToProcessModel[category].push(item)
+
+            processStatusMap[item.name] = item.status
         }
 
-        customCmd.availableMachines = [... new Set(availableMachines)]
+        console.log("categoryToProcessModel:")
+        console.log(JSON.stringify(categoryToProcessModel))
+
+        // customCmd.availableMachines = [... new Set(availableMachines)]
+
+        processMainRepeater.model = [... new Set(categoryNames)]
 
         consoleItem.hiddenProcessNames = hiddenProcessNames
 
@@ -74,7 +90,7 @@ function processCmd(name, cmd, opt) {
 }
 
 
-function onProcessOutputReceived(procRepeater, consoleItem, msg) {
+function onProcessOutputReceived(consoleItem, msg) {
 
     let muted = root.processMutedState[msg.name]
 
@@ -92,20 +108,11 @@ function onProcessOutputReceived(procRepeater, consoleItem, msg) {
 
 }
 
-function onProcessStatusReceived(procRepeater, consoleItem, msg) {
+function onProcessStatusReceived(msg) {
 
     // handle status
-    for(let i = 0; i < procRepeater.count; i++) {
-
-        var item_i = procRepeater.itemAt(i)
-
-        // found!
-        if(item_i.processName === msg.name) {
-
-            item_i.processState = msg.status
-            break
-        }
-    }
+    processStatusMap[msg.name] = msg.status
+    processStatusMapChanged()
 }
 
 

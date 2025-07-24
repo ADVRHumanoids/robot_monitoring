@@ -142,6 +142,8 @@ Item {
 
                     // banner
                     Label {
+                        Layout.fillWidth: true
+
                         id: titleLabel
                         text: root.name
                         font.pixelSize: CommonProperties.font.h2
@@ -162,11 +164,11 @@ Item {
                         leftPadding: 4
                     }
 
-                    Item {
-                        Layout.preferredWidth: 1
-                        Layout.minimumWidth: 6
-                        Layout.fillWidth: true
-                    }
+                    // Item {
+                    //     Layout.preferredWidth: 1
+                    //     Layout.minimumWidth: 6
+                    //     Layout.fillWidth: true
+                    // }
 
                     Control {
                         padding: root.verticalMargins

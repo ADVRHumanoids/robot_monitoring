@@ -36,6 +36,11 @@ void WebSocketWorker::initialize()
 
 void WebSocketWorker::setUrl(QUrl url)
 {
+    if(url.port() < 0)
+    {
+        return;
+    }
+
     if (!_ws)
     {
         qFatal("ws not initialized");

@@ -18,10 +18,10 @@ Item
     // if running from web it contains the server address
 
     // server hostname
-    property string hostname: appData.hostname
+    property string hostname
 
     // server port
-    property int port: appData.port
+    property int port: -1
 
     // alias for the underlying websocket's active property
     property alias active: socket.active
@@ -313,7 +313,7 @@ Item
 
     Timer {
         id: retryConnect
-        interval: 2000
+        interval: 333
         repeat: true
         running: !root.active
 

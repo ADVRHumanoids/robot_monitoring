@@ -139,6 +139,14 @@ MultiPaneResponsiveLayout {
 
             }
 
+            Label {
+                width: parent.width
+                text: 'No process found'
+                enabled: false
+                font.pixelSize: CommonProperties.font.h2
+                horizontalAlignment: Qt.AlignHCenter
+            }
+
             Repeater {
 
                 id: processMainRepeater

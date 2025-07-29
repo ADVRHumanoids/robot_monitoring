@@ -30,7 +30,9 @@ qt_add_qml_module(xbot2_gui_common
     DelayButtonRound.qml
     DoubleSpinBox1.qml
     MultiColumnLayout1.qml
-    QML_FILES LoadingPage.qml
+    LoadingPage.qml
+    RecursiveSplitView.qml
+    RecursiveSplitView.js
 )
 
 target_link_libraries(xbot2_gui PRIVATE xbot2_gui_commonplugin)

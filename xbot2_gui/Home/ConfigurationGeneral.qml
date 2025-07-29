@@ -104,6 +104,7 @@ GridLayout {
     Item {}
 
     Label {
+        visible: appData.hasGamepadCapability
         topPadding: 4
         Layout.columnSpan: 3
         text: 'Gamepad'
@@ -112,7 +113,8 @@ GridLayout {
     }
 
     GamepadTest {
-        enabled: appData.hasGamepadCapability
+        visible: appData.hasGamepadCapability
+        enabled: gamepad.connected
         Layout.columnSpan: 3
         Layout.fillWidth: true
     }

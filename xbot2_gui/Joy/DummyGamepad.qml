@@ -26,4 +26,10 @@ Item {
     property bool buttonRight
     property bool buttonCenter
     property bool buttonGuide
+
+    function setEnabled(enabled) {
+
+    }
+
+    signal onAxisChanged(int type, real value)
 }

@@ -4,7 +4,7 @@ import QtQuick.Controls
 import QtCore
 
 import Font
-import "../Common"
+import Common
 
 Item {
 

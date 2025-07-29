@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Common
 
-import "../Common"
 import "ConsoleCard.js" as Logic
 
 Item {

@@ -41,8 +41,7 @@ function requestProcessUpdate() {
             processStatusMap[item.name] = item.status
         }
 
-        console.log("categoryToProcessModel:")
-        console.log(JSON.stringify(categoryToProcessModel))
+        categoryToProcessModelChanged()
 
         // customCmd.availableMachines = [... new Set(availableMachines)]
 
@@ -121,6 +120,7 @@ function requestPluginUpdate(pluginRepeater, quiet = false) {
     let onPluginListReceived = function (msg) {
         // SharedData.pluginNames = msg.plugins
         pluginRepeater.model = msg.plugins
+        pluginStack.currentIndex = 1
     }
 
     client.doRequest('GET', '/plugin/get_list', '', onPluginListReceived, quiet)

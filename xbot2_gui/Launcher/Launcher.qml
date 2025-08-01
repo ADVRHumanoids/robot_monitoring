@@ -145,6 +145,7 @@ MultiPaneResponsiveLayout {
                 enabled: false
                 font.pixelSize: CommonProperties.font.h2
                 horizontalAlignment: Qt.AlignHCenter
+                visible: processMainRepeater.count === 0 && procSectionHeader.procVisible
             }
 
             Repeater {
@@ -254,8 +255,6 @@ MultiPaneResponsiveLayout {
 
                 text: 'Plugin launcher'
 
-                enabled: client.robotConnected
-
                 SmallToolButton {
                     text: MaterialSymbolNames.refresh
                     font.family: 'Material Symbols Outlined'
@@ -265,32 +264,61 @@ MultiPaneResponsiveLayout {
                 }
 
                 onClicked: {
-                    pluginLayout.visible = !pluginLayout.visible
+                    pluginStack.visible = !pluginStack.visible
                     // leftGrid.computeLayout()
                 }
 
-                iconText: pluginLayout.visible ? '\uf077' : '\uf078'
+                iconText: pluginStack.visible ? '\uf077' : '\uf078'
             }
 
-            MultiColumnLayout1 {
+            StackLayout {
 
-                id: pluginLayout
-
-                enabled: client.robotConnected
-
+                id: pluginStack
                 width: parent.width
-                columns: Math.ceil(width / 400.0)
 
-                Repeater {
+                Control {
 
-                    id: pluginRepeater
+                    Layout.fillWidth: true
 
-                    PluginCard {
-                        visible: pluginRepeater.visible
-                        pluginName: modelData
-                        onStart: Logic.pluginCmd(pluginName, 'start')
-                        onStop: Logic.pluginCmd(pluginName, 'stop')
-                        onAbort: Logic.pluginCmd(pluginName, 'abort')
+                    contentItem: ColumnLayout {
+
+                        BusyIndicator {
+                            running: !client.robotConnected
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+
+                        Label {
+                            text: 'Robot not connected'
+                            visible: !client.robotConnected
+                            horizontalAlignment: Qt.AlignHCenter
+                            Layout.alignment: Qt.AlignHCenter
+                            font.pixelSize: CommonProperties.font.h4
+                        }
+
+                    }
+                }
+
+                MultiColumnLayout1 {
+
+                    id: pluginLayout
+
+                    enabled: client.robotConnected
+
+                    Layout.fillWidth: true
+
+                    columns: Math.ceil(width / 400.0)
+
+                    Repeater {
+
+                        id: pluginRepeater
+
+                        PluginCard {
+                            pluginName: modelData
+                            onStart: Logic.pluginCmd(pluginName, 'start')
+                            onStop: Logic.pluginCmd(pluginName, 'stop')
+                            onAbort: Logic.pluginCmd(pluginName, 'abort')
+                        }
+
                     }
 
                 }
@@ -340,6 +368,9 @@ MultiPaneResponsiveLayout {
         function onRobotConnectedChanged() {
             if(client.robotConnected) {
                 Logic.requestPluginUpdate(pluginRepeater, true)
+            }
+            else {
+                pluginStack.currentIndex = 0
             }
         }
     }

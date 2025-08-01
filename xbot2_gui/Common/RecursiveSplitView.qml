@@ -14,17 +14,17 @@ Control {
 
     property alias orientation: split.orientation
 
-    property int childId: -1
+    property int splitId: -1
 
     property RecursiveSplitView treeParent: null
 
     property Component wrappedDelegate: Item {
         property int splitId
-        property Item splitItem
+        property Item treeParent
         SplitView.fillHeight: true
         SplitView.fillWidth: true
-        SplitView.preferredHeight: splitItem.height / 2.
-        SplitView.preferredWidth: splitItem.width / 2.
+        SplitView.preferredHeight: treeParent.height / 2.
+        SplitView.preferredWidth: treeParent.width / 2.
 
         Loader {
             id: delegateLoader
@@ -34,19 +34,19 @@ Control {
                 target: delegateLoader.item
                 ignoreUnknownSignals: true
                 function onSplitVertical() {
-                    splitItem.splitVertical(splitId)
+                    treeParent.splitVertical(splitId)
                 }
                 function onSplitHorizontal() {
-                    splitItem.splitHorizontal(splitId)
+                    treeParent.splitHorizontal(splitId)
                 }
                 function onCloseSplit() {
-                    splitItem.closeSplit(splitId)
+                    treeParent.closeSplit(splitId)
                 }
             }
         }
 
         Component.onCompleted: {
-            splitItem = root
+            treeParent = root
             delegateLoader.sourceComponent = root.delegate
         }
 
@@ -54,11 +54,11 @@ Control {
 
     property Component self: Loader {
         id: loaderComponent
-        property Item splitItem
+        property Item treeParent
         SplitView.fillHeight: true
         SplitView.fillWidth: true
-        SplitView.preferredHeight: splitItem.height / 2.
-        SplitView.preferredWidth: splitItem.width / 2.
+        SplitView.preferredHeight: treeParent.height / 2.
+        SplitView.preferredWidth: treeParent.width / 2.
     }
 
 
@@ -78,19 +78,27 @@ Control {
         split.removeItem(split.itemAt(splitId))
 
         if(treeParent === null) {
-            // top level, just delete the requested item
-            keepWdLoader.item.splitId = 0
-            return
+
+            if(keepWdLoader === null) {
+                // recreate root item
+                createDelegate(0)
+                return
+            }
+            else {
+                // we are the root item, just remove the requested item
+                keepWdLoader.item.splitId = 0
+                return
+            }
         }
 
         // ask parent to replace us with the keep item
-        treeParent.replaceItem(childId, keepWdLoader)
+        treeParent.replaceItem(root.splitId, keepWdLoader)
 
     }
 
     function replaceItem(idToReplace, itemToReplace) {
-        itemToReplace.item.splitItem = root
-        itemToReplace.splitItem = root
+        itemToReplace.item.treeParent = root
+        itemToReplace.treeParent = root
         let itemToRemove = split.takeItem(idToReplace)
         split.addItem(itemToReplace)
         split.moveItem(1, idToReplace)
@@ -111,13 +119,13 @@ Control {
 
         // create new RecursiveSplitView, forwarding the delegate
         // it will also instantiate a new delegate upon creation
-        let item1 = self.createObject(split, {'splitItem': root})
+        let item1 = self.createObject(split, {'treeParent': root})
         item1.setSource('RecursiveSplitView.qml',
                         {
                             'treeParent': root,
                             'orientation': ori,
                             'delegate': root.delegate,
-                            'childId': splitId
+                            'splitId': splitId
                         }
                         )
 
@@ -131,16 +139,16 @@ Control {
 
     function _addWrappedDelegateLoader(loader) {
         split.addItem(loader)
-        loader.item.splitItem = root
+        loader.item.treeParent = root
         loader.item.splitId = 1
-        loader.splitItem = root
+        loader.treeParent = root
     }
 
     function createDelegate(splitId) {
-        let wdloader = self.createObject(split, {'splitItem': root})
+        let wdloader = self.createObject(split, {'treeParent': root})
         wdloader.sourceComponent = root.wrappedDelegate
         wdloader.item.splitId = splitId
-        wdloader.item.splitItem = root
+        wdloader.item.treeParent = root
     }
 
 
@@ -148,10 +156,23 @@ Control {
         createDelegate(0)
     }
 
+    // contentItem: Item {
+    //     implicitHeight: split.implicitHeight
+    //     implicitWidth: split.implicitWidth
+    //     SplitView {
+    //         anchors.fill: parent
+    //         anchors.margins: 16
+    //         id: split
+    //     }
+    //     Label {
+    //         height: 16
+    //         text: `${root} <-- (${root.treeParent} @ ${root.splitId})`
+    //     }
+
+    // }
+
     contentItem: SplitView {
-
         id: split
-
     }
 
 }

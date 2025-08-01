@@ -65,6 +65,9 @@ Item
     // generic message
     signal objectReceived(var msg)
 
+    // numeric fields
+    property var objNumericFields: Object()
+
     // bytes received counter
     property alias bytesRecvCounters: pb.recvBytes
     property alias numMsgCounters: pb.numMsg

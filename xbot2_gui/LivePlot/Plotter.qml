@@ -122,10 +122,10 @@ Item {
     }
 
     function resetView() {
-        axisValueLeft.min = -1
-        axisValueLeft.max = 1
-        axisValueRight.min = -1
-        axisValueRight.max = 1
+        axisValueLeft.min = -1e-16
+        axisValueLeft.max = 1e-16
+        axisValueRight.min = -1e-16
+        axisValueRight.max = 1e-16
         chart.autoscale = true
         chart.autoscroll = true
     }
@@ -158,7 +158,7 @@ Item {
         // already exists, do nothing
         if(seriesEntry !== undefined) {
             console.log(`series "${seriesName}" already exists`)
-            return
+            return seriesEntry
         }
 
         // create series, attach to axes
@@ -193,6 +193,7 @@ Item {
 
     function removeSeries(seriesName) {
         chart.removeSeries(chart.series(seriesName))
+        currSeries[seriesName].destroy()
         delete currSeries[seriesName]
     }
 

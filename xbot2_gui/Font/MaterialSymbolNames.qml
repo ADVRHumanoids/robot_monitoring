@@ -45,6 +45,10 @@ Item {
     property string visibility: '\ue8f4'
     property string collapseAll: '\ue944'
     property string apps: '\ue5c3'
+    property string more: '\ue5d3'
+    property string splitHorz: '\uf674'
+    property string splitVert: '\uf676'
+    property string close: '\ue5cd'
 
     property FontLoader filledFont: FontLoader {
         source: `/Font/materialsymbols/MaterialSymbolsOutlined[opsz,wght,FILL,GRAD@20,200,1,200].otf`

@@ -10,25 +10,25 @@ MultiPaneResponsiveLayout {
 
     onPageSelected: livePlot.rebuild()
 
-    onAfterLayoutChange: livePlot.rebuild()
+    // onAfterLayoutChange: livePlot.rebuild()
 
-    LayoutClassHelper {
-        id: lay
-        targetWidth: parent.width
-    }
+    // LayoutClassHelper {
+    //     id: lay
+    //     targetWidth: parent.width
+    // }
 
     GridLayout {
 
         anchors.fill: parent
 
-        rows: lay.expanded ? 1 : -1
-        columns: lay.expanded ? -1 : 1
+        rows: layout.expanded ? 1 : -1
+        columns: layout.expanded ? -1 : 1
 
         PlotterLegend {
             id: plotterLegend
             chart: livePlot.chartView
-            Layout.fillWidth: !lay.expanded
-            Layout.fillHeight: lay.expanded
+            Layout.fillWidth: !layout.expanded
+            Layout.fillHeight: layout.expanded
         }
 
         Plotter {

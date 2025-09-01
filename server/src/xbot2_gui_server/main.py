@@ -4,6 +4,7 @@ sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 from .server import Xbot2WebServer
 import yaml, json
+import time
 import sys
 import importlib
 import logging
@@ -19,11 +20,14 @@ def main():
     parser = argparse.ArgumentParser(description='A modern UI for the Xbot2 framework, written in Qt6 / QML')
     parser.add_argument('config', type=str, nargs='?', help='path to config file')
     parser.add_argument('--port', '-p', type=int, default=8080, help='port for the UI server (it must be available on both TCP and UDP)')
-    parser.add_argument('--launch-ui', '-u', action='store_true', help='run the UI frontend')
     args = parser.parse_args()
 
     # set verbose logging level
     logging.basicConfig(level=logging.DEBUG, force=True)
+
+    while not ros_utils.RosWrapper.master_alive():
+        print('waiting for ros master')
+        time.sleep(1.0)
     
     # load config
     if args.config:
@@ -45,128 +49,67 @@ def main():
     # task that load all extensions after waiting for ros master
     async def load_extensions():
 
-        while not ros_utils.RosWrapper.master_alive():
-            await srv.log('waiting for ros master')
-            await asyncio.sleep(1.0)
-
-        await srv.log('ros master is alive')
-
         # load ros
         ros_utils.ros_handle = ros_utils.RosWrapper()
 
         # spin ros callbacks
         srv.schedule_task(ros_utils.ros_handle.spin_node())
 
+        module_list = [
+            'xbot2_gui_server.joint_states'
+        ]
+
         # wasm ui
         from .webui import WebUiHandler
         ext = WebUiHandler(srv, cfg.get('webui', {}))
         extensions.append(ext)
 
-        # joint states
-        from .joint_states import JointStateHandler
-        ext = JointStateHandler(srv, cfg.get('joint_states', {}))
-        extensions.append(ext)
-        print(ext)
-
-        # joint device
-        from .joint_device import JointDeviceHandler
-        ext = JointDeviceHandler(srv, cfg.get('joint_device', {}))
-        extensions.append(ext)
-        print(ext)
-
-        # plugin
-        from .plugin import PluginHandler
-        ext = PluginHandler(srv, cfg.get('plugin', {}))
-        extensions.append(ext)
-        print(ext)
-
-        # theora video
-        from .theora_video import TheoraVideoHandler
-        ext = TheoraVideoHandler(srv, cfg.get('theora_video', {}))
-        extensions.append(ext)
-        print(ext)
-
-        # launcher
-        try:
-            from .launcher import Launcher
-            ext = Launcher(srv, cfg.get('launcher', {}))
-            extensions.append(ext)
-        except ModuleNotFoundError:
-            pass
-        except BaseException as e:
-            print('Exception ', type(e), e)  
-
-        # cartesian
-        try:
-            from .cartesian import CartesianHandler
-            ext = CartesianHandler(srv, cfg.get('cartesian', {}))
-            extensions.append(ext)
-        except ModuleNotFoundError:
-            pass
-
-        # speech
-        try:
-            from .speech import SpeechHandler
-            ext = SpeechHandler(srv, cfg.get('speech', {}))
-            extensions.append(ext)
-            print(ext)
-        except ModuleNotFoundError:
-            pass
-        except BaseException as e:
-            print('Exception ', type(e), e)  
-
-
-        # visual
-        try:
-            from .visual import VisualHandler
-            ext = VisualHandler(srv, cfg.get('visual', {}))
-            extensions.append(ext)
-            print(ext)
-        except BaseException as e:
-            print('Exception ', type(e), e)  
-
-        # concert
-        if 'concert' in cfg.keys():
+        def load_extension(module_name, class_name, srv, config):
+            print(f'>>> loading {module_name}.{class_name}')
             try:
-                from .concert import ConcertHandler
-                ext = ConcertHandler(srv, cfg.get('concert', {}))
+                pkgname = module_name.split('.')[1]
+                module = importlib.import_module(module_name)
+                handler_class = getattr(module, class_name)
+                ext = handler_class(srv, config.get(pkgname, {}))
                 extensions.append(ext)
-                print(ext)    
-            except BaseException as e:
-                print('Exception ', type(e), e)  
+                print(f'<<< loaded {module_name}.{class_name}')
+            except ModuleNotFoundError:
+                print(f'Module {module_name} not found')
+                import traceback
+                traceback.print_exc()
+            except AttributeError:
+                print(f'Class {class_name} not found in module {module_name}')
+                import traceback
+                traceback.print_exc()
+            except Exception as e:
+                print(f'Error loading {module_name}.{class_name}: {type(e).__name__} - {e}')
+                import traceback
+                traceback.print_exc()
 
-        # ecat
-        if 'ecat' in cfg.keys():
-            from .ecat import EcatHandler
-            ext = EcatHandler(srv, cfg.get('ecat', {}))
-            extensions.append(ext)
+        # define extensions 
+        ext_list = [
+            ('xbot2_gui_server.joint_states', 'JointStateHandler'),
+            ('xbot2_gui_server.joint_device', 'JointDeviceHandler'),
+            ('xbot2_gui_server.plugin', 'PluginHandler'),
+            ('xbot2_gui_server.theora_video', 'TheoraVideoHandler'),
+            ('xbot2_gui_server.launcher', 'Launcher'),
+            ('xbot2_gui_server.cartesian', 'CartesianHandler'),
+            # ('xbot2_gui_server.speech', 'SpeechHandler'),
+            ('xbot2_gui_server.visual', 'VisualHandler'),
+            # ('xbot2_gui_server.concert', 'ConcertHandler'),
+            ('xbot2_gui_server.ecat', 'EcatHandler'),
+            ('xbot2_gui_server.horizon', 'HorizonHandler'),
+            ('xbot2_gui_server.dashboard', 'DashboardHandler'),
+            ('xbot2_gui_server.parameters', 'ParameterHandler')
+        ]
 
-        # horizon
-        if 'horizon' in cfg.keys():
-            from .horizon import HorizonHandler
-            ext = HorizonHandler(srv, cfg.get('horizon', {}))
-            extensions.append(ext)
-        
-        # dashboard
-        try:
-            from .dashboard import DashboardHandler
-            ext = DashboardHandler(srv, cfg.get('dashboard', {}))
-            extensions.append(ext)
-            print(ext)
-        except BaseException as e:
-            print('Exception ', type(e), e)
+        # load extensions
+        for module_name, class_name in ext_list:
+            load_extension(module_name, class_name, srv, cfg)
 
-        try:
-            from .parameters import ParameterHandler
-            ext = ParameterHandler(srv, cfg.get('parameters', {}))
-            extensions.append(ext)
-            print(ext)
-        except BaseException as e:
-            print('Exception ', type(e), e)
-
-        srv.extensions = extensions
-
-        print('load extensions completed', extensions)
+        print('loaded extensions:')
+        for ext in extensions:
+            print(' ', ext)
 
     # schedule extension loading task
     srv.schedule_task(load_extensions())
@@ -183,30 +126,6 @@ def main():
         return web.Response(text=json.dumps({'requested_pages': requested_pages}))
 
     srv.add_route('GET', '/requested_pages', requested_pages_handler, 'requested_pages_handler')
-
-    # run ui client if required
-    async def run_ui():
-
-        proc = await asyncio.create_subprocess_shell(
-            f'bash -ic "new-xbot2-gui -p {args.port}"',
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.STDOUT,
-                    stdin=asyncio.subprocess.PIPE)
-        
-        while True:
-            try:
-                l = await proc.stdout.readline()
-                if len(l) == 0:
-                    retcode = await proc.wait()
-                    print(f'[ui] process exited with {retcode}')
-                    sys.exit(retcode)
-                l = l.decode()
-                print('[ui]', l, end='')
-            except KeyboardInterrupt:
-                return
-
-    if args.launch_ui:
-        srv.schedule_task(run_ui())
 
     # run server
     srv.run_server(port=args.port)

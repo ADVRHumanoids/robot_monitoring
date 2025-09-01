@@ -56,7 +56,7 @@ private:
     VideoStreamPainter * _parent;
 
     struct Packet {
-        QByteArray datab64;
+        QByteArray data;
         int b_o_s;
         int e_o_s;
         long granulepos;

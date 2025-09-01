@@ -20,6 +20,8 @@ void CachedVisual::clearCache()
 
 bool CachedVisual::addMesh(QString name, QString url)
 {
+    name.replace("%", "_");
+
     if(_download_in_progress)
     {
         qWarning() << "canceling in progress download";
@@ -28,7 +30,7 @@ bool CachedVisual::addMesh(QString name, QString url)
 
     // check present in cache
     auto path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-    qInfo() << "writable location at " << path;
+    // qInfo() << "writable location at " << path;
 
     // create cache directory
     QDir dir;
@@ -37,11 +39,12 @@ bool CachedVisual::addMesh(QString name, QString url)
     // create file
     QString fileName = path + "/meshes/" + name;
 
+
     _file = std::make_unique<QFile>(fileName);
 
     if(_file->exists() && _file->size() > 0)
     {
-        qInfo() << _file->fileName() << " exists with size " << _file->size();
+        // qInfo() << _file->fileName() << " exists with size " << _file->size();
 
         emit fileChanged(file());
         emit meshReady();

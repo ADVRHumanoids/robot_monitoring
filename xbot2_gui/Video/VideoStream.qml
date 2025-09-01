@@ -10,14 +10,14 @@ Item {
     // public
     function setTheoraHeader(hdr) {
         for(let i = 0; i < 3; i++) {
+            console.log(`got bos=${hdr[i].bOS} eos=${hdr[i].eOS} pktno=${hdr[i].packetno}`)
             video.setTheoraPacket(hdr[i].data,
-                                  hdr[i].b_o_s,
-                                  hdr[i].e_o_s,
+                                  hdr[i].bOS,
+                                  hdr[i].eOS,
                                   hdr[i].granulepos,
                                   hdr[i].packetno)
         }
         _hdr_recv = true
-        console.log(streamName + ': set headers done')
     }
 
     function setTheoraPacket(msg) {
@@ -27,8 +27,8 @@ Item {
         }
 
         video.setTheoraPacket(msg.data,
-                              msg.b_o_s,
-                              msg.e_o_s,
+                              msg.bOS,
+                              msg.eOS,
                               msg.granulepos,
                               msg.packetno)
     }
@@ -37,6 +37,7 @@ Item {
     id: root
 
     property bool _hdr_recv: false
+    property string streamName
 
     // force video painter to respect the source aspect ratio
     AspectRatio {

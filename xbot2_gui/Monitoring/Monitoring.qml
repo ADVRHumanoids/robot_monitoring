@@ -7,7 +7,7 @@ import Common
 import Main
 import Monitoring.BarPlot
 import Monitoring.SingleJointState
-import ViewerQuick3D as V
+import ViewerQuick3D
 
 import "Monitoring.js" as Logic
 
@@ -16,6 +16,7 @@ MultiPaneResponsiveLayout {
     property ClientEndpoint client
     property Item robotViewer: loader.item
     enabled: client.robotConnected
+    property bool isCurrentPage
 
     id: root
     property Item livePlot: CommonProperties.globalLivePlot
@@ -25,7 +26,7 @@ MultiPaneResponsiveLayout {
     property real iload
 
     LayoutClassHelper {
-        id: lay
+        id: layout
         targetWidth: root.width
     }
 
@@ -49,8 +50,8 @@ MultiPaneResponsiveLayout {
 
                 width: parent.width
 
-                rows: lay.compact ? -1 : 1
-                columns: lay.compact ? 1 : -1
+                rows: layout.compact ? -1 : 1
+                columns: layout.compact ? 1 : -1
 
                 rowSpacing: 8
                 columnSpacing: 8
@@ -59,7 +60,7 @@ MultiPaneResponsiveLayout {
                     id: jointDevice
                     Layout.fillWidth: true
                     Layout.preferredWidth: 1
-                    Layout.preferredHeight: height
+                    // Layout.preferredHeight: height
                     bannerHeight: batt.height
                     collapsed: true
                     onSetSafetyState: Logic.setSafetyState(ok)
@@ -106,7 +107,7 @@ MultiPaneResponsiveLayout {
                 id: scroll1
 
                 width: parent.width
-                height: leftRoot.height - jointDeviceGrid.height - parent.spacing - parent.topPadding - parent.bottomPadding
+                height: leftRoot.height - jointDevice.height - parent.spacing - parent.topPadding - parent.bottomPadding
                 contentWidth: availableWidth
 
                 Column {
@@ -126,7 +127,6 @@ MultiPaneResponsiveLayout {
                                 id: barPlotCombo
                                 Layout.fillWidth: true
                                 model: barPlot.fieldNames
-                                width: implicitWidth
                                 wheelEnabled: true
                             }
 
@@ -141,6 +141,13 @@ MultiPaneResponsiveLayout {
                                                 jointState.selectJoint(jointName)
                                                 jointCommand.selectJoint(jointName)
                                             }
+
+                            onSelectedJointsChanged: {
+                                jointCommand.ctrlJoints = selectedJoints
+                                loader.item.selectedJoints = selectedJoints
+                            }
+
+                            enableMultipleSelection: jointCommand.enableMultipleSelection
                         }
 
                     }
@@ -186,18 +193,28 @@ MultiPaneResponsiveLayout {
             id: loader
             width: parent.width
             asynchronous: true
-            // visible: status === Loader.Ready
             active: true
 
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.preferredHeight: 200
 
-            sourceComponent: V.RobotModelViewer {
+            sourceComponent: RobotModelViewer {
                 id: robotViewer
                 client: root.client
                 color: Qt.transparent
-                // backgroundColor: 'transparent'
+
+                onJointClicked: function(jointName) {
+                    jointState.selectJoint(jointName)
+
+                }
+
+                onSelectedJointsChanged: {
+                    barPlot.selectedJoints = selectedJoints
+                    jointCommand.ctrlJoints = selectedJoints
+                }
+
+                enableMultipleSelection: jointCommand.enableMultipleSelection
 
             }
 
@@ -205,12 +222,26 @@ MultiPaneResponsiveLayout {
 
         JointCommandCard {
             id: jointCommand
+            collapsed: true
             Layout.fillWidth: true
             client: root.client
             robotCmd: loader.item.robotCmd
             onResetCmd: robotViewer.resetCmd()
             onCmdChanged: robotViewer.showRobotCmd = true
             enabled: jointDevice.jointActive
+            // ctrlJoints: loader.item.selectedJoints
+            onJointRemoved: {
+                barPlot.selectedJoints = ctrlJoints
+                loader.item.selectedJoints = ctrlJoints
+            }
+        }
+
+        Gripper {
+
+            collapsed: true
+            Layout.fillWidth: true
+            visible: gripperNames.length > 0
+
         }
 
     }

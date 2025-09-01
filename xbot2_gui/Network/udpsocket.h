@@ -49,6 +49,8 @@ signals:
 
     void addressChanged();
 
+    void binaryMessageReceived(QByteArray data);
+
     void textMessageReceived(QString msg);
 
     void boundChanged(bool);

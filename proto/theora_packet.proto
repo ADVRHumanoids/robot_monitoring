@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+message TheoraPacket {
+    string stream_name = 1;
+    bytes data = 2;
+    int32 b_o_s = 3;
+    int32 e_o_s = 4;
+    int32 granulepos = 5;
+    int32 packetno = 6;
+}
+

@@ -74,24 +74,25 @@ function processCmd(name, cmd, opt) {
 }
 
 
-function onProcMessageReceived(procRepeater, consoleItem, msg) {
+function onProcessOutputReceived(procRepeater, consoleItem, msg) {
+
+    let muted = root.processMutedState[msg.name]
 
     // handle output
-    if(msg.content === 'output')
-    {
-        let prefix = '[' + msg.name + '] '
+    let prefix = '[' + msg.name + '] '
 
-        if(msg.stdout.length > 0) {
-            consoleItem.appendText(msg.name, prefix + msg.stdout)
-        }
-
-        if(msg.stderr.length > 0) {
-            consoleItem.appendText(msg.name, '<font color="red">' + prefix + msg.stderr + '</>')
-            root.numErrors += 1
-        }
-
-        return;
+    if(msg.out.length > 0) {
+        consoleItem.appendText(msg.name, prefix + msg.out, muted)
     }
+
+    if(msg.err.length > 0) {
+        consoleItem.appendText(msg.name, '<font color="red">' + prefix + msg.err + '</>', muted)
+        root.numErrors += 1
+    }
+
+}
+
+function onProcessStatusReceived(procRepeater, consoleItem, msg) {
 
     // handle status
     for(let i = 0; i < procRepeater.count; i++) {
@@ -101,11 +102,7 @@ function onProcMessageReceived(procRepeater, consoleItem, msg) {
         // found!
         if(item_i.processName === msg.name) {
 
-            if(msg.content === 'status')
-            {
-                item_i.processState = msg.status
-            }
-
+            item_i.processState = msg.status
             break
         }
     }

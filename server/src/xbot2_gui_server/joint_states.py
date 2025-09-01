@@ -17,7 +17,7 @@ from urdf_parser_py import urdf as urdf_parser
 from .server import ServerBase
 from . import utils
 
-# from .proto import joint_states_pb2
+from .proto import jointstate_pb2, generic_pb2
 
 ## limit float precision in json serialization
 class RoundingFloat(float):
@@ -39,7 +39,9 @@ class JointStateHandler:
         # save server object, register our handlers
         self.srv = srv
         self.srv.schedule_task(self.run())
+        self.srv.register_ws_coroutine(self.handle_ws_msg)
         self.srv.add_route('GET', '/joint_states/info', self.get_joint_info_handler, 'get_joint_info')
+        self.srv.add_route('GET', '/joint_states/grippers', self.get_grippers_handler, 'get_grippers')
         self.srv.add_route('GET', '/joint_states/urdf', self.get_urdf_handler, 'get_urdf')
         self.srv.add_route('GET', '/joint_states/connected', self.robot_connected_handler, 'get_connected')
         self.srv.add_route('PUT', '/joint_command/goto/{joint_name}', self.command_handler, 'command')
@@ -76,6 +78,11 @@ class JointStateHandler:
         self.cmd_guard = JointStateHandler.CommandGuard(self.command_acquire, self.command_release)
         self.cmd_should_stop = True
 
+        # grippers
+        self.gripper_state_sub = dict()
+        self.gripper_cmd_pub = dict()
+        self.gripper_state_msg = dict()
+
         # config
         self.rate = config.get('rate', 30.0)
 
@@ -100,6 +107,10 @@ class JointStateHandler:
         for i in range(len(msg.value)):
             if not math.isnan(msg.value[i]):
                 aux[i] = msg.value[i]
+
+
+    def on_gripper_state_recv(self, msg: StdJointState, gname):
+        self.gripper_state_msg[gname] = msg
 
 
     @utils.handle_exceptions
@@ -191,6 +202,44 @@ class JointStateHandler:
         print('done!')
 
         return web.Response(text=json.dumps(joint_info))
+
+
+    @utils.handle_exceptions
+    async def get_grippers_handler(self, req: web.Request):
+
+        # get topic names from ros master
+        topic_name_type_list = ros_handle.get_topic_names_and_types()
+
+        # filter /xbotcore/gripper/GRIPPERNAME/state
+        gripper_names = set()
+        for tname, ttype in topic_name_type_list:
+            print(tname, ttype)
+            if ttype != 'sensor_msgs/JointState':
+                continue
+            tokens = tname.strip('/').split('/')
+            if len(tokens) == 4 and tokens[1] == 'gripper' and tokens[3] == 'state':
+                gripper_names.add(tokens[2])
+
+        # register topics
+        for gname in gripper_names:
+            state = f'xbotcore/gripper/{gname}/state'
+            cmd = f'xbotcore/gripper/{gname}/command'
+            self.gripper_state_msg[gname] = None
+            self.gripper_state_sub[gname] = rospy.Subscriber(state, StdJointState, 
+                self.on_gripper_state_recv, gname, queue_size=1)
+            self.gripper_cmd_pub[gname] = rospy.Publisher(cmd, StdJointState, queue_size=1)
+            print(f'connecting to gripper {gname}...')
+            
+        
+        # reply
+        res = {
+            'success': True,
+            'message': '',
+            'gripper_names': sorted(list(gripper_names))
+        }
+
+        return web.Response(text=json.dumps(res))
+            
     
 
     async def run_loop(self):
@@ -208,28 +257,47 @@ class JointStateHandler:
         if self.msg is None:
             return
         
-        # convert to dict
-        js_msg_to_send = self.js_msg_to_dict(self.msg)
+        # pb js
+        # TBD aux support
+        try:
+	    msgpb = generic_pb2.Message()
+	    msgpb.jointstate.linkPos.extend(self.msg.link_position)
+    	    msgpb.jointstate.motPos.extend(self.msg.motor_position)
+	    msgpb.jointstate.motVel.extend(self.msg.motor_velocity)
+	    msgpb.jointstate.velRef.extend(self.msg.velocity_reference)
+	    msgpb.jointstate.torRef.extend(self.msg.effort_reference)
+	    msgpb.jointstate.tor.extend(self.msg.effort)
+	    msgpb.jointstate.posRef.extend(self.msg.position_reference)
+	    msgpb.jointstate.k.extend(self.msg.stiffness)
+	    msgpb.jointstate.d.extend(self.msg.damping)
+	    msgpb.jointstate.motorTemp.extend(self.msg.temperature_motor)
+	    msgpb.jointstate.driverTemp.extend(self.msg.temperature_driver)
+	    msgpb.jointstate.vbatt = self.vbatt
+	    msgpb.jointstate.ibatt = self.iload
+	    await self.srv.udp_send_to_all(msgpb)
+        except Exception as e:
+	    # print traceback  
+	    import traceback
+	    traceback.print_exc()
 
-        # to save bw
-        del js_msg_to_send['name']
-
-        # add pow data and seq id
-        js_msg_to_send['vbatt'] = self.vbatt
-        js_msg_to_send['iload'] = self.iload
-        js_msg_to_send['seq'] = self.js_seq
-        self.js_seq += 1
-
-        # serialize msg to json
-        js_str = json.dumps(js_msg_to_send)      
-
-        # send to all connected clients
-        await self.srv.udp_send_to_all(js_str)
+        
 
         # clear to avoid sending duplicates
         self.msg = None
         for v in self.aux_map.values():
             v.clear()
+
+        # grippers
+        for gname, gmsg in self.gripper_state_msg.items():
+            if gmsg is None:
+                continue 
+            gmsg = {
+                'type': 'gripper_state',
+                'q': gmsg.position[0],
+                'tau': gmsg.effort
+            }
+            await self.srv.ws_send_to_all(json.dumps(gmsg))
+            self.gripper_state_msg[gname] = None
 
 
     async def run(self):
@@ -264,17 +332,29 @@ class JointStateHandler:
 
             self.cmd_should_stop = False
             
-            qf = float(req.rel_url.query['qref'])
+            qf = np.array(list(map(float, req.rel_url.query['qref'].split(';'))))
             trj_time = float(req.rel_url.query['time'])
-            joint_name = req.match_info['joint_name']
+            try:
+                ctrl = req.rel_url.query['ctrl']
+            except KeyError:
+                ctrl = 'Position'
+            joint_name = req.match_info['joint_name'].split(';')
 
             time = ros_handle.now()
             t0 = time
             dt = 0.01
-            jidx = self.last_js_msg.name.index(joint_name)
-            q0 = self.last_js_msg.position_reference[jidx]
+            jidx = [self.last_js_msg.name.index(jn) for jn in joint_name]
+
+            if ctrl == 'Position':
+                q0 = np.array(self.last_js_msg.position_reference)[jidx]
+            elif ctrl == 'Stiffness':
+                q0 = np.array(self.last_js_msg.stiffness)[jidx]
+            elif ctrl == 'Damping':
+                q0 = np.array(self.last_js_msg.damping)[jidx]
+            else:
+                raise ValueError(f'unknown control mode {ctrl}')
             
-            print(f'commanding joint {joint_name} from q0 = {q0} to qf = {qf} in {trj_time} s')
+            print(f'commanding {ctrl} joint {joint_name} from q0 = {q0} to qf = {qf} in {trj_time} s')
             
             while time.to_sec() <= t0.to_sec() + trj_time \
                 and not self.cmd_should_stop:
@@ -283,9 +363,16 @@ class JointStateHandler:
                 alpha = ((6*tau - 15)*tau + 10)*tau**3
                 qref = q0*(1 - alpha) + qf*alpha
                 msg = JointCommand()
-                msg.name = [joint_name]
-                msg.ctrl_mode = [1]
-                msg.position = [qref]
+                msg.name = joint_name
+                if ctrl == 'Position':
+                    msg.ctrl_mode = [1]*len(joint_name)
+                    msg.position = qref.tolist()
+                elif ctrl == 'Stiffness':
+                    msg.ctrl_mode = [8]*len(joint_name)
+                    msg.stiffness = qref.tolist()
+                elif ctrl == 'Damping':
+                    msg.ctrl_mode = [16]*len(joint_name)
+                    msg.damping = qref.tolist()
                 self.cmd_pub.publish(msg)
                 await asyncio.sleep(dt)
                 time = ros_handle.now()
@@ -367,3 +454,28 @@ class JointStateHandler:
                 js_msg_dict['aux_types'].append(k)
         
         return js_msg_dict
+
+
+    async def handle_ws_msg(self, msg, proto, ws):
+
+        if msg['type'] == 'joint_cmd':
+            cmdmsg = JointCommand()
+            cmdmsg.name = msg['joint_names']
+            if msg['ctrl'] == 'Velocity':
+                cmdmsg.ctrl_mode = [2]*len(cmdmsg.name)
+                cmdmsg.velocity = msg['command']
+            elif msg['ctrl'] == 'Effort':
+                cmdmsg.ctrl_mode = [4]*len(cmdmsg.name)
+                cmdmsg.effort = msg['command']
+            else:
+                raise ValueError(f'unknown control mode {msg["ctrl"]}')
+            self.cmd_pub.publish(cmdmsg)
+
+        if msg['type'] == 'gripper_cmd':
+            cmdmsg = StdJointState()
+            gname = msg['name']
+            if msg['action'] == 'open':
+                cmdmsg.position = [0.0]
+            elif msg['action'] == 'close':
+                cmdmsg.effort = [msg['effort']]
+            self.gripper_cmd_pub[gname].publish(cmdmsg)

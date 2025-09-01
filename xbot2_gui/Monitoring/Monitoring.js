@@ -11,17 +11,19 @@ let vbattCurrentThreshold = 49.5
 
 function jsCallback(js) {
 
-    barPlot.setJointStateMessage(js)
+    if(root.isCurrentPage) {
+        robotViewer.updateRobotState(js,
+                                     robotViewer.robotState,
+                                     'linkPos')
 
-    jointState.setJointStateMessage(js)
+        barPlot.setJointStateMessage(js)
+
+        jointState.setJointStateMessage(js)
+    }
 
     addJointStatePoint(livePlot, js)
 
-    robotViewer.updateRobotState(js,
-                                 robotViewer.robotState,
-                                 'linkPos')
-
-    for(let aux of js.aux_types) {
+    for(let aux of Object.keys(js.aux)) {
         barPlot.addAuxType(aux)
     }
 
@@ -35,7 +37,7 @@ function jsCallback(js) {
     }
 
     vbatt = js.vbatt
-    iload = js.iload
+    iload = js.ibatt
 }
 
 
@@ -62,15 +64,6 @@ function objCallback(obj) {
     }
 }
 
-function construct() {
-    client.jointStateReceived.connect(jsCallback)
-    client.objectReceived.connect(objCallback)
-}
-
-function destroy() {
-    client.jointStateReceived.disconnect(jsCallback)
-    client.objectReceived.disconnect(objCallback)
-}
 
 function addJointStateSeries(livePlot, jName, fieldName) {
 
@@ -109,12 +102,12 @@ function addJointStatePoint(livePlot, msg) {
         }
 
         // recompute jIndex if needed
-        if(msg.name[props.jIndex] !== props.jName) {
-            props.jIndex = msg.name.indexOf(props.jName)
+        if(SharedData.jointNames[props.jIndex] !== props.jName) {
+            props.jIndex = SharedData.jointNames.indexOf(props.jName)
         }
 
         // compute relative time
-        let t = msg.stamp
+        let t = msg.stamp ?? appData.getTimeNs() * 1e-9
 
         if(livePlot.initialTime < 0) {
             livePlot.initialTime = t
@@ -156,7 +149,10 @@ function setFilterProfile(profile) {
                      })
 }
 
-function setSafetyState(ok) {
+function setSafetyState(ok, cli=undefined) {
+
+    let client = cli ? cli : root.client
+
     client.doRequest('POST', '/joint/safety/set_enabled?enabled=' + ok,
                      '',
                      (msg) =>

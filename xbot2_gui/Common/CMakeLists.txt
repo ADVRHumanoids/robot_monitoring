@@ -27,8 +27,10 @@ qt_add_qml_module(xbot2_gui_common
     CheckListItem.qml
     NotificationPopup.qml
     ResizableRectangle.qml
-    QML_FILES DelayButtonRound.qml
-    QML_FILES DoubleSpinBox1.qml
+    DelayButtonRound.qml
+    DoubleSpinBox1.qml
+    MultiColumnLayout1.qml
+    QML_FILES LoadingPage.qml
 )
 
 target_link_libraries(xbot2_gui PRIVATE xbot2_gui_commonplugin)

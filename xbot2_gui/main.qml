@@ -8,6 +8,7 @@ import Common
 import Menu
 import Font
 import Audio
+import Monitoring
 
 ApplicationWindow {
 
@@ -46,25 +47,26 @@ ApplicationWindow {
         appData.keepScreenOn(true)
     }
 
-    MouseArea {
-        z: 100
-        height: 50
-        width: 50
-        anchors {
-            left: parent.left
-            bottom: parent.bottom
-        }
-        onDoubleClicked: {
-            console.log('taking screenshot')
-            appData.screenshot(mainWindow, `xbot2_gui_${Date()}`)
-        }
-    }
+    // MouseArea {
+    //     z: 100
+    //     height: 50
+    //     width: 50
+    //     anchors {
+    //         left: parent.left
+    //         bottom: parent.bottom
+    //     }
+    //     onDoubleClicked: {
+    //         console.log('taking screenshot')
+    //         appData.screenshot(mainWindow, `xbot2_gui_${Date()}`)
+    //     }
+    // }
 
-    DelayButtonRound {
+    SoftSafetyButton {
         id: softEmergency
-        visible: false
+        client: client
+        visible: CommonProperties.config.showSoftEmergency
         anchors {
-            left: parent.left
+            right: parent.right
             bottom: parent.bottom
             margins: 16
         }
@@ -73,6 +75,20 @@ ApplicationWindow {
         height: 70
         opacity: 0.8
     }
+
+    MonWidget {
+        expanded: layout.expanded
+        anchors {
+            left: parent.left
+            top: parent.top
+            margins: 8
+        }
+        z: 200
+        opacity: 0.8
+        visible: CommonProperties.config.showMonWidget
+        width: expanded ? 94 : implicitWidth
+    }
+
 
     MaterialSymbols {
         id: syms
@@ -109,15 +125,6 @@ ApplicationWindow {
             active: true
         }
 
-        // PageItem {
-        //     name: "Dashboard"
-        //     page: "/qt/qml/Launcher/Dashboard.qml"
-        //     iconText: MaterialSymbolNames.dashboard
-        //     iconFont: syms.font.family
-        //     active: true
-        //     visible: requestedPages.indexOf(name) > -1
-        // }
-
         PageItem {
             name: "Process"
             page: "/qt/qml/Launcher/Launcher.qml"
@@ -144,6 +151,15 @@ ApplicationWindow {
         }
 
         PageItem {
+            name: "Playground"
+            page: "/qt/qml/TestThings/Playground2.qml"
+            iconText: MaterialSymbolNames.playground
+            iconFont: syms.font.family
+            active: true
+            show: CommonProperties.config.testing
+        }
+
+        PageItem {
             name: "Joy"
             page: "/qt/qml/Joy/Joy.qml"
             iconText: MaterialSymbolNames.joystick
@@ -158,16 +174,16 @@ ApplicationWindow {
             iconFont: syms.font.family
             active: client.robotConnected || mainWindow.dbg || true
             sizeFactor: 1.1
-            visible: requestedPages.indexOf(name) > -1
+            show: requestedPages.indexOf(name) > -1
         }
 
         PageItem {
-            name: "Tuning"
+            name: "Parameters"
             page: "/qt/qml/Monitoring/Parameters.qml"
             iconText: MaterialSymbolNames.tune
             iconFont: syms.font.family
             active: true
-            visible: true
+            show: requestedPages.indexOf(name) > -1
         }
 
         PageItem {
@@ -185,7 +201,7 @@ ApplicationWindow {
             iconText: MaterialSymbolNames.tools
             iconFont: syms.font.family
             active: true
-            visible: requestedPages.indexOf(name) > -1
+            show: requestedPages.indexOf(name) > -1
         }
 
         PageItem {
@@ -193,7 +209,7 @@ ApplicationWindow {
             page: "/qt/qml/TestThings/Linfa.qml"
             iconSource: '/Icons/icons/alberobotics100x100.png'
             active: true
-            visible: requestedPages.indexOf(name) > -1
+            show: requestedPages.indexOf(name) > -1
         }
 
         PageItem {
@@ -203,7 +219,7 @@ ApplicationWindow {
             iconFont: syms.font.family
             active: true
             sizeFactor: 1.2
-            visible: requestedPages.indexOf(name) > -1
+            show: requestedPages.indexOf(name) > -1
         }
 
         PageItem {
@@ -213,7 +229,7 @@ ApplicationWindow {
             iconFont: syms.font.family
             active: true
             sizeFactor: 1.1
-            visible: requestedPages.indexOf(name) > -1
+            show: requestedPages.indexOf(name) > -1
         }
 
         PageItem {
@@ -222,7 +238,7 @@ ApplicationWindow {
             iconSource: '/Icons/icons/brick_wall_white.png'
             active: true
             sizeFactor: 1.
-            visible: requestedPages.indexOf(name) > -1
+            show: requestedPages.indexOf(name) > -1
         }
 
         PageItem {
@@ -231,7 +247,7 @@ ApplicationWindow {
             iconText: MaterialSymbolNames.weight
             iconFont: syms.font.family
             active: true
-            visible: requestedPages.indexOf(name) > -1 
+            show: requestedPages.indexOf(name) > -1
             sizeFactor: 1.1
         }
 
@@ -242,7 +258,7 @@ ApplicationWindow {
             iconFont: syms.font.family
             active: true
             sizeFactor: 1.1
-            visible: requestedPages.indexOf(name) > -1
+            show: requestedPages.indexOf(name) > -1
         }
 
     }
@@ -311,6 +327,8 @@ ApplicationWindow {
 
         id: pagesStack
 
+        property int previousIndex: -1
+
         anchors {
             right: parent.right
             top: parent.top
@@ -325,6 +343,11 @@ ApplicationWindow {
 
         onCurrentIndexChanged: {
 
+            try {
+                itemAt(previousIndex).item.isCurrentPage = false
+            }catch(err){}
+
+            previousIndex = currentIndex
 
             try {
                 itemAt(currentIndex).item.numErrors = 0
@@ -332,6 +355,10 @@ ApplicationWindow {
 
             try {
                 itemAt(currentIndex).item.pageSelected()
+            }catch(err){}
+
+            try {
+                itemAt(currentIndex).item.isCurrentPage = true
             }catch(err){}
 
             nav.setBadgeNumber(currentIndex, 0)
@@ -356,62 +383,84 @@ ApplicationWindow {
             model: pagesModel.children
 
             // lazy-loading of active page
-            Loader {
-
-                id: stackPageLoader
-                property string pageName: ''
+            Loader {  // Item {
 
                 Layout.fillHeight: true
                 Layout.fillWidth: true
 
-                active: pagesStack.currentIndex === index
+                // LoadingPage {
+                //     id: loadingPage
+                //     anchors.fill: parent
+                //     z: 1
+                // }
 
-                onLoaded: {
+                // Loader {
 
-                    console.log(`${modelData.name} loaded`)
+                    id: stackPageLoader
+                    property string pageName: ''
 
-                    active = true
+                    // anchors.fill: parent
 
-                    items[modelData.name.toLowerCase()] = item
+                    // asynchronous: true
+                    active: pagesStack.currentIndex === index
 
-                    try {
-                        item.pageSelected()
-                    }
-                    catch(err){}
-
-                    item.pageName = modelData.name
-
-                    pageName = modelData.name
-
-                }
-
-                Component.onCompleted: {
-                    // this is the "constructor"
-                    // each page has a .client elem
-                    setSource(modelData.page, {'client': client})
-                }
-
-                Connections {
-                    target: stackPageLoader.item
-                    ignoreUnknownSignals: true
-
-                    function onRestartUi() {
-                        console.log('onRestartUi: calling pagesStackRepeater.reloadAll()')
-                        pagesStackRepeater.reloadAll()
+                    onStatusChanged: {
+                        active = true
                     }
 
-                    function onNumErrorsChanged() {
-                        if(index !== pagesStack.currentIndex) {
-                            nav.setBadgeNumber(index, stackPageLoader.item.numErrors)
+                    onLoaded: {
+
+                        // loadingPage.opacity = 0
+
+                        console.log(`${modelData.name} loaded`)
+
+                        active = true
+
+                        items[modelData.name.toLowerCase()] = item
+
+                        try {
+                            item.pageSelected()
                         }
-                        else {
-                            item.numErrors = 0
+                        catch(err){}
+
+                        try {
+                            item.isCurrentPage = true
+                        }
+                        catch(err){}
+
+                        item.pageName = modelData.name
+
+                        pageName = modelData.name
+
+                    }
+
+                    Component.onCompleted: {
+                        // this is the "constructor"
+                        // each page has a .client elem
+                        setSource(modelData.page, {'client': client})
+                    }
+
+                    Connections {
+                        target: stackPageLoader.item
+                        ignoreUnknownSignals: true
+
+                        function onRestartUi() {
+                            console.log('onRestartUi: calling pagesStackRepeater.reloadAll()')
+                            pagesStackRepeater.reloadAll()
+                        }
+
+                        function onNumErrorsChanged() {
+                            if(index !== pagesStack.currentIndex) {
+                                nav.setBadgeNumber(index, stackPageLoader.item.numErrors)
+                            }
+                            else {
+                                item.numErrors = 0
+                            }
                         }
                     }
                 }
 
-
-            }
+            // }
         }
     }
 
@@ -502,43 +551,43 @@ ApplicationWindow {
         }
 
         onConnected: client.doRequestAsync('GET', '/requested_pages', '')
-                                      .then(function(msg) {
-                                          requestedPages = msg['requested_pages']
-                                          nav.construct()
-                                          navBar.construct()
-                                      })
-    }
-
-    // audio
-    Connections {
-
-        target: AudioBroadcaster
-
-        function onReadyRead() {
-
-            if(AudioBroadcaster.bytesAvailable < 2048 ||
-                    !AudioBroadcaster.enableSend)
-            {
-                return
-            }
-
-            let data = AudioBroadcaster.readBase64(2048)
-
-            let msg = {
-                'type': 'speech',
-                'data': data
-            }
-
-            client.sendTextMessage(JSON.stringify(msg))
+        .then(function(msg) {
+            requestedPages = msg['requested_pages']
+            nav.construct()
+            navBar.construct()
+        })
         }
-    }
 
-    Settings {
-        category: 'layout'
-        property alias x: mainWindow.x
-        property alias y: mainWindow.y
-        property alias width: mainWindow.width
-        property alias height: mainWindow.height
-    }
+            // audio
+            Connections {
 
-}
+                target: AudioBroadcaster
+
+                function onReadyRead() {
+
+                    if(AudioBroadcaster.bytesAvailable < 2048 ||
+                            !AudioBroadcaster.enableSend)
+                    {
+                        return
+                    }
+
+                    let data = AudioBroadcaster.readBase64(2048)
+
+                    let msg = {
+                        'type': 'speech',
+                        'data': data
+                    }
+
+                    client.sendTextMessage(JSON.stringify(msg))
+                }
+            }
+
+            Settings {
+                category: 'layout'
+                property alias x: mainWindow.x
+                property alias y: mainWindow.y
+                property alias width: mainWindow.width
+                property alias height: mainWindow.height
+            }
+
+        }

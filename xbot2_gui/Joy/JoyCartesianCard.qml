@@ -106,6 +106,7 @@ Card1 {
                 VideoStream.refreshNames(undefined,
                                          (topics) => {
                                              videoStreamCombo.model = topics
+                                             videoStreamCombo.currentTextChanged()
                                          })
             }
         }

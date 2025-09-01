@@ -1,14 +1,16 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import QtCore
 
+import Font
 import "../Common"
 
 Item {
 
-    function appendText(procName, text) {
+    function appendText(procName: string, text: string, muted: bool) {
 
-        var i = 0
+        let i = 0
 
         if(procName === 'launcher') {
             i = -1
@@ -17,13 +19,13 @@ Item {
             i = processNames.indexOf(procName)
         }
 
-        let color = theme.baseColors[(i+1) % theme.baseColors.length]
+        let color = colors[(i+1) % colors.length]
 
         text = `<font color="${color}">` + text + '</font>'
 
         consoleRepeater.itemAt(i+2).appendText(text)
 
-        if(i >= 0 && !procCheckRepeater.itemAt(i).checked) {
+        if(i >= 0 && muted) {
             return
         }
 
@@ -37,38 +39,24 @@ Item {
     //
     id: root
 
+    Component.onCompleted: {
+
+    }
+
     implicitWidth: card.implicitWidth
 
     implicitHeight: card.implicitHeight
 
-    // https://doc.qt.io/qt-6/qml-color.html
-    Item {
-        id: theme
-        property list<Item> baseColors: [
-            Item {
-                property color color: 'white'
-            },
-            Item {
-                property color color: 'aquamarine'
-            },
-            Item {
-                property color color: 'darkkhaki'
-            },
-            Item {
-                property color color: 'mediumspringgreen'
-            },
-            Item {
-                property color color: 'greenyellow'
-            },
-            Item {
-                property color color: 'lightpink'
-            },
-            Item {
-                property color color: 'lightseagreen'
-            }
-
-        ]
-    }
+    property list<string> colors: [
+        '#4DADF7',
+        '#22E3A4',
+        '#D27CFF',
+        '#FF9F45',
+        '#33FFD0',
+        '#82E0AA',
+        '#B388FF',
+        '#5EEAD4'
+    ]
 
     Card1 {
         id: card
@@ -77,8 +65,33 @@ Item {
         name: 'Console Output'
 
         toolButtons: [
-            Button {
-                text: 'Clear'
+            SmallToolButton {
+                text: MaterialSymbolNames.copy
+                font.family: 'Material Symbols Outlined'
+                font.variableAxes: {'opsz': 48}
+                font.pixelSize: 16
+
+                onClicked: {
+                    let txt = consoleRepeater.itemAt(consoleCombo.currentIndex).getText()
+                    appData.copyToClipboard(txt)
+                }
+                onDoubleClicked: {
+                    if(!CommonProperties.config.testing) {
+                        return
+                    }
+
+                    for(let i = 0; i < 10000; i++) {
+                        appendText('launcher', i+'Example text Example text Example text Example text Example text Example text Example text Example text Example text Example text Example text Example text Example text ')
+                    }
+                }
+            },
+
+            SmallToolButton {
+                text: MaterialSymbolNames.clean
+                font.family: 'Material Symbols Outlined'
+                font.variableAxes: {'opsz': 48}
+                font.pixelSize: 16
+
                 onClicked: {
                     consoleRepeater.itemAt(consoleCombo.currentIndex).clearText()
                 }
@@ -91,17 +104,75 @@ Item {
         ]
 
         frontItem: StackLayout {
-            width: parent.width
-            height: root.height - 80
+
+            anchors.fill: parent
             currentIndex: consoleCombo.currentIndex
+
             Repeater {
+
                 id: consoleRepeater
+
                 model: ['all', 'launcher'].concat(root.processNames)
-                ConsoleCard {
-                    name: modelData
+
+                Item {
+                    required property int index
+                    required property string modelData
+                    // property color txtColor: root.colors[index % root.colors.length]
+
+                    function appendText(txt) {
+                        // console.log(root.colors[index % root.colors.length])
+                        // console.log(txtColor)
+                        listModel.append({'txt': txt}) // , 'txtColor': txtColor})
+                        if(scrollOnOutputCheck.checked) {
+                            consoleLoader.item?.scrollToEnd()
+                        }
+                    }
+
+                    function clearText() {
+                        listModel.clear()
+                    }
+
+                    function getText() {
+                        let txt = ''
+                        for(let i = 0; i < listModel.count; i++) {
+                            txt = txt + listModel.get(i).txt + '\n'
+                        }
+                        return txt
+                    }
+
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    scrollOnOutput: scrollOnOutputCheck.checked
+                    implicitHeight: consoleLoader.implicitHeight
+                    implicitWidth: consoleLoader.implicitWidth
+
+                    Loader {
+
+                        id: consoleLoader
+
+                        active: index === consoleCombo.currentIndex
+
+                        anchors.fill: parent
+
+                        sourceComponent: ConsoleCard {
+                            id: cardInner
+                            pixelSize: fontSizeSpin.value
+                        }
+
+                        onLoaded: {
+                            item.listModel = listModel
+                            if(scrollOnOutputCheck.checked) {
+                                item.scrollToEnd()
+
+                            }
+                            console.log(`${modelData} loaded ${listModel.count} lines`)
+                        }
+
+                    }
+
+                    ListModel {
+                        id: listModel
+                    }
+
                 }
             }
         }
@@ -132,84 +203,23 @@ Item {
             }
 
             Label {
-                text: 'Select the processes to show in the global console'
-                font.pixelSize: CommonProperties.font.h3
-                Layout.columnSpan: Math.max(1, grid.columns)
+                text: 'Font size'
             }
 
-            Repeater {
-                id: procCheckRepeater
-                model: root.processNames
-                CheckBox {
-                    text: modelData
-                    checked: root.hiddenProcessNames.indexOf(modelData) === -1
-                }
+            SpinBox {
+                id: fontSizeSpin
+                from: 1
+                to: 18
+                value: 12
             }
+
         }
 
     }
 
-
-    // Item {
-    //     property string textAggregated
-    //     property var textMap
-    // }
-
-    // ColumnLayout {
-
-    //     anchors.fill: parent
-
-    //     SectionHeader {
-
-    //         text: 'Console Output'
-
-    //         Layout.fillWidth: true
-
-    //         Button {
-    //             text: 'C'
-    //             onClicked: {
-    //                 cfg.visible = !cfg.visible
-    //             }
-    //         }
-
-    //         ComboBox {
-    //             model: ['All']
-    //         }
-
-    //         CheckBox {
-    //             text: 'Autoscroll'
-    //             checked: true
-    //             id: autoscrollCheck
-    //         }
-
-    //     }
-
-
-    //     Item {
-
-    //         id: cfg
-    //         clip: true
-
-    //         Layout.fillWidth: true
-    //         Layout.fillHeight: true
-    //         Layout.preferredHeight: implicitHeight
-    //         implicitHeight: grid.implicitHeight
-    //         implicitWidth: grid.implicitWidth
-
-    //         GridLayout {
-    //             id: grid
-    //             anchors.fill: parent
-    //             Repeater {
-    //                 model: root.processNames
-    //                 CheckBox {
-    //                     text: modelData
-    //                 }
-    //             }
-    //         }
-    //     }
-
-
-
-
+    Settings {
+        category: 'console'
+        property alias fontSize: fontSizeSpin.value
+    }
 
 }

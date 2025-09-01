@@ -73,7 +73,7 @@ Item {
         for(let i = 0; i < model.children.length; i++) {
             let obj = model.children[i]
             if(obj instanceof Repeater) continue
-            if(!obj.visible) continue
+            if(!obj.show) continue
             let btn = barButtonComponent.createObject(activePositioner,
                                                       {
                                                           'text': obj.name,
@@ -83,6 +83,7 @@ Item {
                                                           'sizeFactor': (obj.sizeFactor || 1.0) * root.sizeFactor,
                                                           'enabled': Qt.binding(() => { return obj.active })
                                                       })
+            // console.log(`created button ${btn.text} ${btn.iconChar}`)
             buttonItems.push(btn)
         }
 
@@ -128,7 +129,7 @@ Item {
 
     Flickable {
         id: hScroll
-        width: Math.min(contentWidth, parent.width - 100)
+        width: Math.min(contentWidth, parent.width - 40)
         height: parent.height
         anchors.centerIn: visible ? parent : undefined
         contentHeight: height

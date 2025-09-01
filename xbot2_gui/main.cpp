@@ -7,6 +7,7 @@
 #include <QtWidgets/QApplication>
 #include <QtQml/qqmlregistration.h>
 #include <QtQuickWidgets/QtQuickWidgets>
+#include <QCryptographicHash>
 
 #include "Video/videostreampainter.h"
 #include "RobotModel/robot_model.h"
@@ -51,6 +52,34 @@ public:
     Q_INVOKABLE void updateUi();
 
     Q_INVOKABLE uint64_t getTimeNs() const;
+
+    Q_INVOKABLE QString getDateTime() const;
+
+    Q_INVOKABLE QString cryptoHash(QString text) const
+    {
+        QCryptographicHash hasher(QCryptographicHash::Algorithm::Sha256);
+        hasher.addData(text.toUtf8());
+        return QString(hasher.result().toBase64());
+    }
+
+    Q_INVOKABLE bool copyToClipboard(QString text)
+    {
+        auto clipboard = QGuiApplication::clipboard();
+
+        if(!clipboard)
+        {
+            qWarning("could not get clipboard");
+            return false;
+        }
+
+        clipboard->setText(text);
+        return true;
+    }
+
+    Q_INVOKABLE QByteArray base64ToBytes(QString b64)
+    {
+        return QByteArray::fromBase64(b64.toUtf8());
+    }
 
     Q_INVOKABLE static QUrl fromUserInput(const QString& userInput)
     {
@@ -137,6 +166,7 @@ int main(int argc, char *argv[])
     // set app properties
     QApplication app(argc, argv);
     auto font = app.font();
+    qInfo() << "FONT" <<  font;
     font.setPixelSize(12);
     app.setFont(font);
 
@@ -178,6 +208,19 @@ int main(int argc, char *argv[])
     QtWebView::initialize();
 #endif
 
+    // list all qrc files
+    // QDirIterator it(":", QDirIterator::Subdirectories);
+    // while (it.hasNext()) {
+    //     qDebug() << it.next();
+    //     auto info = it.fileInfo();
+    //     if(info.baseName() == "qmldir")
+    //     {
+    //         QFile f(info.absolutePath());
+    //         f.open(QIODeviceBase::ReadOnly);
+    //         qDebug() << f.readAll().toStdString();
+    //     }
+    // }
+
 
     // register appdata
     QQmlApplicationEngine engine;
@@ -207,4 +250,9 @@ uint64_t AppData::getTimeNs() const
 {
     auto now = std::chrono::high_resolution_clock::now();
     return now.time_since_epoch().count();
+}
+
+QString AppData::getDateTime() const
+{
+    return QDateTime::currentDateTime().toString("yyyy_MM_dd_hh_mm_ss");
 }

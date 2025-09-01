@@ -34,8 +34,8 @@ before_script:
 script: 
   - set -e
   - bash travis/build_client.bash 
-  - bash travis/build_and_deploy_server.bash
   - bash travis/deploy_client.bash
+  - bash travis/build_and_deploy_server.bash
   - set +e
 
 # deploy:

@@ -33,6 +33,12 @@ Item {
         property alias loader: loader
         property bool busy: false
 
+        function set() {
+            control.busy = !autoSwitch.checked
+            Logic.setParams(control.name, loader.item.value)
+            .then((res) => control.busy = false)
+        }
+
         id: control
         leftPadding: 10
         rightPadding: 10
@@ -61,11 +67,14 @@ Item {
                 Button {
                     text: 'Set'
                     enabled: !control.busy
-                    onClicked: {
-                        control.busy = true
-                        Logic.setParams(control.name, loader.item.value)
-                        .then((res) => control.busy = false)
-                    }
+                    onClicked: control.set()
+                }
+
+                Switch {
+                    text: 'Auto'
+                    enabled: !control.busy
+                    checked: false
+                    id: autoSwitch
                 }
             }
 
@@ -80,6 +89,16 @@ Item {
                     // Layout.fillWidth: true
                     width: parent.width
                     opacity: control.busy ? 0.1 : 1
+                }
+
+                Connections {
+                    target: loader.item
+                    ignoreUnknownSignals: false
+                    function onValueChangedByUser(value) {
+                        if(autoSwitch.checked) {
+                            control.set()
+                        }
+                    }
                 }
 
                 BusyIndicator {

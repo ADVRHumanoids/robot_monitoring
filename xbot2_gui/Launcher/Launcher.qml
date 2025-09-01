@@ -16,6 +16,14 @@ MultiPaneResponsiveLayout {
 
     property int numErrors: 0
 
+    property var processMutedState: Object()
+
+
+    LayoutClassHelper {
+        id: layout
+        targetWidth: root.width
+    }
+
     ScrollView {
 
         property string iconText: 'Launcher'
@@ -23,19 +31,22 @@ MultiPaneResponsiveLayout {
 
         id: leftScroll
 
-        contentHeight: leftGrid.height
+        contentHeight: leftColumn.height
         contentWidth: availableWidth
 
-        MultiColumnLayout {
+        Column {
 
-            id: leftGrid
+            id: leftColumn
             width: leftScroll.contentWidth
+            spacing: 4
 
-            columns: root.layoutHelper.compact ? 1 : 2
+            // columns: root.layoutHelper.compact ? 1 : 2
 
             SectionHeader {
 
-                property int columnSpan: leftGrid.columns
+                visible: CommonProperties.config.showLauncherDashboard
+
+                width: parent.width
 
                 iconText: dashboard.visible ? '\uf077' : '\uf078'
 
@@ -50,7 +61,7 @@ MultiPaneResponsiveLayout {
 
                 onClicked: {
                     dashboard.visible = !dashboard.visible
-                    leftGrid.computeLayout()
+                    // leftGrid.computeLayout()
                 }
 
             }
@@ -58,12 +69,23 @@ MultiPaneResponsiveLayout {
             Dashboard {
                 id: dashboard
                 client: root.client
-                property int columnSpan: leftGrid.columns
+                width: parent.width
+                visible: CommonProperties.config.showLauncherDashboard
+                enabled: visible
+            }
+
+            Item {
+
+                // spacer
+                width: parent.width
+
+                height: 16
+                visible: dashboard.visible
             }
 
             SectionHeader {
 
-                property int columnSpan: leftGrid.columns
+                width: parent.width
 
                 text: 'Process launcher'
 
@@ -71,7 +93,7 @@ MultiPaneResponsiveLayout {
                     id: showAllChk
                     text: 'Show All'
                     checked: false
-                    onCheckedChanged: Qt.callLater(leftGrid.computeLayout)
+                    onCheckedChanged: Qt.callLater(processLayout.computeLayout)
                 }
 
                 Button {
@@ -80,54 +102,65 @@ MultiPaneResponsiveLayout {
                 }
 
                 onClicked: {
-                    processRepeater.visible = !processRepeater.visible
-                    leftGrid.computeLayout()
+                    processLayout.visible = !processLayout.visible
                 }
 
-                iconText: processRepeater.visible ? '\uf077' : '\uf078'
+                iconText: processLayout.visible ? '\uf077' : '\uf078'
 
             }
 
-            Repeater {
+            MultiColumnLayout1 {
 
-                id: processRepeater
+                id: processLayout
 
-                ProcessCard {
+                width: parent.width
+                columns: Math.ceil(width / 400.0)
 
-                    visible: (showAllChk.checked || modelData.visible) && processRepeater.visible
+                Repeater {
 
-                    processName: modelData.name
-                    processState: modelData.status
-                    processConfig: modelData.cmdline
+                    id: processRepeater
 
-                    objectName: `pcard_${processName}`
+                    ProcessCard {
 
-                    onStart: Logic.processCmd(processName, 'start', processOptions)
-                    onStop: Logic.processCmd(processName, 'stop', {})
-                    onKill: Logic.processCmd(processName, 'kill', {})
+                        visible: (showAllChk.checked || modelData.visible) && processRepeater.visible
+                        muted: !modelData.visible
+
+                        processName: modelData.name
+                        processState: modelData.status
+                        processConfig: modelData.cmdline
+
+                        objectName: `pcard_${processName}`
+
+                        onStart: Logic.processCmd(processName, 'start', processOptions)
+                        onStop: Logic.processCmd(processName, 'stop', {})
+                        onKill: Logic.processCmd(processName, 'kill', {})
+
+                        onMutedChanged: root.processMutedState[processName] = muted
+                    }
+
                 }
 
-            }
+                CustoCommand {
+                    id: customCmd
+                    pageItem: root
+                    onSubmitCommand: Logic.customCommand(machine, command, timeout)
+                    // visible: processRepeater.visible
+                }
 
-            CustoCommand {
-                id: customCmd
-                pageItem: root
-                onSubmitCommand: Logic.customCommand(machine, command, timeout)
-                visible: processRepeater.visible
             }
 
             Item {
 
                 // spacer
-                property int columnSpan: leftGrid.columns
+                width: parent.width
 
                 height: 16
-                visible: processRepeater.visible
+                visible: processLayout.visible
             }
 
             SectionHeader {
 
-                property int columnSpan: leftGrid.columns
+                width: parent.width
 
                 text: 'Plugin launcher'
 
@@ -139,29 +172,39 @@ MultiPaneResponsiveLayout {
                 }
 
                 onClicked: {
-                    pluginRepeater.visible = !pluginRepeater.visible
-                    leftGrid.computeLayout()
+                    pluginLayout.visible = !pluginLayout.visible
+                    // leftGrid.computeLayout()
                 }
 
-                iconText: pluginRepeater.visible ? '\uf077' : '\uf078'
+                iconText: pluginLayout.visible ? '\uf077' : '\uf078'
             }
 
-            Repeater {
+            MultiColumnLayout1 {
 
-                id: pluginRepeater
+                id: pluginLayout
 
-                PluginCard {
-                    visible: pluginRepeater.visible
-                    pluginName: modelData
-                    onStart: Logic.pluginCmd(pluginName, 'start')
-                    onStop: Logic.pluginCmd(pluginName, 'stop')
-                    onAbort: Logic.pluginCmd(pluginName, 'abort')
+                width: parent.width
+                columns: Math.ceil(width / 400.0)
+
+                Repeater {
+
+                    id: pluginRepeater
+
+                    PluginCard {
+                        visible: pluginRepeater.visible
+                        pluginName: modelData
+                        onStart: Logic.pluginCmd(pluginName, 'start')
+                        onStop: Logic.pluginCmd(pluginName, 'stop')
+                        onAbort: Logic.pluginCmd(pluginName, 'abort')
+                    }
+
                 }
 
             }
         }
     }
 
+    // end left col
 
 
     LauncherConsoleItem {
@@ -186,14 +229,19 @@ MultiPaneResponsiveLayout {
 
         target: root.client
 
-        function onProcMessageReceived(msg) {
-            Logic.onProcMessageReceived(processRepeater, consoleItem, msg)
+        function onProcessOutputReceived(msg) {
+            Logic.onProcessOutputReceived(processRepeater, consoleItem, msg)
         }
 
         function onPluginStatMessageReceived(msg) {
             Logic.onPluginMessageReceived(pluginRepeater, msg)
         }
 
+        function onObjectReceived(msg) {
+            if(msg.type === 'proc_status') {
+                Logic.onProcessStatusReceived(processRepeater, consoleItem, msg)
+            }
+        }
     }
 
 }

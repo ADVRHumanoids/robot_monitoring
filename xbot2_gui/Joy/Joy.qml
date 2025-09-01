@@ -15,10 +15,6 @@ Item {
 
     id: root
 
-    LayoutClassHelper {
-        id: layout
-        targetWidth: parent.width
-    }
     property ClientEndpoint client
 
     JoyCartesianCard {
@@ -124,7 +120,7 @@ Item {
         Connections {
             target: client
             function onTheoraPacketReceived(msg) {
-                if(msg.stream_name === setupCard.videoStream) {
+                if(msg.streamName === setupCard.videoStream) {
                     video.setTheoraPacket(msg)
                 }
             }

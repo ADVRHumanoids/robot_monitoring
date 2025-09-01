@@ -26,7 +26,7 @@ Item {
 
             Loader {
                 id: loader
-                active: true
+                active: index === stack.currentIndex
                 sourceComponent: root.jointStateComponent
 
                 Connections {

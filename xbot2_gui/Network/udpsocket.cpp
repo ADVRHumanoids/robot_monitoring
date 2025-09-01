@@ -85,9 +85,11 @@ void UdpSocket::readyRead()
     {
         _dg = _sock.receiveDatagram();
 
-        QString decoded_data(_dg.data());
+        emit binaryMessageReceived(_dg.data());
 
-        emit textMessageReceived(decoded_data);
+        // QString decoded_data(_dg.data());
+
+        // emit textMessageReceived(decoded_data);
 
     }
 }

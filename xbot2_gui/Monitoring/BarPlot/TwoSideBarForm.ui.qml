@@ -15,9 +15,11 @@ Rectangle {
     id: root
     width: 400
     height: textRect.height + 10
+    // implicitHeight: textRect.implicitHeight + 10
     color: "#dddddd"
     radius: barRadius
     border.color: "#ffffff"
+    clip: true
 
     Rectangle {
         id: bar

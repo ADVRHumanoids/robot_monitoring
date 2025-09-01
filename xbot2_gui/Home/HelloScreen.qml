@@ -83,15 +83,16 @@ MultiPaneResponsiveLayout {
     Popup {
         id: configPopup
         anchors.centerIn: Overlay.overlay
-        width: Overlay.overlay.width * 0.8
-        height: Overlay.overlay.height * 0.8
+        width: Overlay.overlay.width * (layout.expanded ? 0.8 : 1.0)
+        height: Overlay.overlay.height * (layout.expanded ? 0.8 : 1.0)
         Configuration {
             anchors.fill: parent
+            onClosed: configPopup.close()
         }
         modal: true
         focus: true
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
-        padding: 16
+        padding: layout.expanded ? 16 : 4
         clip: true
     }
 
@@ -125,6 +126,12 @@ MultiPaneResponsiveLayout {
                 id: srvStatus
                 client: root.client
                 width: scroll.availableWidth
+            }
+
+            StatisticsCard {
+                client: root.client
+                width: scroll.availableWidth
+
             }
 
         }
@@ -169,64 +176,5 @@ MultiPaneResponsiveLayout {
         }
 
     }
-
-    //    MaterialResponsiveGrid {
-
-    //        id: mainGrid
-
-    //        anchors.fill: parent
-
-    //        SectionHeader {
-    //            property int columnSpan: mainGrid.columns
-    //            text: 'XBot2 GUI'
-    //        }
-
-    //        ServerStatusCard {
-    //            id: srvStatus
-    //            client: root.client
-    //            onStatsUpdated: {
-    //                let t = appData.getTimeNs()*1e-9 - statsPlot.t0
-    //                statsPlot.addPoint(statsPlot.currSeries['rx data'],
-    //                                   t, rxKbps)
-    //                statsPlot.addPoint(statsPlot.currSeries['tx data'],
-    //                                   t, txKbps)
-    //                statsPlot.addPoint(statsPlot.currSeries['server rtt'],
-    //                                   t, client.srvRtt)
-    //            }
-    //        }
-
-    //        Card {
-
-    //            name: 'Statistics'
-
-    //            height: srvStatus.height
-
-    //            property int columnSpan: 8
-
-    //            toolButtons: [
-    //                SmallToolButton {
-    //                    text: '\uf021'
-    //                    font.family: CommonProperties.fontAwesome.solid.family
-    //                    onClicked: statsPlot.resetView()
-    //                }
-    //            ]
-
-    //            frontItem: Plotter {
-    //                id: statsPlot
-    //                anchors.fill: parent
-    //                property real t0: appData.getTimeNs()*1e-9
-    //                axisLeftTitle: 'RTT [ms]'
-    //                axisRightTitle: 'Data rate [kbps]'
-
-    //            }
-
-    //            Component.onCompleted: {
-    //                statsPlot.addSeries('server rtt', {})
-    //                statsPlot.addSeries('rx data', {}, true)
-    //                statsPlot.addSeries('tx data', {}, true)
-    //            }
-    //        }
-    //    }
-
 
 }

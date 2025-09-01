@@ -18,6 +18,11 @@ Rectangle {
     property alias robotCmd: robotCmd
     property alias showRobotCmd: showCmdChk.checked
 
+    signal jointClicked(string jointName)
+
+    property alias selectedJoints: robotState.selectedJoints
+    property bool enableMultipleSelection: false
+
     function updateRobotState(js, robot, fieldName) {
         Logic.updateViewerState(js, robot, fieldName)
     }
@@ -28,6 +33,10 @@ Rectangle {
                                 'posRef')
     }
 
+    function resetView() {
+        originNode.resetView()
+    }
+
     //
     id: root
 
@@ -35,19 +44,28 @@ Rectangle {
 
         z: 10
 
+        padding: 8
+
         contentItem: GridLayout {
-            columns: 2
+            columns: 1
             CheckBox {
                 id: showAxesChk
                 Layout.fillWidth: true
-                Layout.columnSpan: 2
+                Layout.preferredHeight: 40
+                // Layout.columnSpan: 2
                 text: 'Show axes'
             }
             CheckBox {
                 id: showCmdChk
                 Layout.fillWidth: true
-                Layout.columnSpan: 2
+                Layout.preferredHeight: 40
+                // Layout.columnSpan: 2
                 text: 'Show command robot'
+            }
+            Button {
+                text: 'Reset view'
+                onClicked: root.resetView()
+                Layout.fillWidth: true
             }
         }
 
@@ -74,6 +92,15 @@ Rectangle {
             eulerRotation.y: 40
             eulerRotation.x: -40
 
+            function resetView() {
+                x = 50
+                y = 100
+                z = 50
+                eulerRotation.y = 40
+                eulerRotation.x = -40
+                cameraPerspectiveTwo.z = 200
+            }
+
         }
 
         Axes3D {
@@ -86,8 +113,14 @@ Rectangle {
 
             DirectionalLight {
                 ambientColor: Qt.rgba(0.5, 0.5, 0.5, 1.0)
-                brightness: 1.0
+                brightness: 1
                 eulerRotation.x: -25
+            }
+
+            DirectionalLight {
+                ambientColor: Qt.rgba(-0.5, -0.5, 0.5, 1.0)
+                brightness: 1
+                eulerRotation.x: 25
             }
 
             RobotModelNode {
@@ -122,7 +155,7 @@ Rectangle {
 
         environment: SceneEnvironment {
                  backgroundMode: SceneEnvironment.Color
-                 clearColor: palette.active.base
+                 clearColor: palette.active.window
                  InfiniteGrid {
                      gridInterval: 30
                  }
@@ -136,10 +169,29 @@ Rectangle {
 
         MouseArea {
             anchors.fill: parent
-            onClicked: (mouse) => {
+            // property var lastPicked: undefined
+            onClicked: function(mouse) {
+                // try {
+                //     lastPicked.isPicked = false
+                // }
+                // catch(err) {}
+
                 var result = view3d.pick(mouse.x, mouse.y);
                 var pickedObject = result.objectHit;
-                pickedObject.isPicked = !pickedObject.isPicked;
+                // pickedObject.isPicked = !pickedObject.isPicked;
+                console.log(pickedObject.parentJointName)
+                root.jointClicked(pickedObject.parentJointName)
+
+                if(pickedObject.isSelected) {
+                    root.selectedJoints = root.selectedJoints.filter(item => item !== pickedObject.parentJointName)
+                }
+                else if(enableMultipleSelection) {
+                    root.selectedJoints.push(pickedObject.parentJointName)
+                }
+                else {
+                    root.selectedJoints = [pickedObject.parentJointName]
+                }
+
             }
         }
     }

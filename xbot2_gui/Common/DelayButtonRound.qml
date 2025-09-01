@@ -41,7 +41,7 @@ DelayButton {
             onPaint: {
                 var ctx = getContext("2d")
                 ctx.clearRect(0, 0, width, height)
-                ctx.strokeStyle = "white"
+                ctx.strokeStyle = Qt.lighter(control.color)
                 ctx.lineWidth = parent.size / 20
                 ctx.beginPath()
                 var startAngle = Math.PI / 5 * 3
@@ -52,6 +52,4 @@ DelayButton {
         }
     }
 
-
-    onProgressChanged: console.log(progress)
 }

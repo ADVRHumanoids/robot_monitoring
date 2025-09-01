@@ -5,7 +5,6 @@ import QtQuick3D.Helpers
 import RobotModel
 import Common
 import Main
-import ViewerQuick3D
 import "RobotModelNode.js" as Logic
 
 Node {
@@ -16,13 +15,15 @@ Node {
 
     property color color: 'red'
 
-    property alias jointNames: model.jointNames
+    property alias jointNames: robotModel.jointNames
 
-    property alias ndof: model.ndof
+    property alias ndof: robotModel.ndof
 
     property bool axesVisible: false
 
     property var q: Array(ndof).fill(0.0)
+
+    property list<string> selectedJoints
 
     signal modelChanged()
 
@@ -55,7 +56,7 @@ Node {
 //            name: modelData.linkName
 //            type: modelData.type
             meshUri: modelData.filename
-
+            parentJointName: robotModel.parentJointName(modelData.linkName)
             cylinderLength: modelData.length || 0
             cylinderRadius: modelData.radius || 0
             scale: modelData.scale
@@ -66,11 +67,12 @@ Node {
             visible: root.visible
             client: root.client
             axesVisible: root.axesVisible
+            isSelected: root.selectedJoints.indexOf(parentJointName) >= 0
         }
     }
 
     RobotModel {
-        id: model
+        id: robotModel
         onModelChanged: root.modelChanged()
     }
 

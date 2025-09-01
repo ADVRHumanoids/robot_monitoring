@@ -6,6 +6,8 @@ Item {
     property real from: 0
     property real to: 1
     property real value: 0.5
+    property bool adaptivePrecision: false
+    property int decimals: 2
 
     signal valueModified(real value)
 
@@ -27,7 +29,7 @@ Item {
         editable: true
         anchors.fill: parent
 
-        property int decimals: 2
+        property int decimals: root.adaptivePrecision ? Math.ceil(Math.max(0, 2 - Math.log10(root.to - root.from))) : root.decimals
         readonly property int decimalFactor: Math.pow(10, decimals)
 
         function decimalToInt(decimal) {

@@ -10,18 +10,20 @@ Item {
     signal beforeLayoutChange()
     signal afterLayoutChange()
 
-    property alias layoutHelper: layout
+    // property alias layoutHelper: layout
 
     //
     id: root
 
-    LayoutClassHelper {
-        id: layout
-        targetWidth: root.width
+    // LayoutClassHelper {
+    //     id: layout
+    //     targetWidth: root.width
 
-        onBeforeLayoutChange: root.beforeLayoutChange()
-        onAfterLayoutChange: root.afterLayoutChange()
-    }
+    //     onBeforeLayoutChange: root.beforeLayoutChange()
+    //     onAfterLayoutChange: root.afterLayoutChange()
+
+    //     onExpandedChanged: console.log(`mprl layout expanded = ${expanded}`)
+    // }
 
     default property alias items: container.data
 
@@ -44,13 +46,12 @@ Item {
             tmp.push(c)
         }
         columnItems = tmp
-
     }
 
     RowLayout {
 
         id: row
-        anchors.fill: visible ? parent : undefined
+        anchors.fill: layout.expanded ? parent : undefined
         visible: layout.expanded
         spacing: CommonProperties.geom.margins
 
@@ -113,7 +114,7 @@ Item {
             right: visible ? parent.right : undefined
         }
 
-        visible: !row.visible && root.columnItems.length > 1
+        visible: !layout.expanded && root.columnItems.length > 1
 
         model: modelItem
 
@@ -129,6 +130,7 @@ Item {
                     required property int index
                     property string name: root.columnItems[index].iconText
                     property string iconText: root.columnItems[index].iconChar
+                    property bool show: true
                 }
             }
         }
@@ -144,7 +146,7 @@ Item {
 
         id: swipe
 
-        visible: !row.visible
+        visible: !layout.expanded
 
         clip: true
 

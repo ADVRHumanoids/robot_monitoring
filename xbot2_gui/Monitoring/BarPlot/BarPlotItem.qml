@@ -6,8 +6,9 @@ Item {
 
     property string jointName: "joint_name"
     property alias bar: bar
-    property real labelColorAlpha: 0.3
+    property real labelColorAlpha: (isSelected || labelMouseArea.containsMouse) ? 0.6 : 0.3
     property alias labelMouseArea: labelMouseArea
+    property bool isSelected: false
 
     signal jointClicked(string jName)
 
@@ -34,7 +35,9 @@ Item {
             text: jointName
             background: Rectangle {
                 border.color: "red"
-                color: _statusOk ? Qt.rgba(0.9, 0.9, 0.9, labelColorAlpha) : Qt.rgba(1, 0, 0, labelColorAlpha)
+                color: _statusOk ?
+                           Qt.rgba(0.9, 0.9, 0.9, labelColorAlpha) :
+                           Qt.rgba(1, 0, 0, labelColorAlpha)
                 radius: 3
                 border.width: _statusOk ? 0 : 1
             }
@@ -48,18 +51,9 @@ Item {
                 anchors.fill: parent
                 hoverEnabled: true
 
-                onHoveredChanged: {
-                    if(labelMouseArea.containsMouse)
-                    {
-                        labelColorAlpha = 0.6
-                    }
-                    else
-                    {
-                        labelColorAlpha = 0.3
-                    }
+                onClicked: {
+                    jointClicked(jointName)
                 }
-
-                onClicked:  jointClicked(jointName)
             }
         }
 

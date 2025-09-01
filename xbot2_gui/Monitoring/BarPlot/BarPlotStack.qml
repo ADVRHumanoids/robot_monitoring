@@ -9,6 +9,10 @@ Item {
 
     property list<string> fieldNames
 
+    property list<string> selectedJoints
+
+    property bool enableMultipleSelection
+
     property alias currentIndex: stack.currentIndex
 
     function setJointStateMessage(js_msg) {
@@ -16,6 +20,7 @@ Item {
     }
 
     signal jointClicked(string jointName)
+
 
     function setStatus(jName, ok) {
         let idx = SharedData.jointNames.indexOf(jName)
@@ -65,22 +70,18 @@ Item {
         id: stack
         anchors.fill: parent
 
-        onCurrentIndexChanged: {
-            root.setJointStateMessage(SharedData.latestJointState)
-        }
-
         Repeater {
 
             id: container
-            model: fieldNames.length
 
             Loader {
+
+                // required property int index
 
                 active: index === stack.currentIndex
                 sourceComponent: barPlotComponent
 
                 onLoaded: {
-                    active = true
                     item.jointNames = SharedData.jointNames
                     item.min = modelData.min
                     item.max = modelData.max
@@ -96,26 +97,42 @@ Item {
     }
 
 
-    property Component barPlotComponent: Component {
-        BarPlot {
+    property Component barPlotComponent: BarPlot {
 
-            Layout.fillHeight: true
-            Layout.fillWidth: true
+        Layout.fillHeight: true
+        Layout.fillWidth: true
 
-            onJointClicked: function(jn) {
-                root.jointClicked(jn)
+        onJointClicked: function(jn) {
+            root.jointClicked(jn)
+
+            if(root.selectedJoints.indexOf(jn) < 0) {
+                if(root.enableMultipleSelection) {
+                    root.selectedJoints.push(jn)
+                }
+                else {
+                    root.selectedJoints = [jn]
+                }
+            }
+            else {
+                root.selectedJoints = root.selectedJoints.filter(item => item !== jn)
             }
 
         }
+
+        selectedJoints: root.selectedJoints
+
     }
+
 
     Component.onCompleted: {
         statusOk = Array(SharedData.jointNames.length)
         statusOk.fill(true)
         container.model = Logic.barPlotDefaultModel
+        let fieldNames = []
         for(let item of container.model) {
-            root.fieldNames.push(Logic.getLongName(item.fieldName))
+            fieldNames.push(Logic.getLongName(item.fieldName))
         }
+        root.fieldNames = fieldNames
     }
 
 }

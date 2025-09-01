@@ -13,7 +13,7 @@ Item {
     property list<string> jointNames: SharedData.jointNames
 
     function setJointStateMessage(js) {
-        for(let aux of js.aux_types) {
+        for(let aux of Object.keys(js.aux)) {
             if(auxTypes.indexOf(aux) < 0) {
                 fieldsModel.append(
                             {
@@ -116,11 +116,29 @@ Item {
             numeric: true
         }
         ListElement {
+            shortName: ''
+            longName: ''
+            precision: 0
+        }
+
+        ListElement {
             shortName: 'tor'
             longName: 'Torque'
             precision: 1
             enablePlot: true
             numeric: true
+        }
+        ListElement {
+            shortName: 'motTor'
+            longName: 'Mot. Torque'
+            precision: 1
+            enablePlot: true
+            numeric: true
+        }
+        ListElement {
+            shortName: ''
+            longName: ''
+            precision: 0
         }
 
 

@@ -9,7 +9,7 @@ ros_handle : ros_utils.RosWrapper = ros_utils.ros_handle
 from std_srvs.srv import SetBool, Trigger
 from geometry_msgs.msg import TwistStamped, Twist
 try:
-    from cartesian_interface.srv import SetControlMode, GetTaskList, GetCartesianTaskInfo
+    from cartesian_interface_ros.srv import SetControlMode, GetTaskList, GetCartesianTaskInfo
 except ModuleNotFoundError:
     pass
 

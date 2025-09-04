@@ -5,12 +5,14 @@ import functools
 import base64
 import math
 import time
+import numpy as np
 
 # ros handle
 from . import ros_utils
 ros_handle : ros_utils.RosWrapper = ros_utils.ros_handle
 
 from xbot_msgs.msg import JointState, Fault, JointCommand, CustomState
+from sensor_msgs.msg import JointState as StdJointState
 from std_msgs.msg import Float32, String
 from urdf_parser_py import urdf as urdf_parser
 
@@ -225,9 +227,10 @@ class JointStateHandler:
             state = f'xbotcore/gripper/{gname}/state'
             cmd = f'xbotcore/gripper/{gname}/command'
             self.gripper_state_msg[gname] = None
-            self.gripper_state_sub[gname] = rospy.Subscriber(state, StdJointState, 
-                self.on_gripper_state_recv, gname, queue_size=1)
-            self.gripper_cmd_pub[gname] = rospy.Publisher(cmd, StdJointState, queue_size=1)
+            self.gripper_state_sub[gname] = ros_handle.create_subscription(
+                StdJointState, state, functools.partial(self.on_gripper_state_recv, gname=gname), queue_size=1
+            )
+            self.gripper_cmd_pub[gname] = ros_handle.create_publisher(StdJointState, cmd, queue_size=1)
             print(f'connecting to gripper {gname}...')
             
         
@@ -260,25 +263,25 @@ class JointStateHandler:
         # pb js
         # TBD aux support
         try:
-	    msgpb = generic_pb2.Message()
-	    msgpb.jointstate.linkPos.extend(self.msg.link_position)
-    	    msgpb.jointstate.motPos.extend(self.msg.motor_position)
-	    msgpb.jointstate.motVel.extend(self.msg.motor_velocity)
-	    msgpb.jointstate.velRef.extend(self.msg.velocity_reference)
-	    msgpb.jointstate.torRef.extend(self.msg.effort_reference)
-	    msgpb.jointstate.tor.extend(self.msg.effort)
-	    msgpb.jointstate.posRef.extend(self.msg.position_reference)
-	    msgpb.jointstate.k.extend(self.msg.stiffness)
-	    msgpb.jointstate.d.extend(self.msg.damping)
-	    msgpb.jointstate.motorTemp.extend(self.msg.temperature_motor)
-	    msgpb.jointstate.driverTemp.extend(self.msg.temperature_driver)
-	    msgpb.jointstate.vbatt = self.vbatt
-	    msgpb.jointstate.ibatt = self.iload
-	    await self.srv.udp_send_to_all(msgpb)
+            msgpb = generic_pb2.Message()
+            msgpb.jointstate.linkPos.extend(self.msg.link_position)
+            msgpb.jointstate.motPos.extend(self.msg.motor_position)
+            msgpb.jointstate.motVel.extend(self.msg.motor_velocity)
+            msgpb.jointstate.velRef.extend(self.msg.velocity_reference)
+            msgpb.jointstate.torRef.extend(self.msg.effort_reference)
+            msgpb.jointstate.tor.extend(self.msg.effort)
+            msgpb.jointstate.posRef.extend(self.msg.position_reference)
+            msgpb.jointstate.k.extend(self.msg.stiffness)
+            msgpb.jointstate.d.extend(self.msg.damping)
+            msgpb.jointstate.motorTemp.extend(self.msg.temperature_motor)
+            msgpb.jointstate.driverTemp.extend(self.msg.temperature_driver)
+            msgpb.jointstate.vbatt = self.vbatt
+            msgpb.jointstate.ibatt = self.iload
+            await self.srv.udp_send_to_all(msgpb)
         except Exception as e:
-	    # print traceback  
-	    import traceback
-	    traceback.print_exc()
+            # print traceback  
+            import traceback
+            traceback.print_exc()
 
         
 

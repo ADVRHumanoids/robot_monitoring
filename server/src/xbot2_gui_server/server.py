@@ -95,8 +95,8 @@ class Xbot2WebServer(ServerBase):
             self.app.router.add_route(method=route[0], path=route[1], handler=route[2], name=route[3])
 
         webui_path = os.path.abspath(os.path.dirname(__file__)) + '/webui'
-
-        self.app.add_routes([web.static('/webui', webui_path)])
+        if os.path.exists(webui_path):
+            self.app.add_routes([web.static('/webui', webui_path)])
 
     
     def add_route(self, method, path, handler, name):

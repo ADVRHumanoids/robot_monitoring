@@ -4,7 +4,6 @@ import json
 import math
 import time
 
-import rospy
 from std_srvs.srv import SetBool, Trigger
 from std_msgs.msg import Float64
 from geometry_msgs.msg import TwistStamped, Twist
@@ -12,6 +11,8 @@ from geometry_msgs.msg import TwistStamped, Twist
 
 from .server import ServerBase
 from . import utils
+from . import ros_utils
+ros_handle = ros_utils.ros_handle
 
 
 class HorizonHandler:
@@ -34,10 +35,10 @@ class HorizonHandler:
                            self.walk_switch_handler,
                            'horizon_walk_switch_handler')
         
-        # subscribers
-        self.vref_pub = rospy.Publisher('/horizon/base_velocity/reference', Twist, queue_size=1, tcp_nodelay=True)
-        self.stats_sub = rospy.Subscriber('/mpc_solution_time', Float64, self.sol_time_callback, queue_size=1, tcp_nodelay=True)
-#        self.timeline_sub = rospy.Subscriber('/phase_manager/timelines', TimelineArray, self.timeline_callback, queue_size=1, tcp_nodelay=True)
+        # publishers and subscribers using ros_handle
+        self.vref_pub = ros_handle.create_publisher(Twist, '/horizon/base_velocity/reference', queue_size=1)
+        self.stats_sub = ros_handle.create_subscription(Float64, '/mpc_solution_time', self.sol_time_callback, queue_size=1)
+        #self.timeline_sub = ros_handle.create_subscription(TimelineArray, '/phase_manager/timelines', self.timeline_callback, queue_size=1)
         self.solution_time = None
         self.timelines  = None
 
@@ -49,7 +50,7 @@ class HorizonHandler:
 
         active = utils.str2bool(req.rel_url.query['active'])
 
-        srv = rospy.ServiceProxy(f'/horizon/{gait}/switch', SetBool)
+        srv = ros_handle.create_client(SetBool, f'/horizon/{gait}/switch')
 
         res = await utils.to_thread(srv, data=active)
 

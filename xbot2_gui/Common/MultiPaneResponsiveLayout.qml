@@ -10,20 +10,20 @@ Item {
     signal beforeLayoutChange()
     signal afterLayoutChange()
 
-    property alias layoutHelper: layout
+    // property alias layoutHelper: layout
 
     //
     id: root
 
-    LayoutClassHelper {
-        id: layout
-        targetWidth: root.width
+    // LayoutClassHelper {
+    //     id: layout
+    //     targetWidth: root.width
 
-        onBeforeLayoutChange: root.beforeLayoutChange()
-        onAfterLayoutChange: root.afterLayoutChange()
+    //     onBeforeLayoutChange: root.beforeLayoutChange()
+    //     onAfterLayoutChange: root.afterLayoutChange()
 
-        onExpandedChanged: console.log(`mprl layout expanded = ${expanded}`)
-    }
+    //     onExpandedChanged: console.log(`mprl layout expanded = ${expanded}`)
+    // }
 
     default property alias items: container.data
 

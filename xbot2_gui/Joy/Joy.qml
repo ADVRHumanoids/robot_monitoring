@@ -14,11 +14,9 @@ Item {
 
     id: root
 
-    LayoutClassHelper {
-        id: layout
-        targetWidth: parent.width
-    }
     property ClientEndpoint client
+
+    property GamepadInterface gamepadIfc: CommonProperties.gamepad.registerGamepad('joy')
 
     JoyCartesianCard {
 
@@ -59,6 +57,14 @@ Item {
         contentItem: Column {
 
             spacing: 3
+
+            Button {
+                visible: gamepadIfc.connected
+                id: gamepadCtrlBtn
+                text: `${checked ? 'Disable' : 'Enable'} Gamepad`
+                checkable: true
+                width: parent.width
+            }
 
             Label {
                 text: ' max speed'
@@ -119,7 +125,7 @@ Item {
         Connections {
             target: client
             function onTheoraPacketReceived(msg) {
-                if(msg.stream_name === setupCard.videoStream) {
+                if(msg.streamName === setupCard.videoStream) {
                     video.setTheoraPacket(msg)
                 }
             }
@@ -253,6 +259,24 @@ Item {
             vref[5] = -x*maxAngularV
             Joy.sendVref(currentTask, vref)
         }
+    }
+
+    Connections {
+        target: gamepadIfc.gamepad
+
+        function onAxisChanged(axis, value) {
+
+            leftPad.setXY(chkY.checked * gamepadIfc.gamepad.axisLeftX,
+                          chkX.checked * gamepadIfc.gamepad.axisLeftY)
+
+            rightPad.setXY(gamepadIfc.gamepad.axisRightX, 0 * gamepadIfc.gamepad.axisRightY)
+        }
+    }
+
+    Binding {
+        target: gamepadIfc
+        property: 'enabled'
+        value: gamepadCtrlBtn.checked
     }
 }
 

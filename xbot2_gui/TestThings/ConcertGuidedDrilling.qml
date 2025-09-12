@@ -4,7 +4,6 @@ import QtQuick.Controls
 import Qt.labs.settings
 
 import Common
-import "../Common"
 import "../Joy"
 import "../Video"
 import "../Video/VideoStream.js" as VideoStream

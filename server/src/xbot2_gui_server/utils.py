@@ -55,3 +55,14 @@ def handle_exceptions(func):
 
     return async_wrapper
 
+
+def print_exceptions(func):
+
+    @functools.wraps(func)
+    async def async_wrapper(self, *args, **kwargs):
+        try:
+            return await func(self, *args, **kwargs)
+        except BaseException as e:
+            traceback.print_exc()
+    return async_wrapper
+

@@ -37,11 +37,16 @@ public:
 #ifdef __EMSCRIPTEN__
         wasm = true;
 #endif
+#ifdef XBOT2_GUI_USE_GAMEPAD
+        hasGamepadCapability = true;
+#endif
     }
 
     Q_PROPERTY(QList<int> version MEMBER version);
 
     Q_PROPERTY(QString hostname MEMBER hostname);
+
+    Q_PROPERTY(bool hasGamepadCapability MEMBER hasGamepadCapability);
 
     Q_PROPERTY(int port MEMBER port);
 
@@ -74,6 +79,11 @@ public:
 
         clipboard->setText(text);
         return true;
+    }
+
+    Q_INVOKABLE QByteArray base64ToBytes(QString b64)
+    {
+        return QByteArray::fromBase64(b64.toUtf8());
     }
 
     Q_INVOKABLE static QUrl fromUserInput(const QString& userInput)
@@ -141,6 +151,7 @@ public:
     QString versionString;
     bool wasm = false;
     bool portFromCmdLine = false;
+    bool hasGamepadCapability = false;
 
 
 };
@@ -161,6 +172,7 @@ int main(int argc, char *argv[])
     // set app properties
     QApplication app(argc, argv);
     auto font = app.font();
+    qInfo() << "FONT" <<  font;
     font.setPixelSize(12);
     app.setFont(font);
 

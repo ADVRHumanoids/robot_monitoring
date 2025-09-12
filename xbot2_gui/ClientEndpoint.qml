@@ -1,26 +1,33 @@
 import QtQuick
 import QtWebSockets
 import QtCore
-import QtQml.WorkerScript
 
 import Common
 import Network
+import Protobuf
+
 import "ClientEndpoint.js" as Client
 import "sharedData.js" as SharedData
 
+import xbot2_gui.msgs
+
 Item
 {
+
     // note: the appData object is exposed by main.cpp
     // if running from web it contains the server address
 
     // server hostname
-    property string hostname: appData.hostname
+    property string hostname
 
     // server port
-    property int port: appData.port
+    property int port: -1
 
     // alias for the underlying websocket's active property
     property alias active: socket.active
+
+    // deserialization worker
+    property alias worker: workerLoader.item
 
     //
     property bool isConnected: false
@@ -34,7 +41,7 @@ Item
     signal finalized()
 
     // triggered upon reception of a new joint state msg
-    signal jointStateReceived(var js)
+    signal jointStateReceived(jointState js)
 
     // receiving joint states
     property bool robotConnected: false
@@ -46,20 +53,25 @@ Item
     signal connected(var msg)
 
     // triggerd upon reception of a proc msg
-    signal procMessageReceived(var msg)
+    signal processOutputReceived(processOutput msg)
 
     // triggerd upon reception of a plugin stat msg
     signal pluginStatMessageReceived(var msg)
 
     // image received
     signal jpegReceived(var msg)
-    signal theoraPacketReceived(var msg)
+    signal theoraPacketReceived(theoraPacket msg)
 
     // generic message
     signal objectReceived(var msg)
 
+    // numeric fields
+    property var objNumericFields: Object()
+
     // bytes received counter
-    property int bytesRecv: 0
+    property alias bytesRecvCounters: pb.recvBytes
+    property alias numMsgCounters: pb.numMsg
+    property int bytesRecv: pb.recvBytes.all
     property int bytesSent: 0
     property real srvRtt: 0
     property int jsMsgRecv: 0
@@ -116,15 +128,64 @@ Item
 
 
     // websocket for streaming data
-    WebSocket {
+
+    WebSocketAsync {
 
         id: socket
         url: "ws://" + hostname + ":" + port + "/ws"
         active: true
 
-        onTextMessageReceived: function (message) {
+        onBinaryMessageReceived: function (data) {
+            // root.bytesRecv += data.byteLength
+            pb.processBinaryMessage(data)
+        }
 
-            root.bytesRecv += message.length
+        onConnected: {
+
+            CommonProperties.notifications.info('Server connected', 'webclient')
+
+            root.connected('Server connected')
+
+            root.isConnected = true
+
+            // root.bytesRecv = 0
+            root.bytesSent = 0
+
+            if(appData.wasm) {
+                root.sendTextMessage(
+                            JSON.stringify(
+                                {
+                                    'type': 'request_ws_udp_tunnel'
+                                }
+                                )
+                            )
+            }
+            else {
+                root.doRequestAsync("GET", "/udp", "")
+                .then((response) => {
+                          udp.hostname = root.hostname
+                          udp.port = response.port
+                      })
+            }
+        }
+
+        onDisconnected: {
+            root.isConnected = false
+            root.isFinalized = false
+            udp.rebind()
+        }
+
+        onErrorOccurred: function(err) {
+            CommonProperties.notifications.error('Error: ' + err, 'webclient')
+            root.error(err)
+        }
+    }
+
+    ProtobufDeserialization {
+
+        id: pb
+
+        onTextMessageReceived: function (message) {
 
             if(appData.wasm) {
                 // deserialize directly since workers have issues in wasm
@@ -135,80 +196,68 @@ Item
                 worker.sendMessage(message)
             }
 
-
-
         }
 
-        onStatusChanged: {
+        onJointStateReceived: function(js) {
 
-            print(`status changed [url ${url}]: ${socket.status}`)
+            root.robotConnected = true
 
-            if (socket.status === WebSocket.Error) {
+            robotConnectedTimer.restart()
 
-                CommonProperties.notifications.error('Error: ' + socket.errorString, 'webclient')
+            SharedData.latestJointState = js
 
-                error(socket.errorString)
+            SharedData1.latestJointState = js
 
-                active = false
+            root.jointStateReceived(js)
 
-                isConnected = false
+            root.jsMsgRecv += 1
 
-                root.isFinalized = false
+            // if(lastJsSeqId < 0) {
+            //     lastJsSeqId = obj.seq
+            // }
+            // else {
+            //     root.jsDropped += (obj.seq - lastJsSeqId - 1)
+            //     lastJsSeqId = obj.seq
+            // }
 
-            } else if (socket.status === WebSocket.Open) {
+            if(isConnected && !isFinalized)
+            {
+                client.active = true
 
-                CommonProperties.notifications.info('Server connected', 'webclient')
-
-                connected('Server connected')
-
-                isConnected = true
-
-                root.bytesRecv = 0
-                root.bytesSent = 0
-
-                if(appData.wasm) {
-                    root.sendTextMessage(
-                                JSON.stringify(
-                                    {
-                                        'type': 'request_ws_udp_tunnel'
-                                    }
-                                    )
-                                )
-                }
-                else {
-                    doRequestAsync("GET", "/udp", "")
+                doRequestAsync("GET", "/joint_states/info", "")
                         .then((response) => {
-                                      udp.hostname = root.hostname
-                                      udp.port = response.port
-                                  })
-                }
-
-            } else if (socket.status === WebSocket.Closed) {
-                CommonProperties.notifications.error('Socket closed', 'webclient')
-                isConnected = false
-                active = false
-                root.isFinalized = false
-                udp.rebind()
+                              root.onInfoReceived(response)
+                          })
             }
         }
+
+        onProcessOutputReceived: function(po) {
+            root.processOutputReceived(po)
+        }
+
+        onTheoraPacketReceived: function(pkt) {
+            root.theoraPacketReceived(pkt)
+        }
+
     }
 
     // udp socket to receive unreliable data
     UdpSocket {
         id: udp
-        onTextMessageReceived: function (message) {
-            root.bytesRecv += message.length
-            worker.sendMessage(message)
+        onBinaryMessageReceived: function (data) {
+            // root.bytesRecv += data.byteLength
+            pb.processBinaryMessage(data)
         }
     }
 
-    WorkerScript {
+    Loader {
 
-        id: worker
-        source: "DeserializationWorker.js"
-        onMessage: function(msg) {
-            Client.handleMessage(msg)
-        }
+        source: "DeserializationWorker.qml"
+
+        id: workerLoader
+
+        active: !appData.wasm
+
     }
 
     property int _nattempt: 0
@@ -267,7 +316,7 @@ Item
 
     Timer {
         id: retryConnect
-        interval: 2000
+        interval: 333
         repeat: true
         running: !root.active
 

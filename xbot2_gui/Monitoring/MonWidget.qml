@@ -83,6 +83,7 @@ Control {
 
             Column {
 
+                Layout.alignment: Qt.AlignTop
                 Layout.fillWidth: true
                 Layout.columnSpan: 2
 
@@ -93,7 +94,7 @@ Control {
                 }
 
                 Label {
-                    text: `${vBatt} V`
+                    text: `${vBatt.toFixed(1)} V`
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
 
@@ -101,6 +102,7 @@ Control {
 
             Column {
 
+                Layout.alignment: Qt.AlignTop
                 Layout.preferredWidth: 40
                 Layout.fillWidth: true
 
@@ -118,13 +120,17 @@ Control {
                 Label {
                     text: root.jnameMaxTempDri
                     anchors.horizontalCenter: parent.horizontalCenter
+                    wrapMode: Text.WrapAnywhere
                     font.pointSize: 6
+                    width: parent.width
+                    horizontalAlignment: Text.AlignHCenter
                 }
 
             }
 
             Column {
 
+                Layout.alignment: Qt.AlignTop
                 Layout.preferredWidth: 40
                 Layout.fillWidth: true
 
@@ -142,7 +148,10 @@ Control {
                 Label {
                     text: root.jnameMaxTempMot
                     anchors.horizontalCenter: parent.horizontalCenter
+                    wrapMode: Text.WrapAnywhere
                     font.pointSize: 6
+                    width: parent.width
+                    horizontalAlignment: Text.AlignHCenter
                 }
 
             }
@@ -155,7 +164,9 @@ Control {
         running: true
         repeat: true
         onTriggered: {
+
             let js = SharedData.latestJointState
+
             if(js === undefined) {
                 return
             }

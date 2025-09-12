@@ -65,7 +65,7 @@ public:
 
     Q_INVOKABLE QByteArray read(qint64 maxBytes)
     {
-        auto ret = _buf.first(maxBytes <= 0 ? _buf.size() : std::min(_buf.size(), maxBytes));
+        auto ret = _buf.first(maxBytes <= 0 ? _buf.size() : std::min<int>(_buf.size(), maxBytes));
         _buf.remove(0, ret.size());
         emit bytesAvailableChanged(_buf.size());
         return ret;
@@ -73,7 +73,7 @@ public:
 
     Q_INVOKABLE QString readBase64(qint64 maxBytes)
     {
-        auto ret = _buf.first(maxBytes <= 0 ? _buf.size() : std::min(_buf.size(), maxBytes));
+        auto ret = _buf.first(maxBytes <= 0 ? _buf.size() : std::min<int>(_buf.size(), maxBytes));
         _buf.remove(0, ret.size());
         emit bytesAvailableChanged(_buf.size());
         return ret.toBase64();

@@ -13,6 +13,7 @@ Item {
     property list<string> jointNames: []
     property list<real> min: []
     property list<real> max: []
+    property list<string> selectedJoints: []
     property string fieldName: "tor"
     property string fieldNameRef: "torRef"
     property alias container: container
@@ -59,7 +60,7 @@ Item {
                 bar.value: 0
                 jointName: root.jointNames[index]
                 bar.type: type
-
+                isSelected: root.selectedJoints.indexOf(jointName) >= 0
                 onJointClicked: function(jn) {
                     root.jointClicked(jn)
                 }

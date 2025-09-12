@@ -13,6 +13,8 @@ from concert_launcher import remote
 from .server import ServerBase
 from . import utils
 
+from .proto import generic_pb2, process_output_pb2
+
 class Launcher:
 
     def __init__(self, srv: ServerBase, config=dict()) -> None:
@@ -48,6 +50,7 @@ class Launcher:
         self.proc_stdout_max_kbps = 1000
         self.proc_stdout_enabled = True
 
+
     @utils.handle_exceptions
     async def process_get_list_handler(self, request):
         
@@ -67,8 +70,10 @@ class Launcher:
                 'status': status[p],
                 'cmdline': variants,
                 'machine': self.cfg[p].get('machine', 'local'),
-                'visible': self.cfg[p].get('show_ui', True)
+                'visible': self.cfg[p].get('show_ui', True),
+                'category': self.cfg[p].get('category', 'default'),
             })
+
 
         return web.Response(text=json.dumps(proc_data))
     
@@ -172,8 +177,7 @@ class Launcher:
             for p in self.get_process_names():
 
                 msg = {
-                    'type': 'proc',
-                    'content': 'status',
+                    'type': 'proc_status',
                     'name': p,
                     'status': status[p]
                 }
@@ -210,17 +214,12 @@ class Launcher:
 
         ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
 
+        @utils.print_exceptions
         async def printer(l: str):
-
-            msg = {
-                'type': 'proc',
-                'content': 'output',
-                'name': process,
-                'stdout': ansi_escape.sub('', l.strip()),
-                'stderr': '',
-            }
-
-            msg_str = json.dumps(msg)
+            
+            pbmsg = generic_pb2.Message()
+            pbmsg.process_output.name = process
+            pbmsg.process_output.out = ansi_escape.sub('', l.strip())
 
             # throttle logic
             if time.time() - self.proc_stdout_prev_time > 1.0:
@@ -234,13 +233,12 @@ class Launcher:
             # too much data: send once, then skip for the rest of the window duration
             if self.proc_stdout_bytes*8/1000 > self.proc_stdout_max_kbps:  # kbps -> Bps
                 if self.proc_stdout_enabled:
-                    msg['stdout'] = f'[launcher] process exceeding max output bandwith (max_bw = {self.proc_stdout_max_kbps}) over a 1 sec window'
-                    msg_str = json.dumps(msg)
+                    pbmsg.process_output.out = f'[launcher] process exceeding max output bandwith (max_bw = {self.proc_stdout_max_kbps}) over a 1 sec window'
                     self.proc_stdout_enabled = False
                 else:
                     return
 
-            await self.srv.ws_send_to_all(msg_str)
+            await self.srv.ws_send_to_all(pbmsg)
 
         return printer
 
@@ -314,10 +312,10 @@ class Launcher:
                 'stderr': '',
             }
 
-            msg_str = json.dumps(msg)
-
-            await self.srv.ws_send_to_all(msg_str)
-
+            pbmsg = generic_pb2.Message()
+            pbmsg.process_output.name = 'launcher'
+            pbmsg.process_output.out = f'[{proc}] {text}'
+            await self.srv.ws_send_to_all(pbmsg)
         
         return await exe.execute_process(process=process, 
                                          cfg=self.cfg,
@@ -328,18 +326,10 @@ class Launcher:
     async def kill(self, process, graceful=True):
 
         async def on_launcher_event(proc, text):
-
-            msg = {
-                'type': 'proc',
-                'content': 'output',
-                'name': 'launcher',
-                'stdout': f'[{proc}] {text}',
-                'stderr': '',
-            }
-
-            msg_str = json.dumps(msg)
-
-            await self.srv.ws_send_to_all(msg_str)
+            pbmsg = generic_pb2.Message()
+            pbmsg.process_output.name = 'launcher'
+            pbmsg.process_output.out = f'[{proc}] {text}'
+            await self.srv.ws_send_to_all(pbmsg)
 
         return await exe.kill(process=process, 
                               cfg=self.cfg, 

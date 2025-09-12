@@ -12,7 +12,7 @@ qt_add_qml_module(xbot2_gui_testthings
     MotionTabPlot.qml
     MotionTab.js
     ConfigureMotorPopup.qml
-    QML_FILES AnimatedRectangle.qml
+    AnimatedRectangle.qml
 )
 
 target_link_libraries(xbot2_gui PRIVATE xbot2_gui_testthingsplugin)

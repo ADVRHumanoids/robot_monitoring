@@ -26,7 +26,7 @@ MultiPaneResponsiveLayout {
     property real iload
 
     LayoutClassHelper {
-        id: lay
+        id: layout
         targetWidth: root.width
     }
 
@@ -50,8 +50,8 @@ MultiPaneResponsiveLayout {
 
                 width: parent.width
 
-                rows: lay.compact ? -1 : 1
-                columns: lay.compact ? 1 : -1
+                rows: layout.compact ? -1 : 1
+                columns: layout.compact ? 1 : -1
 
                 rowSpacing: 8
                 columnSpacing: 8
@@ -141,6 +141,13 @@ MultiPaneResponsiveLayout {
                                                 jointState.selectJoint(jointName)
                                                 jointCommand.selectJoint(jointName)
                                             }
+
+                            onSelectedJointsChanged: {
+                                jointCommand.ctrlJoints = selectedJoints
+                                loader.item.selectedJoints = selectedJoints
+                            }
+
+                            enableMultipleSelection: jointCommand.enableMultipleSelection
                         }
 
                     }
@@ -199,8 +206,15 @@ MultiPaneResponsiveLayout {
 
                 onJointClicked: function(jointName) {
                     jointState.selectJoint(jointName)
-                    jointCommand.selectJoint(jointName)
+
                 }
+
+                onSelectedJointsChanged: {
+                    barPlot.selectedJoints = selectedJoints
+                    jointCommand.ctrlJoints = selectedJoints
+                }
+
+                enableMultipleSelection: jointCommand.enableMultipleSelection
 
             }
 
@@ -208,12 +222,26 @@ MultiPaneResponsiveLayout {
 
         JointCommandCard {
             id: jointCommand
+            collapsed: true
             Layout.fillWidth: true
             client: root.client
             robotCmd: loader.item.robotCmd
             onResetCmd: robotViewer.resetCmd()
             onCmdChanged: robotViewer.showRobotCmd = true
             enabled: jointDevice.jointActive
+            // ctrlJoints: loader.item.selectedJoints
+            onJointRemoved: {
+                barPlot.selectedJoints = ctrlJoints
+                loader.item.selectedJoints = ctrlJoints
+            }
+        }
+
+        Gripper {
+
+            collapsed: true
+            Layout.fillWidth: true
+            visible: gripperNames.length > 0
+
         }
 
     }

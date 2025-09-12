@@ -1,3 +1,5 @@
+.import "/qt/qml/Main/sharedData.js" as SharedData
+
 function updateViewerState(js, robot, fieldName) {
 
     if(robot.ndof === 0) {
@@ -14,9 +16,11 @@ function updateViewerState(js, robot, fieldName) {
 
 function updateViewerQ(js, jointNames, fieldName, q) {
 
-    for(let i = 0; i < js.name.length; i++) {
+    let jsname = SharedData.jointNames
 
-        let name = js.name[i]
+    for(let i = 0; i < jsname.length; i++) {
+
+        let name = jsname[i]
         let idx = jointNames.indexOf(name)
         if(idx < 0)
         {

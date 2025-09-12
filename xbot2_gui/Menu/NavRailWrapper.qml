@@ -10,7 +10,7 @@ Item {
 
     property int currentIndex: 0
 
-    signal hamburgerClicked()
+    signal clicked()
 
     property int orientation: Qt.Vertical
 
@@ -55,7 +55,10 @@ Item {
                 iconChar: parent.iconChar
                 text: parent.text
                 checked: root.currentIndex === parent.index
-                onClicked: root.currentIndex = parent.index
+                onClicked: {
+                    root.clicked()
+                    root.currentIndex = parent.index
+                }
             }
         }
     }

@@ -9,7 +9,10 @@ function sendCommand(ctrlJoints, cmdField, ref, trjtime) {
 
     client.doRequestAsync('PUT',
                           `/joint_command/goto/${jointNames}?qref=${cmd}&time=${trjtime}&ctrl=${cmdField}`)
-    .then((response) => trjCmdBtn.running = false)
+    .then((response) => {
+              trjCmdBtn.running = false
+              robotViewer.showRobotCmd = false
+          })
     .catch((err) => console.error(err))
 
 }
@@ -112,4 +115,23 @@ function currentValue(ctrlJoints, cmdField) {
     if(cmdField === 'Damping') {
         return SharedData.latestJointState.d[idx]
     }
+}
+
+function updateGripperNames() {
+    client.doRequestAsync('GET',
+                          `/joint_states/grippers`)
+        .then((response) => gripperCombo.model = response.gripper_names)
+        .catch((err) => console.error(err))
+}
+
+function sendGripperCommand(name, action, effort=0) {
+    let msg = Object()
+    msg.type = 'gripper_cmd'
+    msg.name = name
+    msg.action = action
+    msg.effort = effort
+
+    client.sendTextMessage(JSON.stringify(msg))
+
+    console.log(JSON.stringify(msg))
 }

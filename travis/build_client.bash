@@ -11,7 +11,7 @@ cp -r * travis/docker/context/robot_monitoring || true
 docker build travis/docker -t travis_build_image
 
 # build client via docker
-docker run --rm -it \
+docker run -i --rm \
  -v $PWD/build_output:/home/user/build_output \
  travis_build_image bash -i /home/user/build.bash
 

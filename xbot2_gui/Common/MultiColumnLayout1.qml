@@ -65,45 +65,56 @@ Control {
         }
     }
 
+    function clearColumns() {
+        for(let i = 0; i < row.visibleChildren.length; i++) {
+            row.visibleChildren[i].children = []
+        }
+    }
+
     function computeLayout() {
 
         try {
 
-        // console.log('computeLayout START')
-        _layout_in_progress = true
+            clearColumns()
 
-        for(let i = 0; i < content.children.length; i++) {
-            let item = content.children[i]
-            if(item instanceof Repeater) {
-                continue
+            // console.log('computeLayout START')
+            _layout_in_progress = true
+
+            for(let i = 0; i < content.children.length; i++) {
+                let item = content.children[i]
+                if(item instanceof Repeater) {
+                    continue
+                }
+                if(!item.visible) {
+                    continue
+                }
+                _items_to_position.push(item)
             }
-            _items_to_position.push(item)
-        }
 
-        let item_parent_list = []
-        let c = 0
+            let item_parent_list = []
+            let c = 0
 
-        for(let i = 0; i < _items_to_position.length; i++) {
-            let item = _items_to_position[i]
-            let column = row.visibleChildren[c]
-            // console.log(i)
-            // console.log(c)
-            // console.log(item)
-            // console.log(column)
-            item_parent_list.push([item, column])
-            c = (c + 1) % root.columns
-        }
+            for(let i = 0; i < _items_to_position.length; i++) {
+                let item = _items_to_position[i]
+                let column = row.visibleChildren[c]
+                // console.log(i)
+                // console.log(c)
+                // console.log(item)
+                // console.log(column)
+                item_parent_list.push([item, column])
+                c = (c + 1) % root.columns
+            }
 
-        for(let i = 0; i < item_parent_list.length; i++) {
-            let item = item_parent_list[i][0]
-            let parent = item_parent_list[i][1]
-            item.parent = parent
-            // item.width = Qt.binding(() => {return parent.width})
-            // item.anchors.left = parent.left
-            // item.anchors.right = parent.right
-            item.Layout.fillWidth = true
-            // item.Layout.preferredHeight = Qt.binding(() => { return item.height })
-        }
+            for(let i = 0; i < item_parent_list.length; i++) {
+                let item = item_parent_list[i][0]
+                let parent = item_parent_list[i][1]
+                item.parent = parent
+                // item.width = Qt.binding(() => {return parent.width})
+                // item.anchors.left = parent.left
+                // item.anchors.right = parent.right
+                item.Layout.fillWidth = true
+                // item.Layout.preferredHeight = Qt.binding(() => { return item.height })
+            }
 
         }
         catch(e) {

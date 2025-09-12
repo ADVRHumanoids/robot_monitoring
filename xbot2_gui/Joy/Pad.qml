@@ -4,6 +4,11 @@ import Common
 
 Item {
 
+    function setXY(x: real, y: real) {
+        inner.anchors.horizontalCenterOffset = x * mouseArea.distanceBound
+        inner.anchors.verticalCenterOffset = y * mouseArea.distanceBound
+        joystickMoved(x, y)
+    }
 
     signal joystickMoved(double x, double y);
     property bool repeat: true
@@ -90,7 +95,7 @@ Item {
             height: horizontalOnly ? root.side/4. + 10 : root.side
             radius: root.side/2.
             color: CommonProperties.colors.primary
-            opacity: root.active ? 1 : 0.1
+            opacity: root.active ? 1 : 0.3
 
 
             Behavior on x {

@@ -84,10 +84,22 @@ function setJointStateMessage(msg)
 
 var barPlotDefaultModel = [
             {
+                'fieldName': 'linkPos',
+                'refName': 'posRef',
+                'min': SharedData.qmin,
+                'max': SharedData.qmax,
+            },
+            {
                 'fieldName': 'motPos',
                 'refName': 'posRef',
                 'min': SharedData.qmin,
                 'max': SharedData.qmax,
+            },
+            {
+                'fieldName': 'linkVel',
+                'refName': 'velRef',
+                'min': SharedData.vmax.map(x => -x),
+                'max': SharedData.vmax,
             },
             {
                 'fieldName': 'motVel',
@@ -98,8 +110,8 @@ var barPlotDefaultModel = [
             {
                 'fieldName': 'tor',
                 'refName': 'torRef',
-                'min': SharedData.taumax.map(x => -x),
-                'max': SharedData.taumax,
+                'min': SharedData.taumax.map(x => -x/3.),
+                'max': SharedData.taumax.map(x => x/3.),
             },
             {
                 'fieldName': 'motorTemp',

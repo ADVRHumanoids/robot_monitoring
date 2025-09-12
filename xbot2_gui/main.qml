@@ -86,6 +86,7 @@ ApplicationWindow {
         z: 200
         opacity: 0.8
         visible: CommonProperties.config.showMonWidget
+        width: expanded ? 94 : implicitWidth
     }
 
 
@@ -110,7 +111,6 @@ ApplicationWindow {
     // (i) hello page (select server address)
     // (ii) monitoring page
     // etc
-    property list<string> requestedPages
 
     Item {
 
@@ -142,14 +142,6 @@ ApplicationWindow {
         }
 
         PageItem {
-            name: "Plot"
-            page: "/qt/qml/LivePlot/Plot.qml"
-            iconText: MaterialSymbolNames.tableChart
-            iconFont: syms.font.family
-            active: client.isConnected || mainWindow.dbg
-        }
-
-        PageItem {
             name: "Playground"
             page: "/qt/qml/TestThings/Playground2.qml"
             iconText: MaterialSymbolNames.playground
@@ -167,88 +159,11 @@ ApplicationWindow {
         }
 
         PageItem {
-            name: "Horizon"
-            page: "/qt/qml/Horizon/Horizon.qml"
-            iconText: MaterialSymbolNames.walker
-            iconFont: syms.font.family
-            active: client.robotConnected || mainWindow.dbg || true
-            sizeFactor: 1.1
-            show: requestedPages.indexOf(name) > -1
-        }
-
-        PageItem {
-            name: "Tuning"
-            page: "/qt/qml/Monitoring/Parameters.qml"
-            iconText: MaterialSymbolNames.tune
+            name: "App"
+            page: "/qt/qml/Main/AppLauncher.qml"
+            iconText: MaterialSymbolNames.apps
             iconFont: syms.font.family
             active: true
-            show: requestedPages.indexOf(name) > -1
-        }
-
-        PageItem {
-            name: "Builder"
-            page: "/qt/qml/TestThings/Linfa.qml"
-            iconText: MaterialSymbolNames.tools
-            iconFont: syms.font.family
-            active: true
-            show: requestedPages.indexOf(name) > -1
-        }
-
-        PageItem {
-            name: "Linfa"
-            page: "/qt/qml/TestThings/Linfa.qml"
-            iconSource: '/Icons/icons/alberobotics100x100.png'
-            active: true
-            show: requestedPages.indexOf(name) > -1
-        }
-
-        PageItem {
-            name: "Drill Task"
-            page: "/qt/qml/Concert/Drilling.qml"
-            iconText: MaterialSymbolNames.drill
-            iconFont: syms.font.family
-            active: true
-            sizeFactor: 1.2
-            show: requestedPages.indexOf(name) > -1
-        }
-
-        PageItem {
-            name: "Conda"
-            page: "/qt/qml/Concert/Conda.qml"
-            iconText: MaterialSymbolNames.wrench
-            iconFont: syms.font.family
-            active: true
-            sizeFactor: 1.1
-            show: requestedPages.indexOf(name) > -1
-        }
-
-        PageItem {
-            name: "Sanding"
-            page: "/qt/qml/Concert/Sanding.qml"
-            iconSource: '/Icons/icons/brick_wall_white.png'
-            active: true
-            sizeFactor: 1.
-            show: requestedPages.indexOf(name) > -1
-        }
-
-        PageItem {
-            name: "Transportation"
-            page: "/qt/qml/Concert/Transportation.qml"
-            iconText: MaterialSymbolNames.weight
-            iconFont: syms.font.family
-            active: true
-            show: requestedPages.indexOf(name) > -1
-            sizeFactor: 1.1
-        }
-
-        PageItem {
-            name: "Ecat"
-            page: "/qt/qml/Ecat/Ecat.qml"
-            iconText: MaterialSymbolNames.wrench
-            iconFont: syms.font.family
-            active: true
-            sizeFactor: 1.1
-            show: requestedPages.indexOf(name) > -1
         }
 
     }
@@ -273,8 +188,11 @@ ApplicationWindow {
         visible: layout.expanded
 
         onCurrentIndexChanged: {
-            pagesStack.currentIndex = currentIndex
             navBar.currentIndex = currentIndex
+        }
+
+        onClicked: {
+            Qt.callLater(() => pagesStack.selectIndex(currentIndex))
         }
 
 
@@ -297,8 +215,11 @@ ApplicationWindow {
         checkedDisplayMode: AbstractButton.TextBesideIcon
 
         onCurrentIndexChanged: {
-            pagesStack.currentIndex = currentIndex
             nav.currentIndex = currentIndex
+        }
+
+        onClicked: {
+            Qt.callLater(() => pagesStack.selectIndex(currentIndex))
         }
 
         anchors {
@@ -316,6 +237,15 @@ ApplicationWindow {
     StackLayout {
 
         id: pagesStack
+
+        function selectIndex(index) {
+            if(currentIndex === index) {
+                itemAt(currentIndex).item.pageSelected()
+            }
+
+            currentIndex = index
+
+        }
 
         property int previousIndex: -1
 
@@ -386,69 +316,69 @@ ApplicationWindow {
 
                 // Loader {
 
-                    id: stackPageLoader
-                    property string pageName: ''
+                id: stackPageLoader
+                property string pageName: ''
 
-                    // anchors.fill: parent
+                // anchors.fill: parent
 
-                    // asynchronous: true
-                    active: pagesStack.currentIndex === index
+                // asynchronous: true
+                active: pagesStack.currentIndex === index
 
-                    onStatusChanged: {
-                        active = true
+                onStatusChanged: {
+                    active = true
+                }
+
+                onLoaded: {
+
+                    // loadingPage.opacity = 0
+
+                    console.log(`${modelData.name} loaded`)
+
+                    active = true
+
+                    items[modelData.name.toLowerCase()] = item
+
+                    // try {
+                    //     item.pageSelected()
+                    // }
+                    // catch(err){}
+
+                    try {
+                        item.isCurrentPage = true
+                    }
+                    catch(err){}
+
+                    item.pageName = modelData.name
+
+                    pageName = modelData.name
+
+                }
+
+                Component.onCompleted: {
+                    // this is the "constructor"
+                    // each page has a .client elem
+                    setSource(modelData.page, {'client': client})
+                }
+
+                Connections {
+                    target: stackPageLoader.item
+                    ignoreUnknownSignals: true
+
+                    function onRestartUi() {
+                        console.log('onRestartUi: calling pagesStackRepeater.reloadAll()')
+                        pagesStackRepeater.reloadAll()
                     }
 
-                    onLoaded: {
-
-                        // loadingPage.opacity = 0
-
-                        console.log(`${modelData.name} loaded`)
-
-                        active = true
-
-                        items[modelData.name.toLowerCase()] = item
-
-                        try {
-                            item.pageSelected()
+                    function onNumErrorsChanged() {
+                        if(index !== pagesStack.currentIndex) {
+                            nav.setBadgeNumber(index, stackPageLoader.item.numErrors)
                         }
-                        catch(err){}
-
-                        try {
-                            item.isCurrentPage = true
-                        }
-                        catch(err){}
-
-                        item.pageName = modelData.name
-
-                        pageName = modelData.name
-
-                    }
-
-                    Component.onCompleted: {
-                        // this is the "constructor"
-                        // each page has a .client elem
-                        setSource(modelData.page, {'client': client})
-                    }
-
-                    Connections {
-                        target: stackPageLoader.item
-                        ignoreUnknownSignals: true
-
-                        function onRestartUi() {
-                            console.log('onRestartUi: calling pagesStackRepeater.reloadAll()')
-                            pagesStackRepeater.reloadAll()
-                        }
-
-                        function onNumErrorsChanged() {
-                            if(index !== pagesStack.currentIndex) {
-                                nav.setBadgeNumber(index, stackPageLoader.item.numErrors)
-                            }
-                            else {
-                                item.numErrors = 0
-                            }
+                        else {
+                            item.numErrors = 0
                         }
                     }
                 }
+            }
 
             // }
         }
@@ -540,44 +470,43 @@ ApplicationWindow {
             }
         }
 
-        onConnected: client.doRequestAsync('GET', '/requested_pages', '')
-        .then(function(msg) {
-            requestedPages = msg['requested_pages']
+        onConnected: {
             nav.construct()
             navBar.construct()
-        })
         }
+    }
 
-            // audio
-            Connections {
 
-                target: AudioBroadcaster
+    // audio
+    Connections {
 
-                function onReadyRead() {
+        target: AudioBroadcaster
 
-                    if(AudioBroadcaster.bytesAvailable < 2048 ||
-                            !AudioBroadcaster.enableSend)
-                    {
-                        return
-                    }
+        function onReadyRead() {
 
-                    let data = AudioBroadcaster.readBase64(2048)
-
-                    let msg = {
-                        'type': 'speech',
-                        'data': data
-                    }
-
-                    client.sendTextMessage(JSON.stringify(msg))
-                }
+            if(AudioBroadcaster.bytesAvailable < 2048 ||
+                    !AudioBroadcaster.enableSend)
+            {
+                return
             }
 
-            Settings {
-                category: 'layout'
-                property alias x: mainWindow.x
-                property alias y: mainWindow.y
-                property alias width: mainWindow.width
-                property alias height: mainWindow.height
+            let data = AudioBroadcaster.readBase64(2048)
+
+            let msg = {
+                'type': 'speech',
+                'data': data
             }
 
+            client.sendTextMessage(JSON.stringify(msg))
         }
+    }
+
+    Settings {
+        category: 'layout'
+        property alias x: mainWindow.x
+        property alias y: mainWindow.y
+        property alias width: mainWindow.width
+        property alias height: mainWindow.height
+    }
+
+}

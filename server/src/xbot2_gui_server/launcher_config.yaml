@@ -4,24 +4,35 @@ context:
     verbose_flag: ''
 
 roscore:
-  cmd: ros1; roscore
+  cmd: while true; do echo roscore; sleep 1; done
+  category: core
 
-ecat: 
-  cmd: watch ls
+ecat:
+  cmd: while true; do echo ecat; sleep 1; done
+  category: core
 
-wait_ecat_online: 
-  cmd: watch ls
+walking:
+  cmd: while true; do echo walking; sleep 1; done
+  category: control
 
 xbot2:
-  cmd: ros1; xbot2-core --hw dummy -C $(rospack find kyon_config)/kyon_basic.yaml
+  cmd: xbot2-core --hw dummy -C $(rospack find kyon_config)/kyon_basic.yaml
   variants:
     verbose:
       params:
         verbose_flag: -V
   ready_check: timeout 3 rostopic echo /xbotcore/status -n 1
+  category: core
 
-prova1:
-  cmd: watch ls
+front_cam:
+  cmd: rostopic echo /xbotcore/statistics
+  category: sensors
 
-prova2:
-  cmd: watch ls
+back_cam:
+  cmd: rostopic echo /xbotcore/joint_states
+  category: sensors
+
+lidar:
+  cmd: rostopic echo /xbotcore/laser_scan
+  category: sensors
+  show_ui: false

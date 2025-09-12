@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import ".."
-import "../Common"
+import Common
 
 Card {
 

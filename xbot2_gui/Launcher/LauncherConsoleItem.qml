@@ -1,15 +1,16 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import QtCore
 
 import Font
-import "../Common"
+import Common
 
 Item {
 
-    function appendText(procName, text) {
+    function appendText(procName: string, text: string, muted: bool) {
 
-        var i = 0
+        let i = 0
 
         if(procName === 'launcher') {
             i = -1
@@ -24,7 +25,7 @@ Item {
 
         consoleRepeater.itemAt(i+2).appendText(text)
 
-        if(i >= 0 && !procCheckRepeater.itemAt(i).checked) {
+        if(i >= 0 && muted) {
             return
         }
 
@@ -64,8 +65,12 @@ Item {
         name: 'Console Output'
 
         toolButtons: [
-            Button {
-                text: 'Copy'
+            SmallToolButton {
+                text: MaterialSymbolNames.copy
+                font.family: 'Material Symbols Outlined'
+                font.variableAxes: {'opsz': 48}
+                font.pixelSize: 16
+
                 onClicked: {
                     let txt = consoleRepeater.itemAt(consoleCombo.currentIndex).getText()
                     appData.copyToClipboard(txt)
@@ -81,8 +86,12 @@ Item {
                 }
             },
 
-            Button {
-                text: 'Clear'
+            SmallToolButton {
+                text: MaterialSymbolNames.clean
+                font.family: 'Material Symbols Outlined'
+                font.variableAxes: {'opsz': 48}
+                font.pixelSize: 16
+
                 onClicked: {
                     consoleRepeater.itemAt(consoleCombo.currentIndex).clearText()
                 }
@@ -95,17 +104,75 @@ Item {
         ]
 
         frontItem: StackLayout {
-            width: parent.width
-            height: root.height - 80
+
+            anchors.fill: parent
             currentIndex: consoleCombo.currentIndex
+
             Repeater {
+
                 id: consoleRepeater
+
                 model: ['all', 'launcher'].concat(root.processNames)
-                ConsoleCard {
-                    name: modelData
+
+                Item {
+                    required property int index
+                    required property string modelData
+                    // property color txtColor: root.colors[index % root.colors.length]
+
+                    function appendText(txt) {
+                        // console.log(root.colors[index % root.colors.length])
+                        // console.log(txtColor)
+                        listModel.append({'txt': txt}) // , 'txtColor': txtColor})
+                        if(scrollOnOutputCheck.checked) {
+                            consoleLoader.item?.scrollToEnd()
+                        }
+                    }
+
+                    function clearText() {
+                        listModel.clear()
+                    }
+
+                    function getText() {
+                        let txt = ''
+                        for(let i = 0; i < listModel.count; i++) {
+                            txt = txt + listModel.get(i).txt + '\n'
+                        }
+                        return txt
+                    }
+
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    scrollOnOutput: scrollOnOutputCheck.checked
+                    implicitHeight: consoleLoader.implicitHeight
+                    implicitWidth: consoleLoader.implicitWidth
+
+                    Loader {
+
+                        id: consoleLoader
+
+                        active: index === consoleCombo.currentIndex
+
+                        anchors.fill: parent
+
+                        sourceComponent: ConsoleCard {
+                            id: cardInner
+                            pixelSize: fontSizeSpin.value
+                        }
+
+                        onLoaded: {
+                            item.listModel = listModel
+                            if(scrollOnOutputCheck.checked) {
+                                item.scrollToEnd()
+
+                            }
+                            console.log(`${modelData} loaded ${listModel.count} lines`)
+                        }
+
+                    }
+
+                    ListModel {
+                        id: listModel
+                    }
+
                 }
             }
         }
@@ -136,21 +203,23 @@ Item {
             }
 
             Label {
-                text: 'Select the processes to show in the global console'
-                font.pixelSize: CommonProperties.font.h3
-                Layout.columnSpan: Math.max(1, grid.columns)
+                text: 'Font size'
             }
 
-            Repeater {
-                id: procCheckRepeater
-                model: root.processNames
-                CheckBox {
-                    text: modelData
-                    checked: root.hiddenProcessNames.indexOf(modelData) === -1
-                }
+            SpinBox {
+                id: fontSizeSpin
+                from: 1
+                to: 18
+                value: 12
             }
+
         }
 
+    }
+
+    Settings {
+        category: 'console'
+        property alias fontSize: fontSizeSpin.value
     }
 
 }

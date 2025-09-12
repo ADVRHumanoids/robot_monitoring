@@ -18,9 +18,10 @@ Pane {
     contentItem: ColumnLayout {
 
         Switch {
-            visible: true
+            visible: false
             id: enableSwitch
             text: 'Enable gait'
+            checked: true
         }
 
         Item {
@@ -39,7 +40,7 @@ Pane {
             id: gaitCombo
             enabled: enableSwitch.checked
             Layout.fillWidth: true
-            model: ['Trot', 'Walk', 'Crawl']
+            model: ['Trot', 'Crawl']
         }
 
         Item {

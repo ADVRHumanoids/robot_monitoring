@@ -148,54 +148,68 @@ function httpRequestAsync(verb, url, body, quiet = false) {
     return promise
 }
 
+function detectObjectFields(obj, save=true, type=undefined) {
+
+    // first check if we already know the fields
+    if(objNumericFields.hasOwnProperty(obj.type)) {
+        return objNumericFields[obj.type]
+    }
+
+    console.log(JSON.stringify(obj))
+
+    // detect fields that are numeric (float)
+    let fields = Object.keys(obj)
+    let numericFields = []
+
+    for(let i = 0; i < fields.length; i++) {
+        let field = fields[i];
+        let fieldType = typeof obj[field];
+        if(fieldType === 'number') {
+            numericFields.push({src: obj.type ?? type, name: field, type: 'number', length: 1});
+            console.log(`NUMERIC FIELD ${obj.type ?? type}.${field}`)
+        }
+        else if(fieldType === 'object' &&
+                Array.isArray(obj[field]) &&
+                typeof obj[field][0] === 'number')
+        {
+            numericFields.push({src: obj.type ?? type, name: field, type: 'array', length: obj[field].length});
+            console.log(`ARRAY FIELD ${obj.type ?? type}.${field}`)
+        }
+        else if(fieldType === 'object') {
+            console.log(`calling recursively with type=${type ?? obj[type]} (${type} ${obj.type})`)
+            let objNumericFields = detectObjectFields(obj[field], false, type ?? obj.type);
+            for(let nf of objNumericFields) {
+                console.log(JSON.stringify(nf))
+                // prepend the field name to the numeric field
+                nf.name = `${field}.${nf.name}`;
+                numericFields.push(nf);
+                console.log(`OBJECT FIELD ${nf.src}/${nf.name}`)
+            }
+        }
+    }
+
+
+    // store the numeric fields for this object type
+    if(save) {
+        objNumericFields[obj.type] = numericFields
+        objNumericFieldsChanged()
+    }
+
+    return numericFields
+}
+
 let lastJsSeqId = -1
 
 function handleMessage(obj) {
 
-    if(obj.type === "joint_states")
-    {
-        robotConnected = true
-
-        robotConnectedTimer.restart()
-
-        obj.name = SharedData.jointNames
-
-        SharedData.latestJointState = obj
-
-        jointStateReceived(obj)
-
-        root.jsMsgRecv += 1
-
-        if(lastJsSeqId < 0) {
-            lastJsSeqId = obj.seq
-        }
-        else {
-            root.jsDropped += (obj.seq - lastJsSeqId - 1)
-            lastJsSeqId = obj.seq
-        }
-
-        if(isConnected && !isFinalized)
-        {
-            client.active = true
-
-            doRequestAsync("GET", "/joint_states/info", "")
-                    .then((response) => {
-                          root.onInfoReceived(response)
-                      })
-        }
-    }
-    else if(obj.type === "proc")
-    {
-        procMessageReceived(obj)
-    }
-    else if(obj.type === "jpeg")
+    if(obj.type === "jpeg")
     {
         jpegReceived(obj)
     }
-    else if(obj.type === "theora")
-    {
-        theoraPacketReceived(obj)
-    }
+    // else if(obj.type === "theora")
+    // {
+    //     theoraPacketReceived(obj)
+    // }
     else if(obj.type === "plugin_stats")
     {
         pluginStatMessageReceived(obj)
@@ -208,8 +222,8 @@ function handleMessage(obj) {
     {
         root.srvRtt = (appData.getTimeNs() - obj.cli_time_ns)*1e-6
     }
-    else
-    {
-        objectReceived(obj)
-    }
+
+    objectReceived(obj)
+
+    detectObjectFields(obj)
 }

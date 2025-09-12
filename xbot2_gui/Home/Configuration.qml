@@ -26,21 +26,30 @@ GridLayout {
         }
     }
 
-    StackLayout {
+    ScrollView {
 
-        currentIndex: bar.currentIndex
         Layout.fillWidth: true
         Layout.fillHeight: true
+        contentWidth: availableWidth
+        id: scroll
 
-        ConfigurationGeneral {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
+        StackLayout {
+
+            currentIndex: bar.currentIndex
+            width: scroll.availableWidth
+
+
+            ConfigurationGeneral {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+            }
+
+            ConfigurationAudio {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+            }
         }
 
-        ConfigurationAudio {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-        }
     }
 
     Button {

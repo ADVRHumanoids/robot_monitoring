@@ -202,8 +202,6 @@ let lastJsSeqId = -1
 
 function handleMessage(obj) {
 
-    detectObjectFields(obj)
-
     if(obj.type === "jpeg")
     {
         jpegReceived(obj)
@@ -226,4 +224,6 @@ function handleMessage(obj) {
     }
 
     objectReceived(obj)
+
+    detectObjectFields(obj)
 }

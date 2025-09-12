@@ -163,7 +163,7 @@ ApplicationWindow {
             page: "/qt/qml/Main/AppLauncher.qml"
             iconText: MaterialSymbolNames.apps
             iconFont: syms.font.family
-            active: client.isConnected
+            active: true
         }
 
     }

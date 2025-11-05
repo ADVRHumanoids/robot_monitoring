@@ -1,6 +1,7 @@
 import asyncio
 from aiohttp import web
 import json
+import zmq
 
 # ros handle
 from . import ros_utils
@@ -41,6 +42,15 @@ class CartesianHandler:
 
         # vel ref pub
         self.vref_pub = None
+        
+        # zmq publisher
+        zmq_pub_remote = config.get('zmq_pub_remote', None)
+        self.cmd_socket = None
+        if zmq_pub_remote is not None:
+            print('zmq_pub_remote=', zmq_pub_remote)
+            context = zmq.Context()
+            self.cmd_socket = context.socket(zmq.PUB)
+            self.cmd_socket.connect(zmq_pub_remote)
 
     
     @utils.handle_exceptions
@@ -148,6 +158,10 @@ class CartesianHandler:
         simple_topic_prefix = '[simple topic] '
         if task_name.startswith(simple_topic_prefix):
             topic_name = task_name[len(simple_topic_prefix):]
+            if self.cmd_socket and topic_name == 'ZMQ':
+                print('send to zmq', msg)
+                self.cmd_socket.send_json(msg)
+                return
             TopicType = Twist
         else:
             topic_name = rospy.resolve_name(f'cartesian/{task_name}/velocity_reference')

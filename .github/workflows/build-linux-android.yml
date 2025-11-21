@@ -26,6 +26,9 @@ jobs:
         MY_KEYSTORE_BASE64: ${{ secrets.MY_KEYSTORE_BASE64 }}
       run: |
         echo $MY_KEYSTORE_BASE64 | base64 --decode > my.keystore
+    
+    - name: Delete huge unnecessary tools folder
+      run: rm -rf /opt/hostedtoolcache
     - name: Install dependencies
       run: bash travis/install_dependencies.bash
     - name: Build client

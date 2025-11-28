@@ -16,10 +16,13 @@ from . import ros_utils
 
 def main():
 
+    default_config_path = os.environ.get('XBOT2_GUI_SERVER_CONFIG', None)
+    default_port = int(os.environ.get('XBOT2_GUI_SERVER_PORT', 8080))
+
     # cli
     parser = argparse.ArgumentParser(description='A modern UI for the Xbot2 framework, written in Qt6 / QML')
-    parser.add_argument('config', type=str, nargs='?', help='path to config file')
-    parser.add_argument('--port', '-p', type=int, default=8080, help='port for the UI server (it must be available on both TCP and UDP)')
+    parser.add_argument('config', type=str, default=default_config_path, help=f'path to config file (yaml); defaults to XBOT2_GUI_SERVER_CONFIG environment variable (default: {default_config_path})', nargs='?')
+    parser.add_argument('--port', '-p', type=int, default=default_port, help='port for the UI server (it must be available on both TCP and UDP)')
     args = parser.parse_args()
 
     # set verbose logging level

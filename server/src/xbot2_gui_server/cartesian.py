@@ -24,7 +24,6 @@ class CartesianHandler:
 
         # config
         self.rate = config.get('rate', 10.0)
-        self.cmd_vel_topics = config.get('cmd_vel_topics', [])
 
         # save server object, register our handlers
         self.srv = srv
@@ -67,7 +66,16 @@ class CartesianHandler:
             pass
 
         # get topic names from ros master
-        for tname in self.cmd_vel_topics:
+        topic_name_type_list = ros_handle.get_topic_names_and_types()
+
+        # filter those with nice type
+        twist_topics = list()
+        for tname, ttypes in topic_name_type_list:
+            if 'geometry_msgs/msg/Twist' in ttypes or 'geometry_msgs/Twist' == ttypes:
+                twist_topics.append(tname)
+
+        # get topic names from ros master
+        for tname in twist_topics:
             res.names.append(tname)
             res.types.append('SimpleTopic')
 

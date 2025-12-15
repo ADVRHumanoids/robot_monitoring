@@ -80,11 +80,13 @@ MultiPaneResponsiveLayout {
 
 
 
-    Popup {
+    Drawer {
         id: configPopup
-        anchors.centerIn: Overlay.overlay
-        width: Overlay.overlay.width * (layout.expanded ? 0.8 : 1.0)
-        height: Overlay.overlay.height * (layout.expanded ? 0.8 : 1.0)
+        edge: Qt.BottomEdge
+
+        width: parent.width
+        height: parent.height * 0.9
+        interactive: true
         Configuration {
             anchors.fill: parent
             onClosed: configPopup.close()
@@ -93,6 +95,8 @@ MultiPaneResponsiveLayout {
         focus: true
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
         padding: layout.expanded ? 16 : 4
+        leftPadding: 16
+        rightPadding: 16
         clip: true
     }
 

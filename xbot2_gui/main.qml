@@ -9,6 +9,7 @@ import Menu
 import Font
 import Audio
 import Monitoring
+import Joy
 
 ApplicationWindow {
 
@@ -46,6 +47,12 @@ ApplicationWindow {
     Component.onCompleted: {
         appData.keepScreenOn(true)
     }
+
+    GamepadInterface {
+        id: gamepadIfc
+    }
+
+    property alias gamepad: gamepadIfc.gamepad
 
     // MouseArea {
     //     z: 100
@@ -88,6 +95,18 @@ ApplicationWindow {
         visible: CommonProperties.config.showMonWidget
         width: expanded ? 94 : implicitWidth
     }
+
+    // GamepadWidget {
+    //     anchors {
+    //         left: parent.left
+    //         bottom: parent.bottom
+    //         margins: 8
+    //     }
+    //     z: 200
+    //     opacity: 0.8
+    //     visible: CommonProperties.config.showMonWidget
+    //     width: expanded ? 94 : implicitWidth
+    // }
 
 
     MaterialSymbols {
@@ -138,16 +157,24 @@ ApplicationWindow {
             iconText: MaterialSymbolNames.gauge
             iconFont: syms.font.family
             active: client.robotConnected || mainWindow.dbg
-            lazyLoad: false
         }
 
+        // PageItem {
+        //     name: "Playground"
+        //     page: "/qt/qml/TestThings/Playground2.qml"
+        //     iconText: MaterialSymbolNames.playground
+        //     iconFont: syms.font.family
+        //     active: true
+        //     show: CommonProperties.config.testing
+        // }
+
         PageItem {
-            name: "Playground"
-            page: "/qt/qml/TestThings/Playground2.qml"
-            iconText: MaterialSymbolNames.playground
+            name: "Plot"
+            page: "/qt/qml/LivePlot/Plot.qml"
+            iconText: MaterialSymbolNames.tableChart
             iconFont: syms.font.family
-            active: true
-            show: CommonProperties.config.testing
+            active: client.isConnected || mainWindow.dbg
+            lazyLoad: false
         }
 
         PageItem {
@@ -165,7 +192,10 @@ ApplicationWindow {
             iconFont: syms.font.family
             active: true
         }
+    }
 
+    function refreshPageStack() {
+        pagesStack.selectIndex(navBar.currentIndex)
     }
 
 
@@ -189,10 +219,11 @@ ApplicationWindow {
 
         onCurrentIndexChanged: {
             navBar.currentIndex = currentIndex
+            Qt.callLater(refreshPageStack)
         }
 
         onClicked: {
-            Qt.callLater(() => pagesStack.selectIndex(currentIndex))
+            Qt.callLater(refreshPageStack)
         }
 
 
@@ -216,10 +247,11 @@ ApplicationWindow {
 
         onCurrentIndexChanged: {
             nav.currentIndex = currentIndex
+            Qt.callLater(refreshPageStack)
         }
 
         onClicked: {
-            Qt.callLater(() => pagesStack.selectIndex(currentIndex))
+            Qt.callLater(refreshPageStack)
         }
 
         anchors {
@@ -322,7 +354,7 @@ ApplicationWindow {
                 // anchors.fill: parent
 
                 // asynchronous: true
-                active: pagesStack.currentIndex === index
+                active: pagesStack.currentIndex === index || !modelData.lazyLoad
 
                 onStatusChanged: {
                     active = true
@@ -498,6 +530,35 @@ ApplicationWindow {
             }
 
             client.sendTextMessage(JSON.stringify(msg))
+        }
+    }
+
+    // joy based navigation
+    Connections {
+
+        target: gamepad
+
+        function onButtonL1Changed(value) {
+            if(value) {
+                // decrement and wrap
+                navBar.currentIndex = (navBar.currentIndex - 1 + pagesModel.children.length) %
+                        pagesModel.children.length
+            }
+        }
+
+        function onButtonR1Changed(value) {
+            if(value) {
+                // increment and wrap
+                navBar.currentIndex = (navBar.currentIndex + 1 +pagesModel.children.length) %
+                        pagesModel.children.length
+            }
+        }
+
+        function onButtonStartChanged(value) {
+            if(value) {
+                let page = pagesStack.itemAt(pagesStack.currentIndex).item
+                page.toggleAcquireGamepad()
+            }
         }
     }
 

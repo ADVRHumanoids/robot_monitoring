@@ -14,6 +14,7 @@ qt_add_qml_module(xbot2_gui_joy
     QML_FILES DummyGamepad.qml
     QML_FILES GamepadManager.qml
     QML_FILES GamepadManagerDummy.qml
+    QML_FILES GamepadWidget.qml
 )
 
 target_link_libraries(xbot2_gui PRIVATE xbot2_gui_joyplugin)

@@ -10,6 +10,8 @@ Item {
 
     property int currentIndex: 0
 
+    property int count: activePositioner.visibleChildren.length
+
     signal clicked()
 
     property int orientation: Qt.Vertical

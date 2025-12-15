@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import Common
+import Joy
 
 Pane {
 
@@ -12,10 +13,54 @@ Pane {
     property alias alwaysWalk: enableSwitch.checked
     property alias gaitType: gaitCombo.currentText
 
+    function toggleAcquireGamepad() {
+        gamepadCtrlBtn.checked = !gamepadCtrlBtn.checked
+    }
+
     //
     id: root
 
+    property GamepadInterface gamepadIfc: undefined
+
+    Binding {
+        target: gamepadIfc
+        property: 'enabled'
+        value: gamepadCtrlBtn.checked
+    }
+
+    Connections {
+
+        target: gamepadIfc.gamepad
+
+        function onButtonUpChanged(value) {
+            if(value) {
+                maxSpeedLinearSpinBox.increase()
+            }
+        }
+
+        function onButtonDownChanged(value) {
+            if(value) {
+                maxSpeedLinearSpinBox.decrease()
+            }
+        }
+
+        function onButtonSelectChanged(value) {
+            if(value) {
+                chkY.checked = !chkY.checked
+            }
+        }
+    }
+
     contentItem: ColumnLayout {
+
+        Button {
+            visible: gamepadIfc.connected
+            id: gamepadCtrlBtn
+            text: `${checked ? 'Disable' : 'Enable'} Gamepad`
+            checkable: true
+            checked: false
+            width: parent.width
+        }
 
         Switch {
             visible: false
@@ -94,6 +139,10 @@ Pane {
         opacity: 0.8
         radius: 8
         clip: true
+    }
+
+    Component.onCompleted:  {
+        gamepadIfc = CommonProperties.gamepad.registerGamepad('horizon')
     }
 
 }

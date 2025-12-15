@@ -33,12 +33,14 @@ Item {
 
         // handle autoscale
         let axisValue = seriesData.axisValue
+        let paddedValUp = val + (axisValue.max - axisValue.min)*0.1
+        let paddedValDown = val - (axisValue.max - axisValue.min)*0.1
 
-        if(axisValue.max < val && chart.autoscale) {
-            axisValue.max = val + (axisValue.max - axisValue.min)*0.1
+        if(axisValue.max < paddedValUp && chart.autoscale) {
+            axisValue.max = paddedValUp
         }
-        else if(axisValue.min > val && chart.autoscale) {
-            axisValue.min = val - (axisValue.max - axisValue.min)*0.1
+        else if(axisValue.min > paddedValDown && chart.autoscale) {
+            axisValue.min = paddedValDown
         }
 
         valMax = Math.max(val, valMax)

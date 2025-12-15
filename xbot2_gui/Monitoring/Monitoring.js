@@ -67,20 +67,22 @@ function objCallback(obj) {
 
 function addJointStateSeries(livePlot, jName, fieldName) {
 
-    if(livePlot === null) {
-        error('Live plot unavailable: open the "Plot" panel', 'Plot')
-        return
-    }
+    Common.CommonProperties.plot.addJointStateSeriesRequested(jName, fieldName)
 
-    let seriesName = jName + '/' + fieldName
+    // if(livePlot === null) {
+    //     error('Live plot unavailable: open the "Plot" panel', 'Plot')
+    //     return
+    // }
 
-    let props = Object()
-    props.type = 'joint_state'
-    props.jIndex = 0
-    props.jName = jName
-    props.fieldName = fieldName
+    // let seriesName = jName + '/' + fieldName
 
-    livePlot.addSeries(seriesName, props)
+    // let props = Object()
+    // props.type = 'joint_state'
+    // props.jIndex = 0
+    // props.jName = jName
+    // props.fieldName = fieldName
+
+    // livePlot.addSeries(seriesName, props)
 
 }
 

@@ -19,6 +19,70 @@ Item {
     property real t0: -1.0
     property Plotter activePlot
 
+    function addSingleSeries(item) {
+
+        let seriesName = `${item.src}/${item.name}` + (item.idx >= 0 ? `[${item.idx}]` : '')
+
+        console.log(`will add series ${seriesName}...`)
+
+        if(item.src === 'jointState' && item.idx >= 0) {
+            let jName = SharedData.jointNames[item.idx]
+            seriesName = `${jName}/${item.name}`
+        }
+
+        let series = activePlot.addSeries(seriesName, {}, false)
+
+        let recursiveObjectFields = item.name.split('.')
+
+        let _thisPlot = activePlot
+
+        let cb = function(msg) {
+
+
+            if(msg?.type !== undefined && msg.type !== item.src) {
+                // console.log(`${msg.type} != ${item.src}`)
+                // msg not intended for this callback
+                return true
+            }
+
+            let time = appData.getTimeNs()
+
+            let value = msg
+            for(let field of recursiveObjectFields) {
+                value = value[field]
+            }
+
+            if(item.idx >= 0) {
+                value = value[item.idx]
+            }
+
+            if(_thisPlot === null) {
+                console.log('parent plot died')
+                console.log(`removing callback for series ${seriesName}`)
+                return false
+            }
+
+            try {
+                _thisPlot.addPoint(series, (time - t0)*1e-9, value)
+            }
+            catch(err) {
+                console.error(`error adding point to series ${seriesName}: ${err}`)
+                console.log(`removing callback for series ${seriesName}`)
+                return false
+            }
+
+            return true
+        }
+
+        if(item.src === 'jointState') {
+            jointStateCallbacks.push(cb)
+            console.log('..done')
+        }
+        else {
+            genericCallbacks.push(cb)
+        }
+    }
+
     function addSeries() {
         for(let i = 0; i < listModel.count; i++) {
 
@@ -28,55 +92,7 @@ Item {
                 continue
             }
 
-            let seriesName = `${item.src}/${item.name}` + (item.idx >= 0 ? `[${item.idx}]` : '')
-
-            console.log(`will add series ${seriesName}...`)
-
-            if(item.src === 'jointState' && item.idx >= 0) {
-                let jName = SharedData.jointNames[item.idx]
-                seriesName = `${jName}/${item.name}`
-            }
-
-            let series = activePlot.addSeries(seriesName, {}, false)
-
-            let recursiveObjectFields = item.name.split('.')
-
-            let cb = function(msg) {
-
-
-                if(msg?.type !== undefined && msg.type !== item.src) {
-                    // console.log(`${msg.type} != ${item.src}`)
-                    return
-                }
-
-                let time = appData.getTimeNs()
-
-                let value = msg
-                for(let field of recursiveObjectFields) {
-                    value = value[field]
-                }
-
-                if(item.idx >= 0) {
-                    value = value[item.idx]
-                }
-
-                if(activePlot === null) {
-                    console.log('parent plot died')
-                    return false
-                }
-
-                activePlot.addPoint(series, (time - t0)*1e-9, value)
-
-                return true
-            }
-
-            if(item.src === 'jointState') {
-                jointStateCallbacks.push(cb)
-                console.log('..done')
-            }
-            else {
-                genericCallbacks.push(cb)
-            }
+            addSingleSeries(item)
         }
     }
 
@@ -119,7 +135,6 @@ Item {
         }
 
         jointStateNumericFieldsChanged()
-        listModel.build()
     }
 
 
@@ -251,6 +266,12 @@ Item {
             }
 
         }
+
+        onAboutToShow: {
+            for(let i = 0; i < listModel.count; i++) {
+                listModel.get(i).checked = false
+            }
+        }
     }
 
 
@@ -307,11 +328,14 @@ Item {
                     // font.variableAxes: {'opsz': 48}
                     font.pixelSize: 24
                     onClicked: {
+                        listModel.build()
                         activePlot = plot
                         drawer.open()
                     }
                 }
             }
+
+            Component.onCompleted: root.activePlot = plot
         }
     }
 
@@ -325,59 +349,43 @@ Item {
 
             if(SharedData.jointNames.length === 0) {
                 return
-
             }
 
             if(jointStateNumericFields.length === 0) {
                 discoverJointStateNumericFields(msg)
             }
 
-
-            for(const cb of root.jointStateCallbacks) {
-                cb(msg)
-            }
+            root.jointStateCallbacks = root.jointStateCallbacks.filter(cb => cb(msg))
 
         }
 
         function onObjectReceived(msg) {
 
-            for(const cb of root.genericCallbacks) {
-                cb(msg)
-            }
+            root.genericCallbacks = root.genericCallbacks.filter(cb => cb(msg))
 
         }
     }
 
-    // RecursiveSplitView {
+    Connections {
 
-    //     id: split
-    //     anchors.fill: parent
+        target: CommonProperties.plot
 
-    //     delegate: Control {
+        function onAddJointStateSeriesRequested(jName, jField) {
+            let seriesDescription = {
+                'src': 'jointState',
+                'name': jField,
+                'idx': SharedData.jointNames.indexOf(jName),
+                'checked': true
+            }
+            addSingleSeries(seriesDescription)
+        }
 
-    //         signal splitVertical()
-    //         signal splitHorizontal()
-    //         signal closeSplit()
+    }
 
-    //         contentItem: Plotter {
+    Component.onCompleted: {
+        root.t0 = appData.getTimeNs()
+    }
 
-    //             PlotterLegend {
-
-    //                 id: plotterLegend
-    //                 chart: livePlot.chartView
-    //             }
-
-    //             id: livePlot
-    //             plotterLegend: plotterLegend
-    //             property real initialTime: -1.0
-    //             timeSpan: 10.0
-    //         }
-
-    //         background: Rectangle {
-    //             color: Qt.hsva(Math.random(), .8, .2, 1.0)
-    //         }
-    //     }
-    // }
 
 }
 

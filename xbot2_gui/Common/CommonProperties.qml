@@ -96,9 +96,13 @@ Item {
 
     property Item globalLivePlot
 
+    property Item plot: Item {
+        signal addJointStateSeriesRequested(string jName, string jField)
+    }
+
     property Item config: Item {
         id: config
-        property bool testing: false
+        property bool testing: true
         property bool showSoftEmergency: false
         property bool showMonWidget: false
         property bool showLauncherDashboard: false
@@ -107,26 +111,29 @@ Item {
 
     property Item gamepad: Item {
 
-        id: gamepad
+        id: root
 
-        function registerGamepad(name) {
+        property string activeName: ''
 
-            if(_gamepadNames.indexOf(name) === -1) {
-                console.log(`Registering gamepad: ${name}`)
-                _gamepadNames.push(name)
+        function registerGamepad(gpname) {
+
+            if(_gamepadNames.indexOf(gpname) === -1) {
+                console.log(`Registering gamepad: ${gpname}`)
+                _gamepadNames.push(gpname)
+                let obj = gamepadDelegate.createObject(_gamepads, {'name': gpname})
+                _gamepads.push(obj)
+                console.log(obj)
+                return obj
             }
             else {
-                console.warn(`Gamepad name "${name}" already registered.`)
-
+                console.warn(`Gamepad name "${gpname}" already registered.`)
             }
-
-            return gamepadRepeater.itemAt(_gamepadNames.indexOf(name))
 
         }
 
         function getEnabledGamepad() {
-            for(let i = 0; i < gamepadRepeater.count; i++) {
-                let g = gamepadRepeater.itemAt(i)
+            for(let i = 0; i < _gamepads.length; i++) {
+                let g = _gamepads[i]
                 if(g.enabled) {
                     return g
                 }
@@ -134,37 +141,45 @@ Item {
             return null
         }
 
-        property list<string> _gamepadNames: []
+        function disableAll() {
+            for(let i = 0; i < _gamepads.length; i++) {
+                let g = _gamepads[i]
+                g.enabled = false
+            }
+        }
 
-        Repeater {
-            id: gamepadRepeater
-            model: gamepad._gamepadNames
-            delegate: GamepadInterface {
-                id: gamepadIfc
-                required property string modelData
-                property alias name: gamepadIfc.modelData
-                enabled: false
+        property Component gamepadDelegate: GamepadInterface {
+            id: gamepadIfc
+            required property string name
+            enabled: false
 
-                onEnabledChanged: {
-                    if(!enabled) {
-                        console.log(`Gamepad "${modelData}" disabled.`)
-                        return
-                    }
+            onEnabledChanged: {
+                if(!enabled) {
+                    console.log(`Gamepad "${name}" disabled.`)
+                    root.activeName = ''
+                    return
+                }
 
-                    console.log(`Gamepad "${modelData}" enabled.`)
+                console.log(`Gamepad "${name}" enabled.`)
+                root.activeName = name
 
-                    for(let i = 0; i < gamepadRepeater.count; i++) {
-                        if(gamepadRepeater.itemAt(i).name !== name) {
-                            gamepadRepeater.itemAt(i).enabled = false
-                        }
+                console.log(`There are ${root._gamepads.length} gamepads`)
+
+                for(let i = 0; i < root._gamepads.length; i++) {
+                    let g = root._gamepads[i]
+                    console.log(g)
+                    if(g.name !== name) {
+                        console.log(`Disabling "${g.name}" ...`)
+                        g.enabled = false
+                        console.log('AAAAAAAAAAAa')
                     }
                 }
             }
-
-            onItemAdded: function(item) {
-                console.log(`Gamepad "${item.modelData}" added to repeater.`)
-            }
         }
+
+        property list<var> _gamepads: []
+        property list<string> _gamepadNames: []
+
     }
 
     Settings {

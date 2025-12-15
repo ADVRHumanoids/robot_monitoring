@@ -16,6 +16,8 @@ Item {
 
     property bool isCurrentPage: false
 
+    signal toggleAcquireGamepad()
+
     function pageSelected() {
 
         if(isCurrentPage) {
@@ -37,14 +39,6 @@ Item {
     Item {
 
         id: appModel
-
-        PageItem {
-            name: "Plot"
-            page: "/qt/qml/LivePlot/Plot.qml"
-            iconText: MaterialSymbolNames.tableChart
-            iconFont: syms.font.family
-            active: client.isConnected || mainWindow.dbg
-        }
 
         PageItem {
             name: "Horizon"
@@ -277,6 +271,15 @@ Item {
 
                     Component.onCompleted: {
                         setSource(modelData.page, {'client': client})
+                    }
+
+                    Connections {
+                        target: root
+                        function onToggleAcquireGamepad() {
+                            if(item.toggleAcquireGamepad !== undefined) {
+                                item.toggleAcquireGamepad()
+                            }
+                        }
                     }
 
                 }

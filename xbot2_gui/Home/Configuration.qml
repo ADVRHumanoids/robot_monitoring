@@ -51,11 +51,5 @@ GridLayout {
         }
 
     }
-
-    Button {
-        text: 'Close'
-        onClicked: root.closed()
-        Layout.alignment: Qt.AlignRight
-    }
 }
 

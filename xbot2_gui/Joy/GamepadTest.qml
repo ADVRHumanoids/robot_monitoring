@@ -179,6 +179,18 @@ Control {
                 checked: gamepad.buttonR1
                 Layout.fillWidth: true
             }
+            ToolButton {
+                text: 'L1'
+                checkable: true
+                checked: gamepad.buttonL3
+                Layout.fillWidth: true
+            }
+            ToolButton {
+                text: 'R1'
+                checkable: true
+                checked: gamepad.buttonR3
+                Layout.fillWidth: true
+            }
         }
 
     }

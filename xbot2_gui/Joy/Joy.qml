@@ -14,9 +14,15 @@ Item {
 
     id: root
 
+    signal toggleAcquireGamepad()
+
+    onToggleAcquireGamepad: {
+        gamepadCtrlBtn.checked = !gamepadCtrlBtn.checked
+    }
+
     property ClientEndpoint client
 
-    property GamepadInterface gamepadIfc: CommonProperties.gamepad.registerGamepad('joy')
+    property GamepadInterface gamepadIfc: undefined
 
     JoyCartesianCard {
 
@@ -271,12 +277,34 @@ Item {
 
             rightPad.setXY(gamepadIfc.gamepad.axisRightX, 0 * gamepadIfc.gamepad.axisRightY)
         }
+
+        function onButtonUpChanged(value) {
+            if(value) {
+                maxSpeedLinearSpinBox.increase()
+            }
+        }
+
+        function onButtonDownChanged(value) {
+            if(value) {
+                maxSpeedLinearSpinBox.decrease()
+            }
+        }
+
+        function onButtonSelectChanged(value) {
+            if(value) {
+                chkY.checked = !chkY.checked
+            }
+        }
     }
 
     Binding {
         target: gamepadIfc
         property: 'enabled'
         value: gamepadCtrlBtn.checked
+    }
+
+    Component.onCompleted:  {
+        gamepadIfc = CommonProperties.gamepad.registerGamepad('joy')
     }
 }
 

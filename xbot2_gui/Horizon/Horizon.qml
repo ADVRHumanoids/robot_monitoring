@@ -14,10 +14,17 @@ Item {
     //     targetWidth: parent.width
     // }
 
+    signal toggleAcquireGamepad()
+
     property ClientEndpoint client
+
+    property alias gamepadIfc: configPane.gamepadIfc
 
     property list<real> vref: [0, 0, 0, 0, 0, 0]
 
+    onToggleAcquireGamepad: {
+        configPane.toggleAcquireGamepad()
+    }
 
 
     HorizonViz {
@@ -46,6 +53,8 @@ Item {
     }
 
     DualJoy {
+
+        id: dualJoy
 
         compactLayout: layout.compact
 
@@ -99,6 +108,22 @@ Item {
                 viz.updateGaitPattern(msg.timelines)
                 return
             }
+        }
+
+    }
+
+    Connections {
+        target: gamepadIfc.gamepad
+
+        function onAxisChanged(axis, value) {
+
+            dualJoy.leftPad.setXY(
+                        configPane.joyYEnabled * gamepadIfc.gamepad.axisLeftX,
+                        configPane.joyXEnabled * gamepadIfc.gamepad.axisLeftY
+                        )
+
+            dualJoy.rightPad.setXY(gamepadIfc.gamepad.axisRightX,
+                                   0 * gamepadIfc.gamepad.axisRightY)
         }
 
     }

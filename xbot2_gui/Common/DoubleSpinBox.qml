@@ -12,6 +12,14 @@ Item {
     property int decimals: 1
     signal valueModified(real value)
 
+    function increase() {
+        spinbox.increase()
+    }
+
+    function decrease() {
+        spinbox.decrease()
+    }
+
     property real _range: to - from
 
     implicitHeight: spinbox.implicitHeight

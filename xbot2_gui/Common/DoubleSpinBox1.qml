@@ -11,6 +11,14 @@ Item {
 
     signal valueModified(real value)
 
+    function increase() {
+        spinBox.increase()
+    }
+
+    function decrease() {
+        spinBox.decrease()
+    }
+
     id: root
 
     implicitHeight: spinBox.implicitHeight

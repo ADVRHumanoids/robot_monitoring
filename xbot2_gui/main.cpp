@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
     QtWebView::initialize();
 #endif
 
-    // list all qrc files
+    // //list all qrc files
     // QDirIterator it(":", QDirIterator::Subdirectories);
     // while (it.hasNext()) {
     //     qDebug() << it.next();
@@ -231,6 +231,15 @@ int main(int argc, char *argv[])
     // register appdata
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("appData", &appdata);
+
+    // Get current paths
+    QStringList paths = engine.importPathList();
+
+    // Make sure qrc:/qt/qml is first
+    paths.removeAll(QStringLiteral("qrc:/qt/qml"));
+    paths.prepend(QStringLiteral("qrc:/qt/qml"));
+
+    engine.setImportPathList(paths);
 
     // load main qml file
     const QUrl url(QStringLiteral("qrc:/qt/qml/Main/main.qml"));

@@ -67,17 +67,38 @@ function setJointStateMessage(msg)
         }
     }
 
+    let motorStatus = undefined
+    let brakeStatus = undefined
+
+    try
+    {
+        motorStatus = msg.motorStatus
+        brakeStatus = msg.brakeStatus
+    }
+    catch(err)
+    {
+        // do nothing
+    }
+
     for(var i = 0; i < jointNames.length; i++)
     {
         let bar = container.itemAt(i).bar
 
+        // set value
         bar.value = fieldMsg[i]
 
+        // set ref
         if(fieldRefMsg !== undefined) {
             bar.valueRef = fieldRefMsg[i]
         }
         else {
             bar.refMarker.visible = false
+        }
+
+        // set status
+        if(motorStatus !== undefined) {
+            bar.setMotorStatus(motorStatus[i])
+            bar.setBrakeStatus(brakeStatus[i])
         }
     }
 }

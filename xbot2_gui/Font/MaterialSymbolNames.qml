@@ -49,6 +49,7 @@ Item {
     property string splitHorz: '\uf674'
     property string splitVert: '\uf676'
     property string close: '\ue5cd'
+    property string lock: '\ue897'
 
     property FontLoader filledFont: FontLoader {
         source: `/Font/materialsymbols/MaterialSymbolsOutlined[opsz,wght,FILL,GRAD@20,200,1,200].otf`

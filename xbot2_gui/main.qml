@@ -118,6 +118,7 @@ ApplicationWindow {
     LayoutClassHelper {
         id: layout
         targetWidth: mainWindow.width
+        targetHeight: mainWindow.height
     }
 
     Binding {
@@ -568,6 +569,7 @@ ApplicationWindow {
         property alias y: mainWindow.y
         property alias width: mainWindow.width
         property alias height: mainWindow.height
+        property alias orientationBasedLayout: layout.orientationBasedLayout
     }
 
 }

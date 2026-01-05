@@ -51,10 +51,23 @@ GridLayout {
     Label {
         topPadding: 4
         Layout.columnSpan: 3
-        text: 'GUI Overlay'
+        text: 'GUI Layout'
         font.pixelSize: CommonProperties.font.h4
         font.bold: true
     }
+
+    Label {
+        text: 'Layout based on device orientation'
+    }
+
+    Switch {
+        checked: layout.orientationBasedLayout
+        onClicked: {
+            layout.orientationBasedLayout = checked
+        }
+    }
+
+    Item {}
 
     Label {
         text: 'Show Soft Emergency Stop'

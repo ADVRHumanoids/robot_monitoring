@@ -81,7 +81,7 @@ void MeshGeometry::updateData()
 
     if(m_meshFile.size() < numTriangles*50 + 84)
     {
-        qWarning("Bad mesh file size: %d < %d*50 + 84",
+        qWarning("Bad mesh file size: %ld < %d*50 + 84",
                  m_meshFile.size(), numTriangles);
         return;
     }

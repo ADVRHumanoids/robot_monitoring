@@ -7,7 +7,7 @@ Item {
     function setXY(x: real, y: real) {
         inner.anchors.horizontalCenterOffset = x * mouseArea.distanceBound
         inner.anchors.verticalCenterOffset = y * mouseArea.distanceBound
-        joystickMoved(x, y)
+        joystickMoved(x, -y)
     }
 
     signal joystickMoved(double x, double y);

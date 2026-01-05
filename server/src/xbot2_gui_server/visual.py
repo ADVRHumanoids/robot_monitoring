@@ -237,7 +237,7 @@ class VisualHandler:
             else:
                 origin = {
                     'origin_xyz': l.collision.origin.xyz,
-                    'origin_rot': R.from_euler('XYZ', l.collision.origin.rpy).as_quat().tolist()
+                    'origin_rot': R.from_euler('xyz', l.collision.origin.rpy).as_quat().tolist()
                 }
             
             for c in l.collisions:

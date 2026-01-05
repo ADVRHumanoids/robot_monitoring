@@ -294,7 +294,6 @@ Item {
                 anchors.right: plot.right
                 rows: 1
                 ToolButton {
-
                     text: MaterialSymbolNames.splitHorz
                     font.family: 'Material Symbols Outlined'
                     // font.variableAxes: {'opsz': 48}

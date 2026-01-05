@@ -297,6 +297,17 @@ Item {
         }
     }
 
+    Timer {
+        id: gamepadAutorepeatTimer
+        interval: 100
+        repeat: true
+        running: gamepadIfc.enabled
+
+        onTriggered: {
+            Joy.sendVref(currentTask, vref)
+        }
+    }
+
     Binding {
         target: gamepadIfc
         property: 'enabled'

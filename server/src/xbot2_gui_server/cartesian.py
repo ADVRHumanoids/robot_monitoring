@@ -20,7 +20,7 @@ class CartesianHandler:
 
         # config
         self.rate = config.get('rate', 10.0)
-        self.cmd_vel_topics = config.get('cmd_vel_topics', [])
+        self.cmd_vel_topics = config.get('cmd_vel_topics', ['/omnisteering/cmd_vel'])
 
         # save server object, register our handlers
         self.srv = srv

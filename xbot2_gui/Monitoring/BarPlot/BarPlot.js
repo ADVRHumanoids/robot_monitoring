@@ -82,7 +82,8 @@ function setJointStateMessage(msg)
 
     for(var i = 0; i < jointNames.length; i++)
     {
-        let bar = container.itemAt(i).bar
+        let barPlotItem = container.itemAt(i)
+        let bar = barPlotItem.bar
 
         // set value
         bar.value = fieldMsg[i]
@@ -97,8 +98,8 @@ function setJointStateMessage(msg)
 
         // set status
         if(motorStatus !== undefined) {
-            bar.setMotorStatus(motorStatus[i])
-            bar.setBrakeStatus(brakeStatus[i])
+            barPlotItem.motorStatus = motorStatus[i]
+            barPlotItem.brakeStatus = brakeStatus[i]
         }
     }
 }

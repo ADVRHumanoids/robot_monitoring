@@ -24,4 +24,9 @@ message JointState {
 
     float vbatt = 14;
     float ibatt = 15;
+
+    repeated uint32 motorStatus = 16;
+    repeated bool brakeStatus = 17;
+
+    repeated float motTor = 18;
 }

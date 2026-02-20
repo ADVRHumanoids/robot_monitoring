@@ -1,391 +1,363 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick3D
+import QtQuick3D.Helpers
 
 import Main
 import Common
-import LivePlot
-import Font
+import ViewerQuick3D
 
 import "../Main/sharedData.js" as SharedData
 
 Item {
 
     id: root
+
     property ClientEndpoint client
-    property var jointStateNumericFields: Array()
-    property var jointStateCallbacks: Array()
-    property var genericCallbacks: Array()
-    property real t0: -1.0
-    property Plotter activePlot
 
-    function addSingleSeries(item) {
+    // ExpandableControl {
+    //     z: 1
+    //     // width: 300
+    //     anchors {
+    //         top: parent.top
+    //         left: parent.left
+    //         margins: 16
+    //     }
 
-        let seriesName = `${item.src}/${item.name}` + (item.idx >= 0 ? `[${item.idx}]` : '')
+    //     GridLayout {
+    //         anchors.fill: parent
+    //         columns: 2
+    //         Label { text: 'Hey' }
+    //         Button { text: 'Press Me' }
+    //         Label { text: 'Hey' }
+    //         Button { text: 'Press Me' }
+    //         Label { text: 'Hey' }
+    //         Button { text: 'Press Me' }
+    //         Label { text: 'Hey' }
+    //         Button { text: 'Press Me' }
+    //         Label { text: 'Hey' }
+    //         Button { text: 'Press Me' }
+    //         Label { text: 'Hey' }
+    //         Button { text: 'Press Me' }
+    //     }
+    // }
 
-        console.log(`will add series ${seriesName}...`)
+    Control {
+        z: 1
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.margins: 16
+        contentItem: ColumnLayout {
 
-        if(item.src === 'jointState' && item.idx >= 0) {
-            let jName = SharedData.jointNames[item.idx]
-            seriesName = `${jName}/${item.name}`
-        }
-
-        let series = activePlot.addSeries(seriesName, {}, false)
-
-        let recursiveObjectFields = item.name.split('.')
-
-        let _thisPlot = activePlot
-
-        let cb = function(msg) {
-
-
-            if(msg?.type !== undefined && msg.type !== item.src) {
-                // console.log(`${msg.type} != ${item.src}`)
-                // msg not intended for this callback
-                return true
-            }
-
-            let time = appData.getTimeNs()
-
-            let value = msg
-            for(let field of recursiveObjectFields) {
-                value = value[field]
-            }
-
-            if(item.idx >= 0) {
-                value = value[item.idx]
-            }
-
-            if(_thisPlot === null) {
-                console.log('parent plot died')
-                console.log(`removing callback for series ${seriesName}`)
-                return false
-            }
-
-            try {
-                _thisPlot.addPoint(series, (time - t0)*1e-9, value)
-            }
-            catch(err) {
-                console.error(`error adding point to series ${seriesName}: ${err}`)
-                console.log(`removing callback for series ${seriesName}`)
-                return false
-            }
-
-            return true
-        }
-
-        if(item.src === 'jointState') {
-            jointStateCallbacks.push(cb)
-            console.log('..done')
-        }
-        else {
-            genericCallbacks.push(cb)
-        }
-    }
-
-    function addSeries() {
-        for(let i = 0; i < listModel.count; i++) {
-
-            let item = listModel.get(i)
-
-            if(!item.checked) {
-                continue
-            }
-
-            addSingleSeries(item)
-        }
-    }
-
-
-
-
-
-    function discoverJointStateNumericFields(msg) {
-        let fields = Object.keys(msg)
-
-        for (let field of fields) {
-
-            let ftype = typeof msg[field];
-
-            // console.log(`jointState.${field} (${ftype}) (${Array.isArray(msg[field])})`)
-
-            if(ftype === 'number') {
-                console.log(`jointState.${field}`)
-                jointStateNumericFields.push(
-                            {
-                                src: 'jointState',
-                                name: field,
-                                type: 'number',
-                                length: 1
-                            })
-            }
-
-            if(ftype === 'object' &&
-                    typeof msg[field][0] === 'number') {
-                // console.log(`jointState.${field}[${msg[field].length}]`)
-                jointStateNumericFields.push(
-                            {
-                                src: 'jointState',
-                                name: field,
-                                type: 'array',
-                                length: msg[field].length
-                            })
-            }
-
-        }
-
-        jointStateNumericFieldsChanged()
-    }
-
-
-
-    ListModel {
-
-        id: listModel
-
-        function build() {
-
-            for(let [k, v] of Object.entries(client.objNumericFields)) {
-                for(let v1 of v) {
-                    console.log(JSON.stringify(v1))
-                    if(v1.type === 'array') {
-                        for(let i = 0; i < v1.length; i++) {
-                            append({
-                                       src: v1.src,
-                                       name: v1.name,
-                                       idx: i,
-                                       checked: false
-                                   })
-                        }
-                    }
-                    else {
-                        append({
-                                   src: v1.src,
-                                   name: v1.name,
-                                   idx: -1,
-                                   checked: false
-                               })
-                    }
-                }
-
-            }
-
-            for(let v1 of jointStateNumericFields) {
-                console.log(JSON.stringify(v1))
-                if(v1.type === 'array') {
-                    for(let j = 0; j < v1.length; j++) {
-                        append({
-                                   src: v1.src,
-                                   name: v1.name,
-                                   idx: j,
-                                   checked: false
-                               })
-                    }
-                }
-                else {
-                    append({
-                               src: v1.src,
-                               name: v1.name,
-                               idx: -1,
-                               checked: false
-                           })
+            Switch {
+                text: 'Enable'
+                onCheckedChanged: {
+                    let msg_type = checked ? 'pc_registration' : 'pc_unregistration'
+                    client.sendTextMessageUdp(JSON.stringify(
+                                               {
+                                                   'type': msg_type
+                                               })
+                                           )
                 }
             }
-        }
-    }
-
-    Drawer {
-
-        id: drawer
-
-        height: parent.height
-
-        padding: 16
-        leftPadding: 16
-        rightPadding: 16
-
-        ColumnLayout {
-
-            anchors.fill: parent
-
-            spacing: 16
-
-            TextField {
-                id: filterField
-                Layout.fillWidth: true
-                placeholderText: 'Filter'
-            }
-
-            ListView {
-
-                Layout.fillHeight: true
-                Layout.fillWidth: true
-
-                model: listModel
-
-                delegate:  Label {
-                    required property bool checked
-                    required property int index
-                    required property int idx
-                    required property string src
-                    required property string name
-                    property string idxText: src === 'jointState' ? SharedData.jointNames[idx] : `${idx}`
-                    id: label
-                    text: `${src}/${name}` + (idx >= 0 ? `[${idxText}]` : '')
-                    color: checked ? palette.accent : palette.text
-                    font.bold: checked || mouse.containsMouse
-                    visible: filterField.text === '' ||
-                             text.toLowerCase().includes(filterField.text.toLowerCase())
-                    height: visible ? implicitHeight : 0
-                    topPadding: 1
-                    bottomPadding: 1
-
-                    MouseArea {
-                        id: mouse
-                        anchors.fill: parent
-                        onClicked: listModel.get(index).checked = !listModel.get(index).checked
-                        hoverEnabled: true
-                    }
-                }
-
-            }
-
-            Button {
-                Layout.fillWidth: true
-                text: 'Add series'
-                onClicked: root.addSeries()
-            }
-
 
             SpinBox {
-                Layout.fillWidth: true
-                from: 1
-                to: 1000
-                value: activePlot.timeSpan
-                onValueModified: activePlot.timeSpan = value
+                id: camHeightSpin
+                from: 100
+                to: 5000
+                value: 400
             }
 
-        }
-
-        onAboutToShow: {
-            for(let i = 0; i < listModel.count; i++) {
-                listModel.get(i).checked = false
-            }
         }
     }
 
+    // the main 3d node
+    Node {
 
+        id: standAloneScene
 
-    RecursiveSplitView {
+        Node {
 
-        anchors.fill: parent
+            id: originNode
 
-        delegate: Plotter {
-            id: plot
-            signal splitHorizontal()
-            signal splitVertical()
-            signal closeSplit()
-            plotterLegend: legend
-            PlotterLegend {
-                id: legend
-                chart: plot.chartView
+            PerspectiveCamera {
+                id: cameraPerspectiveTwo
+                clipNear: 1
+                fieldOfView: 30
             }
-            GridLayout {
-                anchors.right: plot.right
-                rows: 1
-                ToolButton {
 
-                    text: MaterialSymbolNames.splitHorz
-                    font.family: 'Material Symbols Outlined'
-                    // font.variableAxes: {'opsz': 48}
-                    font.pixelSize: 24
-                    onClicked: plot.splitHorizontal()
+            x: 0
+            y: camHeightSpin.value
+            z: 0
+            eulerRotation.x: -90
+            eulerRotation.y: -90
+
+        }
+
+        Node {
+
+            // quick3d world (y-axis up)
+            id: quickWorld
+
+            DirectionalLight {
+                ambientColor: Qt.rgba(0.5, 0.5, 0.5, 1.0)
+                brightness: 1.0
+                eulerRotation.x: -25
+            }
+
+            Node {
+
+                id: worldNode
+
+                // robotic world (z-axis up)
+
+                eulerRotation.x: -90
+
+                Axes3D {
+                    // mark origin with axes
                 }
-                ToolButton {
-                    text: MaterialSymbolNames.splitVert
-                    font.family: 'Material Symbols Outlined'
-                    // font.variableAxes: {'opsz': 48}
-                    font.pixelSize: 24
-                    onClicked: plot.splitVertical()
+
+                Model {
+                    // goal cuboid
+                    id: goalMarker
+                    source: "#Cube"
+                    position: Qt.vector3d(0, 0, 0)
+                    scale: Qt.vector3d(1, .5, .5)
+                    materials: [
+                        DefaultMaterial {
+                            diffuseColor: Qt.hsva(0.8, 0.8, 0.8, 1)
+                        }
+                    ]
+                    pickable: true
+
+                    Model {
+                        id: goalMarkerRing
+                        geometry: TorusGeometry {
+
+                        }
+                        scale: Qt.vector3d(1, 2, 2)
+                        eulerRotation.x: 90
+                        materials: [
+                            DefaultMaterial {
+                                diffuseColor: Qt.hsva(0.2, 0.8, 0.8, 1)
+                            }
+                        ]
+                        pickable: true
+                    }
                 }
-                ToolButton {
-                    text: MaterialSymbolNames.home
-                    font.family: 'Material Symbols Outlined'
-                    // font.variableAxes: {'opsz': 48}
-                    font.pixelSize: 24
-                    onClicked: plot.resetView()
-                }
-                ToolButton {
-                    text: MaterialSymbolNames.close
-                    font.family: 'Material Symbols Outlined'
-                    // font.variableAxes: {'opsz': 48}
-                    font.pixelSize: 24
-                    onClicked: plot.closeSplit()
-                }
-                ToolButton {
-                    text: MaterialSymbolNames.more
-                    font.family: 'Material Symbols Outlined'
-                    // font.variableAxes: {'opsz': 48}
-                    font.pixelSize: 24
-                    onClicked: {
-                        listModel.build()
-                        activePlot = plot
-                        drawer.open()
+
+                // RobotModelNode {
+                //     client: root.client
+                //     opacity: 0.5
+                //     color: 'white'
+                // }
+
+                Repeater3D {
+
+                    id: pcRepeater
+
+                    model: 0
+
+                    delegate: PointCloud {
+
+                        property int iblkLast: -1
+
+                        // required property var model
+
+                        // position: Qt.vector3d(model.pos[0]*100,
+                        //                       model.pos[1]*100,
+                        //                       model.pos[2]*100)
+
+                        // rotation: Qt.quaternion(model.rot[3],
+                        //                         model.rot[0],
+                        //                         model.rot[1],
+                        //                         model.rot[2])
                     }
                 }
             }
-
-            Component.onCompleted: root.activePlot = plot
         }
     }
 
-    Connections {
 
-        id: jsConn
+    View3D {
+
+        anchors.fill: parent
+        id: view3d
+        importScene: standAloneScene
+        camera: cameraPerspectiveTwo
+
+        environment: SceneEnvironment {
+            backgroundMode: SceneEnvironment.Color
+            clearColor: Qt.rgba(0, 0, 0, 0)
+            // InfiniteGrid {
+            //     gridInterval: 30
+            // }
+        }
+
+        MouseArea {
+            anchors.fill: parent
+
+            // interaction type
+            property int interactionType: -1
+
+            // for panning the scene
+            property real lastX: -1
+            property real lastY: -1
+
+            // for dragging the goal marker
+            property vector3d grabOffset
+            property real depth
+
+            // for rotating the goal marker
+            property real angleOffset
+
+            onPressed: function (mouse) {
+
+                // pressed on goal marker?
+                let result = view3d.pick(mouse.x, mouse.y)
+
+                // yes, initiate goal marker dragging
+                if (result.objectHit === goalMarker) {
+
+                    depth = -cameraPerspectiveTwo.mapPositionFromScene(result.scenePosition).z
+                    // grabOffset = goalMarker.scenePosition.minus(result.scenePosition)
+                    interactionType = 1
+                    return
+                }
+
+                // yes, initiate goal marker rotation
+                if (result.objectHit === goalMarkerRing) {
+
+                    depth = -cameraPerspectiveTwo.mapPositionFromScene(result.scenePosition).z
+                    grabOffset = result.scenePosition.minus(goalMarker.scenePosition)
+                    angleOffset = Math.atan2(grabOffset.z, grabOffset.x)
+                    interactionType = 2
+                    console.log(`start rotating from angle ${angleOffset}`)
+                    return
+                }
+
+                // nope, pan the scene
+                interactionType = 0
+                lastX = mouse.x
+                lastY = mouse.y
+                console.log('started panning')
+            }
+
+            onPositionChanged: function (mouse) {
+
+                // panning
+                if(interactionType === 0) {
+                    let dx = mouse.x - lastX
+                    let dy = mouse.y - lastY
+
+                    originNode.z -= dx * originNode.y / 800.0
+                    originNode.x += dy * originNode.y / 800.0
+
+                    lastX = mouse.x
+                    lastY = mouse.y
+
+                    return
+                }
+
+                // drag goal
+                if(interactionType === 1) {
+
+                    // mouse position in 3d scene at the depth of the goal marker
+                    let worldMousePos = view3d.mapTo3DScene(
+                            Qt.vector3d(mouse.x, mouse.y, depth)
+                            )
+
+                    console.log('mouse position', worldMousePos)
+
+                    // desired global position of the goal marker
+                    let desiredPosition = Qt.vector3d(
+                                worldMousePos.x, // + grabOffset.x,
+                                goalMarker.scenePosition.y,
+                                worldMousePos.z, // + grabOffset.z
+                                )
+
+                    console.log('desired position (global)', desiredPosition)
+
+                    let worldPosition = worldNode.mapPositionFromNode(standAloneScene, desiredPosition)
+
+                    console.log('desired position (world)', worldPosition)
+
+                    goalMarker.position = worldPosition
+
+                    return
+                }
+
+                // rotate goal
+                if(interactionType === 2) {
+                    // mouse position in 3d scene at the depth of the goal marker
+                    let worldMousePos = view3d.mapTo3DScene(
+                            Qt.vector3d(mouse.x, mouse.y, depth)
+                            )
+
+                    // vector from goal marker to mouse position
+                    grabOffset = worldMousePos.minus(goalMarker.scenePosition)
+
+                    let angleNow = Math.atan2(grabOffset.z, grabOffset.x)
+
+                    let angleDelta = angleOffset - angleNow
+
+                    goalMarker.eulerRotation.z += angleDelta * 180 / Math.PI
+
+                    angleOffset = angleNow
+                }
+            }
+
+            onWheel: function (wheel) {
+                camHeightSpin.value += wheel.angleDelta.y
+            }
+
+
+        }
+
+        // OrbitCameraController {
+        //     camera: cameraPerspectiveTwo
+        //     origin: originNode
+        //     anchors.fill: parent
+        // }
+
+    }
+
+    property var pcNameToId: Object()
+    property var sonarNameToId: Object()
+
+    Connections {
 
         target: client
 
-        function onJointStateReceived(msg) {
+        function onPointCloudReceived(obj) {
 
-            if(SharedData.jointNames.length === 0) {
-                return
+            let pc = pcRepeater.objectAt(0)
+
+            let instanceTable = pc.instancing
+
+            // ideally a now point cloud starts with a iblk = 0 packet
+            // in the case of packet loss, we may check if iblk is smaller than the last one
+            // to detect point cloud start
+            if(obj.iblk == 0 || obj.iblk < pc.iblkLast) {
+                instanceTable.clear()
             }
 
-            if(jointStateNumericFields.length === 0) {
-                discoverJointStateNumericFields(msg)
+            pc.iblkLast = obj.iblk
+
+            // add all the points
+            for(let i = 0; i + 2 < obj.xyz.length; i += 3) {
+                instanceTable.addPoint(obj.xyz[i],
+                                       obj.xyz[i+1],
+                                       obj.xyz[i+2]
+                                       )
             }
 
-            root.jointStateCallbacks = root.jointStateCallbacks.filter(cb => cb(msg))
-
-        }
-
-        function onObjectReceived(msg) {
-
-            root.genericCallbacks = root.genericCallbacks.filter(cb => cb(msg))
-
-        }
-    }
-
-    Connections {
-
-        target: CommonProperties.plot
-
-        function onAddJointStateSeriesRequested(jName, jField) {
-            let seriesDescription = {
-                'src': 'jointState',
-                'name': jField,
-                'idx': SharedData.jointNames.indexOf(jName),
-                'checked': true
+            // last iblk means we have received the whole point cloud
+            // we can now update the screen
+            if(obj.iblk == (obj.nblk - 1)) {
+                instanceTable.commit()
             }
-            addSingleSeries(seriesDescription)
         }
-
     }
-
-    Component.onCompleted: {
-        root.t0 = appData.getTimeNs()
-    }
-
-
 }
-

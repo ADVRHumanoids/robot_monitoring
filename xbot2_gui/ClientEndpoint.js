@@ -164,6 +164,10 @@ function detectObjectFields(obj, save=true, type=undefined) {
     for(let i = 0; i < fields.length; i++) {
         let field = fields[i];
         let fieldType = typeof obj[field];
+        console.log(`field = ${field} value = ${obj[field]} type = ${fieldType}`)
+        if(obj[field] === null) {
+            continue
+        }
         if(fieldType === 'number') {
             numericFields.push({src: obj.type ?? type, name: field, type: 'number', length: 1});
             console.log(`NUMERIC FIELD ${obj.type ?? type}.${field}`)

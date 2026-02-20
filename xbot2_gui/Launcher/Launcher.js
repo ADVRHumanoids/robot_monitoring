@@ -26,6 +26,8 @@ function requestProcessUpdate() {
 
         let categoryNames = []
 
+        categoryToProcessModel = Object()
+
         for(let item of msg) {
             let category = item.category ?? 'none'
             availableMachines.push(item.machine)

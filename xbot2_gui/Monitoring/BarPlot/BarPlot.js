@@ -74,6 +74,9 @@ function setJointStateMessage(msg)
     {
         motorStatus = msg.motorStatus
         brakeStatus = msg.brakeStatus
+
+        if(motorStatus.length === 0) motorStatus = undefined
+        if(brakeStatus.length === 0) brakeStatus = undefined
     }
     catch(err)
     {
@@ -136,6 +139,12 @@ var barPlotDefaultModel = [
                 'max': SharedData.taumax.map(x => x/3.),
             },
             {
+                'fieldName': 'motTor',
+                'refName': 'torRef',
+                'min': SharedData.taumax.map(x => -x/3.),
+                'max': SharedData.taumax.map(x => x/3.),
+            },
+            {
                 'fieldName': 'motorTemp',
                 'refName': '',
                 'min': Array(SharedData.jointNames.length).fill(20),
@@ -161,7 +170,7 @@ var barPlotDefaultModel = [
             },
         ]
 
-var barPlotFields = ['motPos', 'linkPos', 'motVel', 'linkVel', 'tor', 'motorTemp', 'k', 'd']
+var barPlotFields = ['motPos', 'linkPos', 'motVel', 'linkVel', 'tor', 'motTor', 'motorTemp', 'k', 'd']
 
 var shortToLongName = SjsData.shortToLongName
 

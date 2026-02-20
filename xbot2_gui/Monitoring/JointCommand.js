@@ -135,3 +135,42 @@ function sendGripperCommand(name, action, effort=0) {
 
     console.log(JSON.stringify(msg))
 }
+
+function startMotor(name) {
+    let jointNames = ctrlJoints.join(';')
+    client.doRequestAsync('POST',
+                          `/joint_command/motor_ctrl/${jointNames}?ctrl=start`)
+        .then((response) => {
+
+              })
+}
+
+function stopMotor(name) {
+    let jointNames = ctrlJoints.join(';')
+    client.doRequestAsync('POST',
+                          `/joint_command/motor_ctrl/${jointNames}?ctrl=stop`)
+        .then((response) => {
+
+              })
+
+}
+
+function engageBrake(name) {
+    let jointNames = ctrlJoints.join(';')
+    client.doRequestAsync('POST',
+                          `/joint_command/brake_ctrl/${jointNames}?ctrl=engage`)
+        .then((response) => {
+
+              })
+
+}
+
+function releaseBrake(name) {
+    let jointNames = ctrlJoints.join(';')
+    client.doRequestAsync('POST',
+                          `/joint_command/brake_ctrl/${jointNames}?ctrl=release`)
+        .then((response) => {
+
+              })
+
+}

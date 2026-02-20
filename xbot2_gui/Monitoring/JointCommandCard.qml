@@ -66,13 +66,18 @@ Card1 {
         columns: 2
 
         columnSpacing: 16
-        rowSpacing: 16
+        rowSpacing: 8
 
+        Label {
+            text: root.ctrlJoints.length > 0 ? 'Selected joints:' : 'No joint selected'
+            Layout.columnSpan: 2
+        }
 
         Flow {
             spacing: 4
             Layout.columnSpan: 2
             Layout.fillWidth: true
+
             Repeater {
                 id: jointRepeater
                 model: root.ctrlJoints
@@ -87,9 +92,20 @@ Card1 {
                         anchors.fill: parent
                         onClicked: root.removeJoint(modelData)
                     }
-                    Component.onCompleted: clearBtn.height = height
+                    Component.onCompleted: {
+                        selectAllBtn.height = height
+                        clearBtn.height = height
+                    }
                 }
             }
+
+            ToolButton {
+                id: selectAllBtn
+                text: 'ALL'
+                visible: jointRepeater.count < SharedData.jointNames.length
+                onClicked: root.ctrlJoints = SharedData.jointNames
+            }
+
             ToolButton {
                 id: clearBtn
                 text: 'X'
@@ -99,6 +115,8 @@ Card1 {
         }
 
         RowLayout {
+
+            visible: jointDevice.jointActive
 
             Layout.fillWidth: true
             Layout.columnSpan: 2
@@ -133,6 +151,7 @@ Card1 {
 
         Button {
             id: trjCmdBtn
+            visible: jointDevice.jointActive
             property bool running: false
             enabled: root.ctrlJoints.length > 0
             Layout.columnSpan: 1
@@ -165,6 +184,7 @@ Card1 {
         }
 
         Button {
+            visible: jointDevice.jointActive
             enabled: root.ctrlJoints.length > 0
             Layout.columnSpan: 1
             Layout.fillWidth: true
@@ -173,6 +193,55 @@ Card1 {
                 root.ctrlJointsChanged()
             }
         }
+
+        DelayButton {
+            visible: !jointDevice.jointActive
+            enabled: root.ctrlJoints.length > 0
+            text: 'Stop Motor'
+            Layout.fillWidth: true
+            onActivated: {
+                progress = 0;
+                Logic.stopMotor();
+            }
+            delay: 333
+        }
+
+        DelayButton {
+            visible: !jointDevice.jointActive
+            enabled: root.ctrlJoints.length > 0
+            text: 'Start Motor'
+            Layout.fillWidth: true
+            onActivated: {
+                progress = 0;
+                Logic.startMotor()
+            }
+            delay: 333
+        }
+
+        DelayButton {
+            visible: !jointDevice.jointActive
+            enabled: root.ctrlJoints.length > 0
+            text: 'Engage brake'
+            Layout.fillWidth: true
+            onActivated: {
+                progress = 0;
+                Logic.engageBrake()
+            }
+            delay: 333
+        }
+
+        DelayButton {
+            visible: !jointDevice.jointActive
+            enabled: root.ctrlJoints.length > 0
+            text: 'Release brake'
+            Layout.fillWidth: true
+            onActivated: {
+                progress = 0;
+                Logic.releaseBrake()
+            }
+            delay: 333
+        }
+
 
         Item {
             Layout.fillHeight: true

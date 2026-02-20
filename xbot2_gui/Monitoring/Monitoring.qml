@@ -228,7 +228,7 @@ MultiPaneResponsiveLayout {
             robotCmd: loader.item.robotCmd
             onResetCmd: robotViewer.resetCmd()
             onCmdChanged: robotViewer.showRobotCmd = true
-            enabled: jointDevice.jointActive
+            // enabled: jointDevice.jointActive
             // ctrlJoints: loader.item.selectedJoints
             onJointRemoved: {
                 barPlot.selectedJoints = ctrlJoints

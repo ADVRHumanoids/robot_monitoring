@@ -15,6 +15,10 @@ Item {
     property int motorStatus: -1
     property bool brakeStatus: false
 
+    property bool _rtso: motorStatus & 0x1
+    property bool _on: motorStatus & 0x4
+    property bool _fault: motorStatus & 0x8
+
     signal jointClicked(string jName)
 
     function setStatus(ok) {
@@ -25,17 +29,11 @@ Item {
     function motorStatusAsColor(st) {
 
         // bitmask:
-        // LSB  : on
-        // bit-1: ready to switch on
-        // bit-2: fault
+        // w	sod	qs	ve	f	oe	so	rtso
 
-        let _on = (st & 0x1) !== 0
-        let _rtso = (st & 0x2) !== 0
-        let _fault = (st & 0x4) !== 0
-
-        if(_on) return 'green'
-        if(_rtso) return 'yellow'
-        if(_fault) return 'red'
+        if(_on) return Qt.hsva(0.3, 0.8, 1.0, 1.0)
+        if(_rtso) return Qt.hsva(0.166, 0.8, 1.0, 1.0)
+        if(_fault) return Qt.hsva(0., 0.8, 1.0, 1.0)
         return 'gray'
     }
 
@@ -107,7 +105,6 @@ Item {
                         }
                     }
                 }
-
             }
         }
 
@@ -116,6 +113,7 @@ Item {
             id: bar
             Layout.fillWidth: true
             height: leftCtrl.height
+            enabled: root.motorStatus < 0 || root._on
         }
 
     }

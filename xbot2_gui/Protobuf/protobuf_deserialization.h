@@ -20,6 +20,7 @@ public:
     Q_PROPERTY(int text MEMBER text);
     Q_PROPERTY(int proc MEMBER proc);
     Q_PROPERTY(int video MEMBER video);
+    Q_PROPERTY(int pointcloud MEMBER pointcloud);
     QML_ELEMENT
 
     int all = 0;
@@ -27,6 +28,7 @@ public:
     int text = 0;
     int proc = 0;
     int video = 0;
+    int pointcloud = 0;
 };
 
 class ProtobufDeserializationWorker : public QObject
@@ -46,6 +48,8 @@ signals:
     void processOutputReceived(const ProcessOutput&);
 
     void theoraPacketReceived(const TheoraPacket&);
+
+    void pointCloudReceived(const PointCloud&);
 
     void countersUpdated(Counters c);
 
@@ -96,6 +100,8 @@ signals:
     void processOutputReceived(const ProcessOutput&);
 
     void theoraPacketReceived(const TheoraPacket&);
+
+    void pointCloudReceived(const PointCloud&);
 
     void recvBytesChanged();
 

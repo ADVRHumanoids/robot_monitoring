@@ -62,6 +62,9 @@ Item
     signal jpegReceived(var msg)
     signal theoraPacketReceived(theoraPacket msg)
 
+    // pointcloud received
+    signal pointCloudReceived(pointCloud msg)
+
     // generic message
     signal objectReceived(var msg)
 
@@ -237,6 +240,10 @@ Item
 
         onTheoraPacketReceived: function(pkt) {
             root.theoraPacketReceived(pkt)
+        }
+
+        onPointCloudReceived: function(pc) {
+            root.pointCloudReceived(pc)
         }
 
     }

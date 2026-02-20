@@ -37,6 +37,12 @@ void ProtobufDeserializationWorker::processBinaryMessage(const QByteArray &msg)
         _bytes_recv.video += msg.size();
         emit theoraPacketReceived(_msg.theoraPacket());
     }
+    else if(_msg.hasPointCloud())
+    {
+        _counters.pointcloud++;
+        _bytes_recv.pointcloud += msg.size();
+        emit pointCloudReceived(_msg.pointCloud());
+    }
     else
     {
         qWarning("empty protobuf msg received");
@@ -74,6 +80,11 @@ ProtobufDeserialization::ProtobufDeserialization(QObject *parent)
             &ProtobufDeserializationWorker::theoraPacketReceived,
             this,
             &ProtobufDeserialization::theoraPacketReceived);
+
+    connect(worker,
+            &ProtobufDeserializationWorker::pointCloudReceived,
+            this,
+            &ProtobufDeserialization::pointCloudReceived);
 
     connect(worker,
             &ProtobufDeserializationWorker::bytesRecvUpdated,

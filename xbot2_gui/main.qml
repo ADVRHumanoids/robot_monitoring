@@ -160,14 +160,14 @@ ApplicationWindow {
             active: client.robotConnected || mainWindow.dbg
         }
 
-        // PageItem {
-        //     name: "Playground"
-        //     page: "/qt/qml/TestThings/Playground2.qml"
-        //     iconText: MaterialSymbolNames.playground
-        //     iconFont: syms.font.family
-        //     active: true
-        //     show: CommonProperties.config.testing
-        // }
+        PageItem {
+            name: "Playground"
+            page: "/qt/qml/TestThings/Playground2.qml"
+            iconText: MaterialSymbolNames.playground
+            iconFont: syms.font.family
+            active: true
+            show: true
+        }
 
         PageItem {
             name: "Plot"

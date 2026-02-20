@@ -13,14 +13,16 @@ function makeModel(linkToUri) {
         obj.type = value.type
         obj.radius = value.radius
         obj.length = value.length
-        obj.origin_xyz = Qt.vector3d(value.origin_xyz[0],
-                                     value.origin_xyz[1],
-                                     value.origin_xyz[2])
+        obj.origin_xyz = Qt.vector3d(value.origin_xyz[0]*100,
+                                     value.origin_xyz[1]*100,
+                                     value.origin_xyz[2]*100)
         obj.origin_rot = Qt.quaternion(value.origin_rot[3],
                                        value.origin_rot[0],
                                        value.origin_rot[1],
                                        value.origin_rot[2])
         model.push(obj)
+
+        console.log(JSON.stringify(value))
     }
 
     return model

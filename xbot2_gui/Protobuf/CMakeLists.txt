@@ -22,6 +22,7 @@ qt_add_protobuf(xbot2_gui_msgs
     ${CMAKE_SOURCE_DIR}/proto/text.proto
     ${CMAKE_SOURCE_DIR}/proto/process_output.proto
     ${CMAKE_SOURCE_DIR}/proto/theora_packet.proto
+    ${CMAKE_SOURCE_DIR}/proto/pointcloud.proto
     QML
     QML_URI "xbot2_gui.msgs"
 )

@@ -113,9 +113,9 @@ class HhcmCalibrationHandler:
         try:
             from xbot2_gui_server.ecat_repl.stuff import read_sdo, set_uri
             set_uri('amax-5580:5555')
-            motor_id = (await utils.to_thread(read_sdo, ['Assigned_name'], [1]))[1]['Assigned_name']
+            motor_id : str = (await utils.to_thread(read_sdo, ['Assigned_name'], [1]))[1]['Assigned_name']
             print(motor_id)
-            motor_id = motor_id.split('_')[0]
+            motor_id = motor_id.split('_')[1] if motor_id.startswith('ID') else motor_id.split('_')[0]
         except BaseException as e:
             print(e)
             motor_id = 'UNKNOWN'

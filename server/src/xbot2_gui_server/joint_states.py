@@ -12,6 +12,7 @@ from . import ros_utils
 ros_handle : ros_utils.RosWrapper = ros_utils.ros_handle
 
 from xbot_msgs.msg import JointState, Fault, JointCommand, CustomState
+from xbot_msgs.srv import SetBoolList
 from sensor_msgs.msg import JointState as StdJointState
 from std_msgs.msg import Float32, String
 from urdf_parser_py import urdf as urdf_parser
@@ -47,6 +48,8 @@ class JointStateHandler:
         self.srv.add_route('GET', '/joint_states/urdf', self.get_urdf_handler, 'get_urdf')
         self.srv.add_route('GET', '/joint_states/connected', self.robot_connected_handler, 'get_connected')
         self.srv.add_route('PUT', '/joint_command/goto/{joint_name}', self.command_handler, 'command')
+        self.srv.add_route('POST', '/joint_command/motor_ctrl/{joint_name}', self.motor_ctrl_handler, 'motor_ctrl')
+        self.srv.add_route('POST', '/joint_command/brake_ctrl/{joint_name}', self.brake_ctrl_handler, 'brake_ctrl')
         self.srv.add_route('POST', '/joint_command/goto/stop', self.stop_handler, 'stop')
         
         # joint state subscriber
@@ -277,6 +280,9 @@ class JointStateHandler:
             msgpb.jointstate.driverTemp.extend(self.msg.temperature_driver)
             msgpb.jointstate.vbatt = self.vbatt
             msgpb.jointstate.ibatt = self.iload
+            msgpb.jointstate.motTor.extend(self.msg.motor_effort)
+            msgpb.jointstate.motorStatus.extend(self.msg.motor_status)
+            msgpb.jointstate.brakeStatus.extend(self.msg.brake_status)
             await self.srv.udp_send_to_all(msgpb)
         except Exception as e:
             # print traceback  
@@ -402,6 +408,32 @@ class JointStateHandler:
     async def stop_handler(self, req: web.Request):
         self.cmd_should_stop = True 
         return web.Response(text='["ok"]')
+    
+
+    @utils.handle_exceptions
+    async def motor_ctrl_handler(self, req: web.Request):
+        joint_name = req.match_info['joint_name'].split(';')
+        ctrl = req.rel_url.query['ctrl']
+        if ctrl not in ('start', 'stop'):
+            raise ValueError(f'invalid ctrl {ctrl}')
+        start_flag = ctrl == 'start'
+        start_flag = [start_flag for _ in joint_name]
+        srv = ros_handle.create_client(SetBoolList, '/xbotcore/motor_ctrl')
+        res = await ros_handle.call(srv, timeout_sec=1.0, name=joint_name, request=start_flag)
+        return web.json_response(dict(success=res.success, message=res.message))
+
+
+    @utils.handle_exceptions
+    async def brake_ctrl_handler(self, req: web.Request):
+        joint_name = req.match_info['joint_name'].split(';')
+        ctrl = req.rel_url.query['ctrl']
+        if ctrl not in ('engage', 'release'):
+            raise ValueError(f'invalid ctrl {ctrl}')
+        engage_flag = ctrl == 'engage'
+        engage_flag = [engage_flag for _ in joint_name]
+        srv = ros_handle.create_client(SetBoolList, '/xbotcore/brake_ctrl')
+        res = await ros_handle.call(srv, timeout_sec=1.0, name=joint_name, request=engage_flag)
+        return web.json_response(dict(success=res.success, message=res.message))
             
 
     def on_js_recv(self, msg: JointState):

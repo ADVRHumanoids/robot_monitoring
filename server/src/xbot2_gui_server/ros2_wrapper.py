@@ -27,7 +27,8 @@ class Ros2Utils:
         self.urdf = None
 
         def on_robot_desc_recv(msg):
-            print('ros2: got urdf')
+            if self.urdf is None:
+                print('ros2: got urdf')
             self.urdf = msg.data
         
         self.urdf_sub = self.create_subscription(String, 

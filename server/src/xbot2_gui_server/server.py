@@ -190,7 +190,7 @@ class Xbot2WebServer(ServerBase):
         # here we have a protobuf message
 
         # tunnel udp via ws for wasm clients
-        # await self.ws_send_to_all(pbmsg, self.ws_udp_tunnel)
+        await self.ws_send_to_all(pbmsg, self.ws_udp_tunnel)
         
         # send udp to normal clients
         if self.udp is None:
@@ -396,6 +396,7 @@ class Xbot2WebServer(ServerBase):
         return web.Response(text=json.dumps(
             {
                 'success': True,
+                'message': f'server udp port is {port}',
                 'port': port
             }
         ))

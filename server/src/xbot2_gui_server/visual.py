@@ -210,6 +210,8 @@ class VisualHandler:
         uri = uri.replace('%2F', '/')
         print('uri', uri)
         path = ros_utils.resolve_ros_uri(uri)
+        if path.startswith('file://'):
+            path = path[len('file://'):]
         print('URI/PATH: ', uri, path)
         return web.FileResponse(path)
 

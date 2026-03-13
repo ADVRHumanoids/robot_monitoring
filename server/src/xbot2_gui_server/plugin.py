@@ -2,7 +2,7 @@ import asyncio
 from aiohttp import web
 import json
 
-from std_srvs.srv import SetBool
+from std_srvs.srv import SetBool, Trigger
 from xbot_msgs.srv import GetPluginList
 from xbot_msgs.msg import Statistics2
 
@@ -43,13 +43,19 @@ class PluginHandler:
         plugin_name = request.match_info.get('plugin_name', None)
         command = request.match_info.get('command', None)
         
-        if command not in ('start', 'stop'):
+        if command not in ('start', 'stop', 'abort'):
             res['message'] = f'invalid command {command}'
             res['success'] = False
             return web.Response(text=json.dumps(res))
-
-        req_data = command == 'start'
         
+        # handle abort
+        if command == 'abort':
+            abort = ros_handle.create_client(Trigger, f'xbotcore/{plugin_name}/abort')
+            res = await ros_handle.call(abort, timeout_sec=1.0)
+            return web.Response(text=json.dumps({'success': res.success, 'message': res.message}))
+
+        # handle start/stop
+        req_data = command == 'start'
         switch = ros_handle.create_client(SetBool, f'xbotcore/{plugin_name}/switch')
         res = await ros_handle.call(switch, timeout_sec=1.0, data=req_data)
 

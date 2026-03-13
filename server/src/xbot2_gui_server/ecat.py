@@ -10,6 +10,31 @@ from xbot2_cli.ecat_context import Arguments as EcatArgs
 from .server import ServerBase
 from . import utils
 
+import zmq
+from .proto import repl_cmd_pb2
+
+
+# subscribe to zmq topic for ecat updates
+ctx = zmq.Context()
+socket = ctx.socket(zmq.SUB)
+socket.connect('tcp://10.240.23.85:10000')
+socket.setsockopt_string(zmq.SUBSCRIBE, '')
+
+# receive one message
+msg = socket.recv()
+msg = socket.recv()
+
+# parse message
+cmd = repl_cmd_pb2.Repl_info()
+cmd.ParseFromString(msg)
+
+# print message as string
+print(cmd)
+
+
+
+exit()
+
 
 class EcatHandler:
 
@@ -21,6 +46,7 @@ class EcatHandler:
 
         # config
         self.uri = config.get('uri', 'localhost:5555')
+        self.rate = config.get('rate', 10.0)
 
         # save server object, register our handlers
         self.srv = srv
@@ -195,3 +221,29 @@ class EcatHandler:
                             'message': f'ok',
                         }
                         ))
+    
+    async def run_loop(self):
+
+        ctx = zmq.Context()
+        socket = ctx.socket(zmq.SUB)
+        socket.connect(f'tcp://{self.uri}:10000')
+        socket.setsockopt_string(zmq.SUBSCRIBE, '')
+
+
+
+        while True:
+            try:
+                msg = socket.recv(zmq.NOBLOCK)
+                cmd = repl_cmd_pb2.Repl_info()
+                cmd.ParseFromString(msg)
+            except zmq.Again:
+                pass
+            except Exception as e:
+                pass
+
+        
+
+    @utils.handle_exceptions
+    async def run(self):
+
+        await utils.sync_loop(self.run_loop, dt=1./self.rate)()

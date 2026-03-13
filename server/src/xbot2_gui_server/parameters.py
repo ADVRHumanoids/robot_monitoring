@@ -3,7 +3,6 @@ from aiohttp import web
 import json
 import yaml
 
-import rospy
 from std_srvs.srv import SetBool, Trigger
 from std_msgs.msg import String
 from geometry_msgs.msg import TwistStamped, Twist
@@ -14,6 +13,9 @@ from .server import ServerBase
 from . import utils
 from . import launcher
 
+# ros handle
+from . import ros_utils
+ros_handle : ros_utils.RosWrapper = ros_utils.ros_handle
 
 class ParameterHandler:
 
@@ -32,16 +34,14 @@ class ParameterHandler:
                            'parameters_set_value')
 
         # subscribe to stats
-        self.get_info = rospy.ServiceProxy('xbotcore/get_parameter_info', GetParameterInfo)
-        self.set_parameters = rospy.ServiceProxy('xbotcore/set_parameters', SetString)
+        self.get_info = ros_handle.create_client(GetParameterInfo, 'xbotcore/get_parameter_info')
+        self.set_parameters = ros_handle.create_client(SetString, 'xbotcore/set_parameter_values')
 
     
     @utils.handle_exceptions
     async def parameters_get_info(self, request):
 
-        response = await utils.to_thread(self.get_info, name=[], tunable_only=True)
-
-        print(response)
+        response = await ros_handle.call(self.get_info, timeout_sec=1.0, name=[], tunable_only=True)
 
         return web.json_response(
             {
@@ -57,9 +57,9 @@ class ParameterHandler:
 
         body = await request.text()
 
-        print(body)
+        print('setting parameters to', body)
 
-        res = await utils.to_thread(self.set_parameters, request=body)
+        res = await ros_handle.call(self.set_parameters, timeout_sec=1.0, request=body)
 
         return web.json_response(
             {

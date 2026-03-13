@@ -172,14 +172,15 @@ class JointStateHandler:
         # get urdf
         print('retrieving robot description..')
         urdf = ros_handle.get_urdf()
-        urdf = urdf.replace('<texture/>', '')
         if urdf is None:
             joint_info['message'] = 'unable to get robot description'
             joint_info['success'] = False
             return web.Response(text=json.dumps(joint_info))
 
+        # santize
+        urdf = urdf.replace('<texture/>', '')
+
         # parse urdf
-        print('parsing urdf..')
         model = urdf_parser.Robot.from_xml_string(urdf)
 
         # read joint limits from urdf

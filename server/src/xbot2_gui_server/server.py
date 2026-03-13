@@ -48,7 +48,7 @@ class ServerBase:
     def add_route(self, method, path, handler, name):
         raise NotImplementedError
 
-    def schedule_task(self, task):
+    def schedule_task(self, task) -> asyncio.Task:
         raise NotImplementedError
     
     async def log(self, txt, sev=0):
@@ -107,7 +107,7 @@ class Xbot2WebServer(ServerBase):
 
     
     def schedule_task(self, task):
-        self.loop.create_task(task)
+        return self.loop.create_task(task)
 
     
     def register_ws_coroutine(self, callback):

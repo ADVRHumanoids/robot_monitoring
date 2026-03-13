@@ -19,20 +19,54 @@ class Launcher:
 
     def __init__(self, srv: ServerBase, config=dict()) -> None:
         
-        launcher_cfg_path = config['launcher_config']
-        if not os.path.isabs(launcher_cfg_path):
-            launcher_cfg_path = os.path.join(os.path.dirname(srv.cfgpath), launcher_cfg_path)
+        launcher_cfg_path = config.get('launcher_config')
         
-        self.cfg = yaml.safe_load(open(launcher_cfg_path, 'r'))
+        self.cfg = None
+        
+        # no launcher config provided, use a default empty one
+        # note: this allows dynamic process creation
+        if launcher_cfg_path is None:
+            self.cfg = {
+                'context': {
+                    'session': 'default',
+                }
+            }
 
+        # path to a cache file to store additional process info (custom_commands, etc.)
+        self.cache_path = config.get('cache_path', None)
+        if self.cache_path is None:
+            self.cache_path = os.path.expanduser('~/.cache/xbot2_gui_server/launcher_cache.yaml')
+        
+        # create required directory tree and cache file if it doesn't exist
+        os.makedirs(os.path.dirname(self.cache_path), exist_ok=True)
+        if not os.path.exists(self.cache_path):
+            with open(self.cache_path, 'w') as f:
+                yaml.dump({}, f)
+
+        # launcher config provided, try to load it
+        if self.cfg is None:
+            if not os.path.isabs(launcher_cfg_path):
+                launcher_cfg_path = os.path.join(os.path.dirname(srv.cfgpath), launcher_cfg_path)
+            self.cfg = yaml.safe_load(open(launcher_cfg_path, 'r'))
+
+        # add cached custom commands to config
+        with open(self.cache_path, 'r') as f:
+            cache = yaml.safe_load(f) or {}
+        
+        for process, data in cache.items():
+            if process not in self.cfg:
+                self.cfg[process] = data
+
+        # status broadcast rate (Hz)
         self.rate = 3.333
         
+        # save server 
         self.srv = srv
 
-        self.srv.schedule_task(self.watch_all_processes())
+        # schedule tasks
+        self.start_tasks()
 
-        self.srv.schedule_task(self.run())
-
+        # add routes
         self.srv.add_route('GET', f'/process/get_list', 
                            self.process_get_list_handler, f'process_launcher_get_list_handler')
         
@@ -42,13 +76,34 @@ class Launcher:
         self.srv.add_route('PUT', f'/process/{{name}}/command/{{command}}',
                            self.process_command_handler, f'process_launcher_cmd_handler')
         
+        self.srv.add_route('PUT', f'/process/add_custom_command',
+                           self.process_add_custom_command_handler, f'process_add_custom_command_handler')
+        
+        self.srv.add_route('PUT', f'/process/delete_custom_command/{{name}}',
+                           self.process_delete_custom_command_handler, f'process_delete_custom_command_handler')
+        
         self.srv.add_route('GET', f'/process/{{name}}/state',
                            self.process_state_handler, f'process_launcher_state_handler')
         
+        # init stdout throttling vars
         self.proc_stdout_bytes = 0
         self.proc_stdout_prev_time = 0
         self.proc_stdout_max_kbps = 1000
         self.proc_stdout_enabled = True
+
+
+    async def stop_tasks(self):
+        tasks_to_cancel = [self.watch_all_proc_task, self.run_task]
+        tasks_to_cancel = [t for t in tasks_to_cancel if t is not None and not t.done()]
+        for task in tasks_to_cancel:
+            task.cancel()
+        await asyncio.gather(*tasks_to_cancel, return_exceptions=True)
+
+
+    def start_tasks(self):
+        self.watch_all_proc_task = self.srv.schedule_task(self.watch_all_processes())
+        self.run_task = self.srv.schedule_task(self.run())
+
 
     @utils.handle_exceptions
     async def process_get_list_handler(self, request):
@@ -68,13 +123,98 @@ class Launcher:
                 'name': p,
                 'status': status[p],
                 'cmdline': variants,
+                'category': self.cfg[p].get('category', 'none'),
                 'machine': self.cfg[p].get('machine', 'local'),
-                'visible': self.cfg[p].get('show_ui', True)
+                'visible': self.cfg[p].get('show_ui', True),
+                'cmd': self.cfg[p]['cmd'],
+                'docker': self.cfg[p].get('docker', ''),
+                'is_custom': self.cfg[p].get('_is_custom', False),
             })
 
         return web.Response(text=json.dumps(proc_data))
     
+
+    @utils.handle_exceptions
+    async def process_add_custom_command_handler(self, request):
+        body = await request.text()
+        body = json.loads(body)
+
+        # extract required fields
+        process = body['process']
+        cmd = body['cmd']
+        docker = body.get('docker')
+        show_ui = body.get('show_ui', False)
+        machine = body['machine']
+        edit = body.get('edit', False)
+        previous_name = body.get('previous_name', process)
+
+        if '@' not in machine:
+            return web.json_response({'success': False, 'message': f'invalid machine {machine} (must be "user@host")'})
+
+        if not edit and process in self.cfg.keys():
+            return web.json_response({'success': False, 'message': f'process {process} already exists'})
+        
+        # remove previous name (we support renaming processes)
+        if edit:
+            del self.cfg[previous_name]
+        
+        # add custom command to config
+        self.cfg[process] = {
+            'cmd': cmd,
+            'machine': machine,
+            'show_ui': show_ui,
+            '_is_custom': True,
+        }
+
+        if docker is not None and docker != '':
+            self.cfg[process]['docker'] = docker
+
+        # add custom command to cache file for persistence across server restarts
+        with open(self.cache_path, 'r') as f:
+            cache = yaml.safe_load(f) or {}
+
+        cache[process] = self.cfg[process]
+
+        with open(self.cache_path, 'w') as f:
+            yaml.dump(cache, f)
+
+        # restart tasks to pick up new config (note: this is required to update the process list and status)
+        await self.stop_tasks()
+        self.start_tasks()
+
+        # return success
+        return web.json_response({'success': True, 'message': f'custom command {cmd} added to process {process}'})
     
+
+    @utils.handle_exceptions
+    async def process_delete_custom_command_handler(self, request):
+        
+        process = request.match_info.get('name', None)
+
+        if process not in self.cfg.keys():
+            return web.json_response({'success': False, 'message': f'process {process} does not exist'})
+        
+        # cancel tasks using self.cfg 
+        await self.stop_tasks()
+
+        # remove custom command from config
+        del self.cfg[process]
+
+        # remove custom command from cache file for persistence across server restarts
+        with open(self.cache_path, 'r') as f:
+            cache = yaml.safe_load(f) or {}
+
+        if process in cache:
+            del cache[process]
+
+        with open(self.cache_path, 'w') as f:
+            yaml.dump(cache, f)
+
+        self.start_tasks()
+
+        return web.json_response({'success': True, 'message': f'custom command {process} deleted'})
+    
+
     @utils.handle_exceptions
     async def process_state_handler(self, request: web.Request):
 
@@ -159,7 +299,6 @@ class Launcher:
         
         return web.Response(text=json.dumps(res))
         
-
 
     async def run(self):
 

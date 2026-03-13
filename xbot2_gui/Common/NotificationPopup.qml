@@ -50,14 +50,8 @@ Control {
 
     property Component delegate: Component {
         TextArea {
-
-            MouseArea {
-                anchors.fill: parent
-                z: 1
-            }
-
-            placeholderText: name
             width: view.width
+            placeholderText: name
             wrapMode: Text.WrapAnywhere
             readOnly: true
             textFormat: TextEdit.RichText
@@ -65,6 +59,19 @@ Control {
             visible: level >= root.verbosity
             color: levelToColor[level]
             property list<color> levelToColor: [palette.text, CommonProperties.colors.warn, CommonProperties.colors.err]
+            rightPadding: 50
+
+            // SmallToolButton {
+            //     text: 'X'
+            //     anchors.right: parent.right
+            //     anchors.verticalCenter: parent.verticalCenter
+            //     anchors.margins: 6
+            //     anchors.verticalCenterOffset: 5
+            //     onClicked: {
+            //         model.remove(1)
+            //         filteredModel.remove(1)
+            //     }
+            // }
         }
     }
 

@@ -229,13 +229,6 @@ Control {
         }
     }
 
-
-    Component.onCompleted: {
-
-        Logic.refresh()
-
-    }
-
     Connections {
 
         target: client

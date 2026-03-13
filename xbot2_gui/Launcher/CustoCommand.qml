@@ -4,153 +4,149 @@ import QtQuick.Layouts
 
 import Common
 
-Card1 {
+Control {
 
     property list<string> availableMachines
+    property list<string> availableContainers
 
-    property Item pageItem
-
-    signal submitCommand(string machine, string command, int timeout)
-
-    onSubmitCommand: {
-        stdoutText.clear()
-        stderrText.clear()
+    function setEditMode(info) {
+        _prevName = info.name
+        procNameField.text = info.name
+        machineCombo.editText = info.machine
+        dockerCombo.editText = info.container
+        cmdField.text = info.cmd
+        visibleChk.checked = info.visible
+        _editMode = true
     }
 
-    function setResult(retcode, stdout, stderr) {
+    signal addCustomProcess(string name, string machine, string container, string cmd, bool visible, bool edit, string prevName)
+    signal closeRequest()
 
-        stdoutText.append(stdout)
-        stderrText.append(stderr)
-    }
+    leftPadding: width > 800 ? (width - 800) / 2 : 16
+    rightPadding: leftPadding
+    bottomPadding: 16
 
+    //
     id: root
+    property bool _editMode: false
+    property string _prevName
 
-    name: 'Custom command'
-    nameFont.pixelSize: CommonProperties.font.h3
+    contentItem: GridLayout {
 
-    collapsable: false
+        columns: 2
 
-    collapsed: true
+        rowSpacing: 8
+        columnSpacing: 8
 
-    configurable: false
-
-    toolButtons: [
-
-        Button {
-            text: 'Submit'
-            onClicked: popup.open()
+        // title
+        Label {
+            text: _editMode ? 'Edit custom process' : 'Add custom process'
+            font.pixelSize: CommonProperties.font.h2
+            Layout.columnSpan: 2
         }
 
-    ]
+        // subtitle
+        Label {
+            text: 'This process will be available to all connected clients.'
+            font.pixelSize: CommonProperties.font.h4
+            Layout.columnSpan: 2
+            wrapMode: Text.Wrap
 
-    Popup {
+            bottomPadding: 8
+        }
 
-        id: popup
-        anchors.centerIn: Overlay.overlay
-        width: Math.min(Overlay.overlay.width - 48, 600)
-        height: Math.min(Overlay.overlay.height - 48, implicitHeight)
-        modal: true
-        focus: true
-        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
-        padding: 24
+        // 0
 
-        GridLayout {
+        Label {
+            text: 'Name'
+        }
 
-            anchors.fill: parent
+        TextField {
+            id: procNameField
+            Layout.fillWidth: true
+            placeholderText: 'Process name'
+        }
 
-            columns: 2
+        // 1
 
-            rowSpacing: 8
-            columnSpacing: 8
+        Label {
+            text: 'Machine'
+        }
 
-            // 1
+        ComboBox {
+            Layout.fillWidth: true
+            id: machineCombo
+            model: root.availableMachines
+            editable: true
+        }
 
-            Label {
-                text: 'Machine'
+        // 2
+
+        Label {
+            text: 'Container'
+        }
+
+        ComboBox {
+            Layout.fillWidth: true
+            id: dockerCombo
+            model: root.availableContainers
+            editable: true
+        }
+
+        // 4
+
+        FramedControl {
+            Layout.fillWidth: true
+            Layout.columnSpan: 2
+            text: 'Visible'
+            subtext: 'The process will be visible by default.'
+            CheckBox {
+                id: visibleChk
             }
+        }
 
-            ComboBox {
-                Layout.fillWidth: true
-                id: machineCombo
-                model: root.availableMachines
-                editable: true
-            }
+        // 3
 
-            // 2
+        TextField {
+            Layout.fillWidth: true
+            id: cmdField
+            Layout.columnSpan: 2
+            placeholderText: 'Shell command'
+        }
 
-            TextField {
-                Layout.fillWidth: true
-                id: cmdField
-                Layout.columnSpan: 2
-                placeholderText: 'Shell command'
-                onAccepted: root.submitCommand(machineCombo.currentText,
-                                               cmdField.text,
-                                               timeoutSpin.value)
-                focus: true
-            }
+        // 5
 
-            // 3
+        RowLayout {
 
-            Label {
-                text: 'Timeout'
-            }
-
-            SpinBox {
-                Layout.fillWidth: true
-                id: timeoutSpin
-                from: 1
-                to: 100
-                value: 5
-            }
-
-            // 4
+            Layout.columnSpan: 2
+            spacing: 8
+            Layout.fillWidth: true
 
             Button {
-                Layout.columnSpan: 2
                 Layout.fillWidth: true
-                text: 'Submit'
-                onClicked: root.submitCommand(machineCombo.currentText,
-                                              cmdField.text,
-                                              timeoutSpin.value)
-            }
-
-            //
-
-            ScrollView {
-
-                id: scroll
-                Layout.columnSpan: 2
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                TextArea {
-                    id: stdoutText
-                    placeholderText: 'Stdout'
-                    readOnly: true
-                    width: scroll.availableWidth
+                text: _editMode ? 'Submit' : 'Add'
+                enabled: procNameField.text.length > 0 && cmdField.text.length > 0
+                onClicked: {
+                    root.addCustomProcess(procNameField.text,
+                                          machineCombo.editText,
+                                          dockerCombo.editText,
+                                          cmdField.text,
+                                          visibleChk.checked,
+                                          _editMode,
+                                          _prevName)
                 }
-
             }
 
-            //
-
-            TextArea {
-                id: stderrText
-                Layout.columnSpan: 2
+            Button {
+                text: 'Close'
                 Layout.fillWidth: true
-                placeholderText: 'Stderr'
-                readOnly: true
-                color: CommonProperties.colors.err
+                onClicked: root.closeRequest()
             }
 
-        }
-
-        Behavior on height {
-            NumberAnimation {
-                duration: 333
-                easing.type: Easing.OutQuad
-            }
         }
 
     }
 
 }
+
+

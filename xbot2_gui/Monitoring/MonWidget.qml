@@ -19,8 +19,8 @@ Control {
     property real vBatt: 0
     property real danger: Math.min(1, Math.max( 0, (51 - vBatt)/4, (maxTempMot - 50)/30, (maxTempDri - 50)/10 ))
 
-    property color okColor: 'green'
-    property color badColor: 'red'
+    property color okColor: Qt.hsva(0.333, 0.8, 1.0, 1.0)
+    property color badColor: Qt.hsva(0.0, 0.8, 1.0, 1.0)
 
     padding: 4
 

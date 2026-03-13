@@ -22,6 +22,42 @@ MultiPaneResponsiveLayout {
 
     property var processStatusMap: Object()
 
+    property var processInfoMap: Object()
+
+    Timer {
+        id: processStatusTimer
+        interval: 2000
+        repeat: false
+        running: false
+        onTriggered: processStatusMap = {} // clear old status to avoid showing stale data
+    }
+
+    Drawer {
+        id: customProcPopup
+        edge: Qt.BottomEdge
+        width: parent.width
+        height: Math.min(parent.height * 0.9, implicitHeight)
+        interactive: false
+        modal: true
+        focus: true
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        padding: layout.expanded ? 16 : 4
+        leftPadding: 16
+        rightPadding: 16
+        clip: true
+
+        CustoCommand {
+            id: custoCommand
+            anchors.fill: parent
+            onAddCustomProcess: function(name, machine, container, cmd, visible, edit, prevName) {
+                Logic.addCustomProcess(name, machine, container, cmd, visible, edit, prevName)
+                customProcPopup.close()
+            }
+            onCloseRequest: customProcPopup.close()
+
+        }
+    }
+
 
     ScrollView {
 
@@ -112,6 +148,16 @@ MultiPaneResponsiveLayout {
                     font.pixelSize: 16
 
                     visible: Object.keys(categoryToProcessModel).length > 1
+                }
+
+                SmallToolButton {
+                    id: addCustomProcChk
+                    text: MaterialSymbolNames.add
+                    font.family: 'Material Symbols Outlined'
+                    font.variableAxes: {'opsz': 48}
+                    font.pixelSize: 16
+                    checkable: false
+                    onClicked: {custoCommand._editMode = false; customProcPopup.open()}
                 }
 
                 SmallToolButton {
@@ -222,14 +268,21 @@ MultiPaneResponsiveLayout {
                                 processName: modelData.name
                                 processState: processStatusMap[processName] ?? 'unknown'
                                 processConfig: modelData.cmdline
+                                processInfo: root.processInfoMap[processName] ?? {}
 
                                 objectName: `pcard_${processName}`
 
                                 onStart: Logic.processCmd(processName, 'start', processOptions)
                                 onStop: Logic.processCmd(processName, 'stop', {})
                                 onKill: Logic.processCmd(processName, 'kill', {})
+                                onDeleteRequest: Logic.deleteCustomProcess(processName)
 
                                 onMutedChanged: root.processMutedState[processName] = muted
+
+                                onProcEditRequest: {
+                                    custoCommand.setEditMode(processInfo)
+                                    customProcPopup.open()
+                                }
                             }
 
                         }

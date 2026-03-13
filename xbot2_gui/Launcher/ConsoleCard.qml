@@ -15,11 +15,11 @@ Item {
 
     property int pixelSize: 14
 
+    signal flickStarted()
+
     id: root
     implicitHeight: view.implicitHeight
     implicitWidth: view.implicitWidth
-
-
 
     property Component delegate: TextEdit {
         required property string txt
@@ -30,7 +30,7 @@ Item {
         readOnly: true
         textFormat: TextEdit.RichText
         text: txt
-        // color: txtColor
+        color: palette.active.text
     }
 
     ListView {
@@ -43,5 +43,6 @@ Item {
         ScrollBar.vertical: ScrollBar {
             active: true
         }
+        onMovementStarted: root.flickStarted()
     }
 }

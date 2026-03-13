@@ -263,6 +263,7 @@ Item {
                 to: 1000
                 value: activePlot.timeSpan
                 onValueModified: activePlot.timeSpan = value
+                editable: true
             }
 
         }
@@ -313,6 +314,13 @@ Item {
                     // font.variableAxes: {'opsz': 48}
                     font.pixelSize: 24
                     onClicked: plot.resetView()
+                }
+                ToolButton {
+                    text: MaterialSymbolNames.clean
+                    font.family: 'Material Symbols Outlined'
+                    // font.variableAxes: {'opsz': 48}
+                    font.pixelSize: 24
+                    onClicked: plot.clearPoints()
                 }
                 ToolButton {
                     text: MaterialSymbolNames.close

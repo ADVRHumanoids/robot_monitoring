@@ -14,9 +14,13 @@ Item {
 
     property var options: Object()
 
+    property var info: Object()
+
     function applySettings() {
         Logic.apply()
     }
+
+    signal procEditRequested()
 
     // private
 
@@ -25,16 +29,61 @@ Item {
     property var _controls: Object()
     property alias _grid: mainLayout
 
-    implicitHeight: mainLayout.implicitHeight
-    implicitWidth: mainLayout.implicitWidth
-
+    implicitHeight: mainColumn.implicitHeight
+    implicitWidth: mainColumn.implicitWidth
 
     // layout to be filled by Logic.construct()
-    GridLayout {
-        id: mainLayout
+    ColumnLayout {
+
+        id: mainColumn
         anchors.fill: parent
-        columns: 2
-        columnSpacing: 16
+        spacing: 16
+
+        GridLayout {
+
+            Layout.fillWidth: true
+
+            columns: 1
+
+            // command
+            FramedValue {
+                title: 'Command'
+                value1: root.info.cmd || ''
+                Layout.fillWidth: true
+            }
+
+            // machine
+            FramedValue {
+                title: 'Machine'
+                value1: root.info.machine || ''
+                Layout.fillWidth: true
+            }
+
+            // docker
+            FramedValue {
+                visible: root.info.docker !== undefined && root.info.docker !== ''
+                title: 'Container'
+                value1: root.info.docker || ''
+                Layout.fillWidth: true
+            }
+
+            // edit btn
+            Button {
+                text: 'Edit process'
+                Layout.fillWidth: true
+                onClicked: root.procEditRequested()
+                visible: root.info.is_custom
+            }
+        }
+
+        GridLayout {
+            id: mainLayout
+            columns: 2
+            columnSpacing: 16
+            Layout.fillHeight: true
+            Layout.fillWidth: true
+        }
+
     }
 
     property var label: Component {

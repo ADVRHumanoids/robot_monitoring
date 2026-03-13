@@ -113,7 +113,7 @@ Control {
                 }
 
                 Label {
-                    text: `${root.maxTempDri}°`
+                    text: `${root.maxTempDri.toFixed(1)}°`
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
 
@@ -141,7 +141,7 @@ Control {
                 }
 
                 Label {
-                    text: `${root.maxTempMot}°`
+                    text: `${root.maxTempMot.toFixed(1)}°`
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
 

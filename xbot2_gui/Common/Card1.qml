@@ -50,11 +50,17 @@ Item {
 
     }
 
+    property Item badgeItem: Item {
+
+    }
+
     property list<Item> toolButtons
 
     property alias statusIcon: statusIcon
 
     signal applyConfiguration()
+
+    signal titleClicked()
 
 
     // private
@@ -63,6 +69,7 @@ Item {
     Component.onCompleted: {
         frontItem.parent = flip.front.contentItemWrapper
         backItem.parent = flip.back.contentItemWrapper
+        badgeControl.contentItem = badgeItem
     }
 
     implicitWidth: flip.implicitWidth
@@ -140,6 +147,12 @@ Item {
 
                     spacing: 0
 
+                    // badge
+                    Control {
+                        id: badgeControl
+                        rightPadding: contentItem.implicitWidth > 0 ? 6 : 0
+                    }
+
                     // banner
                     Label {
                         Layout.fillWidth: true
@@ -154,6 +167,7 @@ Item {
                             enabled: root.collapsable
                             anchors.fill: parent
                             onDoubleClicked: root.collapsed = !root.collapsed
+                            onClicked: root.bannerClicked()
                         }
                     }
 
@@ -281,6 +295,7 @@ Item {
 
                 Item {
                     Layout.fillHeight: true
+                    Layout.fillWidth: true
                     id: backItemWrapper
                     implicitWidth: children[0].implicitWidth
                     implicitHeight: children[0].implicitHeight

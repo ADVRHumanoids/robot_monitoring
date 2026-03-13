@@ -8,6 +8,10 @@ function construct() {
         requestPluginUpdate(pluginRepeater, true)
     }
 
+    if(dashboard.visible) {
+        dashboard.refresh()
+    }
+
 }
 
 
@@ -20,6 +24,8 @@ function requestProcessUpdate() {
 
         let availableMachines = []
 
+        let availableContainers = []
+
         let processNames = []
 
         let hiddenProcessNames = []
@@ -29,10 +35,17 @@ function requestProcessUpdate() {
         categoryToProcessModel = Object()
 
         for(let item of msg) {
+
             let category = item.category ?? 'none'
+
             availableMachines.push(item.machine)
+
+            availableContainers.push(item.docker)
+
             processNames.push(item.name)
+
             categoryNames.push(category)
+
             if(!item.visible) {
                 hiddenProcessNames.push(item.name)
             }
@@ -41,11 +54,15 @@ function requestProcessUpdate() {
             categoryToProcessModel[category].push(item)
 
             processStatusMap[item.name] = item.status
+
+            processInfoMap[item.name] = item
         }
 
         categoryToProcessModelChanged()
 
-        // customCmd.availableMachines = [... new Set(availableMachines)]
+        custoCommand.availableMachines = [... new Set(availableMachines)]
+
+        custoCommand.availableContainers = [... new Set(availableContainers)]
 
         processMainRepeater.model = [... new Set(categoryNames)]
 
@@ -53,13 +70,45 @@ function requestProcessUpdate() {
 
         consoleItem.processNames = processNames
 
-        console.log(hiddenProcessNames)
+        console.log(`categoryNames: ${JSON.stringify(categoryNames)}`)
+        console.log(`categoryToProcessModel: ${JSON.stringify(categoryToProcessModel)}`)
+
 
     }
 
     client.doRequest('GET', '/process/get_list', '', onProcessListReceived)
 }
 
+function addCustomProcess(name, machine, container, cmd, visible, edit, prevName) {
+
+    client.doRequestAsync('PUT', '/process/add_custom_command',
+                          JSON.stringify(
+                              {
+                                  'process': name,
+                                  'machine': machine,
+                                  'docker': container,
+                                  'cmd': cmd,
+                                  'show_ui': visible,
+                                  'edit': edit,
+                                  'previous_name': prevName
+                              })
+                          )
+    .then((res) => {
+              requestProcessUpdate()
+          })
+    .catch((err) => {})
+
+}
+
+function deleteCustomProcess(name) {
+
+    client.doRequestAsync('PUT', '/process/delete_custom_command/' + name, '')
+    .then((res) => {
+              requestProcessUpdate()
+          })
+    .catch((err) => {})
+
+}
 
 function customCommand(machine, command, timeout) {
     client.doRequestAsync('POST', '/process/custom_command',
@@ -99,7 +148,7 @@ function onProcessOutputReceived(consoleItem, msg) {
     let prefix = '[' + msg.name + '] '
 
     if(msg.out.length > 0) {
-        consoleItem.appendText(msg.name, prefix + msg.out, muted)
+        consoleItem.appendText(msg.name, msg.out, muted)
     }
 
     if(msg.err.length > 0) {
@@ -114,6 +163,7 @@ function onProcessStatusReceived(msg) {
     // handle status
     processStatusMap[msg.name] = msg.status
     processStatusMapChanged()
+    processStatusTimer.restart()
 }
 
 

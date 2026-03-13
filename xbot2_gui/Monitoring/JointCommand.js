@@ -174,3 +174,11 @@ function releaseBrake(name) {
               })
 
 }
+
+
+function enableControl() {
+    client.doRequest('PUT',
+                     '/plugin/' + rosCtrlName + '/command/start',
+                     '',
+                     function(msg){console.log(JSON.stringify(msg))})
+}

@@ -53,6 +53,9 @@ Item {
 
         // save current time for autoscroll
         currTime = t
+
+        // update last value inside legend
+        plotterLegend.updateLastValue(seriesData.series.name, val)
     }
 
     function setPoints(seriesData, t_list, val_list) {
@@ -73,6 +76,13 @@ Item {
 
         if(axisValue.min > valMin && chart.autoscale) {
             axisValue.min = valMin - (axisValue.max - axisValue.min)*0.1
+        }
+    }
+
+    function clearPoints() {
+        for(let i = 0; i < chart.count; i++) {
+            let s = chart.series(i)
+            s.removePoints(0, s.count)
         }
     }
 
@@ -132,7 +142,7 @@ Item {
         chart.autoscroll = true
     }
 
-    property real timeSpan: 10
+    property real timeSpan: 30
 
     property var currSeries: Object()
 

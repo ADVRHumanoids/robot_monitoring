@@ -21,6 +21,7 @@ ApplicationWindow {
     visibility: Qt.platform.os === "android" ? Window.FullScreen : Window.AutomaticVisibility
     property bool dbg: false
 
+    // set palette
     palette {
         active {
             highlight: Material.primary
@@ -466,7 +467,7 @@ ApplicationWindow {
             id: hideTimer
             interval: 3000
             onTriggered: {
-                parent.showPopup = false
+                // parent.showPopup = false
             }
         }
 

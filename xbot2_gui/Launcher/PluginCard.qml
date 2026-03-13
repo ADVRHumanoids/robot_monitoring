@@ -57,40 +57,11 @@ Item {
         configurable: false
 
         // color management
-        backgroundColor: colorMap[pluginState]
+        // backgroundColor: colorMap[pluginState]
         borderWidth: 2
-        borderColor: pluginState === 'Aborted' ? Qt.darker(backgroundColor) : Qt.lighter(backgroundColor)
+        borderColor: pluginState === 'Aborted' ? Qt.darker(badge.color, 1.1) : Qt.lighter(badge.color, 1.1)
 
-        SequentialAnimation on backgroundColor {
 
-            loops: Animation.Infinite
-
-            running: root.pluginState === 'Starting' ||
-                     root.pluginState === 'Stopping'
-
-            alwaysRunToEnd: false
-
-            ColorAnimation {
-                from: colorMap[pluginState]
-                to: card.defaultBackground
-                duration: 555
-                easing {
-                    type: Easing.OutSine
-                }
-            }
-
-            ColorAnimation {
-                from: card.defaultBackground
-                to: colorMap[pluginState]
-                duration: 555
-                easing {
-                    type: Easing.InSine
-                }
-            }
-
-            onFinished: card.backgroundColor = Qt.binding(() => colorMap[pluginState])
-
-        }
 
         toolButtons: [
             SmallToolButton {
@@ -100,6 +71,45 @@ Item {
                 onClicked: root.pluginStoppable ? root.stop() : root.start()
             }
         ]
+
+        badgeItem: Rectangle {
+            id: badge
+            implicitHeight: 8
+            implicitWidth: 8
+            radius: 4
+            color: colorMap[pluginState]
+
+            SequentialAnimation on color {
+
+                loops: Animation.Infinite
+
+                running: root.pluginState === 'Starting' ||
+                         root.pluginState === 'Stopping'
+
+                alwaysRunToEnd: false
+
+                ColorAnimation {
+                    from: colorMap[pluginState]
+                    to: badge.color
+                    duration: 555
+                    easing {
+                        type: Easing.OutSine
+                    }
+                }
+
+                ColorAnimation {
+                    from: badge.color
+                    to: colorMap[pluginState]
+                    duration: 555
+                    easing {
+                        type: Easing.InSine
+                    }
+                }
+
+                onFinished: badge.color = Qt.binding(() => colorMap[pluginState])
+
+            }
+        }
 
         frontItem: ColumnLayout {
             anchors.fill: parent
@@ -112,6 +122,7 @@ Item {
                     Layout.fillWidth: true
                     text: root.pluginStoppable ? 'Stop' : 'Start'
                     onClicked: root.pluginStoppable ? root.stop() : root.start()
+                    highlighted: true
                 }
                 Button {
                     Layout.fillWidth: true

@@ -214,24 +214,6 @@ Item
             root.jointStateReceived(js)
 
             root.jsMsgRecv += 1
-
-            // if(lastJsSeqId < 0) {
-            //     lastJsSeqId = obj.seq
-            // }
-            // else {
-            //     root.jsDropped += (obj.seq - lastJsSeqId - 1)
-            //     lastJsSeqId = obj.seq
-            // }
-
-            if(isConnected && !isFinalized)
-            {
-                client.active = true
-
-                doRequestAsync("GET", "/joint_states/info", "")
-                        .then((response) => {
-                              root.onInfoReceived(response)
-                          })
-            }
         }
 
         onProcessOutputReceived: function(po) {
@@ -315,7 +297,7 @@ Item
         id: broadcastUdpTimer
         interval: 1000
         repeat: true
-        running: udp.bound
+        running: true
         onTriggered: {
             udp.sendTextMessage('udp_discovery')
         }
@@ -332,6 +314,20 @@ Item
             .then((res) => {
                    console.log('server is alive, connecting ws')
                    root.active = true
+                  })
+        }
+    }
+
+    Timer {
+        id: jointInfoTimer
+        interval: 1000
+        repeat: true
+        running: isConnected && !isFinalized
+
+        onTriggered: {
+            doRequestAsync("GET", "/joint_states/info", "", true)
+            .then((response) => {
+                      root.onInfoReceived(response)
                   })
         }
     }

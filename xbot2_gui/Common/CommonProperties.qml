@@ -13,7 +13,7 @@ Item {
         property color accent: Material.accentColor
         property color ok: Material.color(Material.Green, Material.Shade900)
         property color warn: Material.color(Material.Yellow, Material.Shade900)
-        property color err: Material.color(Material.Red, Material.Shade300)
+        property color err: Qt.hsva(0.0, 0.7, 0.9, 1.0)
         property color primaryText: Material.primaryTextColor
         property color secondaryText: Material.secondaryTextColor
         property color cardBackground: Qt.rgba(1, 1, 1, 0.075)

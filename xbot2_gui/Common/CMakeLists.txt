@@ -34,6 +34,8 @@ qt_add_qml_module(xbot2_gui_common
     RecursiveSplitView.qml
     RecursiveSplitView.js
     QML_FILES ExpandableControl.qml
+    QML_FILES FramedControl.qml
+    QML_FILES FramedValue.qml
 )
 
 target_link_libraries(xbot2_gui PRIVATE xbot2_gui_commonplugin)

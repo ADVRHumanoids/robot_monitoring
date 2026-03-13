@@ -31,10 +31,10 @@ Item {
         // bitmask:
         // w	sod	qs	ve	f	oe	so	rtso
 
-        if(_on) return Qt.hsva(0.3, 0.8, 1.0, 1.0)
-        if(_rtso) return Qt.hsva(0.166, 0.8, 1.0, 1.0)
-        if(_fault) return Qt.hsva(0., 0.8, 1.0, 1.0)
-        return 'gray'
+        if(_on) return Qt.hsva(0.3, 0.8, 1.0, 1.0)  // green if motor on
+        if(!_rtso) return Qt.hsva(0.166, 0.8, 1.0, 1.0)  // yellow if not ready to switch on
+        if(_fault) return Qt.hsva(0., 0.8, 1.0, 1.0)  // red if fault
+        return 'gray'  // gray if off but otherwise ok and ready
     }
 
 
@@ -80,7 +80,7 @@ Item {
                         z: 1
                         font.family: syms.font.family
                         font.pixelSize: 14
-                        color: 'black'
+                        color: Qt.hsva(0., 0.8, 7.0, 1.0)
                         anchors.centerIn: parent
                         visible: root.brakeStatus
                     }

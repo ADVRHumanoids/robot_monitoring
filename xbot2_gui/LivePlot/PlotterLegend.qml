@@ -10,11 +10,23 @@ Item {
     implicitHeight: grid.implicitHeight
     implicitWidth: grid.implicitWidth
 
+    property var seriesLastValues: Object()
+
+    Timer {
+        running: true
+        repeat: true
+        interval: 666
+        onTriggered: {
+            seriesLastValuesChanged()
+        }
+    }
+
     signal hideSeries(string name, bool hide)
     signal highlightSeries(string name, bool highlight)
     signal removeSeriesRequested(string name)
 
     function addSeries(series) {
+        seriesLastValues[series.name] = Number.NaN
         legendModel.append({
                                seriesName: series.name,
                                seriesColor: String(series.color)
@@ -30,6 +42,10 @@ Item {
             }
         }
         legendModel.remove(idxToRemove, 1)
+    }
+
+    function updateLastValue(seriesName, value) {
+        seriesLastValues[seriesName] = value
     }
 
     onHideSeries: function(seriesName, hidden) {
@@ -110,10 +126,8 @@ Item {
                 }
 
                 Label {
-
-
                     id: nameText
-                    text: seriesName
+                    text: `${seriesName} (${root.seriesLastValues[seriesName].toFixed(2)})`
                     font.weight: Qt.application.font.weight * (highlighed && !hidden ? 2 : 1)
                     font.strikeout: hidden
                 }

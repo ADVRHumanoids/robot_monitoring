@@ -21,15 +21,21 @@ Item {
 
         let color = colors[(i+1) % colors.length]
 
-        text = `<font color="${color}">` + text + '</font>'
+        text = `<b><font color="${color}">[${procName}] </font></b>` + text
 
         consoleRepeater.itemAt(i+2).appendText(text)
+
+        if(!scrollOnOutputCheck.checked) {
+            _showNewOutputVisible = true
+        }
 
         if(i >= 0 && muted) {
             return
         }
 
         consoleRepeater.itemAt(0).appendText(text)
+
+
     }
 
     property list<string> processNames: ['proc1', 'proc2', 'proc3']
@@ -43,19 +49,21 @@ Item {
 
     }
 
+    property bool _showNewOutputVisible: false
+
     implicitWidth: card.implicitWidth
 
     implicitHeight: card.implicitHeight
 
     property list<string> colors: [
-        '#4DADF7',
-        '#22E3A4',
-        '#D27CFF',
-        '#FF9F45',
-        '#33FFD0',
-        '#82E0AA',
-        '#B388FF',
-        '#5EEAD4'
+        '#82AAFF',
+        '#89DDFF',
+        '#C792EA',
+        '#A6E3A1',
+        '#9CCFD8',
+        '#B4BEFE',
+        '#7DCFFF',
+        '#A1EFD3'
     ]
 
     Card1 {
@@ -65,6 +73,7 @@ Item {
         name: 'Console Output'
 
         toolButtons: [
+
             SmallToolButton {
                 text: MaterialSymbolNames.copy
                 font.family: 'Material Symbols Outlined'
@@ -74,15 +83,6 @@ Item {
                 onClicked: {
                     let txt = consoleRepeater.itemAt(consoleCombo.currentIndex).getText()
                     appData.copyToClipboard(txt)
-                }
-                onDoubleClicked: {
-                    if(!CommonProperties.config.testing) {
-                        return
-                    }
-
-                    for(let i = 0; i < 10000; i++) {
-                        appendText('launcher', i+'Example text Example text Example text Example text Example text Example text Example text Example text Example text Example text Example text Example text Example text ')
-                    }
                 }
             },
 
@@ -156,6 +156,27 @@ Item {
                         sourceComponent: ConsoleCard {
                             id: cardInner
                             pixelSize: fontSizeSpin.value
+                            onFlickStarted: scrollOnOutputCheck.checked = false
+
+                            Column {
+                                anchors {
+                                    top: parent.top
+                                    horizontalCenter: parent.horizontalCenter
+                                    margins: 8
+                                }
+                                opacity: 0.7
+
+                                Button {
+                                    id: scrollOnOutputButton
+                                    text: 'Show new output'
+                                    onClicked: {
+                                        cardInner.scrollToEnd()
+                                        scrollOnOutputCheck.checked = true
+                                        _showNewOutputVisible = false
+                                    }
+                                    visible: _showNewOutputVisible
+                                }
+                            }
                         }
 
                         onLoaded: {
@@ -180,39 +201,50 @@ Item {
         backItem: GridLayout {
 
             id: grid
+            width: parent.width
+            columns: Math.ceil(width / 450)
+            uniformCellWidths: true
+            uniformCellHeights: true
 
-            columns: 3
-
-            CheckBox {
-                id: scrollOnOutputCheck
+            FramedControl {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
                 text: 'Scroll on output'
-                checked: true
+                subtext: 'Automatically scroll console to show new output. This is disabled on manual scroll.'
+                CheckBox {
+                    id: scrollOnOutputCheck
+                    checked: true
+                }
+
             }
 
-            Button {
-                text: 'Clear all consoles'
-                onClicked: {
-                    for(let i = 0; i < consoleRepeater.count; i++) {
-                        consoleRepeater.itemAt(i).clearText()
+            FramedControl {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                text: 'Clear all'
+                subtext: 'Clear output for all processes (including main console)'
+                Button {
+                    text: 'Clear'
+                    onClicked: {
+                        for(let i = 0; i < consoleRepeater.count; i++) {
+                            consoleRepeater.itemAt(i).clearText()
+                        }
                     }
                 }
             }
 
-            Item {
+            FramedControl {
                 Layout.fillWidth: true
-            }
-
-            Label {
+                Layout.fillHeight: true
                 text: 'Font size'
+                subtext: 'Adjust font size; applies to all consoles'
+                SpinBox {
+                    id: fontSizeSpin
+                    from: 1
+                    to: 18
+                    value: 12
+                }
             }
-
-            SpinBox {
-                id: fontSizeSpin
-                from: 1
-                to: 18
-                value: 12
-            }
-
         }
 
     }

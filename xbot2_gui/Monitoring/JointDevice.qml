@@ -21,7 +21,7 @@ Card1 {
 
     configurable: false
 
-    name: 'Safety'
+    name: jointActive ? 'Operational' : 'Safe'
 
     toolButtons: [
         Button {

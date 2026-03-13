@@ -13,6 +13,7 @@ docker build travis/docker -t travis_build_image
 # build client via docker
 docker run -i --rm \
  -v $PWD/build_output:/home/user/build_output \
+ -e BUILD_SKIP_ANDROID -e BUILD_SKIP_LINUX \
  travis_build_image bash -i /home/user/build.bash
 
 # restore correct ownership

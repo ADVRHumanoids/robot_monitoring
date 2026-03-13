@@ -28,10 +28,10 @@ Card1 {
 
             id: grid
 
-            columns: 3
+            columns: Math.ceil(width / 300)
 
-            columnSpacing: CommonProperties.geom.spacing
-            rowSpacing: CommonProperties.geom.spacing
+            columnSpacing: CommonProperties.geom.spacing * 1.33
+            rowSpacing: CommonProperties.geom.spacing * 1.33
 
         }
     }
@@ -57,14 +57,12 @@ Card1 {
             root.bytesDelta = brc.all/1024. - bytesAll
             root.bytesAll = brc.all/1024.
 
-            if(grid.children.length !== numKeys * 3)
+            if(grid.children.length !== numKeys)
             {
                 grid.children = []
 
                 for(const key of Object.keys(brc)) {
-                    rowHdr.createObject(grid, {'text': key})
-                    numField.createObject(grid, {'text': '--', 'fieldName': key})
-                    kBField.createObject(grid, {'text': '--', 'fieldName': key})
+                    framedValue.createObject(grid, {'title': key})
                 }
             }
         }
@@ -74,51 +72,36 @@ Card1 {
 
     }
 
-    property Component numField: TextField {
-        id: numField
-        property string fieldName
-        property int oldValue: 0
-        readOnly: true
-        placeholderText: 'num msg'
-        Layout.preferredHeight: 40
-        Layout.minimumWidth: 100
+    property Component framedValue: FramedValue {
+        id: comp
+        property int oldMsgs: 0
+        property real oldKbytes: 0
         Layout.fillWidth: true
+        Layout.fillHeight: true
         Connections {
             target: timer
             function onTriggered() {
-                let value = client.numMsgCounters[fieldName]
-                if(showTotalSwitch.checked) {
-                    numField.text = value
-                }
-                else {
-                    numField.text = value - numField.oldValue
-                }
-                numField.oldValue = value
-            }
-        }
-    }
 
-    property Component kBField: TextField {
-        id: kBField
-        property string fieldName
-        property real oldValue: 0
-        readOnly: true
-        placeholderText: 'bandwidth'
-        Layout.preferredHeight: 40
-        Layout.minimumWidth: 100
-        Layout.fillWidth: true
-        Connections {
-            target: timer
-            function onTriggered() {
-                let value = client.bytesRecvCounters[fieldName] / 1024.
+                // msgs
+                let msgs = client.numMsgCounters[title]
                 if(showTotalSwitch.checked) {
-                    kBField.text = `${(value*8).toFixed(1)} kb  (${(value/root.bytesAll*100).toFixed(0)} %)`
+                    comp.value1 = `${msgs} msgs`
                 }
                 else {
-                    let delta = value - kBField.oldValue
-                    kBField.text = `${(delta*8).toFixed(1)} kbps  (${(delta/root.bytesDelta*100).toFixed(0)} %)`
+                    comp.value1 = `${msgs - comp.oldMsgs} msgs`
                 }
-                kBField.oldValue = value
+                comp.oldMsgs = msgs
+
+                // bandwidth
+                let kbytes = client.bytesRecvCounters[title] / 1024.
+                if(showTotalSwitch.checked) {
+                    comp.value2 = `${(kbytes*8).toFixed(1)} kb  (${(kbytes/root.bytesAll*100).toFixed(0)} %)`
+                }
+                else {
+                    let delta = kbytes - comp.oldKbytes
+                    comp.value2 = `${(delta*8).toFixed(1)} kbps  (${(delta/root.bytesDelta*100).toFixed(0)} %)`
+                }
+                comp.oldKbytes = kbytes
             }
         }
     }

@@ -345,6 +345,7 @@ Control {
 
     onPageSelected: {
         Logic.construct()
+        Logic.updateSdos()
     }
 
 }

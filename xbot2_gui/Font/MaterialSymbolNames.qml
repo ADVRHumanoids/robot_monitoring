@@ -50,6 +50,11 @@ Item {
     property string splitVert: '\uf676'
     property string close: '\ue5cd'
     property string lock: '\ue897'
+    property string add: '\ue145'
+    property string delete_: '\ue872'
+    property string arrowUp: '\ue5d8'
+    property string arrowDown: '\ue5db'
+    property string search: '\ue8b6'
 
     property FontLoader filledFont: FontLoader {
         source: `/Font/materialsymbols/MaterialSymbolsOutlined[opsz,wght,FILL,GRAD@20,200,1,200].otf`

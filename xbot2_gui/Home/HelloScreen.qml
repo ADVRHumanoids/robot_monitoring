@@ -55,13 +55,13 @@ MultiPaneResponsiveLayout {
     signal restartUi()
 
     function setError(msg) {
-        srvStatus.msgText.text = "Error: " + msg
+        srvStatus.msgText.text = msg
         srvStatus.msgText.color = CommonProperties.colors.err
     }
 
     function setConnected(msg) {
-        srvStatus.msgText.text = "Status OK: " + msg
-        srvStatus.msgText.color = CommonProperties.colors.ok
+        srvStatus.msgText.text = msg
+        srvStatus.msgText.color = Qt.lighter(CommonProperties.colors.ok, 2)
     }
 
     function setProgress(msg) {
@@ -112,7 +112,7 @@ MultiPaneResponsiveLayout {
         Column {
 
             id: leftCol
-            spacing: CommonProperties.geom.spacing
+            spacing: CommonProperties.geom.spacing * 2
             width: scroll.contentWidth
 
             SectionHeader {
@@ -130,11 +130,13 @@ MultiPaneResponsiveLayout {
                 id: srvStatus
                 client: root.client
                 width: scroll.availableWidth
+                backgroundColor: Qt.rgba(1, 1, 1, 0.01)
             }
 
             StatisticsCard {
                 client: root.client
                 width: scroll.availableWidth
+                backgroundColor: srvStatus.backgroundColor
 
             }
 

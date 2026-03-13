@@ -16,7 +16,7 @@ Card1 {
     signal resetCmd()
     signal cmdChanged()
     signal jointRemoved()
-    property list<string> ctrlJoints
+    property list<string> ctrlJoints: SharedData.jointNames.length > 0 ? [SharedData.jointNames[0]] : []
     property alias activeCtrl: ctrlCombo.currentText
     property alias enableMultipleSelection: multiJointChk.checked
 
@@ -40,12 +40,15 @@ Card1 {
     id: root
     name: 'Joint Command'
     property bool continuousPublishMode: activeCtrl === 'Velocity' || activeCtrl === 'Effort'
+    property bool rosCtrlRunning: true
+    property bool rosCtrlStarting: false
+    property string rosCtrlName: 'ros_control'
     configurable: true
 
     onCtrlJointsChanged: {
         Qt.callLater( () => {
-            slider.value = Logic.currentValue(root.ctrlJoints, root.activeCtrl)
-        })
+                         slider.value = Logic.currentValue(root.ctrlJoints, root.activeCtrl)
+                     })
         root.resetCmd()
     }
 
@@ -68,51 +71,86 @@ Card1 {
         columnSpacing: 16
         rowSpacing: 8
 
-        Label {
-            text: root.ctrlJoints.length > 0 ? 'Selected joints:' : 'No joint selected'
-            Layout.columnSpan: 2
-        }
-
-        Flow {
-            spacing: 4
+        FramedControl {
+            visible: !rosCtrlRunning && jointDevice.jointActive
             Layout.columnSpan: 2
             Layout.fillWidth: true
+            text: 'Enable'
+            subtext: 'The ROS control plugin is not running. Commands are not available.'
+            Button {
+                id: rosCtrlEnableBtn
+                text: 'Enable'
+                onClicked: Logic.enableControl()
+                visible: !rosCtrlStarting
+            }
+            BusyIndicator {
+                running: true
+                visible: rosCtrlStarting
+                Layout.preferredHeight: rosCtrlEnableBtn.implicitHeight
+            }
 
-            Repeater {
-                id: jointRepeater
-                model: root.ctrlJoints
-                Label {
-                    padding: 4
-                    text: modelData
-                    background: Rectangle {
-                        color: Qt.rgba(1, 1, 1, 0.1)
-                        radius: 2
+        }
+
+
+        FramedControl {
+
+            text: root.ctrlJoints.length > 0 ? 'Selected joints' : 'No joint selected'
+            Layout.columnSpan: 2
+            horizontal:  false
+            Layout.fillWidth: true
+
+            // frameBackground: Rectangle {
+            //     color: Qt.rgba(1, 1, 1, 0.025)
+            //     border.width: 0
+            //     radius: 4
+            // }
+
+            Flow {
+                spacing: 4
+                Layout.fillWidth: true
+
+                Repeater {
+                    id: jointRepeater
+                    model: root.ctrlJoints
+                    Label {
+                        padding: 4
+                        text: modelData
+                        font.pixelSize: 10
+                        background: Rectangle {
+                            color: Qt.rgba(1, 1, 1, 0.1)
+                            radius: 2
+                        }
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: root.removeJoint(modelData)
+                        }
+                        Component.onCompleted: {
+                            selectAllBtn.height = height
+                            clearBtn.height = height
+                        }
                     }
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: root.removeJoint(modelData)
-                    }
-                    Component.onCompleted: {
-                        selectAllBtn.height = height
-                        clearBtn.height = height
-                    }
+                }
+
+                ToolButton {
+                    id: selectAllBtn
+                    text: 'Select all'
+                    highlighted: true
+                    visible: jointRepeater.count < SharedData.jointNames.length
+                    onClicked: root.ctrlJoints = SharedData.jointNames
+                }
+
+                ToolButton {
+                    id: clearBtn
+                    text: 'Clear'
+                    highlighted: true
+                    visible: jointRepeater.count > 1
+                    onClicked: {root.ctrlJoints = []; root.jointRemoved()}
                 }
             }
 
-            ToolButton {
-                id: selectAllBtn
-                text: 'ALL'
-                visible: jointRepeater.count < SharedData.jointNames.length
-                onClicked: root.ctrlJoints = SharedData.jointNames
-            }
-
-            ToolButton {
-                id: clearBtn
-                text: 'X'
-                visible: jointRepeater.count > 1
-                onClicked: {root.ctrlJoints = []; root.jointRemoved()}
-            }
         }
+
+
 
         RowLayout {
 
@@ -194,52 +232,70 @@ Card1 {
             }
         }
 
-        DelayButton {
+        FramedControl {
+
             visible: !jointDevice.jointActive
-            enabled: root.ctrlJoints.length > 0
-            text: 'Stop Motor'
+            Layout.columnSpan: 2
             Layout.fillWidth: true
-            onActivated: {
-                progress = 0;
-                Logic.stopMotor();
+            text: 'Motor control'
+            subtext: 'Start or stop all selected motors           '
+
+
+            DelayButton {
+                enabled: root.ctrlJoints.length > 0
+                text: 'Stop'
+                Layout.fillWidth: true
+                onActivated: {
+                    progress = 0;
+                    Logic.stopMotor();
+                }
+                delay: 333
             }
-            delay: 333
+
+            DelayButton {
+                enabled: root.ctrlJoints.length > 0
+                text: 'Start'
+                Layout.fillWidth: true
+                onActivated: {
+                    progress = 0;
+                    Logic.startMotor()
+                }
+                delay: 333
+            }
+
         }
 
-        DelayButton {
-            visible: !jointDevice.jointActive
-            enabled: root.ctrlJoints.length > 0
-            text: 'Start Motor'
-            Layout.fillWidth: true
-            onActivated: {
-                progress = 0;
-                Logic.startMotor()
-            }
-            delay: 333
-        }
+        FramedControl {
 
-        DelayButton {
-            visible: !jointDevice.jointActive
-            enabled: root.ctrlJoints.length > 0
-            text: 'Engage brake'
+            Layout.columnSpan: 2
             Layout.fillWidth: true
-            onActivated: {
-                progress = 0;
-                Logic.engageBrake()
-            }
-            delay: 333
-        }
+            visible: !jointDevice.jointActive
+            text: 'Brake control'
+            subtext: 'Engage or release all selected brakes '
 
-        DelayButton {
-            visible: !jointDevice.jointActive
-            enabled: root.ctrlJoints.length > 0
-            text: 'Release brake'
-            Layout.fillWidth: true
-            onActivated: {
-                progress = 0;
-                Logic.releaseBrake()
+
+            DelayButton {
+                enabled: root.ctrlJoints.length > 0
+                text: 'Engage'
+                Layout.fillWidth: true
+                onActivated: {
+                    progress = 0;
+                    Logic.engageBrake()
+                }
+                delay: 333
             }
-            delay: 333
+
+            DelayButton {
+                enabled: root.ctrlJoints.length > 0
+                text: 'Release'
+                Layout.fillWidth: true
+                onActivated: {
+                    progress = 0;
+                    Logic.releaseBrake()
+                }
+                delay: 333
+            }
+
         }
 
 
@@ -261,32 +317,53 @@ Card1 {
 
     backItem: Control {
 
+        anchors.fill: parent
+
         contentItem: GridLayout {
 
-            columns: 2
+            columns: 1
 
             columnSpacing: 6
             rowSpacing: 6
 
-            Label {
+            FramedControl {
+                Layout.fillWidth: true
                 text: 'Trajectory time'
+                subtext: 'Adjust the interpolation time for all commands'
+
+                SpinBox {
+                    id: trjTimeSpin
+                    from: 1
+                    to: 20
+                    value: 5
+                }
+
             }
 
-            DoubleSpinBox {
-                id: trjTimeSpin
-                from: 1.0
-                to: 10.0
-                stepSize: 1.0
-                value: 5.0
-            }
+            FramedControl {
+                Layout.fillWidth: true
+                text: 'Multiple joints'
+                subtext: 'Allow to select multuple joints at once'
 
-            CheckBox {
-                Layout.columnSpan: 2
-                id: multiJointChk
-                checked: false
-                text: 'Enable multiple joints'
+                CheckBox {
+                    id: multiJointChk
+                    checked: false
+                    text: ''
+                }
             }
         }
 
+    }
+
+    Connections {
+        target: client
+        function onPluginStatMessageReceived(status) {
+            try {
+                root.rosCtrlRunning = status[rosCtrlName].state === 'Running'
+                root.rosCtrlStarting = status[rosCtrlName].state === 'Starting'
+            }catch(e) {
+                rosCtrlName = 'ros_ctrl'
+            }
+        }
     }
 }

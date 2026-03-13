@@ -15,24 +15,33 @@ Item {
     property string processName: 'ProcessName'
     property alias processConfig: configPanel.description
     property alias processOptions: configPanel.options
+    property var processInfo: Object()
     property alias muted: muteSwitch.checked
+    property bool deletable: processInfo.is_custom || false
 
     signal start()
     signal stop()
     signal kill()
+    signal deleteRequest()
+    signal procEditRequest()
 
     implicitHeight: card.implicitHeight
 
     // private
+    id: root
+
     property var colorMap: {
         'Running':  Qt.lighter(CommonProperties.colors.ok),
         'Stopped': card.defaultBackground,
         'Killed': CommonProperties.colors.err,
         'Waiting': Qt.lighter(CommonProperties.colors.ok, 3),
-        'Killing': CommonProperties.colors.err
+        'Killing': CommonProperties.colors.err,
+        'unknown': 'lightgray'
     }
 
-    id: root
+
+    // impl
+
     Layout.maximumHeight: card.Layout.maximumHeight
 
     Card1 {
@@ -55,42 +64,11 @@ Item {
         statusIcon.visible: muteSwitch.checked
 
         // color management
-        backgroundColor: colorMap[processState]
+        // backgroundColor: colorMap[processState]
         borderWidth: 2
-        borderColor: processKilled ? Qt.darker(backgroundColor) : Qt.lighter(backgroundColor)
+        borderColor: processKilled ? Qt.darker(badge.color, 1.1) : Qt.lighter(badge.color, 1.1)
 
 
-
-        SequentialAnimation on backgroundColor {
-
-            loops: Animation.Infinite
-
-            running: root.processState === 'Waiting' ||
-                     root.processState === 'Killing'
-
-            alwaysRunToEnd: true
-
-            ColorAnimation {
-                from: colorMap[processState]
-                to: card.defaultBackground
-                duration: 555
-                easing {
-                    type: Easing.OutSine
-                }
-            }
-
-            ColorAnimation {
-                from: card.defaultBackground
-                to: colorMap[processState]
-                duration: 555
-                easing {
-                    type: Easing.InSine
-                }
-            }
-
-            onFinished: card.backgroundColor = Qt.binding(() => colorMap[processState])
-
-        }
 
         toolButtons: [
 
@@ -100,30 +78,91 @@ Item {
                 font.family: CommonProperties.fontAwesome.solid.family
                 onClicked: root.processRunning ? root.stop() : root.start()
             }
-
         ]
+
+        badgeItem: Rectangle {
+            id: badge
+            implicitHeight: 8
+            implicitWidth: 8
+            radius: 4
+            color: colorMap[processState]
+
+            SequentialAnimation on color {
+
+                loops: Animation.Infinite
+
+                running: root.processState === 'Waiting' ||
+                         root.processState === 'Killing' ||
+                         root.processState === 'unknown'
+
+                alwaysRunToEnd: true
+
+                ColorAnimation {
+                    from: colorMap[processState]
+                    to: badge.color
+                    duration: 555
+                    easing {
+                        type: Easing.OutSine
+                    }
+                }
+
+                ColorAnimation {
+                    from: badge.color
+                    to: colorMap[processState]
+                    duration: 555
+                    easing {
+                        type: Easing.InSine
+                    }
+                }
+
+                onFinished: badge.color = Qt.binding(() => colorMap[processState])
+
+            }
+
+        }
 
         frontItem: GridLayout {
             // anchors.fill: parent
             columns: 2
             height: implicitHeight
             anchors.fill: parent
+
             Button {
                 text: root.processRunning ? 'Stop' : 'Start'
                 onClicked: root.processRunning ? root.stop() : root.start()
                 Layout.fillWidth: true
+                highlighted: true
             }
+
             Button {
                 text: 'Kill'
                 onClicked: root.kill()
                 Layout.fillWidth: true
             }
-            Switch {
-                Layout.columnSpan: 2
 
-                id: muteSwitch
+            FramedControl {
                 text: 'Mute'
-                checked: false
+                subtext: 'Disable console output'
+                Layout.columnSpan: 2
+                Layout.fillWidth: true
+                Switch {
+                    id: muteSwitch
+                    checked: false
+                }
+            }
+
+            FramedControl {
+                Layout.columnSpan: 2
+                Layout.fillWidth: true
+                text: 'Delete process'
+                subtext: root.processRunning ? 'Process cannot be removed while running' :
+                                               'Remove this process from the GUI server (custom process only)'
+                visible: root.deletable
+                enabled: !root.processRunning
+                Button {
+                    text: 'Delete'
+                    onClicked: root.deleteRequest()
+                }
             }
         }
 
@@ -131,6 +170,9 @@ Item {
             id: configPanel
             enabled: !root.processRunning
             anchors.fill: parent
+            info: root.processInfo
+
+            onProcEditRequested: root.procEditRequest()
         }
 
         onApplyConfiguration: {

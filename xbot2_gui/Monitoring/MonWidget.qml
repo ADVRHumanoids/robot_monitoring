@@ -17,7 +17,10 @@ Control {
     property string jnameMaxTempMot: ''
     property string jnameMaxTempDri: ''
     property real vBatt: 0
-    property real danger: Math.min(1, Math.max( 0, (51 - vBatt)/4, (maxTempMot - 50)/30, (maxTempDri - 50)/10 ))
+    property real danger: Math.min(1, Math.max( 0,
+                                               (vBatt > 0)*(51 - vBatt)/4,
+                                               (maxTempMot > 0)*(maxTempMot - 50)/30,
+                                               (maxTempDri > 0)*(maxTempDri - 50)/10 ))
 
     property color okColor: Qt.hsva(0.333, 0.8, 1.0, 1.0)
     property color badColor: Qt.hsva(0.0, 0.8, 1.0, 1.0)
@@ -86,6 +89,8 @@ Control {
                 Layout.alignment: Qt.AlignTop
                 Layout.fillWidth: true
                 Layout.columnSpan: 2
+
+                visible: vBatt > 0
 
                 Label {
                     text: 'Vbatt'
@@ -171,7 +176,7 @@ Control {
                 return
             }
 
-            root.vBatt = js.vbatt
+            root.vBatt = js.vbatt ?? 0
             root.maxTempMot = Math.max( ...js.motorTemp )
             root.maxTempDri = Math.max( ...js.driverTemp )
             jnameMaxTempMot = SharedData.jointNames[ js.motorTemp.indexOf(root.maxTempMot) ]

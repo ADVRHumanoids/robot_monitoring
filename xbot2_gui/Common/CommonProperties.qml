@@ -32,7 +32,7 @@ Item {
 
     property Item font: Item {
         property int h1: 24
-        property int h2: 20
+        property int h2: geom.compactLayout ? 16 : 20
         property int h3: 16
         property int h4: 14
     }

@@ -19,7 +19,11 @@ Item {
     property real t0: -1.0
     property Plotter activePlot
 
-    function addSingleSeries(item) {
+    function addSingleSeries(_item) {
+
+        // deep copy _item
+        let item = Object()
+        Object.assign(item, _item)
 
         let seriesName = `${item.src}/${item.name}` + (item.idx >= 0 ? `[${item.idx}]` : '')
 
@@ -145,9 +149,11 @@ Item {
 
         function build() {
 
+            listModel.clear()
+
             for(let [k, v] of Object.entries(client.objNumericFields)) {
                 for(let v1 of v) {
-                    console.log(JSON.stringify(v1))
+                    // console.log(JSON.stringify(v1))
                     if(v1.type === 'array') {
                         for(let i = 0; i < v1.length; i++) {
                             append({
@@ -171,7 +177,7 @@ Item {
             }
 
             for(let v1 of jointStateNumericFields) {
-                console.log(JSON.stringify(v1))
+                // console.log(JSON.stringify(v1))
                 if(v1.type === 'array') {
                     for(let j = 0; j < v1.length; j++) {
                         append({
@@ -290,6 +296,8 @@ Item {
             PlotterLegend {
                 id: legend
                 chart: plot.chartView
+                x: 8
+                y: 8
             }
             GridLayout {
                 anchors.right: plot.right

@@ -25,10 +25,13 @@ ScrollView {
             Component.onCompleted: checked = AudioBroadcaster.active
 
             Connections {
+
                 target: AudioBroadcaster
+
                 function onActiveChanged() {
                     asrSwitch.checked = AudioBroadcaster.active
                 }
+
                 function onLevelChanged() {
 
                     // plot audio level
@@ -70,14 +73,14 @@ ScrollView {
 
             interactive: false
 
-            chartView.title: 'Sound level'
-            chartView.titleColor: palette.text
-            chartView.margins {
-                bottom: 6
-                left: 6
-                right: 6
-                top: 6
-            }
+            // chartView.title: 'Sound level'
+            // chartView.titleColor: palette.text
+            // chartView.margins {
+            //     bottom: 6
+            //     left: 6
+            //     right: 6
+            //     top: 6
+            // }
 
             property var levelTimeSeries: undefined
 

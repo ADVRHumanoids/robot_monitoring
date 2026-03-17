@@ -343,7 +343,7 @@ Card1 {
             FramedControl {
                 Layout.fillWidth: true
                 text: 'Multiple joints'
-                subtext: 'Allow to select multuple joints at once'
+                subtext: 'Allow to select multiple joints at once'
 
                 CheckBox {
                     id: multiJointChk

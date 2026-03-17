@@ -225,6 +225,9 @@ function handleMessage(obj) {
     else if(obj.type === 'ping')
     {
         root.srvRtt = (appData.getTimeNs() - obj.cli_time_ns)*1e-6
+
+        // fake reception of rtt message (useful for plotting it)
+        handleMessage({'type': 'internal_0', 'ping_ms': root.srvRtt})
     }
 
     objectReceived(obj)

@@ -167,7 +167,6 @@ Item {
                             enabled: root.collapsable
                             anchors.fill: parent
                             onDoubleClicked: root.collapsed = !root.collapsed
-                            onClicked: root.bannerClicked()
                         }
                     }
 

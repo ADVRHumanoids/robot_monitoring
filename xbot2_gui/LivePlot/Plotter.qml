@@ -1,5 +1,5 @@
 import QtQuick
-import QtCharts
+import QtGraphs
 import QtQuick.Controls
 import QtQuick.Layouts
 
@@ -18,7 +18,7 @@ Item {
 
     property string axisXTitle: 'time [s]'
 
-    property alias interactive: mouseArea.enabled
+    property bool interactive: true
 
     signal doubleClicked()
 
@@ -30,6 +30,21 @@ Item {
 
         // add point
         seriesData.series.append(t, val)
+
+        // remove old samples to avoid out of memory
+        if(seriesData.series.count > 110000) {
+            seriesData.series.removeMultiple(0, 10000)
+        }
+
+        // update last value inside legend
+        plotterLegend.updateLastValue(seriesData.series.name, val)
+
+        // if visible, autoscale and scroll
+        let seriesVisible = seriesData.series.visible
+
+        if(!seriesVisible) {
+            return
+        }
 
         // handle autoscale
         let axisValue = seriesData.axisValue
@@ -46,16 +61,10 @@ Item {
         valMax = Math.max(val, valMax)
         valMin = Math.min(val, valMin)
 
-        // remove old samples to avoid out of memory
-        if(seriesData.series.count > 110000) {
-            seriesData.series.removePoints(0, 10000)
-        }
-
         // save current time for autoscroll
         currTime = t
 
-        // update last value inside legend
-        plotterLegend.updateLastValue(seriesData.series.name, val)
+
     }
 
     function setPoints(seriesData, t_list, val_list) {
@@ -80,9 +89,9 @@ Item {
     }
 
     function clearPoints() {
-        for(let i = 0; i < chart.count; i++) {
-            let s = chart.series(i)
-            s.removePoints(0, s.count)
+        for(let i = 0; i < chart.seriesList.length; i++) {
+            let s = chart.seriesList[i]
+            s.removeMultiple(0, s.count)
         }
     }
 
@@ -92,47 +101,6 @@ Item {
         axisTime.max = xmax
     }
 
-    function rebuild() {
-
-        if(_rebuilding) {
-            return
-        }
-
-        _rebuilding = true
-
-
-
-        for(let i = 0; i < chart.count; i++) {
-
-            // save points, type, name
-            let series = chart.series(i)
-            console.log(series, series.name)
-
-            let points = rebuilder.getPoints(series)
-            let type = series.type
-            let name = series.name
-
-            // remove
-            chart.removeSeries(series)
-
-            // create
-            series = chart.createSeries(type,
-                                        name);
-
-            series.useOpenGL = true
-            series.antialiasing = false
-            series.axisX = axisTime
-            series.axisY = axisValueLeft
-
-            // fill with saved points
-            rebuilder.setPoints(series, points)
-
-            // update seriesdata
-            currSeries[name].series = series
-        }
-        _rebuilding = false
-    }
-
     function resetView() {
         axisValueLeft.min = -1e-16
         axisValueLeft.max = 1e-16
@@ -140,6 +108,12 @@ Item {
         axisValueRight.max = 1e-16
         chart.autoscale = true
         chart.autoscroll = true
+        axisTime.pan = 0
+        axisValueLeft.pan = 0
+        axisValueRight.pan = 0
+        axisTime.zoom = 1
+        axisValueLeft.zoom = 1
+        axisValueRight.zoom = 1
     }
 
     property real timeSpan: 30
@@ -153,14 +127,9 @@ Item {
     implicitWidth: 400
     implicitHeight: 300
 
-    property bool _rebuilding: false
     property real currTime: 0
     property real valMin: 1e9
     property real valMax: -1e9
-
-    PlotRebuilder {
-        id: rebuilder
-    }
 
     function _addSeries(seriesName, seriesProps, useSecondaryValueAxis) {
 
@@ -174,20 +143,20 @@ Item {
         }
 
         // create series, attach to axes
-        let series = chart.createSeries(ChartView.SeriesTypeLine,
+        let series = chart.createSeries('LineSeries',
                                         seriesName);
-        series.useOpenGL = true
-        series.antialiasing = false
-        series.axisX = axisTime
+        // series.useOpenGL = true
+        // series.antialiasing = false
+        // series.axisX = axisTime
 
         let axisValue = undefined
 
         if(useSecondaryValueAxis) {
-            series.axisYRight = axisValueRight
+            // series.axisY = axisValueRight
             axisValue = axisValueRight
         }
         else {
-            series.axisY = axisValueLeft
+            // series.axisY = axisValueLeft
             axisValue = axisValueLeft
         }
 
@@ -210,16 +179,60 @@ Item {
     }
 
 
-    ChartView {
+    GraphsView {
 
         id: chart
         anchors.fill: parent
-        legend.visible: false
         antialiasing: true
-        backgroundColor: Qt.rgba(1, 1, 1, 0.1)
+        marginLeft: 10
+        axisX: axisTime
+        axisY: axisValueLeft
+        panStyle: interactive ? GraphsView.PanStyle.Drag : GraphsView.PanStyle.None
+        zoomStyle: interactive ? GraphsView.ZoomStyle.Center : GraphsView.ZoomStyle.None
+
+        theme: GraphsTheme {
+            theme: GraphsTheme.Theme.MixSeries
+            colorScheme: GraphsTheme.ColorScheme.Dark
+            axisX.mainWidth: 1
+            axisY.mainWidth: 1
+            grid.mainWidth: 1
+            seriesColors: [
+                '#4FC3F7', // sky blue
+                '#FFB74D', // warm orange
+                '#81C784', // soft green
+                '#BA68C8', // violet
+                '#E57373', // coral red
+                '#FFF176', // muted yellow
+                '#4DB6AC', // teal
+                '#F06292', // pink
+                '#90A4AE', // cool gray-blue
+                '#AED581'  // lime green
+            ]
+        }
 
         property bool autoscale: true
         property bool autoscroll: true
+        property int seriesColorId: 0
+
+        property Component lineSeriesComponent: LineSeries {}
+
+        function createSeries(seriesType, seriesName) {
+            let numAvailableColors = theme.seriesColors.length
+            let seriesColor = theme.seriesColors[seriesColorId % numAvailableColors]
+            seriesColorId += 1
+            let s = lineSeriesComponent.createObject(chart, {'name': seriesName})
+            chart.addSeries(s)
+            plotterLegend.addSeries(s, seriesColor)
+            return s
+        }
+
+        function series(seriesName) {
+            for(let i = 0; i < seriesList.length; i++) {
+                if(seriesList[i].name === seriesName) {
+                    return seriesList[i]
+                }
+            }
+        }
 
         function centredZoom(scale, center) {
 
@@ -247,162 +260,160 @@ Item {
             }
         }
 
-        Rectangle {
+        // Rectangle {
 
-            function setSignedWidth(new_width) {
+        //     function setSignedWidth(new_width) {
 
-                if(new_width > 0) {
-                    width = new_width
-                    xScale = 1
-                }
-                else {
-                    width = -new_width
-                    xScale = -1
-                }
-            }
+        //         if(new_width > 0) {
+        //             width = new_width
+        //             xScale = 1
+        //         }
+        //         else {
+        //             width = -new_width
+        //             xScale = -1
+        //         }
+        //     }
 
-            function setSignedHeight(new_height) {
+        //     function setSignedHeight(new_height) {
 
-                if(new_height > 0) {
-                    height = new_height
-                    yScale = 1
-                }
-                else {
-                    height = -new_height
-                    yScale = -1
-                }
-            }
+        //         if(new_height > 0) {
+        //             height = new_height
+        //             yScale = 1
+        //         }
+        //         else {
+        //             height = -new_height
+        //             yScale = -1
+        //         }
+        //     }
 
-            id: rubberBand
-            color: Qt.rgba(0.8, 0.8, 0.9, 0.2)
-            border.color: Qt.rgba(0.8, 0.8, 0.9, 1.0)
-            border.width: 1
-            visible: false
-            transform: Scale {
-                xScale: rubberBand.xScale
-                yScale: rubberBand.yScale
-            }
-            property real xScale: 1.0
-            property real yScale: 1.0
-        }
+        //     id: rubberBand
+        //     color: Qt.rgba(0.8, 0.8, 0.9, 0.2)
+        //     border.color: Qt.rgba(0.8, 0.8, 0.9, 1.0)
+        //     border.width: 1
+        //     visible: false
+        //     transform: Scale {
+        //         xScale: rubberBand.xScale
+        //         yScale: rubberBand.yScale
+        //     }
+        //     property real xScale: 1.0
+        //     property real yScale: 1.0
+        // }
 
-        MouseArea {
+        // MouseArea {
 
-            id: mouseArea
-            anchors.fill: parent
-            preventStealing: true
-            acceptedButtons: Qt.LeftButton | Qt.RightButton
+        //     id: mouseArea
+        //     anchors.fill: parent
+        //     preventStealing: true
+        //     acceptedButtons: Qt.LeftButton | Qt.RightButton
 
-            onWheel: function (wheel) {
+        //     onWheel: function (wheel) {
 
-                let scale = wheel.angleDelta.y > 0 ? 6/5 : 5/6
-                let scaleXy = Qt.point(scale, scale)
+        //         let scale = wheel.angleDelta.y > 0 ? 6/5 : 5/6
+        //         let scaleXy = Qt.point(scale, scale)
 
-                let center = Qt.point(wheel.x - chart.plotArea.x,
-                                      wheel.y - chart.plotArea.y)
-                chart.centredZoom(scaleXy, center)
-            }
+        //         let center = Qt.point(wheel.x - chart.plotArea.x,
+        //                               wheel.y - chart.plotArea.y)
+        //         chart.centredZoom(scaleXy, center)
+        //     }
 
-            property point lastPos
+        //     property point lastPos
 
-            onPressed: function(mouse){
-                if(mouse.button === Qt.LeftButton)
-                {
-                    lastPos.x = mouse.x
-                    lastPos.y = mouse.y
-                    chart.autoscale = false
-                    chart.autoscroll = false
-                }
-                else if(mouse.button === Qt.RightButton)
-                {
-                    rubberBand.x = mouseX
-                    rubberBand.y = mouseY
-                    rubberBand.visible = true
-                }
-            }
+        //     onPressed: function(mouse){
+        //         if(mouse.button === Qt.LeftButton)
+        //         {
+        //             lastPos.x = mouse.x
+        //             lastPos.y = mouse.y
+        //             chart.autoscale = false
+        //             chart.autoscroll = false
+        //         }
+        //         else if(mouse.button === Qt.RightButton)
+        //         {
+        //             rubberBand.x = mouseX
+        //             rubberBand.y = mouseY
+        //             rubberBand.visible = true
+        //         }
+        //     }
 
-            onMouseXChanged: {
-                if(rubberBand.visible)
-                {
-                    rubberBand.setSignedWidth(mouseX - rubberBand.x)
-                }
-                else
-                {
-                    if(mouseX > lastPos.x)
-                        chart.scrollLeft(mouseX - lastPos.x)
-                    else
-                        chart.scrollRight(-mouseX + lastPos.x)
-                    lastPos.x = mouseX
-                }
-            }
+        //     onMouseXChanged: {
+        //         if(rubberBand.visible)
+        //         {
+        //             rubberBand.setSignedWidth(mouseX - rubberBand.x)
+        //         }
+        //         else
+        //         {
+        //             if(mouseX > lastPos.x)
+        //                 chart.scrollLeft(mouseX - lastPos.x)
+        //             else
+        //                 chart.scrollRight(-mouseX + lastPos.x)
+        //             lastPos.x = mouseX
+        //         }
+        //     }
 
-            onMouseYChanged: {
-                if(rubberBand.visible)
-                {
-                    rubberBand.setSignedHeight(mouseY - rubberBand.y)
-                }
-                else
-                {
-                    if(mouseY > lastPos.Y)
-                        chart.scrollUp(mouseY - lastPos.y)
-                    else
-                        chart.scrollDown(-mouseY + lastPos.y)
-                    lastPos.y = mouseY
-                }
-            }
+        //     onMouseYChanged: {
+        //         if(rubberBand.visible)
+        //         {
+        //             rubberBand.setSignedHeight(mouseY - rubberBand.y)
+        //         }
+        //         else
+        //         {
+        //             if(mouseY > lastPos.Y)
+        //                 chart.scrollUp(mouseY - lastPos.y)
+        //             else
+        //                 chart.scrollDown(-mouseY + lastPos.y)
+        //             lastPos.y = mouseY
+        //         }
+        //     }
 
-            onReleased: {
+        //     onReleased: {
 
-                if(rubberBand.visible) {
-                    chart.autoscale = false
-                    chart.autoscroll = false
-                    chart.zoomIn(Qt.rect(rubberBand.x,
-                                         rubberBand.y,
-                                         rubberBand.width,
-                                         rubberBand.height));
-                    rubberBand.visible = false
-                }
-            }
+        //         if(rubberBand.visible) {
+        //             chart.autoscale = false
+        //             chart.autoscroll = false
+        //             chart.zoomIn(Qt.rect(rubberBand.x,
+        //                                  rubberBand.y,
+        //                                  rubberBand.width,
+        //                                  rubberBand.height));
+        //             rubberBand.visible = false
+        //         }
+        //     }
 
-            onDoubleClicked: root.doubleClicked()
-        }
+        //     onDoubleClicked: root.doubleClicked()
+        // }
 
-        ValuesAxis {
+        ValueAxis {
             id: axisTime
             max: currTime
             min: Math.max(currTime - timeSpan, 0)
             titleText: `<font color='white'>${root.axisXTitle}</font>`
-            labelsColor: CommonProperties.colors.primaryText
+            gridVisible: true
+            // labelsColor: CommonProperties.colors.primaryText
         }
 
-        ValuesAxis {
+        ValueAxis {
             id: axisValueLeft
             min: -1
             max: 1
             titleText: `<font color='white'>${root.axisLeftTitle}</font>`
-            labelsColor: CommonProperties.colors.primaryText
+            gridVisible: true
+            subTickCount: 2
+            // labelsColor: CommonProperties.colors.primaryText
         }
 
-        ValuesAxis {
+        ValueAxis {
             id: axisValueRight
             min: -1
             max: 1
             titleText: `<font color='white'>${root.axisRightTitle}</font>`
-            labelsColor: CommonProperties.colors.primaryText
+            // labelsColor: CommonProperties.colors.primaryText
         }
 
-        onSeriesAdded: function(series) {
-            console.log(`++chart has ${count} elems`)
-            plotterLegend.addSeries(series)
-        }
-
-        onSeriesRemoved: function(series) {
-            console.log(`--chart has ${count} elems`)
-            if(!root._rebuilding) {
-                delete currSeries[series.name]
-            }
-            plotterLegend.removeSeries(series)
-        }
+        // onSeriesRemoved: function(series) {
+        //     console.log(`--chart has ${count} elems`)
+        //     if(!root._rebuilding) {
+        //         delete currSeries[series.name]
+        //     }
+        //     plotterLegend.removeSeries(series)
+        // }
 
         Component.onCompleted: {
             // removeAllSeries()
@@ -410,6 +421,13 @@ Item {
 
     }
 
+
+    Connections {
+        target: plotterLegend
+        function onRemoveSeriesRequested(name) {
+            delete currSeries[name]
+        }
+    }
 
 
 }

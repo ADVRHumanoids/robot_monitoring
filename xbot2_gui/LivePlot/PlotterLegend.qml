@@ -1,14 +1,13 @@
 import QtQuick
 import QtQuick.Controls
-import QtCharts
+import QtQuick.Layouts
+import QtGraphs
 
-Item {
+Control {
 
-    property ChartView chart
+    property GraphsView chart
 
     id: root
-    implicitHeight: grid.implicitHeight
-    implicitWidth: grid.implicitWidth
 
     property var seriesLastValues: Object()
 
@@ -25,11 +24,11 @@ Item {
     signal highlightSeries(string name, bool highlight)
     signal removeSeriesRequested(string name)
 
-    function addSeries(series) {
+    function addSeries(series, seriesColor) {
         seriesLastValues[series.name] = Number.NaN
         legendModel.append({
                                seriesName: series.name,
-                               seriesColor: String(series.color)
+                               seriesColor: String(seriesColor)
                            })
     }
 
@@ -57,17 +56,18 @@ Item {
     }
 
     onRemoveSeriesRequested: function(seriesName) {
-        chart.removeSeries(chart.series(seriesName))
+        let s = chart.series(seriesName)
+        removeSeries(s)
+        chart.removeSeries(s)
     }
 
     property int maxItemWidth: 0
 
-    Grid {
+    contentItem: GridLayout {
         id: grid
-        anchors.centerIn: parent
         rowSpacing: 5
         columnSpacing: 10
-        columns: Math.max(1, parent.width/maxItemWidth)
+        columns: Math.max(1, root.width/maxItemWidth)
         Repeater {
             model: legendModel
             delegate: legendDelegate
@@ -120,6 +120,7 @@ Item {
                 Rectangle {
                     id: markerRect
                     height: nameText.height/2
+                    radius: height/2
                     width: height
                     color: Qt.color(seriesColor)
                     anchors.verticalCenter: parent.verticalCenter

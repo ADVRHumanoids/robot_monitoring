@@ -10,6 +10,6 @@ qt_add_qml_module(xbot2_gui_liveplot
     SOURCES plotrebuilder.h plotrebuilder.cpp
 )
 
-target_link_libraries(xbot2_gui_liveplot PRIVATE Qt6::Charts)
+target_link_libraries(xbot2_gui_liveplot PRIVATE Qt6::Graphs)
 
 target_link_libraries(xbot2_gui PRIVATE xbot2_gui_liveplotplugin)

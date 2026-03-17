@@ -16,9 +16,9 @@ find_package(Qt6 COMPONENTS
     QuickControls2
     Network
     ShaderTools
-    DataVisualization
+    # DataVisualization
     TextToSpeech
-    Charts
+    Graphs
     REQUIRED
 )
 
@@ -77,7 +77,6 @@ endif()
 
 target_link_libraries(xbot2_gui
     PUBLIC
-    Qt6::DataVisualization
     Qt6::Core
     Qt6::Quick
     Qt6::WebSockets

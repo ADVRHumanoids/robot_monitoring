@@ -11,7 +11,7 @@ import Font
 MultiPaneResponsiveLayout {
 
 
-    property ClientEndpoint client: undefined
+    property ClientEndpoint client
 
     Connections {
 
@@ -88,6 +88,7 @@ MultiPaneResponsiveLayout {
         height: parent.height * 0.9
         interactive: true
         Configuration {
+            client: root.client
             anchors.fill: parent
             onClosed: configPopup.close()
         }

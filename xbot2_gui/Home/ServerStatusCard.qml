@@ -35,11 +35,15 @@ Card1 {
 
         property int _rxBytes: 0
         property int _txBytes: 0
+        property int _rxBytesUdp: 0
+        property int _txBytesUdp: 0
         property int _tmNum: 0
         property int _tmDroppedNum: 0
 
         property int rxKbps: 0
         property int txKbps: 0
+        property int rxKbpsUdp: 0
+        property int txKbpsUdp: 0
         property int tmHz: 0
         property int tmDroppedHz: 0
 
@@ -60,6 +64,7 @@ Card1 {
 
         onTriggered: {
 
+            // ws + udp
             let rx = client.bytesRecv - _rxBytes
             rxKbps = rx/interval*8
             _rxBytes = client.bytesRecv;
@@ -68,6 +73,16 @@ Card1 {
             txKbps = tx/interval*8
             _txBytes = client.bytesSent;
 
+            // udp
+            let rxUdp = client.bytesRecvUdp - _rxBytesUdp
+            rxKbpsUdp = rxUdp/interval*8
+            _rxBytesUdp = client.bytesRecvUdp;
+
+            let txUdp = client.bytesSentUdp - _txBytesUdp
+            txKbpsUdp = txUdp/interval*8
+            _txBytesUdp = client.bytesSentUdp;
+
+            //
             let tm = client.jsMsgRecv - _tmNum
             tmHz = tm / interval * 1000.
             _tmNum = client.jsMsgRecv
@@ -82,6 +97,17 @@ Card1 {
             initProcStats()
 
             root.statsUpdated()
+
+            client.handleMessage(
+                        {
+                            type: 'internal_1',
+                            rxKbps: rxKbps,
+                            txKbps: txKbps,
+                            rxKbpsUdp: rxKbpsUdp,
+                            txKbpsUdp: txKbpsUdp,
+                            jointStatesHz: tmHz,
+                            jointStatesDroppedHz: tmDroppedHz
+                        })
         }
     }
 
@@ -162,7 +188,7 @@ Card1 {
 
             Layout.fillWidth: true
 
-            columns: Math.ceil(width / 300)
+            columns: Math.ceil(width / 320)
             columnSpacing: CommonProperties.geom.spacing * 1.33
             rowSpacing: CommonProperties.geom.spacing * 1.33
             uniformCellWidths: true
@@ -196,9 +222,9 @@ Card1 {
 
             FramedValue {
                 id: dataText
-                title: 'Data rate [kbps]'
-                value1: `${statsTimer.rxKbps.toFixed(1)} kbps RX`
-                value2: `${statsTimer.txKbps.toFixed(1)} kbps TX`
+                title: 'Data rate [kbps] (udp)'
+                value1: `${statsTimer.rxKbps.toFixed(1)} (${statsTimer.rxKbpsUdp.toFixed(1)}) kbps RX`
+                value2: `${statsTimer.txKbps.toFixed(1)} (${statsTimer.txKbpsUdp.toFixed(1)}) kbps TX`
                 enabled: client.isConnected
                 Layout.fillWidth: true
                 Layout.fillHeight: true

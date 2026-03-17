@@ -23,6 +23,9 @@ Item
     // server port
     property int port: -1
 
+    // force websocket (disable udp)
+    property bool forceWebsocket: appData.wasm
+
     // alias for the underlying websocket's active property
     property alias active: socket.active
 
@@ -79,6 +82,12 @@ Item
     property real srvRtt: 0
     property int jsMsgRecv: 0
     property int jsDropped: 0
+    property int bytesRecvUdp: 0
+    property int bytesRecvWs: 0
+    property int numMsgUdp: 0
+    property int numMsgWs: 0
+    property int bytesSentUdp: 0
+    property int bytesSentWs: 0
 
 
     // method for performing an http request
@@ -108,6 +117,7 @@ Item
     function sendTextMessage(msg) {
         if(socket.active) {
             bytesSent += msg.length
+            bytesSentWs += msg.length
             socket.sendTextMessage(msg)
         }
     }
@@ -115,14 +125,21 @@ Item
     // method for sending a text message over udp
     function sendTextMessageUdp(msg) {
 
-        if(appData.wasm) {
+        if(root.forceWebsocket) {
+            // this uses websocket
             sendTextMessage(msg)
         }
 
         if(udp.bound) {
             bytesSent += msg.length
+            bytesSentUdp += msg.length
             udp.sendTextMessage(msg)
         }
+    }
+
+    // force message handling
+    function handleMessage(msg) {
+        Client.handleMessage(msg)
     }
 
 
@@ -139,7 +156,8 @@ Item
         active: true
 
         onBinaryMessageReceived: function (data) {
-            // root.bytesRecv += data.byteLength
+            root.numMsgWs += 1
+            root.bytesRecvWs += data.byteLength
             pb.processBinaryMessage(data)
         }
 
@@ -154,7 +172,7 @@ Item
             // root.bytesRecv = 0
             root.bytesSent = 0
 
-            if(appData.wasm) {
+            if(root.forceWebsocket) {
                 root.sendTextMessage(
                             JSON.stringify(
                                 {
@@ -234,7 +252,8 @@ Item
     UdpSocket {
         id: udp
         onBinaryMessageReceived: function (data) {
-            // root.bytesRecv += data.byteLength
+            root.numMsgUdp += 1
+            root.bytesRecvUdp += data.byteLength
             pb.processBinaryMessage(data)
         }
     }
@@ -336,6 +355,25 @@ Item
         category: 'client'
         property alias hostname: root.hostname
         property alias port: root.port
+        property alias forceWebsocket: root.forceWebsocket
+    }
+
+    onForceWebsocketChanged: {
+        if(root.forceWebsocket) {
+            if(socket.active) {
+                root.sendTextMessage(
+                            JSON.stringify(
+                                {
+                                    'type': 'request_ws_udp_tunnel'
+                                }
+                                )
+                            )
+            }
+        }
+        else {
+            udp.rebind()
+            udp.sendTextMessage('udp_discovery')
+        }
     }
 
     Component.onCompleted: {

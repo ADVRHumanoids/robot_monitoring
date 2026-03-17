@@ -22,7 +22,7 @@ Control {
     signal addCustomProcess(string name, string machine, string container, string cmd, bool visible, bool edit, string prevName)
     signal closeRequest()
 
-    leftPadding: width > 800 ? (width - 800) / 2 : 16
+    leftPadding: width > 800 ? (width - 800) / 2 : (layout.compact ? 0 : 16)
     rightPadding: leftPadding
     bottomPadding: 16
 
@@ -50,6 +50,7 @@ Control {
             text: 'This process will be available to all connected clients.'
             font.pixelSize: CommonProperties.font.h4
             Layout.columnSpan: 2
+            Layout.fillWidth: true
             wrapMode: Text.Wrap
 
             bottomPadding: 8

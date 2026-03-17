@@ -3,8 +3,11 @@ import QtQuick.Layouts
 import QtQuick.Controls
 
 import Audio
+import Main
 
 GridLayout {
+
+    property ClientEndpoint client
 
     signal closed()
 
@@ -40,6 +43,7 @@ GridLayout {
 
 
             ConfigurationGeneral {
+                client: root.client
                 Layout.fillWidth: true
                 Layout.fillHeight: true
             }

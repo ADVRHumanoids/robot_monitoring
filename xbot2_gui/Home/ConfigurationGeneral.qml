@@ -5,8 +5,11 @@ import QtCore
 
 import Common
 import Joy
+import Main
 
 GridLayout {
+
+    property ClientEndpoint client
 
     columns: 3
     columnSpacing: 6
@@ -40,12 +43,32 @@ GridLayout {
             let expectedHash = 'iDI7Myu5OI1tJl3y5HnfHLg1PGr84DHamGBx6dEYbaA='
             if(sha256 !== expectedHash) {
                 CommonProperties.notifications.error('Password is not correct')
+                return
             }
             CommonProperties.config.adminPwdOk = true
             CommonProperties.notifications.info('Password correct')
         }
     }
 
+
+    Label {
+        topPadding: 4
+        Layout.columnSpan: 3
+        text: 'Networking'
+        font.pixelSize: CommonProperties.font.h4
+        font.bold: true
+    }
+
+    Label {
+        text: 'Force websocket and disable udp'
+    }
+
+    Switch {
+        checked: client.forceWebsocket
+        onClicked: {
+            client.forceWebsocket = checked
+        }
+    }
 
 
     Label {

@@ -33,7 +33,7 @@ RvizWidget::RvizWidget(QWidget* parent)
                                            true);
 
     _robot_model->subProp("Robot Description")->
-        setValue("/xbotcore/robot_description");
+        setValue("xbotcore/robot_description");
 
     Ogre::ColourValue colour(1, 1, 1, 0.9);
     _render_panel->setBackgroundColor(colour);

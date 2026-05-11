@@ -11,3 +11,9 @@ Qt install dir. On my system, this value is `/opt/qt512/5.12.3/gcc_64`.
 ### running
  - `XBotCore -D` (or gazebo equivalent)
  - `rosrun robot_monitoring joint_state_gui`
+
+ You can launch the legacy GUI with a different namespace using the following
+ 
+ ```
+ xbot2-gui --ros_args --rmap __ns:=/mynamespace
+ ```

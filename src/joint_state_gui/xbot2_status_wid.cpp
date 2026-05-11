@@ -77,7 +77,7 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
 
     _last_status_recv = _node->get_clock()->now(); //initialization
     auto status_sub = _node->create_subscription<std_msgs::msg::String>(
-        "/xbotcore/status", 
+        "xbotcore/status", 
         rclcpp::SensorDataQoS().keep_last(1), 
         [this](const std_msgs::msg::String msg) -> void
         {
@@ -239,7 +239,7 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
         }
     };
 
-    _vbatt_sub = _node->create_subscription<std_msgs::msg::Float32>("/xbotcore/vbatt", 1, on_vbatt_recv);
+    _vbatt_sub = _node->create_subscription<std_msgs::msg::Float32>("xbotcore/vbatt", 1, on_vbatt_recv);
 
     _lcd = findChild<QLCDNumber*>("voltLcd");
     _lcd->setStyleSheet("border: 0px");
@@ -268,7 +268,7 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
     auto shutdownBtnClicked = [this]()
     {
         rclcpp::Client<xbot_msgs::srv::StopProcess>::SharedPtr cli_stop =
-            _node->create_client<xbot_msgs::srv::StopProcess>("/xbotcore/d/stop");
+            _node->create_client<xbot_msgs::srv::StopProcess>("xbotcore/d/stop");
 
         auto request_stop = std::make_shared<xbot_msgs::srv::StopProcess::Request>();
         request_stop->signum = 0;
@@ -278,7 +278,7 @@ XBot2StatusWidget::XBot2StatusWidget(QMainWindow * mw,
                 RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Interrupted while waiting for the service. Exiting.");
                 return 0;
             }
-            RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "service /xbotcore/d/stop not available, waiting again...");
+            RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "service xbotcore/d/stop not available, waiting again...");
         }
 
         auto result_stop = cli_stop->async_send_request(request_stop);

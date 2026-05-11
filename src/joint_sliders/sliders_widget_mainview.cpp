@@ -37,8 +37,8 @@ cartesio_gui::SlidersWidgetMainView::Options::Options():
     message_type("xbot_msgs"),
     enable_velocity_tab(true),
     enable_effort_tab(true),
-    joint_state_topic("/xbotcore/joint_states"),
-    command_topic("/xbotcore/command")
+    joint_state_topic("xbotcore/joint_states"),
+    command_topic("xbotcore/command")
 {
 }
 
@@ -641,5 +641,4 @@ void cartesio_gui::SlidersWidgetMainView::set_ros_namespace()
         make_publisher();
     }
 }
-
 

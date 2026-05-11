@@ -30,7 +30,7 @@ JointMonitorWidget::JointMonitorWidget(int argc,
     create_menu();
 
     _jstate_sub = _node->create_subscription<xbot_msgs::msg::JointState>(
-        "/xbotcore/joint_states",
+        "xbotcore/joint_states",
         rclcpp::SensorDataQoS().keep_last(10),
         std::bind(&JointMonitorWidget::on_jstate_recv, this, _1)
     );
@@ -92,19 +92,19 @@ JointMonitorWidget::JointMonitorWidget(int argc,
 
     // subscribers to fault and aux
     _fault_sub = _node->create_subscription<xbot_msgs::msg::Fault>(
-        "/xbotcore/fault",
+        "xbotcore/fault",
         10,
         std::bind(&JointMonitorWidget::on_fault_recv, this, _1));
 
     _aux_sub = _node->create_subscription<xbot_msgs::msg::CustomState>(
-        "/xbotcore/aux",
+        "xbotcore/aux",
         10,
         std::bind(&JointMonitorWidget::on_aux_recv, this, _1));
 
     // get robot description with topic in ros2
     std::string urdf_string;
     auto urdf_sub = _node->create_subscription<std_msgs::msg::String>(
-        "/xbotcore/robot_description",
+        "xbotcore/robot_description",
         rclcpp::ParametersQoS().transient_local(),
         [&urdf_string](std_msgs::msg::String::ConstSharedPtr msg) {
             urdf_string = msg->data;
@@ -112,7 +112,7 @@ JointMonitorWidget::JointMonitorWidget(int argc,
     );
 
     while(urdf_string.empty()) {
-        RCLCPP_INFO(_node->get_logger(), "Waiting /xbotcore/robot_description");
+        RCLCPP_INFO(_node->get_logger(), "Waiting for xbotcore/robot_description");
         rclcpp::spin_some(_node);        
         usleep(10000);
     }

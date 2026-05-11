@@ -192,7 +192,7 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
     auto disableEnableBtn = findChild<QPushButton*>("disableEnableBtn");
 
     auto setmask_srv = _node->create_client<xbot_msgs::srv::SetControlMask>(
-        "/joint_master/set_control_mask");
+        "joint_master/set_control_mask");
     //setmask_srv.waitForExistence();
 
     connect(disableEnableBtn, &QPushButton::released,
@@ -250,7 +250,7 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
 
     /* Add plugins */
     auto pluginsLayout = findChild<QVBoxLayout *>("pluginsLayout");
-    auto client = _node->create_client<xbot_msgs::srv::GetPluginList>("/xbotcore/get_plugin_list");
+    auto client = _node->create_client<xbot_msgs::srv::GetPluginList>("xbotcore/get_plugin_list");
     auto request = std::make_shared<xbot_msgs::srv::GetPluginList::Request>();
 
     auto srv_data = client->async_send_request(request);
@@ -259,7 +259,7 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
           RCLCPP_ERROR(_node->get_logger(), "Interrupted while waiting for the service. Exiting.");
           throw std::runtime_error("Service interrupted while waiting for get_plugin_list");
         }
-        RCLCPP_INFO(_node->get_logger(), "service /xbotcore/get_plugin_list not available, waiting again...");
+        RCLCPP_INFO(_node->get_logger(), "service xbotcore/get_plugin_list not available, waiting again...");
       }
 
     // Wait for the result.
@@ -284,7 +284,7 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
 
         // connect buttons
         auto switch_srv = _node->create_client<std_srvs::srv::SetBool>(
-            "/xbotcore/" + plname + "/switch");
+            "xbotcore/" + plname + "/switch");
 
         switch_srvs.push_back(switch_srv);
 
@@ -311,7 +311,7 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
         );
 
         auto abort_srv = _node->create_client<std_srvs::srv::Trigger>(
-             "/xbotcore/" + plname + "/abort");
+             "xbotcore/" + plname + "/abort");
 
         abort_srvs.push_back(abort_srv);
 
@@ -379,7 +379,7 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
     auto on_stats_recv = 
 
     _stats_sub = _node->create_subscription<xbot_msgs::msg::Statistics2>(
-        "/xbotcore/statistics",
+        "xbotcore/statistics",
         1,
         [this](const xbot_msgs::msg::Statistics2::SharedPtr msg)
         {
@@ -427,7 +427,7 @@ XBot2Widget::XBot2Widget(QMainWindow * mw, QWidget * parent, rclcpp::Node::Share
 
 
     _jdinfo_sub = _node->create_subscription<xbot_msgs::msg::JointDeviceInfo>(
-        "/xbotcore/joint_device_info",
+        "xbotcore/joint_device_info",
         1,
         [enableFilterCheck, disableEnableBtn, safeBtn, mediumBtn, fastBtn] (const xbot_msgs::msg::JointDeviceInfo::SharedPtr msg)
         {

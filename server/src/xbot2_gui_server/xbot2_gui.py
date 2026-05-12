@@ -11,7 +11,7 @@ if not os.path.exists( os.path.expanduser(cmd_gui_client) ):
     print('Downloading xbot2_gui_client...')
     subprocess.run(f'wget -P /tmp https://github.com/ADVRHumanoids/robot_monitoring/releases/latest/download/xbot2_gui_client_x86_64.zip',
                    shell=True,
-                   timeout=120.0,
+                   timeout=600.0,
                    check=True)
     
     print('Extracting xbot2_gui_client... to ~/.xbot2_gui_client')

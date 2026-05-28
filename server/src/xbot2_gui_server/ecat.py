@@ -14,26 +14,6 @@ import zmq
 from .proto import repl_cmd_pb2
 
 
-# subscribe to zmq topic for ecat updates
-ctx = zmq.Context()
-socket = ctx.socket(zmq.SUB)
-socket.connect('tcp://10.240.23.85:10000')
-socket.setsockopt_string(zmq.SUBSCRIBE, '')
-
-# receive one message
-msg = socket.recv()
-msg = socket.recv()
-
-# parse message
-cmd = repl_cmd_pb2.Repl_info()
-cmd.ParseFromString(msg)
-
-# print message as string
-print(cmd)
-
-
-
-exit()
 
 
 class EcatHandler:

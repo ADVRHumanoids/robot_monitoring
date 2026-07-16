@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+import "jointstate.proto";
+import "text.proto";
+import "process_output.proto";
+import "theora_packet.proto";
+import "pointcloud.proto";
+
+message Message {
+
+    int32 seq = 1;
+    JointState jointstate = 2;
+    Text text = 3;
+    ProcessOutput process_output = 4;
+    TheoraPacket theora_packet = 5;
+    PointCloud point_cloud = 6;
+
+
+}

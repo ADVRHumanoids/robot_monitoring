@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+message FloatArray {
+    repeated float value = 1;
+}
+
+message JointState {
+
+    repeated float linkPos = 1;
+    repeated float motPos = 2;
+    repeated float linkVel = 3;
+    repeated float motVel = 4;
+    repeated float tor = 5;
+    repeated float motorTemp = 6;
+    repeated float driverTemp = 7;
+
+    repeated float posRef = 8;
+    repeated float velRef = 9;
+    repeated float torRef = 10;
+    repeated float k = 11;
+    repeated float d = 12;
+
+    map<string, FloatArray> aux = 13;
+
+    float vbatt = 14;
+    float ibatt = 15;
+
+    repeated uint32 motorStatus = 16;
+    repeated bool brakeStatus = 17;
+
+    repeated float motTor = 18;
+}

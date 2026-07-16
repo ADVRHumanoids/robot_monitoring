@@ -98,6 +98,13 @@ class Xbot2WebServer(ServerBase):
 
         self.app.add_routes([web.static('/webui', webui_path)])
 
+        # The Vue application is built by ``web/npm run build:server`` directly
+        # into this package directory. Keeping the compiled files beside the
+        # Python package means Node.js is not needed on the deployed robot.
+        monitor_path = os.path.abspath(os.path.dirname(__file__)) + '/monitor'
+        if os.path.exists(monitor_path):
+            self.app.add_routes([web.static('/monitor', monitor_path, show_index=True)])
+
     
     def add_route(self, method, path, handler, name):
         try:
@@ -325,7 +332,7 @@ class Xbot2WebServer(ServerBase):
 
     # root handler serves html for web app
     async def root_handler(self, request):
-        return aiohttp.web.HTTPFound('/webui/xbot2_gui.html')
+        return aiohttp.web.HTTPFound('/monitor/')
 
    
     # websocket handler

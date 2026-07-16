@@ -36,7 +36,7 @@ Item {
         Connections {
             target: client
             function onTheoraPacketReceived(msg) {
-                if(msg.stream_name === video.videoStreamName) {
+                if(msg.streamName === video.videoStreamName) {
                     video.setTheoraPacket(msg)
                 }
             }

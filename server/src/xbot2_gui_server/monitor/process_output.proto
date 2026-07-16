@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+message ProcessOutput {
+
+    string name = 1;
+    string out = 2;
+    string err = 3;
+}

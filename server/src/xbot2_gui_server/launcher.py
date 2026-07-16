@@ -118,12 +118,18 @@ class Launcher:
         for p in self.get_process_names():
 
             variants = self.get_process_variants(p)
+            # ``docker`` is the container field already consumed by the QML
+            # launcher. Accept ``container`` as an alias in configuration so
+            # the read-only web metadata remains useful with either spelling.
+            container = self.cfg[p].get('docker', self.cfg[p].get('container', ''))
 
             proc_data.append ({
                 'name': p,
                 'status': status[p],
                 'cmdline': variants,
                 'category': self.cfg[p].get('category', 'none'),
+                'cmd': self.cfg[p].get('cmd', ''),
+                'docker': container,
                 'machine': self.cfg[p].get('machine', 'local'),
                 'visible': self.cfg[p].get('show_ui', True),
                 'cmd': self.cfg[p]['cmd'],

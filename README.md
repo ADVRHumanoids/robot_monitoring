@@ -1,5 +1,10 @@
 # xbot2 System Launch Guide (Using Kyon Simulation Example)
 
+> **New read-only web monitor:** the mobile-first Vue client lives in [`web/`](web/README.md).
+> Regenerate it with `./regenerate_web.bash`; the Python server then serves
+> it at `/monitor/` and redirects `/` there. The original QML/WebAssembly client remains at
+> `/webui/xbot2_gui.html`.
+
 This document provides detailed instructions for launching the xbot2 system, focusing on the Kyon robot simulation example. It covers the core server/simulation components and the graphical user interface (GUI). The launch process relies heavily on ROS Noetic and the `concert_launcher` tool for managing processes.
 
 ## Table of Contents

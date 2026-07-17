@@ -103,7 +103,10 @@ class Xbot2WebServer(ServerBase):
         # Python package means Node.js is not needed on the deployed robot.
         monitor_path = os.path.abspath(os.path.dirname(__file__)) + '/monitor'
         if os.path.exists(monitor_path):
-            self.app.add_routes([web.static('/monitor', monitor_path, show_index=True)])
+            self.monitor_path = monitor_path
+            self.app.router.add_get('/monitor', self.monitor_redirect_handler, name='monitor')
+            self.app.router.add_get('/monitor/', self.monitor_index_handler, name='monitor_index')
+            self.app.add_routes([web.static('/monitor', monitor_path)])
 
     
     def add_route(self, method, path, handler, name):
@@ -332,7 +335,15 @@ class Xbot2WebServer(ServerBase):
 
     # root handler serves html for web app
     async def root_handler(self, request):
-        return aiohttp.web.HTTPFound('/monitor/')
+        raise aiohttp.web.HTTPFound('/monitor/')
+
+
+    async def monitor_redirect_handler(self, request):
+        raise aiohttp.web.HTTPFound('/monitor/')
+
+
+    async def monitor_index_handler(self, request):
+        return aiohttp.web.FileResponse(os.path.join(self.monitor_path, 'index.html'))
 
    
     # websocket handler

@@ -8,8 +8,10 @@ import {
 } from 'vue'
 import {
   appendBoundedLog,
+  buildDiagnosticTree,
   buildJointRows,
   mergePluginStatistics,
+  normalizeDiagnostics,
   normalizeTelemetry,
 } from '../model'
 import {
@@ -21,6 +23,7 @@ import {
 import { MonitorTransport } from '../services/transport'
 import type {
   ConnectionState,
+  DiagnosticsSnapshot,
   JointInfo,
   JointTelemetry,
   PluginStatistics,
@@ -35,6 +38,7 @@ export function useRobotMonitor() {
   const processes = ref<ProcessInfo[]>([])
   const pluginNames = ref<string[]>([])
   const pluginStats = reactive<Record<string, PluginStatistics>>({})
+  const diagnostics = shallowRef<DiagnosticsSnapshot>()
   const jointInfo = shallowRef<JointInfo>()
   const jointTelemetry = shallowRef<JointTelemetry>()
   const faults = reactive<Record<string, string>>({})
@@ -107,6 +111,8 @@ export function useRobotMonitor() {
         if (code) faults[name] = code
         else delete faults[name]
       })
+    } else if (message.type === 'diagnostics') {
+      diagnostics.value = normalizeDiagnostics(message)
     }
   }
 
@@ -180,6 +186,7 @@ export function useRobotMonitor() {
   const jointRows = computed(() =>
     buildJointRows(jointInfo.value, jointTelemetry.value, faults),
   )
+  const diagnosticTree = computed(() => buildDiagnosticTree(diagnostics.value?.status ?? []))
   const serverFresh = computed(
     () => connection.value === 'connected' && clock.value - lastServerMessageAt < 3_000,
   )
@@ -233,6 +240,8 @@ export function useRobotMonitor() {
     processes,
     pluginNames,
     pluginStats,
+    diagnostics,
+    diagnosticTree,
     jointTelemetry,
     jointRows,
     faults,

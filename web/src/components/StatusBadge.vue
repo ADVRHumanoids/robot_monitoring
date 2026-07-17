@@ -6,7 +6,7 @@ const props = defineProps<{ status: string }>()
 const tone = computed(() => {
   const status = props.status.toLowerCase()
   if (['connected', 'live', 'running', 'initialized', 'ok'].includes(status)) return 'good'
-  if (['waiting', 'starting', 'stopping', 'killing', 'stale', 'reconnecting'].includes(status)) {
+  if (['waiting', 'starting', 'stopping', 'killing', 'stale', 'reconnecting', 'warn', 'warning'].includes(status)) {
     return 'warning'
   }
   if (['killed', 'aborted', 'initfailed', 'fault', 'error'].includes(status)) return 'bad'

@@ -104,6 +104,7 @@ def main():
             ('xbot2_gui_server.horizon', 'HorizonHandler'),
             ('xbot2_gui_server.dashboard', 'DashboardHandler'),
             ('xbot2_gui_server.parameters', 'ParameterHandler'),
+            ('xbot2_gui_server.diagnostics', 'DiagnosticsHandler'),
             ('xbot2_gui_server.server_stats', 'ServerStatisticsHandler')
         ]
 
@@ -137,4 +138,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

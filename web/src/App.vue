@@ -1,19 +1,21 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import JointsPanel from './components/JointsPanel.vue'
+import DiagnosticsPanel from './components/DiagnosticsPanel.vue'
 import OverviewPanel from './components/OverviewPanel.vue'
 import PluginsPanel from './components/PluginsPanel.vue'
 import ProcessesPanel from './components/ProcessesPanel.vue'
 import StatusBadge from './components/StatusBadge.vue'
 import { useRobotMonitor } from './composables/useRobotMonitor'
 
-type Section = 'overview' | 'processes' | 'plugins' | 'joints'
+type Section = 'overview' | 'processes' | 'plugins' | 'joints' | 'diagnostics'
 
 const sections: { id: Section; label: string; symbol: string }[] = [
   { id: 'overview', label: 'Overview', symbol: '⌂' },
   { id: 'processes', label: 'Processes', symbol: '▣' },
   { id: 'plugins', label: 'Plugins', symbol: '◆' },
   { id: 'joints', label: 'Joints', symbol: '⌁' },
+  { id: 'diagnostics', label: 'Diagnostics', symbol: '⚕' },
 ]
 const activeSection = ref<Section>('overview')
 
@@ -25,6 +27,8 @@ const {
   processes,
   pluginNames,
   pluginStats,
+  diagnostics,
+  diagnosticTree,
   jointTelemetry,
   jointRows,
   logs,
@@ -104,12 +108,17 @@ const {
         @refresh="refreshPlugins()"
       />
       <JointsPanel
-        v-else
+        v-else-if="activeSection === 'joints'"
         :rows="jointRows"
         :robot-state="robotState"
         :loading="loading.joints"
         :error="errors.joints"
         @refresh="refreshJoints()"
+      />
+      <DiagnosticsPanel
+        v-else
+        :snapshot="diagnostics"
+        :tree="diagnosticTree"
       />
     </main>
 

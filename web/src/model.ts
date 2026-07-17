@@ -1,4 +1,7 @@
 import type {
+  DiagnosticStatusEntry,
+  DiagnosticsSnapshot,
+  DiagnosticTreeNode,
   JointInfo,
   JointRow,
   JointTelemetry,
@@ -118,4 +121,81 @@ export function mergePluginStatistics(
       Number.isFinite(period) && period > 0 ? period : (previous?.expected_period ?? 0),
     state: sample.state === undefined ? (previous?.state ?? 'unknown') : String(sample.state),
   }
+}
+
+/** Normalize the loosely typed JSON diagnostics event at the stream boundary. */
+export function normalizeDiagnostics(value: Record<string, unknown>): DiagnosticsSnapshot {
+  const rawStatuses = Array.isArray(value.status) ? value.status : []
+
+  return {
+    stamp: Number(value.stamp ?? 0),
+    frameId: String(value.frame_id ?? ''),
+    status: rawStatuses
+      .filter((status): status is Record<string, unknown> =>
+        typeof status === 'object' && status !== null,
+      )
+      .map((status) => ({
+        level: normalizeDiagnosticLevel(status.level),
+        name: String(status.name ?? ''),
+        message: String(status.message ?? ''),
+        hardwareId: String(status.hardware_id ?? ''),
+        values: (Array.isArray(status.values) ? status.values : [])
+          .filter((item): item is Record<string, unknown> =>
+            typeof item === 'object' && item !== null,
+          )
+          .map((item) => ({
+            key: String(item.key ?? ''),
+            value: String(item.value ?? ''),
+          })),
+      })),
+  }
+}
+
+function normalizeDiagnosticLevel(value: unknown): number {
+  const level = Number(value)
+  return Number.isFinite(level) ? Math.max(0, Math.min(3, Math.trunc(level))) : 3
+}
+
+type MutableDiagnosticNode = Omit<DiagnosticTreeNode, 'children'> & {
+  childMap: Map<string, MutableDiagnosticNode>
+}
+
+/** Build a hierarchy from slash-separated DiagnosticStatus names. */
+export function buildDiagnosticTree(statuses: DiagnosticStatusEntry[]): DiagnosticTreeNode[] {
+  const roots = new Map<string, MutableDiagnosticNode>()
+
+  statuses.forEach((status) => {
+    const segments = status.name.split('/').filter(Boolean)
+    if (!segments.length) segments.push(status.name || '(unnamed)')
+
+    let siblings = roots
+    let path = ''
+    let node: MutableDiagnosticNode | undefined
+    segments.forEach((segment) => {
+      path = `${path}/${segment}`
+      node = siblings.get(segment)
+      if (!node) {
+        node = { label: segment, path, level: 0, childMap: new Map() }
+        siblings.set(segment, node)
+      }
+      siblings = node.childMap
+    })
+    if (node) node.status = status
+  })
+
+  const finalize = (node: MutableDiagnosticNode): DiagnosticTreeNode => {
+    const children = [...node.childMap.values()]
+      .map(finalize)
+      .sort((left, right) => left.label.localeCompare(right.label))
+    const level = Math.max(node.status?.level ?? 0, ...children.map((child) => child.level))
+    return {
+      label: node.label,
+      path: node.path,
+      level,
+      status: node.status,
+      children,
+    }
+  }
+
+  return [...roots.values()].map(finalize).sort((left, right) => left.label.localeCompare(right.label))
 }

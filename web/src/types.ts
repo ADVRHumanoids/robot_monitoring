@@ -30,6 +30,33 @@ export interface PluginStatistics {
   state: string
 }
 
+export interface DiagnosticValue {
+  key: string
+  value: string
+}
+
+export interface DiagnosticStatusEntry {
+  level: number
+  name: string
+  message: string
+  hardwareId: string
+  values: DiagnosticValue[]
+}
+
+export interface DiagnosticsSnapshot {
+  stamp: number
+  frameId: string
+  status: DiagnosticStatusEntry[]
+}
+
+export interface DiagnosticTreeNode {
+  label: string
+  path: string
+  level: number
+  status?: DiagnosticStatusEntry
+  children: DiagnosticTreeNode[]
+}
+
 /** JSON shape returned by GET /joint_states/info. */
 export interface JointInfo {
   success: boolean

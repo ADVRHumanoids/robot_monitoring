@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
   appendBoundedLog,
+  buildDiagnosticTree,
   buildJointRows,
   mergePluginStatistics,
+  normalizeDiagnostics,
   normalizeTelemetry,
   pluginUtilization,
 } from '../model'
@@ -69,4 +71,36 @@ it('keeps a valid plugin period while accepting zero runtime', () => {
 
   expect(merged).toEqual({ run_time: 0, expected_period: 0.01, state: 'Running' })
   expect(pluginUtilization(merged)).toBe(0)
+})
+
+describe('diagnostics model', () => {
+  it('normalizes the wire payload and builds path segments into a tree', () => {
+    const snapshot = normalizeDiagnostics({
+      stamp: 12.5,
+      frame_id: 'base',
+      status: [
+        { level: 0, name: '/Robot/xbot/joint/ankle/status', message: 'OK', values: [] },
+        {
+          level: 2,
+          name: '/Robot/xbot/joint/knee/status',
+          message: 'encoder fault',
+          hardware_id: 'knee-driver',
+          values: [{ key: 'code', value: '42' }],
+        },
+      ],
+    })
+    const tree = buildDiagnosticTree(snapshot.status)
+
+    expect(snapshot).toMatchObject({ stamp: 12.5, frameId: 'base' })
+    expect(tree).toHaveLength(1)
+    expect(tree[0]).toMatchObject({ label: 'Robot', path: '/Robot', level: 2 })
+    const joint = tree[0]?.children[0]?.children[0]
+    expect(joint?.label).toBe('joint')
+    expect(joint?.children.map((node) => node.label)).toEqual(['ankle', 'knee'])
+    expect(joint?.children[1]?.children[0]?.status).toMatchObject({
+      message: 'encoder fault',
+      hardwareId: 'knee-driver',
+      values: [{ key: 'code', value: '42' }],
+    })
+  })
 })

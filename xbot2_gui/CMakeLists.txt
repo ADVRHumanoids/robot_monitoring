@@ -41,7 +41,7 @@ if(NOT EMSCRIPTEN AND NOT ANDROID)
     )
 endif()
 
-qt_standard_project_setup(REQUIRES 6.9)
+qt_standard_project_setup(REQUIRES 6.10)
 
 ## ui main
 qt_add_executable(xbot2_gui main.cpp)

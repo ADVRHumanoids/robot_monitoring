@@ -38,5 +38,7 @@ qt_add_qml_module(xbot2_gui_common
     QML_FILES FramedValue.qml
 )
 
-target_link_libraries(xbot2_gui PRIVATE xbot2_gui_commonplugin)
+target_link_libraries(xbot2_gui PRIVATE
+    xbot2_gui_common
+    xbot2_gui_commonplugin)
 

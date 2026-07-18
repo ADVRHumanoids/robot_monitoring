@@ -117,6 +117,31 @@ function currentValue(ctrlJoints, cmdField) {
     }
 }
 
+function currentRef(ctrlJoints, activeCtrl) {
+
+    let idx = SharedData.jointNames.indexOf(ctrlJoints[0])
+
+    if(activeCtrl === 'Position') {
+        return SharedData.latestJointState.posRef[idx]
+    }
+
+    if(activeCtrl === 'Velocity') {
+        return SharedData.latestJointState.velRef[idx]
+    }
+
+    if(activeCtrl === 'Effort') {
+        return SharedData.latestJointState.torRef[idx]
+    }
+
+    if(activeCtrl === 'Stiffness') {
+        return SharedData.latestJointState.k[idx]
+    }
+
+    if(activeCtrl === 'Damping') {
+        return SharedData.latestJointState.d[idx]
+    }
+}
+
 function updateGripperNames() {
     client.doRequestAsync('GET',
                           `/joint_states/grippers`)

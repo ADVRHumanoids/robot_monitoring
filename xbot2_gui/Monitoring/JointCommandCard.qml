@@ -159,6 +159,7 @@ Card1 {
             Layout.fillWidth: true
             Layout.columnSpan: 2
 
+
             Slider {
                 enabled: root.ctrlJoints.length > 0
                 Layout.fillWidth: true
@@ -173,6 +174,31 @@ Card1 {
                 }
                 from: Logic.sliderRange(root.ctrlJoints, root.activeCtrl)[0]
                 to: Logic.sliderRange(root.ctrlJoints, root.activeCtrl)[1]
+
+                Slider {
+                    id: stateSlider
+                    anchors.fill: parent
+                    enabled: false
+                    opacity: trjCmdBtn.running || root.continuousPublishMode ? 0.8 : 0.0
+                    from: parent.from
+                    to: parent.to
+                    background.opacity: 0
+
+                    Rectangle {
+                        height: parent.handle.height * 1.333
+                        width: height
+                        radius: height / 2
+                        anchors.centerIn: parent.handle
+                        color: parent.handle.color
+                    }
+
+                    // animate opacity
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 200
+                        }
+                    }
+                }
 
             }
 
@@ -311,6 +337,15 @@ Card1 {
                 Logic.sendContinuousCommand(root.ctrlJoints,
                                             root.activeCtrl,
                                             slider.value)
+            }
+        }
+
+        Timer {
+            interval: 16
+            running: stateSlider.opacity > 0
+            repeat: true
+            onTriggered: {
+                stateSlider.value = Logic.currentRef(root.ctrlJoints, root.activeCtrl)
             }
         }
     }

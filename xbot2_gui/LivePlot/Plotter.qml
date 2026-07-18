@@ -106,14 +106,21 @@ Item {
         axisValueLeft.max = 1e-16
         axisValueRight.min = -1e-16
         axisValueRight.max = 1e-16
-        chart.autoscale = true
-        chart.autoscroll = true
         axisTime.pan = 0
         axisValueLeft.pan = 0
         axisValueRight.pan = 0
         axisTime.zoom = 1
         axisValueLeft.zoom = 1
         axisValueRight.zoom = 1
+        chart.autoscale = true
+        chart.autoscroll = true
+    }
+
+    function autoscroll() {
+        axisTime.pan = 0
+        axisTime.zoom = 1
+        chart.autoscale = true
+        chart.autoscroll = true
     }
 
     property real timeSpan: 30
@@ -260,133 +267,14 @@ Item {
             }
         }
 
-        // Rectangle {
-
-        //     function setSignedWidth(new_width) {
-
-        //         if(new_width > 0) {
-        //             width = new_width
-        //             xScale = 1
-        //         }
-        //         else {
-        //             width = -new_width
-        //             xScale = -1
-        //         }
-        //     }
-
-        //     function setSignedHeight(new_height) {
-
-        //         if(new_height > 0) {
-        //             height = new_height
-        //             yScale = 1
-        //         }
-        //         else {
-        //             height = -new_height
-        //             yScale = -1
-        //         }
-        //     }
-
-        //     id: rubberBand
-        //     color: Qt.rgba(0.8, 0.8, 0.9, 0.2)
-        //     border.color: Qt.rgba(0.8, 0.8, 0.9, 1.0)
-        //     border.width: 1
-        //     visible: false
-        //     transform: Scale {
-        //         xScale: rubberBand.xScale
-        //         yScale: rubberBand.yScale
-        //     }
-        //     property real xScale: 1.0
-        //     property real yScale: 1.0
-        // }
-
-        // MouseArea {
-
-        //     id: mouseArea
-        //     anchors.fill: parent
-        //     preventStealing: true
-        //     acceptedButtons: Qt.LeftButton | Qt.RightButton
-
-        //     onWheel: function (wheel) {
-
-        //         let scale = wheel.angleDelta.y > 0 ? 6/5 : 5/6
-        //         let scaleXy = Qt.point(scale, scale)
-
-        //         let center = Qt.point(wheel.x - chart.plotArea.x,
-        //                               wheel.y - chart.plotArea.y)
-        //         chart.centredZoom(scaleXy, center)
-        //     }
-
-        //     property point lastPos
-
-        //     onPressed: function(mouse){
-        //         if(mouse.button === Qt.LeftButton)
-        //         {
-        //             lastPos.x = mouse.x
-        //             lastPos.y = mouse.y
-        //             chart.autoscale = false
-        //             chart.autoscroll = false
-        //         }
-        //         else if(mouse.button === Qt.RightButton)
-        //         {
-        //             rubberBand.x = mouseX
-        //             rubberBand.y = mouseY
-        //             rubberBand.visible = true
-        //         }
-        //     }
-
-        //     onMouseXChanged: {
-        //         if(rubberBand.visible)
-        //         {
-        //             rubberBand.setSignedWidth(mouseX - rubberBand.x)
-        //         }
-        //         else
-        //         {
-        //             if(mouseX > lastPos.x)
-        //                 chart.scrollLeft(mouseX - lastPos.x)
-        //             else
-        //                 chart.scrollRight(-mouseX + lastPos.x)
-        //             lastPos.x = mouseX
-        //         }
-        //     }
-
-        //     onMouseYChanged: {
-        //         if(rubberBand.visible)
-        //         {
-        //             rubberBand.setSignedHeight(mouseY - rubberBand.y)
-        //         }
-        //         else
-        //         {
-        //             if(mouseY > lastPos.Y)
-        //                 chart.scrollUp(mouseY - lastPos.y)
-        //             else
-        //                 chart.scrollDown(-mouseY + lastPos.y)
-        //             lastPos.y = mouseY
-        //         }
-        //     }
-
-        //     onReleased: {
-
-        //         if(rubberBand.visible) {
-        //             chart.autoscale = false
-        //             chart.autoscroll = false
-        //             chart.zoomIn(Qt.rect(rubberBand.x,
-        //                                  rubberBand.y,
-        //                                  rubberBand.width,
-        //                                  rubberBand.height));
-        //             rubberBand.visible = false
-        //         }
-        //     }
-
-        //     onDoubleClicked: root.doubleClicked()
-        // }
-
         ValueAxis {
             id: axisTime
             max: currTime
             min: Math.max(currTime - timeSpan, 0)
             titleText: `<font color='white'>${root.axisXTitle}</font>`
             gridVisible: true
-            // labelsColor: CommonProperties.colors.primaryText
+            onPanChanged: {chart.autoscroll = false; chart.autoscale = false}
+            onZoomChanged: {chart.autoscroll = false; chart.autoscale = false}
         }
 
         ValueAxis {
@@ -396,7 +284,8 @@ Item {
             titleText: `<font color='white'>${root.axisLeftTitle}</font>`
             gridVisible: true
             subTickCount: 2
-            // labelsColor: CommonProperties.colors.primaryText
+            onPanChanged: {chart.autoscroll = false; chart.autoscale = false}
+            onZoomChanged: {chart.autoscroll = false; chart.autoscale = false}
         }
 
         ValueAxis {
@@ -404,7 +293,8 @@ Item {
             min: -1
             max: 1
             titleText: `<font color='white'>${root.axisRightTitle}</font>`
-            // labelsColor: CommonProperties.colors.primaryText
+            onPanChanged: {chart.autoscroll = false; chart.autoscale = false}
+            onZoomChanged: {chart.autoscroll = false; chart.autoscale = false}
         }
 
         // onSeriesRemoved: function(series) {

@@ -42,7 +42,6 @@ Item {
 
         let cb = function(msg) {
 
-
             if(msg?.type !== undefined && msg.type !== item.src) {
                 // console.log(`${msg.type} != ${item.src}`)
                 // msg not intended for this callback
@@ -305,42 +304,43 @@ Item {
                 ToolButton {
                     text: MaterialSymbolNames.splitHorz
                     font.family: 'Material Symbols Outlined'
-                    // font.variableAxes: {'opsz': 48}
                     font.pixelSize: 24
                     onClicked: plot.splitHorizontal()
                 }
                 ToolButton {
                     text: MaterialSymbolNames.splitVert
                     font.family: 'Material Symbols Outlined'
-                    // font.variableAxes: {'opsz': 48}
                     font.pixelSize: 24
                     onClicked: plot.splitVertical()
                 }
                 ToolButton {
                     text: MaterialSymbolNames.home
                     font.family: 'Material Symbols Outlined'
-                    // font.variableAxes: {'opsz': 48}
                     font.pixelSize: 24
                     onClicked: plot.resetView()
                 }
                 ToolButton {
+                    text: MaterialSymbolNames.autoplay
+                    font.family: 'Material Symbols Outlined'
+                    font.pixelSize: 24
+                    visible: !plot.chartView.autoscroll
+                    onClicked: plot.autoscroll()
+                }
+                ToolButton {
                     text: MaterialSymbolNames.clean
                     font.family: 'Material Symbols Outlined'
-                    // font.variableAxes: {'opsz': 48}
                     font.pixelSize: 24
                     onClicked: plot.clearPoints()
                 }
                 ToolButton {
                     text: MaterialSymbolNames.close
                     font.family: 'Material Symbols Outlined'
-                    // font.variableAxes: {'opsz': 48}
                     font.pixelSize: 24
                     onClicked: plot.closeSplit()
                 }
                 ToolButton {
                     text: MaterialSymbolNames.more
                     font.family: 'Material Symbols Outlined'
-                    // font.variableAxes: {'opsz': 48}
                     font.pixelSize: 24
                     onClicked: {
                         listModel.build()

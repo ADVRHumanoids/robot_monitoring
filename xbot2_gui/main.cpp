@@ -223,7 +223,7 @@ int main(int argc, char *argv[])
     //     {
     //         QFile f(info.absolutePath());
     //         f.open(QIODeviceBase::ReadOnly);
-    //         qDebug() << f.readAll().toStdString();
+    //         qDebug() << "qmldir content" << f.readAll().toStdString();
     //     }
     // }
 
@@ -232,14 +232,14 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("appData", &appdata);
 
-    // Get current paths
-    QStringList paths = engine.importPathList();
+    // // Get current paths
+    // QStringList paths = engine.importPathList();
 
-    // Make sure qrc:/qt/qml is first
-    paths.removeAll(QStringLiteral("qrc:/qt/qml"));
-    paths.prepend(QStringLiteral("qrc:/qt/qml"));
+    // // Make sure qrc:/qt/qml is first
+    // paths.removeAll(QStringLiteral("qrc:/qt/qml"));
+    // paths.prepend(QStringLiteral("qrc:/qt/qml"));
 
-    engine.setImportPathList(paths);
+    // engine.setImportPathList(paths);
 
     // load main qml file
     const QUrl url(QStringLiteral("qrc:/qt/qml/Main/main.qml"));

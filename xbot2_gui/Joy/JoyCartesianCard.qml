@@ -5,7 +5,7 @@ import QtCore
 
 import Common
 import "Joy.js" as Logic
-import "../Video/VideoStream.js" as VideoStream
+import "../VideoMpegTs/VideoStream.js" as VideoStream
 
 
 Card1 {
@@ -14,12 +14,21 @@ Card1 {
                       'No active task'
     property alias currentTask: taskCombo.currentText
     property bool ikRunning: false
-    property alias videoStream: videoStreamCombo.currentText
+    property alias videoStream: videoEnabledSwitch.checked ? videoStreamCombo.currentText : ''
 
     // private
     id: root
     configurable: false
     collapsed: true
+
+    toolButtons: [
+        Switch {
+            id: videoEnabledSwitch
+            text: 'Video'
+            checked: false
+        }
+
+    ]
 
     frontItem: GridLayout {
 

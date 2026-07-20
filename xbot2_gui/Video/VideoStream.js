@@ -11,9 +11,7 @@ function setStream (stream_name, video) {
                                            'stream_name': video.streamName}))
     console.log('..done')
 
-    let body = JSON.stringify({'stream_name': stream_name})
-
-    client.doRequest('PUT', '/video/set_stream', body,
+    client.doRequest('PUT', '/video/set_stream/' + encodeURIComponent(stream_name), '',
                      function(msg) {
 
                          if(!msg.success) {

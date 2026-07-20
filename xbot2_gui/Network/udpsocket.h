@@ -23,6 +23,8 @@ public:
 
     Q_INVOKABLE void sendTextMessage(QString msg);
 
+    Q_INVOKABLE void sendBinaryMessage(QByteArray msg);
+
     Q_INVOKABLE void rebind();
 
     /**

@@ -30,6 +30,7 @@ class Ros2Utils:
             if self.urdf is None:
                 print('ros2: got urdf')
             self.urdf = msg.data
+            self.urdf_sub = None
         
         self.urdf_sub = self.create_subscription(String, 
                                                 'xbotcore/robot_description', 
@@ -53,10 +54,10 @@ class Ros2Utils:
         return Time.from_msg(ts).nanoseconds * 1e-9
 
 
-    async def spin_node(self, period_sec=0.016):
+    async def spin_node(self, period_sec=0.01):
         while True:
-            rclpy.spin_once(self.node, timeout_sec=0.005)
-            await asyncio.sleep(period_sec - 0.005)
+            rclpy.spin_once(self.node, timeout_sec=period_sec)
+            await asyncio.sleep(0.001)
 
 
     def create_subscription(self, msg_class, name, callback, queue_size, latch=False, best_effort=False):
@@ -79,7 +80,9 @@ class Ros2Utils:
         )
         
         return self.node.create_subscription(msg_class, name, callback, qos_profile=qos_profile)
-
+    
+    def destroy_subscription(self, sub):
+        self.node.destroy_subscription(sub)
 
     def create_publisher(self, msg_class, name, queue_size):
         return self.node.create_publisher(msg_class, name, queue_size)

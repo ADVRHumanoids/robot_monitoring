@@ -49,6 +49,8 @@ signals:
 
     void theoraPacketReceived(const TheoraPacket&);
 
+    void mpegTsDatagramReceived(const MpegTsDatagram&);
+
     void pointCloudReceived(const PointCloud&);
 
     void countersUpdated(Counters c);
@@ -100,6 +102,8 @@ signals:
     void processOutputReceived(const ProcessOutput&);
 
     void theoraPacketReceived(const TheoraPacket&);
+
+    void mpegTsDatagramReceived(const MpegTsDatagram&);
 
     void pointCloudReceived(const PointCloud&);
 

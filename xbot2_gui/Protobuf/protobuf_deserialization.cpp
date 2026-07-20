@@ -37,6 +37,12 @@ void ProtobufDeserializationWorker::processBinaryMessage(const QByteArray &msg)
         _bytes_recv.video += msg.size();
         emit theoraPacketReceived(_msg.theoraPacket());
     }
+    else if(_msg.hasMpegTsDatagram())
+    {
+        _counters.video++;
+        _bytes_recv.video += msg.size();
+        emit mpegTsDatagramReceived(_msg.mpegTsDatagram());
+    }
     else if(_msg.hasPointCloud())
     {
         _counters.pointcloud++;
@@ -80,6 +86,11 @@ ProtobufDeserialization::ProtobufDeserialization(QObject *parent)
             &ProtobufDeserializationWorker::theoraPacketReceived,
             this,
             &ProtobufDeserialization::theoraPacketReceived);
+
+    connect(worker,
+            &ProtobufDeserializationWorker::mpegTsDatagramReceived,
+            this,
+            &ProtobufDeserialization::mpegTsDatagramReceived);
 
     connect(worker,
             &ProtobufDeserializationWorker::pointCloudReceived,

@@ -33,6 +33,23 @@ void UdpSocket::sendTextMessage(QString msg)
     }
 }
 
+void UdpSocket::sendBinaryMessage(QByteArray msg)
+{
+    if(_hostname.size() == 0 || _port == 0)
+    {
+        return;
+    }
+
+    QNetworkDatagram dg;
+    dg.setDestination(_addr, _port);
+    dg.setData(msg);
+
+    if(_sock.writeDatagram(dg) < 0)
+    {
+        qWarning("could not send udp datagram");
+    }
+}
+
 void UdpSocket::rebind()
 {
     _sock.abort();

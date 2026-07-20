@@ -4,8 +4,8 @@ import QtQuick.Controls
 import QtCore
 
 import Main
-import Video
-import "../Video/VideoStream.js" as VideoStream
+import VideoMpegTs
+import "../VideoMpegTs/VideoStream.js" as VideoStream
 import "Joy.js" as Joy
 import Common
 import Font
@@ -116,10 +116,6 @@ Item {
 
     }
 
-
-
-
-
     VideoStream {
 
         id: video
@@ -130,9 +126,9 @@ Item {
 
         Connections {
             target: client
-            function onTheoraPacketReceived(msg) {
+            function onMpegTsDatagramReceived(msg) {
                 if(msg.streamName === setupCard.videoStream) {
-                    video.setTheoraPacket(msg)
+                    video.setMpegTsDatagram(msg)
                 }
             }
         }

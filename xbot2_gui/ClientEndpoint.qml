@@ -64,6 +64,7 @@ Item
     // image received
     signal jpegReceived(var msg)
     signal theoraPacketReceived(theoraPacket msg)
+    signal mpegTsDatagramReceived(mpegTsDatagram msg)
 
     // pointcloud received
     signal pointCloudReceived(pointCloud msg)
@@ -240,6 +241,10 @@ Item
 
         onTheoraPacketReceived: function(pkt) {
             root.theoraPacketReceived(pkt)
+        }
+
+        onMpegTsDatagramReceived: function(msg) {
+            root.mpegTsDatagramReceived(msg)
         }
 
         onPointCloudReceived: function(pc) {

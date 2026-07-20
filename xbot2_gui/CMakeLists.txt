@@ -66,6 +66,10 @@ qt_add_qml_module(xbot2_gui
     DeserializationWorker.qml
     AppLauncher.qml
     GuiPage.qml
+    RESOURCES VideoMpegTs/CMakeLists.txt
+    QML_FILES VideoMpegTs/VideoStream.js
+    QML_FILES VideoMpegTs/VideoStream.qml
+    QML_FILES VideoMpegTs/VideoStreamCard.qml
 )
 
 target_compile_definitions(xbot2_gui
@@ -152,7 +156,7 @@ add_subdirectory(TestThings)
 
 add_subdirectory(Joy)
 
-add_subdirectory(Video)
+add_subdirectory(VideoMpegTs)
 
 add_subdirectory(ViewerQuick3D)
 

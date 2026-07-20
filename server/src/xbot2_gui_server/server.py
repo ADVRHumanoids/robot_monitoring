@@ -128,11 +128,13 @@ class Xbot2WebServer(ServerBase):
 
         if clients is None:
             clients = self.ws_clients
-        else:
-            clients = set(clients) & self.ws_clients
+            
+        expired_clients = set(ws for ws in clients if ws not in self.ws_clients)
+        
+        clients = set(clients) & self.ws_clients
             
         if len(clients) == 0:
-            return
+            return expired_clients
 
         # wrap with protobuf if needed
         pbmsg = generic_pb2.Message()
@@ -153,7 +155,7 @@ class Xbot2WebServer(ServerBase):
         
         # print(f'sending ws message size {len(msg)} to {len(clients)} clients')
         
-        expired_clients = set(ws for ws in clients if ws not in self.ws_clients)
+        
         
         # iterate over sockets (one per client)
         for ws in clients:
@@ -206,23 +208,22 @@ class Xbot2WebServer(ServerBase):
         if self.udp is None:
             return False
         
+        # compute expired clients and alive clients
         if clients is None:
             clients = self.udp_clients
-        else:
-            clients = set(clients) & self.udp_clients
+            
+        expired_clients = set(addr for addr in clients if addr not in self.udp_clients)
+        
+        clients = set(clients) & self.udp_clients
 
         if len(clients) == 0:
-            return
+            return expired_clients
         
         # set sequence number and serialize msg to bytes
         pbmsg.seq = self.udp_msg_seq
         msg = pbmsg.SerializeToString()
         self.udp_msg_seq += 1
         
-        # print(f'sending udp message size {len(msg)} to {len(clients)} clients')
-        
-        expired_clients = set(addr for addr in clients if addr not in self.udp_clients)
-
         for addr in clients:
             self.udp.sendto(msg, addr)
 

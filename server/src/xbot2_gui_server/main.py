@@ -94,7 +94,7 @@ def main():
             ('xbot2_gui_server.joint_states', 'JointStateHandler'),
             ('xbot2_gui_server.joint_device', 'JointDeviceHandler'),
             ('xbot2_gui_server.plugin', 'PluginHandler'),
-            ('xbot2_gui_server.theora_video', 'TheoraVideoHandler'),
+            ('xbot2_gui_server.mpeg_ts_video', 'MpegTsVideoHandler'),
             ('xbot2_gui_server.launcher', 'Launcher'),
             ('xbot2_gui_server.cartesian', 'CartesianHandler'),
             # ('xbot2_gui_server.speech', 'SpeechHandler'),

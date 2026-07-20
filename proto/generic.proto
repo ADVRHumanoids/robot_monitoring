@@ -4,6 +4,7 @@ import "jointstate.proto";
 import "text.proto";
 import "process_output.proto";
 import "theora_packet.proto";
+import "mpeg_ts_datagram.proto";
 
 message Message {
 
@@ -12,5 +13,5 @@ message Message {
     Text text = 3;
     ProcessOutput process_output = 4;
     TheoraPacket theora_packet = 5;
-
+    MpegTsDatagram mpeg_ts_datagram = 6;
 }

@@ -265,33 +265,24 @@ class JointStateHandler:
         
         # pb js
         # TBD aux support
-        try:
-            msgpb = generic_pb2.Message()
-            msgpb.jointstate.linkPos.extend(self.msg.link_position)
-            msgpb.jointstate.motPos.extend(self.msg.motor_position)
-            msgpb.jointstate.motVel.extend(self.msg.motor_velocity)
-            msgpb.jointstate.velRef.extend(self.msg.velocity_reference)
-            msgpb.jointstate.torRef.extend(self.msg.effort_reference)
-            msgpb.jointstate.tor.extend(self.msg.effort)
-            msgpb.jointstate.posRef.extend(self.msg.position_reference)
-            msgpb.jointstate.k.extend(self.msg.stiffness)
-            msgpb.jointstate.d.extend(self.msg.damping)
-            msgpb.jointstate.motorTemp.extend(self.msg.temperature_motor)
-            msgpb.jointstate.driverTemp.extend(self.msg.temperature_driver)
-            msgpb.jointstate.vbatt = self.vbatt
-            msgpb.jointstate.ibatt = self.iload
-            try:
-                msgpb.jointstate.motTor.extend(self.msg.motor_effort)
-                msgpb.jointstate.motorStatus.extend(self.msg.motor_status)
-                msgpb.jointstate.brakeStatus.extend(self.msg.brake_status)
-            except AttributeError:
-                pass
-            await self.srv.udp_send_to_all(msgpb)
-        except Exception as e:
-            # print traceback  
-            import traceback
-            traceback.print_exc()
-
+        msgpb = generic_pb2.Message()
+        msgpb.jointstate.linkPos.extend(self.msg.link_position)
+        msgpb.jointstate.motPos.extend(self.msg.motor_position)
+        msgpb.jointstate.motVel.extend(self.msg.motor_velocity)
+        msgpb.jointstate.velRef.extend(self.msg.velocity_reference)
+        msgpb.jointstate.torRef.extend(self.msg.effort_reference)
+        msgpb.jointstate.tor.extend(self.msg.effort)
+        msgpb.jointstate.posRef.extend(self.msg.position_reference)
+        msgpb.jointstate.k.extend(self.msg.stiffness)
+        msgpb.jointstate.d.extend(self.msg.damping)
+        msgpb.jointstate.motorTemp.extend(self.msg.temperature_motor)
+        msgpb.jointstate.driverTemp.extend(self.msg.temperature_driver)
+        msgpb.jointstate.vbatt = self.vbatt
+        msgpb.jointstate.ibatt = self.iload
+        msgpb.jointstate.motTor.extend(self.msg.motor_effort)
+        msgpb.jointstate.motorStatus.extend(self.msg.motor_status)
+        msgpb.jointstate.brakeStatus.extend(self.msg.brake_status)
+        await self.srv.udp_send_to_all(msgpb)
         
 
         # clear to avoid sending duplicates

@@ -143,10 +143,6 @@ add_subdirectory(Network)
 add_subdirectory(Protobuf)
 
 add_subdirectory(Audio)
-if(NOT EMSCRIPTEN)
-
-
-endif()
 
 add_subdirectory(TestThings)
 
@@ -155,6 +151,8 @@ add_subdirectory(Joy)
 add_subdirectory(VideoMpegTs)
 
 add_subdirectory(ViewerQuick3D)
+
+add_subdirectory(Diagnostics)
 
 
 # robot model

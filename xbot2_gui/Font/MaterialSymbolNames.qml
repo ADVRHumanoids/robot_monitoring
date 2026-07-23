@@ -56,6 +56,7 @@ Item {
     property string arrowDown: '\ue5db'
     property string search: '\ue8b6'
     property string autoplay: '\uf6b5'
+    property string ecg: '\uf80f'
 
     property FontLoader filledFont: FontLoader {
         source: `/Font/materialsymbols/MaterialSymbolsOutlined[opsz,wght,FILL,GRAD@20,200,1,200].otf`

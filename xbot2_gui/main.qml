@@ -10,6 +10,7 @@ import Font
 import Audio
 import Monitoring
 import Joy
+import Diagnostics
 
 ApplicationWindow {
 
@@ -163,12 +164,20 @@ ApplicationWindow {
         }
 
         PageItem {
+            name: "Diagnostics"
+            page: "/qt/qml/Monitoring/Diagnostics.qml"
+            iconText: MaterialSymbolNames.ecg
+            iconFont: syms.font.family
+            active: true
+        }
+
+        PageItem {
             name: "Playground"
             page: "/qt/qml/TestThings/Playground2.qml"
             iconText: MaterialSymbolNames.playground
             iconFont: syms.font.family
             active: true
-            show: true
+            show: false
         }
 
         PageItem {

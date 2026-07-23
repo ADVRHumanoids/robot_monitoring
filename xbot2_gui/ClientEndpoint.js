@@ -232,5 +232,7 @@ function handleMessage(obj) {
 
     objectReceived(obj)
 
-    detectObjectFields(obj)
+    if(obj.type !== "diagnostics") {
+        detectObjectFields(obj)
+    }
 }

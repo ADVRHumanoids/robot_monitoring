@@ -2,7 +2,7 @@ function setStream(stream_name, video) {
     var msg = {
         'type': 'video_request',
         'stream_name': stream_name,
-        'operation': 'connect'
+        'operation': stream_name === '' ? 'disconnect' : 'connect'
     }
     client.sendTextMessageUdp(JSON.stringify(msg))
 }

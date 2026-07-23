@@ -14,7 +14,7 @@ Card1 {
                       'No active task'
     property alias currentTask: taskCombo.currentText
     property bool ikRunning: false
-    property alias videoStream: videoEnabledSwitch.checked ? videoStreamCombo.currentText : ''
+    property string videoStream: videoEnabledSwitch.checked ? videoStreamCombo.currentText : ''
 
     // private
     id: root

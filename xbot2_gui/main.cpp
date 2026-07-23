@@ -9,7 +9,6 @@
 #include <QtQuickWidgets/QtQuickWidgets>
 #include <QCryptographicHash>
 
-#include "Video/videostreampainter.h"
 #include "RobotModel/robot_model.h"
 
 #ifdef __EMSCRIPTEN__

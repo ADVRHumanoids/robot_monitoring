@@ -7,6 +7,11 @@ Item {
     property bool autoPlay: true
 
     function setMpegTsDatagram(msg) {
+        const skipped = msg.seq - _lastSeq - 1
+        if(_lastSeq !== -1 && skipped !== 0) {
+            console.log(`WARN: skipped ${skipped} MPEG-TS datagrams`)
+        }
+        _lastSeq = msg.seq
         sock.sendBinaryMessage(msg.data)
     }
 
@@ -23,6 +28,7 @@ Item {
 
     property string _mediaPlayerAddress: "127.0.0.1"
     property int _mediaPlayerPort: 12345
+    property int _lastSeq: -1
 
     function _restart() {
         retryTimer.stop()

@@ -50,7 +50,7 @@ function selectedPaths() {
         if (!treeView.selectionModel.isSelected(index))
             continue
 
-        const path = treeModel.data(index, TreeModel.PathRole)
+        const path = treeView.model.data(index, TreeModel.PathRole)
         if (path)
             paths.push(path)
     }
@@ -64,7 +64,7 @@ function currentPath() {
         return ""
 
     const index = treeView.index(treeView.currentRow, 0)
-    return treeModel.data(index, TreeModel.PathRole) || ""
+    return treeView.model.data(index, TreeModel.PathRole) || ""
 }
 
 function expandedPaths() {
@@ -75,7 +75,7 @@ function expandedPaths() {
             continue
 
         const index = treeView.index(row, 0)
-        const path = treeModel.data(index, TreeModel.PathRole)
+        const path = treeView.model.data(index, TreeModel.PathRole)
         if (path)
             paths.push(path)
     }
@@ -92,7 +92,7 @@ function restoreExpandedPaths(paths) {
 
         for (let row = 0; row < treeView.rows; ++row) {
             const index = treeView.index(row, 0)
-            const path = treeModel.data(index, TreeModel.PathRole)
+            const path = treeView.model.data(index, TreeModel.PathRole)
 
             if (pathSet.has(path) && !treeView.isExpanded(row)) {
                 treeView.expand(row)
@@ -110,7 +110,7 @@ function restoreSelectionState(paths, current) {
 
     for (let row = 0; row < treeView.rows; ++row) {
         const index = treeView.index(row, 0)
-        const path = treeModel.data(index, TreeModel.PathRole)
+        const path = treeView.model.data(index, TreeModel.PathRole)
 
         if (pathSet.has(path))
             treeView.selectionModel.select(index, ItemSelectionModel.Select)

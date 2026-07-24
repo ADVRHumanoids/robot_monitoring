@@ -165,7 +165,7 @@ ApplicationWindow {
 
         PageItem {
             name: "Diagnostics"
-            page: "/qt/qml/Monitoring/Diagnostics.qml"
+            page: "/qt/qml/Diagnostics/Diagnostics.qml"
             iconText: MaterialSymbolNames.ecg
             iconFont: syms.font.family
             active: true

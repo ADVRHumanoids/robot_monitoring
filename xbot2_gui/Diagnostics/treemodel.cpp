@@ -54,7 +54,7 @@ QVariant TreeModel::data(const QModelIndex &index, int role) const
 Qt::ItemFlags TreeModel::flags(const QModelIndex &index) const
 {
     return index.isValid()
-               ? QAbstractItemModel::flags(index) : Qt::ItemFlags(Qt::NoItemFlags);
+    ? QAbstractItemModel::flags(index) : Qt::ItemFlags(Qt::NoItemFlags);
 }
 //! [4]
 
@@ -196,4 +196,6 @@ void TreeModel::setupModelData(const QVariantMap &diagnostics, TreeItem *parent)
                                     status.value("hardware_id"_L1).toString(),
                                     metrics);
     }
+
+    parent->sortChildrenRecursively();
 }

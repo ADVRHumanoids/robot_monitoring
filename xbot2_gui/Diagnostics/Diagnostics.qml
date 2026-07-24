@@ -25,26 +25,43 @@ Item {
             Layout.fillWidth: true
             Layout.preferredWidth: 400
 
-            // Control {
+            RowLayout {
 
-            //     Layout.fillWidth: true
+                Layout.fillWidth: true
 
-            //     background: Rectangle {
-            //         color: 'transparent'
-            //         border.color: Qt.rgba(1, 1, 1, 0.2)
-            //         border.width: 1
-            //         radius: 6
-            //     }
+                SearchField {
+                    id: searchField
+                    Layout.fillWidth: true
+                    suggestionModel: filterModel
+                    textRole: 'path'
+                }
 
-            //     padding: 12
+                ButtonGroup {
+                    buttons: [allButton, warningButton, errorButton]
+                }
 
-            //     contentItem: HorizontalHeaderView {
+                Item {
+                    Layout.preferredWidth: 6
+                }
 
-            //         syncView: treeView
-            //         model: ['Name', 'Status']
-            //     }
+                ToolButton {
+                    id: allButton
+                    text: 'All'
+                    checkable: true
+                    checked: true
+                }
+                ToolButton {
+                    id: warningButton
+                    text: 'Warnings'
+                    checkable: true
+                }
+                ToolButton {
+                    id: errorButton
+                    text: 'Errors'
+                    checkable: true
+                }
 
-            // }
+            }
 
             Control {
 
@@ -66,8 +83,12 @@ Item {
 
                     clip: true
 
-                    model: TreeModel {
-                        id: treeModel
+                    model: DiagnosticFilterModel {
+                        id: filterModel
+                        filterText: searchField.text
+                        sourceModel: TreeModel {
+                            id: treeModel
+                        }
                     }
 
                     columnWidthProvider: function(column) {
@@ -127,12 +148,12 @@ Item {
                 anchors.fill: parent
                 visible: treeView.selectionModel.currentIndex.valid
 
-                message: treeModel.data(treeView.selectionModel.currentIndex, TreeModel.MessageRole)
-                hwId: treeModel.data(treeView.selectionModel.currentIndex, TreeModel.HardwareIdRole)
-                path: treeModel.data(treeView.selectionModel.currentIndex, TreeModel.PathRole)
-                name: treeModel.data(treeView.selectionModel.currentIndex, TreeModel.NameRole)
-                level: treeModel.data(treeView.selectionModel.currentIndex, TreeModel.LevelRole)
-                metrics: treeModel.data(treeView.selectionModel.currentIndex, TreeModel.MetricsRole)
+                message: treeView.model.data(treeView.selectionModel.currentIndex, TreeModel.MessageRole)
+                hwId: treeView.model.data(treeView.selectionModel.currentIndex, TreeModel.HardwareIdRole)
+                path: treeView.model.data(treeView.selectionModel.currentIndex, TreeModel.PathRole)
+                name: treeView.model.data(treeView.selectionModel.currentIndex, TreeModel.NameRole)
+                level: treeView.model.data(treeView.selectionModel.currentIndex, TreeModel.LevelRole)
+                metrics: treeView.model.data(treeView.selectionModel.currentIndex, TreeModel.MetricsRole)
 
             }
 

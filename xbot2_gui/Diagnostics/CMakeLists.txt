@@ -17,6 +17,8 @@ qt_add_qml_module(xbot2_gui_diagnostics
     LevelDelegate.qml
     DetailedView.qml
     Diagnostics.js
+    QML_FILES DiagnosticsTreeView.qml
+    QML_FILES DiagnosticsSummary.qml
 )
 
 target_link_libraries(xbot2_gui_diagnostics PUBLIC Qt6::Gui Qt6::Quick)

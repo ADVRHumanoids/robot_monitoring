@@ -21,7 +21,7 @@ Control {
 
     contentItem: ColumnLayout {
 
-        spacing: 24
+        spacing: 12
 
         // top banner
         RowLayout {
@@ -59,7 +59,7 @@ Control {
                     radius: height / 2.
                     color: Qt.darker(statusLabel.color)
                 }
-                color: Qt.lighter(Logic.levelToColor(root.level))
+                color: Logic.levelToColor(root.level)
                 text: Logic.levelToText(root.level)
                 font.bold: true
                 padding: 6
@@ -86,14 +86,14 @@ Control {
             Layout.fillWidth: true
             padding: 12
             contentItem: Column {
-                spacing: 16
+                spacing: 8
                 Label {
                     text: 'MESSAGE'
                     font.bold: true
                 }
                 Label {
                     id: messageLabel
-                    font.pixelSize: CommonProperties.font.h3
+                    font.pixelSize: CommonProperties.font.h4
                     wrapMode: Text.Wrap
                     width: parent.width
                 }

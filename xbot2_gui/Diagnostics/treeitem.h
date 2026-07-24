@@ -30,6 +30,7 @@ public:
     TreeItem *child(int row);
     const TreeItem *child(int row) const;
     TreeItem *childByName(const QString &name);
+    const TreeItem *childByName(const QString &name) const;
     int childCount() const;
     int columnCount() const;
     QVariant data(int column) const;
@@ -39,6 +40,7 @@ public:
 
     void setDiagnostics(int level, QString message, QString hardwareId, QVariantList metrics);
     void sortChildrenRecursively();
+    void collectActiveIssues(QVariantList *issues) const;
 
 private:
     QString metricsSummary() const;

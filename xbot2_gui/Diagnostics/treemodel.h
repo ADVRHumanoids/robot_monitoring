@@ -19,6 +19,7 @@ class TreeModel : public QAbstractItemModel
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(TreeModel)
+    Q_PROPERTY(QVariantList activeIssues READ activeIssues NOTIFY activeIssuesChanged)
 
 public:
     Q_DISABLE_COPY_MOVE(TreeModel)
@@ -50,12 +51,18 @@ public:
     QHash<int, QByteArray> roleNames() const override;
 
     Q_INVOKABLE void loadFromDiagnostics(const QVariantMap &diagnostics);
+    Q_INVOKABLE QModelIndex indexForPath(const QString &path, int column = 0) const;
+    QVariantList activeIssues() const;
+
+signals:
+    void activeIssuesChanged();
 
 private:
     static std::unique_ptr<TreeItem> createRootItem();
     static void setupModelData(const QVariantMap &diagnostics, TreeItem *parent);
 
     std::unique_ptr<TreeItem> rootItem;
+    QVariantList m_activeIssues;
 };
 //! [0]
 

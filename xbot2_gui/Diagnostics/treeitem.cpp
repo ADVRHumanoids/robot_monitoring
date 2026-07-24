@@ -52,6 +52,15 @@ TreeItem *TreeItem::childByName(const QString &name)
     return it != m_childItems.end() ? it->get() : nullptr;
 }
 
+const TreeItem *TreeItem::childByName(const QString &name) const
+{
+    const auto it = std::find_if(m_childItems.cbegin(), m_childItems.cend(),
+                                 [&name](const std::unique_ptr<TreeItem> &treeItem) {
+                                     return treeItem->m_name == name;
+                                 });
+    return it != m_childItems.cend() ? it->get() : nullptr;
+}
+
 //! [3]
 int TreeItem::childCount() const
 {
@@ -152,6 +161,21 @@ void TreeItem::sortChildrenRecursively()
 
     for (const auto &child : m_childItems)
         child->sortChildrenRecursively();
+}
+
+void TreeItem::collectActiveIssues(QVariantList *issues) const
+{
+    if (m_childItems.empty() && m_level >= 1) {
+        QVariantMap issue;
+        issue.insert("level"_L1, m_level);
+        issue.insert("path"_L1, m_path);
+        issue.insert("message"_L1, m_message);
+        issues->append(issue);
+        return;
+    }
+
+    for (const auto &child : m_childItems)
+        child->collectActiveIssues(issues);
 }
 
 QString TreeItem::metricsSummary() const

@@ -9,7 +9,14 @@ qt_add_qml_module(xbot2_gui_diagnostics
     treeitem.h
     treemodel.cpp
     treemodel.h
-    QML_FILES Diagnostics.qml
+    diagnosticfiltermodel.cpp
+    diagnosticfiltermodel.h
+    QML_FILES
+    Diagnostics.qml
+    NameDelegate.qml
+    LevelDelegate.qml
+    DetailedView.qml
+    Diagnostics.js
 )
 
 target_link_libraries(xbot2_gui_diagnostics PUBLIC Qt6::Gui Qt6::Quick)

@@ -142,6 +142,18 @@ void TreeItem::setDiagnostics(int level, QString message, QString hardwareId, QV
     m_metrics = std::move(metrics);
 }
 
+void TreeItem::sortChildrenRecursively()
+{
+    std::sort(m_childItems.begin(), m_childItems.end(),
+              [](const std::unique_ptr<TreeItem> &left,
+                 const std::unique_ptr<TreeItem> &right) {
+                  return QString::localeAwareCompare(left->m_name, right->m_name) < 0;
+              });
+
+    for (const auto &child : m_childItems)
+        child->sortChildrenRecursively();
+}
+
 QString TreeItem::metricsSummary() const
 {
     QStringList pairs;

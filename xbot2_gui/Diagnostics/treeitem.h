@@ -38,6 +38,7 @@ public:
     TreeItem *parentItem();
 
     void setDiagnostics(int level, QString message, QString hardwareId, QVariantList metrics);
+    void sortChildrenRecursively();
 
 private:
     QString metricsSummary() const;

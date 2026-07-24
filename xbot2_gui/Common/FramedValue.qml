@@ -10,12 +10,14 @@ Control {
     property alias value2: valueLabel2.text
     property alias text: valueLabel1.text
     property color color: 'white'
+    property alias radius: backgroundRect.radius
 
     //
     id: root
     padding: 6
 
     background: Rectangle {
+        id: backgroundRect
         color: Qt.alpha(root.color, 0.03)
         border.color: Qt.lighter(CommonProperties.colors.cardBackground)
         border.width: 1

@@ -11,6 +11,7 @@
 #include "treemodel.h"
 #include "treeitem.h"
 #include <QStringList>
+#include <algorithm>
 
 using namespace Qt::StringLiterals;
 
@@ -54,7 +55,7 @@ QVariant TreeModel::data(const QModelIndex &index, int role) const
 Qt::ItemFlags TreeModel::flags(const QModelIndex &index) const
 {
     return index.isValid()
-    ? QAbstractItemModel::flags(index) : Qt::ItemFlags(Qt::NoItemFlags);
+               ? QAbstractItemModel::flags(index) : Qt::ItemFlags(Qt::NoItemFlags);
 }
 //! [4]
 
@@ -145,7 +146,45 @@ void TreeModel::loadFromDiagnostics(const QVariantMap &diagnostics)
     beginResetModel();
     rootItem = createRootItem();
     setupModelData(diagnostics, rootItem.get());
+    m_activeIssues.clear();
+    rootItem->collectActiveIssues(&m_activeIssues);
+    std::sort(m_activeIssues.begin(), m_activeIssues.end(), [](const QVariant &left, const QVariant &right) {
+        const auto leftIssue = left.toMap();
+        const auto rightIssue = right.toMap();
+        const int leftLevel = leftIssue.value("level"_L1).toInt();
+        const int rightLevel = rightIssue.value("level"_L1).toInt();
+        if (leftLevel != rightLevel)
+            return leftLevel > rightLevel;
+
+        return QString::localeAwareCompare(leftIssue.value("path"_L1).toString(),
+                                           rightIssue.value("path"_L1).toString()) < 0;
+    });
     endResetModel();
+    emit activeIssuesChanged();
+}
+
+QModelIndex TreeModel::indexForPath(const QString &path, int column) const
+{
+    if (path.isEmpty() || column < 0 || column >= rootItem->columnCount())
+        return {};
+
+    const auto segments = path.split(u'/', Qt::SkipEmptyParts);
+    if (segments.isEmpty())
+        return {};
+
+    const TreeItem *item = rootItem.get();
+    for (const auto &segment : segments) {
+        item = item->childByName(segment);
+        if (!item)
+            return {};
+    }
+
+    return createIndex(item->row(), column, const_cast<TreeItem *>(item));
+}
+
+QVariantList TreeModel::activeIssues() const
+{
+    return m_activeIssues;
 }
 
 std::unique_ptr<TreeItem> TreeModel::createRootItem()

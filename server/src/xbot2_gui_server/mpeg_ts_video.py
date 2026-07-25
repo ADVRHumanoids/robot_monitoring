@@ -1,7 +1,6 @@
 import asyncio
 import functools
 import json
-from typing import Iterable
 
 from aiohttp import web
 
@@ -148,12 +147,13 @@ class MpegTsVideoHandler:
             last_seq = seq
 
             try:
-                packets = await asyncio.to_thread(
+                encode = functools.partial(
                     self._encode_datagram,
                     stream_name,
                     seq,
                     data,
                 )
+                packets = await self.loop.run_in_executor(None, encode)
             except ValueError as exc:
                 print(f'WARNING: {exc}')
                 continue

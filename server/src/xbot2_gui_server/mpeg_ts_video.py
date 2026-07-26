@@ -1,9 +1,13 @@
 import asyncio
+import ctypes
 import functools
 import multiprocessing
 import os
 import queue
+import signal
 import socket
+import sys
+import threading
 import time
 import traceback
 from dataclasses import dataclass, field
@@ -21,6 +25,12 @@ ros_handle: ros_utils.RosWrapper = ros_utils.ros_handle
 from mpeg_ts_image_transport_msgs.msg import MpegTsDatagram
 
 
+TS_PACKET_SIZE = 188
+DEFAULT_TS_PACKETS_PER_DATAGRAM = 7
+MAX_TS_PACKETS_PER_DATAGRAM = 7
+PR_SET_PDEATHSIG = 1
+
+
 @dataclass(slots=True)
 class _WorkerStream:
     subscription: Any
@@ -28,33 +38,73 @@ class _WorkerStream:
     last_ros_seq: int = -1
 
 
+def _arm_linux_parent_death_signal(expected_parent_pid: int) -> None:
+    """Ask Linux to terminate this process when its parent disappears."""
+    if sys.platform != 'linux':
+        return
+
+    try:
+        libc = ctypes.CDLL(None, use_errno=True)
+        result = libc.prctl(
+            PR_SET_PDEATHSIG,
+            signal.SIGTERM,
+            0,
+            0,
+            0,
+        )
+        if result != 0:
+            errno = ctypes.get_errno()
+            raise OSError(errno, os.strerror(errno))
+    except BaseException as exc:
+        # The heartbeat pipe below remains the portable fallback.
+        print(f'WARNING: unable to arm PR_SET_PDEATHSIG: {exc}')
+        return
+
+    # PR_SET_PDEATHSIG is not retroactive. Close the startup race by checking
+    # whether the parent changed between spawn and prctl().
+    if os.getppid() != expected_parent_pid:
+        raise SystemExit('parent exited during MPEG-TS worker startup')
+
+
 def _serialize_datagram(
     stream_name: str,
     ros_seq: int,
     data: bytes,
     first_wire_seq: int,
+    ts_packets_per_datagram: int,
 ) -> tuple[tuple[bytes, ...], int]:
-    """Validate, split, and serialize one MPEG-TS ROS datagram."""
-    if len(data) % 188 != 0:
+    """Validate and serialize batches of MPEG-TS packets.
+
+    Each protobuf/UDP datagram contains up to seven consecutive 188-byte TS
+    packets. Seven packets occupy 1316 bytes before protobuf and UDP/IP headers,
+    keeping the normal payload below a 1500-byte Ethernet MTU.
+    """
+    if len(data) % TS_PACKET_SIZE != 0:
         raise ValueError(
             f'received {len(data)} bytes for stream {stream_name}, '
-            'which is not a multiple of 188'
+            f'which is not a multiple of {TS_PACKET_SIZE}'
         )
+
+    packet_count = len(data) // TS_PACKET_SIZE
+    for packet_index in range(packet_count):
+        packet_offset = packet_index * TS_PACKET_SIZE
+        if data[packet_offset] != 0x47:
+            raise ValueError(
+                'received TS packet with invalid sync byte '
+                f'for stream {stream_name} at packet {packet_index}'
+            )
 
     payloads: list[bytes] = []
     wire_seq = first_wire_seq
+    batch_size = ts_packets_per_datagram * TS_PACKET_SIZE
 
-    for offset in range(0, len(data), 188):
-        ts_packet = data[offset:offset + 188]
-        if not ts_packet or ts_packet[0] != 0x47:
-            raise ValueError(
-                f'received TS packet with invalid sync byte for stream {stream_name}'
-            )
+    for offset in range(0, len(data), batch_size):
+        ts_batch = data[offset:offset + batch_size]
 
         message = generic_pb2.Message()
         message.seq = wire_seq
         message.mpeg_ts_datagram.stream_name = stream_name
-        message.mpeg_ts_datagram.data = ts_packet
+        message.mpeg_ts_datagram.data = ts_batch
         message.mpeg_ts_datagram.seq = ros_seq
         payloads.append(message.SerializeToString())
         wire_seq = (wire_seq + 1) & 0x7FFFFFFF
@@ -65,9 +115,18 @@ def _serialize_datagram(
 class _MpegTsProcessRuntime:
     """ROS 2 executor and UDP fan-out owned entirely by the worker process."""
 
-    def __init__(self, config: dict, commands) -> None:
+    def __init__(
+        self,
+        config: dict,
+        commands,
+        heartbeat_connection,
+        expected_parent_pid: int,
+    ) -> None:
         self._config = config
         self._commands = commands
+        self._heartbeat_connection = heartbeat_connection
+        self._expected_parent_pid = expected_parent_pid
+        self._last_heartbeat = time.monotonic()
         self._stop_requested = False
         self._node = None
         self._executor = None
@@ -78,11 +137,16 @@ class _MpegTsProcessRuntime:
         self._last_udp_drop_log = 0.0
 
     def run(self, ready_connection) -> None:
+        _arm_linux_parent_death_signal(self._expected_parent_pid)
+
         import rclpy
         from rclpy.executors import SingleThreadedExecutor
         from rclpy.node import Node
 
         try:
+            if not self._parent_is_healthy():
+                raise RuntimeError('parent process disappeared before worker startup')
+
             rclpy.init(signal_handler_options=rclpy.SignalHandlerOptions.NO)
             self._node = Node('xbot2_gui_mpegts')
             self._executor = SingleThreadedExecutor(context=self._node.context)
@@ -111,13 +175,17 @@ class _MpegTsProcessRuntime:
 
             print(
                 f'MPEG-TS process {os.getpid()} started with dedicated ROS 2 '
-                f'executor and UDP source port {udp_port}'
+                f'executor and UDP source port {udp_port}; '
+                f'{self._config["ts_packets_per_datagram"]} TS packets/datagram'
             )
 
             spin_timeout_sec = float(self._config['spin_timeout_sec'])
             while not self._stop_requested:
                 self._drain_commands()
                 if self._stop_requested:
+                    break
+                if not self._parent_is_healthy():
+                    print('MPEG-TS worker lost its parent heartbeat; exiting')
                     break
                 self._executor.spin_once(timeout_sec=spin_timeout_sec)
 
@@ -152,6 +220,11 @@ class _MpegTsProcessRuntime:
                 self._udp_socket.close()
 
             try:
+                self._heartbeat_connection.close()
+            except BaseException:
+                pass
+
+            try:
                 import rclpy
                 if rclpy.ok():
                     rclpy.shutdown()
@@ -159,6 +232,22 @@ class _MpegTsProcessRuntime:
                 traceback.print_exc()
 
             print(f'MPEG-TS process {os.getpid()} stopped')
+
+    def _parent_is_healthy(self) -> bool:
+        if os.name == 'posix' and os.getppid() != self._expected_parent_pid:
+            return False
+
+        while self._heartbeat_connection.poll():
+            try:
+                self._heartbeat_connection.recv_bytes()
+            except EOFError:
+                return False
+            self._last_heartbeat = time.monotonic()
+
+        return (
+            time.monotonic() - self._last_heartbeat
+            <= float(self._config['heartbeat_timeout_sec'])
+        )
 
     def _drain_commands(self) -> None:
         while True:
@@ -248,6 +337,7 @@ class _MpegTsProcessRuntime:
                 ros_seq,
                 bytes(msg.data),
                 self._wire_seq,
+                int(self._config['ts_packets_per_datagram']),
             )
             self._send_udp(payloads, stream)
         except ValueError as exc:
@@ -275,26 +365,50 @@ class _MpegTsProcessRuntime:
         if now - self._last_udp_drop_log >= 1.0:
             print(
                 'WARNING: MPEG-TS UDP socket dropped '
-                f'{self._dropped_udp_packets} packets because its send buffer was full'
+                f'{self._dropped_udp_packets} datagrams because its send buffer was full'
             )
             self._dropped_udp_packets = 0
             self._last_udp_drop_log = now
 
 
-def _mpegts_process_main(config: dict, commands, ready_connection) -> None:
-    _MpegTsProcessRuntime(config, commands).run(ready_connection)
+def _mpegts_process_main(
+    config: dict,
+    commands,
+    ready_connection,
+    heartbeat_connection,
+    expected_parent_pid: int,
+) -> None:
+    _MpegTsProcessRuntime(
+        config,
+        commands,
+        heartbeat_connection,
+        expected_parent_pid,
+    ).run(ready_connection)
 
 
 class _MpegTsPipelineProcess:
     def __init__(self, config: dict) -> None:
+        self._config = config
         self._context = multiprocessing.get_context('spawn')
         self._commands = self._context.Queue(maxsize=int(config['command_queue_size']))
         parent_connection, child_connection = self._context.Pipe(duplex=False)
+        child_heartbeat, parent_heartbeat = self._context.Pipe(duplex=False)
         self._parent_connection = parent_connection
         self._child_connection = child_connection
+        self._child_heartbeat = child_heartbeat
+        self._parent_heartbeat = parent_heartbeat
+        self._heartbeat_stop = threading.Event()
+        self._heartbeat_thread: threading.Thread | None = None
+        self._queue_closed = False
         self._process = self._context.Process(
             target=_mpegts_process_main,
-            args=(config, self._commands, child_connection),
+            args=(
+                config,
+                self._commands,
+                child_connection,
+                child_heartbeat,
+                os.getpid(),
+            ),
             name='mpegts-pipeline',
             daemon=True,
         )
@@ -308,30 +422,63 @@ class _MpegTsPipelineProcess:
     def start(self, timeout_sec: float) -> None:
         self._process.start()
         self._child_connection.close()
+        self._child_heartbeat.close()
+        self._start_heartbeat()
 
         if not self._parent_connection.poll(timeout_sec):
             self._parent_connection.close()
-            self._process.terminate()
-            self._process.join(timeout=1.0)
-            self._close_queue()
+            self._abort_startup()
             raise TimeoutError('timed out starting the MPEG-TS pipeline process')
 
         try:
             status = self._parent_connection.recv()
         except EOFError as exc:
             self._parent_connection.close()
-            self._process.join(timeout=1.0)
-            self._close_queue()
+            self._abort_startup()
             raise RuntimeError('MPEG-TS pipeline process exited during startup') from exc
         self._parent_connection.close()
+
         if not status.get('ok'):
-            self._process.join(timeout=1.0)
-            self._close_queue()
+            self._abort_startup()
             details = status.get('traceback') or status.get('error') or 'unknown error'
             raise RuntimeError(f'failed to start MPEG-TS pipeline process:\n{details}')
 
         self.pid = int(status['pid'])
         self.udp_port = int(status['udp_port'])
+
+    def _start_heartbeat(self) -> None:
+        self._heartbeat_thread = threading.Thread(
+            target=self._heartbeat_loop,
+            name='mpegts-heartbeat',
+            daemon=True,
+        )
+        self._heartbeat_thread.start()
+
+    def _heartbeat_loop(self) -> None:
+        heartbeat_interval_sec = float(self._config['heartbeat_interval_sec'])
+        while not self._heartbeat_stop.is_set():
+            try:
+                self._parent_heartbeat.send_bytes(b'\x00')
+            except (BrokenPipeError, EOFError, OSError):
+                return
+            self._heartbeat_stop.wait(heartbeat_interval_sec)
+
+    def _stop_heartbeat(self) -> None:
+        self._heartbeat_stop.set()
+        try:
+            self._parent_heartbeat.close()
+        except BaseException:
+            pass
+        if self._heartbeat_thread is not None:
+            self._heartbeat_thread.join(timeout=1.0)
+            self._heartbeat_thread = None
+
+    def _abort_startup(self) -> None:
+        self._stop_heartbeat()
+        if self._process.is_alive():
+            self._process.terminate()
+        self._process.join(timeout=1.0)
+        self._close_queue()
 
     def submit(self, operation: str, *args) -> None:
         if not self._process.is_alive():
@@ -342,20 +489,20 @@ class _MpegTsPipelineProcess:
             raise RuntimeError('MPEG-TS pipeline command queue is full') from exc
 
     def _close_queue(self) -> None:
+        if self._queue_closed:
+            return
+        self._queue_closed = True
         self._commands.close()
         self._commands.join_thread()
 
     def close(self, timeout_sec: float = 5.0) -> None:
-        if not self._process.is_alive():
-            self._process.join(timeout=0.1)
-            self._close_queue()
-            return
+        if self._process.is_alive():
+            try:
+                self.submit('shutdown')
+            except RuntimeError:
+                pass
 
-        try:
-            self.submit('shutdown')
-        except RuntimeError:
-            pass
-
+        self._stop_heartbeat()
         self._process.join(timeout=timeout_sec)
         if self._process.is_alive():
             self._process.terminate()
@@ -395,14 +542,42 @@ class MpegTsVideoHandler:
             'qos_depth': int(config.get('qos_depth', 8)),
             'spin_timeout_sec': float(config.get('spin_timeout_sec', 0.005)),
             'command_queue_size': int(config.get('command_queue_size', 256)),
+            'ts_packets_per_datagram': int(
+                config.get(
+                    'ts_packets_per_datagram',
+                    DEFAULT_TS_PACKETS_PER_DATAGRAM,
+                )
+            ),
+            'heartbeat_interval_sec': float(
+                config.get('heartbeat_interval_sec', 1.0)
+            ),
+            'heartbeat_timeout_sec': float(
+                config.get('heartbeat_timeout_sec', 5.0)
+            ),
         }
         if process_config['qos_depth'] < 1:
             raise ValueError('qos_depth must be positive')
         if process_config['command_queue_size'] < 1:
             raise ValueError('command_queue_size must be positive')
+        if not 1 <= process_config['ts_packets_per_datagram'] <= MAX_TS_PACKETS_PER_DATAGRAM:
+            raise ValueError(
+                'ts_packets_per_datagram must be between 1 and '
+                f'{MAX_TS_PACKETS_PER_DATAGRAM}'
+            )
+        if process_config['heartbeat_interval_sec'] <= 0:
+            raise ValueError('heartbeat_interval_sec must be positive')
+        if (
+            process_config['heartbeat_timeout_sec']
+            <= process_config['heartbeat_interval_sec']
+        ):
+            raise ValueError(
+                'heartbeat_timeout_sec must be greater than heartbeat_interval_sec'
+            )
 
         self._pipeline = _MpegTsPipelineProcess(process_config)
         self._pipeline.start(float(config.get('startup_timeout_sec', 10.0)))
+        self._ts_packets_per_datagram = process_config['ts_packets_per_datagram']
+        self._heartbeat_timeout_sec = process_config['heartbeat_timeout_sec']
 
         app = getattr(self.srv, 'app', None)
         if app is not None:
@@ -430,6 +605,8 @@ class MpegTsVideoHandler:
             'mode': 'dedicated_process_udp',
             'pid': self._pipeline.pid,
             'udp_source_port': self._pipeline.udp_port,
+            'ts_packets_per_datagram': self._ts_packets_per_datagram,
+            'heartbeat_timeout_sec': self._heartbeat_timeout_sec,
             'websocket_video_supported': False,
             'alive': self._pipeline.is_alive,
         })

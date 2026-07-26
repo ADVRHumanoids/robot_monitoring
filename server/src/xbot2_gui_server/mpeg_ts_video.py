@@ -1,7 +1,11 @@
 import asyncio
 import functools
-import json
-from concurrent.futures import ThreadPoolExecutor
+import multiprocessing
+import os
+import queue
+import socket
+import time
+import traceback
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -18,20 +22,349 @@ from mpeg_ts_image_transport_msgs.msg import MpegTsDatagram
 
 
 @dataclass(slots=True)
-class _WebSocketWriter:
-    queue: asyncio.Queue[bytes]
-    send_lock: asyncio.Lock
-    task: asyncio.Task[None] | None = None
-
-
-@dataclass(slots=True)
-class _StreamState:
-    input_queue: asyncio.Queue[tuple[int, bytes]]
-    subscription: Any | None = None
-    task: asyncio.Task[None] | None = None
+class _WorkerStream:
+    subscription: Any
     udp_clients: set[Any] = field(default_factory=set)
-    ws_clients: dict[Any, _WebSocketWriter] = field(default_factory=dict)
     last_ros_seq: int = -1
+
+
+def _serialize_datagram(
+    stream_name: str,
+    ros_seq: int,
+    data: bytes,
+    first_wire_seq: int,
+) -> tuple[tuple[bytes, ...], int]:
+    """Validate, split, and serialize one MPEG-TS ROS datagram."""
+    if len(data) % 188 != 0:
+        raise ValueError(
+            f'received {len(data)} bytes for stream {stream_name}, '
+            'which is not a multiple of 188'
+        )
+
+    payloads: list[bytes] = []
+    wire_seq = first_wire_seq
+
+    for offset in range(0, len(data), 188):
+        ts_packet = data[offset:offset + 188]
+        if not ts_packet or ts_packet[0] != 0x47:
+            raise ValueError(
+                f'received TS packet with invalid sync byte for stream {stream_name}'
+            )
+
+        message = generic_pb2.Message()
+        message.seq = wire_seq
+        message.mpeg_ts_datagram.stream_name = stream_name
+        message.mpeg_ts_datagram.data = ts_packet
+        message.mpeg_ts_datagram.seq = ros_seq
+        payloads.append(message.SerializeToString())
+        wire_seq = (wire_seq + 1) & 0x7FFFFFFF
+
+    return tuple(payloads), wire_seq
+
+
+class _MpegTsProcessRuntime:
+    """ROS 2 executor and UDP fan-out owned entirely by the worker process."""
+
+    def __init__(self, config: dict, commands) -> None:
+        self._config = config
+        self._commands = commands
+        self._stop_requested = False
+        self._node = None
+        self._executor = None
+        self._udp_socket: socket.socket | None = None
+        self._streams: dict[str, _WorkerStream] = {}
+        self._wire_seq = 0
+        self._dropped_udp_packets = 0
+        self._last_udp_drop_log = 0.0
+
+    def run(self, ready_connection) -> None:
+        import rclpy
+        from rclpy.executors import SingleThreadedExecutor
+        from rclpy.node import Node
+
+        try:
+            rclpy.init(signal_handler_options=rclpy.SignalHandlerOptions.NO)
+            self._node = Node('xbot2_gui_mpegts')
+            self._executor = SingleThreadedExecutor(context=self._node.context)
+            self._executor.add_node(self._node)
+
+            self._udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            send_buffer = int(self._config['udp_send_buffer_bytes'])
+            if send_buffer > 0:
+                self._udp_socket.setsockopt(
+                    socket.SOL_SOCKET,
+                    socket.SO_SNDBUF,
+                    send_buffer,
+                )
+            self._udp_socket.bind(
+                (str(self._config['udp_host']), int(self._config['udp_port']))
+            )
+            self._udp_socket.setblocking(False)
+            udp_port = self._udp_socket.getsockname()[1]
+
+            ready_connection.send({
+                'ok': True,
+                'pid': os.getpid(),
+                'udp_port': udp_port,
+            })
+            ready_connection.close()
+
+            print(
+                f'MPEG-TS process {os.getpid()} started with dedicated ROS 2 '
+                f'executor and UDP source port {udp_port}'
+            )
+
+            spin_timeout_sec = float(self._config['spin_timeout_sec'])
+            while not self._stop_requested:
+                self._drain_commands()
+                if self._stop_requested:
+                    break
+                self._executor.spin_once(timeout_sec=spin_timeout_sec)
+
+            self._drain_commands()
+        except BaseException as exc:
+            try:
+                ready_connection.send({
+                    'ok': False,
+                    'error': repr(exc),
+                    'traceback': traceback.format_exc(),
+                })
+                ready_connection.close()
+            except BaseException:
+                pass
+            traceback.print_exc()
+        finally:
+            self._destroy_all_streams()
+
+            if self._executor is not None:
+                try:
+                    self._executor.shutdown(timeout_sec=1.0)
+                except BaseException:
+                    traceback.print_exc()
+
+            if self._node is not None:
+                try:
+                    self._node.destroy_node()
+                except BaseException:
+                    traceback.print_exc()
+
+            if self._udp_socket is not None:
+                self._udp_socket.close()
+
+            try:
+                import rclpy
+                if rclpy.ok():
+                    rclpy.shutdown()
+            except BaseException:
+                traceback.print_exc()
+
+            print(f'MPEG-TS process {os.getpid()} stopped')
+
+    def _drain_commands(self) -> None:
+        while True:
+            try:
+                operation, *args = self._commands.get_nowait()
+            except queue.Empty:
+                return
+
+            if operation == 'shutdown':
+                self._stop_requested = True
+                return
+            if operation == 'add_udp':
+                self._add_udp_client(args[0], args[1])
+            elif operation == 'remove_udp':
+                self._remove_udp_client(args[0], args[1])
+            else:
+                print(f'unknown MPEG-TS process command: {operation}')
+
+    def _create_stream(self, stream_name: str) -> _WorkerStream:
+        from rclpy.qos import (
+            QoSDurabilityPolicy,
+            QoSHistoryPolicy,
+            QoSProfile,
+            QoSReliabilityPolicy,
+        )
+
+        qos_profile = QoSProfile(
+            reliability=QoSReliabilityPolicy.BEST_EFFORT,
+            history=QoSHistoryPolicy.KEEP_LAST,
+            durability=QoSDurabilityPolicy.VOLATILE,
+            depth=int(self._config['qos_depth']),
+        )
+        subscription = self._node.create_subscription(
+            MpegTsDatagram,
+            stream_name,
+            functools.partial(self._on_datagram, stream_name=stream_name),
+            qos_profile,
+        )
+        stream = _WorkerStream(subscription=subscription)
+        self._streams[stream_name] = stream
+        print(f'MPEG-TS process subscribed to {stream_name}')
+        return stream
+
+    def _destroy_stream(self, stream_name: str) -> None:
+        stream = self._streams.pop(stream_name, None)
+        if stream is None or self._node is None:
+            return
+        self._node.destroy_subscription(stream.subscription)
+        print(f'MPEG-TS process unsubscribed from {stream_name}')
+
+    def _destroy_all_streams(self) -> None:
+        for stream_name in tuple(self._streams):
+            try:
+                self._destroy_stream(stream_name)
+            except BaseException:
+                traceback.print_exc()
+
+    def _add_udp_client(self, stream_name: str, client) -> None:
+        stream = self._streams.get(stream_name)
+        if stream is None:
+            stream = self._create_stream(stream_name)
+        stream.udp_clients.add(client)
+
+    def _remove_udp_client(self, stream_name: str, client) -> None:
+        stream = self._streams.get(stream_name)
+        if stream is None:
+            return
+        stream.udp_clients.discard(client)
+        if not stream.udp_clients:
+            self._destroy_stream(stream_name)
+
+    def _on_datagram(self, msg: MpegTsDatagram, stream_name: str) -> None:
+        """This ROS callback and all downstream work run in the child process."""
+        try:
+            stream = self._streams.get(stream_name)
+            if stream is None or not stream.udp_clients:
+                return
+
+            ros_seq = int(msg.seq)
+            if stream.last_ros_seq != -1 and ros_seq > stream.last_ros_seq + 1:
+                skipped = ros_seq - stream.last_ros_seq - 1
+                print(f'WARNING: skipped {skipped} MPEG-TS datagrams for {stream_name}')
+            stream.last_ros_seq = ros_seq
+
+            payloads, self._wire_seq = _serialize_datagram(
+                stream_name,
+                ros_seq,
+                bytes(msg.data),
+                self._wire_seq,
+            )
+            self._send_udp(payloads, stream)
+        except ValueError as exc:
+            print(f'WARNING: {exc}')
+        except BaseException:
+            traceback.print_exc()
+
+    def _send_udp(self, payloads: tuple[bytes, ...], stream: _WorkerStream) -> None:
+        if self._udp_socket is None:
+            return
+
+        for payload in payloads:
+            for client in tuple(stream.udp_clients):
+                try:
+                    self._udp_socket.sendto(payload, client)
+                except BlockingIOError:
+                    self._record_udp_drop()
+                except (ConnectionError, OSError, RuntimeError) as exc:
+                    print(f'removing failed MPEG-TS UDP client {client}: {exc}')
+                    stream.udp_clients.discard(client)
+
+    def _record_udp_drop(self) -> None:
+        self._dropped_udp_packets += 1
+        now = time.monotonic()
+        if now - self._last_udp_drop_log >= 1.0:
+            print(
+                'WARNING: MPEG-TS UDP socket dropped '
+                f'{self._dropped_udp_packets} packets because its send buffer was full'
+            )
+            self._dropped_udp_packets = 0
+            self._last_udp_drop_log = now
+
+
+def _mpegts_process_main(config: dict, commands, ready_connection) -> None:
+    _MpegTsProcessRuntime(config, commands).run(ready_connection)
+
+
+class _MpegTsPipelineProcess:
+    def __init__(self, config: dict) -> None:
+        self._context = multiprocessing.get_context('spawn')
+        self._commands = self._context.Queue(maxsize=int(config['command_queue_size']))
+        parent_connection, child_connection = self._context.Pipe(duplex=False)
+        self._parent_connection = parent_connection
+        self._child_connection = child_connection
+        self._process = self._context.Process(
+            target=_mpegts_process_main,
+            args=(config, self._commands, child_connection),
+            name='mpegts-pipeline',
+            daemon=True,
+        )
+        self.pid: int | None = None
+        self.udp_port = 0
+
+    @property
+    def is_alive(self) -> bool:
+        return self._process.is_alive()
+
+    def start(self, timeout_sec: float) -> None:
+        self._process.start()
+        self._child_connection.close()
+
+        if not self._parent_connection.poll(timeout_sec):
+            self._parent_connection.close()
+            self._process.terminate()
+            self._process.join(timeout=1.0)
+            self._close_queue()
+            raise TimeoutError('timed out starting the MPEG-TS pipeline process')
+
+        try:
+            status = self._parent_connection.recv()
+        except EOFError as exc:
+            self._parent_connection.close()
+            self._process.join(timeout=1.0)
+            self._close_queue()
+            raise RuntimeError('MPEG-TS pipeline process exited during startup') from exc
+        self._parent_connection.close()
+        if not status.get('ok'):
+            self._process.join(timeout=1.0)
+            self._close_queue()
+            details = status.get('traceback') or status.get('error') or 'unknown error'
+            raise RuntimeError(f'failed to start MPEG-TS pipeline process:\n{details}')
+
+        self.pid = int(status['pid'])
+        self.udp_port = int(status['udp_port'])
+
+    def submit(self, operation: str, *args) -> None:
+        if not self._process.is_alive():
+            raise RuntimeError('MPEG-TS pipeline process is not running')
+        try:
+            self._commands.put_nowait((operation, *args))
+        except queue.Full as exc:
+            raise RuntimeError('MPEG-TS pipeline command queue is full') from exc
+
+    def _close_queue(self) -> None:
+        self._commands.close()
+        self._commands.join_thread()
+
+    def close(self, timeout_sec: float = 5.0) -> None:
+        if not self._process.is_alive():
+            self._process.join(timeout=0.1)
+            self._close_queue()
+            return
+
+        try:
+            self.submit('shutdown')
+        except RuntimeError:
+            pass
+
+        self._process.join(timeout=timeout_sec)
+        if self._process.is_alive():
+            self._process.terminate()
+            self._process.join(timeout=1.0)
+            if self._process.is_alive():
+                self._process.kill()
+                self._process.join(timeout=1.0)
+
+        self._close_queue()
 
 
 class MpegTsVideoHandler:
@@ -39,37 +372,38 @@ class MpegTsVideoHandler:
     def __init__(self, srv: ServerBase, config: dict | None = None) -> None:
         config = config or {}
 
+        if getattr(ros_handle, 'ros_version', None) != 2:
+            raise RuntimeError('the isolated MPEG-TS pipeline requires ROS 2')
+
         self.srv = srv
+        self._closed = False
         self.srv.register_ws_coroutine(self.handle_ws_msg)
         self.srv.add_route('GET', '/video/get_names', self.get_names_handler, 'video_get_names')
-
-        # Keep both producer and client queues bounded. For a live video stream,
-        # dropping stale packets is preferable to accumulating seconds of latency.
-        self.input_queue_size = int(config.get('input_queue_size', 4))
-        self.ws_queue_size = int(config.get('ws_queue_size', 256))
-        self.send_timeout_sec = float(config.get('send_timeout_sec', 0.25))
-        self.event_loop_yield_packets = int(config.get('event_loop_yield_packets', 32))
-        worker_threads = int(config.get('worker_threads', 1))
-
-        if self.input_queue_size < 1:
-            raise ValueError('input_queue_size must be positive')
-        if self.ws_queue_size < 1:
-            raise ValueError('ws_queue_size must be positive')
-        if worker_threads < 1:
-            raise ValueError('worker_threads must be positive')
-
-        self.loop = asyncio.get_running_loop()
-        self.streams: dict[str, _StreamState] = {}
-        self._ws_send_locks: dict[Any, asyncio.Lock] = {}
-        self._fallback_wire_seq = 0
-        self._closed = False
-        self._executor = ThreadPoolExecutor(
-            max_workers=worker_threads,
-            thread_name_prefix='mpegts-fanout',
+        self.srv.add_route(
+            'GET',
+            '/video/transport',
+            self.get_transport_handler,
+            'video_transport',
         )
 
-        # aiohttp invokes this during graceful shutdown. The getattr keeps the
-        # handler usable with the lightweight ServerBase fakes used by tests.
+        process_config = {
+            'udp_host': str(config.get('udp_host', '0.0.0.0')),
+            'udp_port': int(config.get('udp_port', 0)),
+            'udp_send_buffer_bytes': int(
+                config.get('udp_send_buffer_bytes', 4 * 1024 * 1024)
+            ),
+            'qos_depth': int(config.get('qos_depth', 8)),
+            'spin_timeout_sec': float(config.get('spin_timeout_sec', 0.005)),
+            'command_queue_size': int(config.get('command_queue_size', 256)),
+        }
+        if process_config['qos_depth'] < 1:
+            raise ValueError('qos_depth must be positive')
+        if process_config['command_queue_size'] < 1:
+            raise ValueError('command_queue_size must be positive')
+
+        self._pipeline = _MpegTsPipelineProcess(process_config)
+        self._pipeline.start(float(config.get('startup_timeout_sec', 10.0)))
+
         app = getattr(self.srv, 'app', None)
         if app is not None:
             app.on_cleanup.append(self._on_cleanup)
@@ -77,296 +411,36 @@ class MpegTsVideoHandler:
     @utils.handle_exceptions
     async def get_names_handler(self, request):
         topic_name_type_list = ros_handle.get_topic_names_and_types()
-        vs_topics = [
+        topics = [
             topic_name
             for topic_name, topic_types in topic_name_type_list
             if 'mpeg_ts_image_transport_msgs/msg/MpegTsDatagram' in topic_types
         ]
-
-        return web.Response(text=json.dumps({
+        return web.json_response({
             'success': True,
             'message': 'ok',
-            'topics': vs_topics,
-        }))
+            'topics': topics,
+        })
 
-    @staticmethod
-    def _encode_datagram(
-        stream_name: str,
-        ros_seq: int,
-        data: bytes,
-        first_wire_seq: int,
-    ) -> tuple[bytes, ...]:
-        """Validate, split, and serialize a ROS datagram in a worker thread."""
-        if len(data) % 188 != 0:
-            raise ValueError(
-                f'received {len(data)} bytes for stream {stream_name}, '
-                'which is not a multiple of 188'
-            )
-
-        encoded_packets: list[bytes] = []
-        for packet_index, offset in enumerate(range(0, len(data), 188)):
-            ts_packet = data[offset:offset + 188]
-            if ts_packet[0] != 0x47:
-                raise ValueError(
-                    f'received TS packet with invalid sync byte for stream {stream_name}'
-                )
-
-            message = generic_pb2.Message()
-            message.seq = first_wire_seq + packet_index
-            message.mpeg_ts_datagram.stream_name = stream_name
-            message.mpeg_ts_datagram.data = ts_packet
-            message.mpeg_ts_datagram.seq = ros_seq
-            encoded_packets.append(message.SerializeToString())
-
-        return tuple(encoded_packets)
-
-    def _reserve_wire_sequences(self, count: int) -> int:
-        """Reserve sequence IDs without serializing on the asyncio thread."""
-        if hasattr(self.srv, 'udp_msg_seq'):
-            first = self.srv.udp_msg_seq
-            self.srv.udp_msg_seq += count
-            return first
-
-        first = self._fallback_wire_seq
-        self._fallback_wire_seq += count
-        return first
-
-    @staticmethod
-    def _put_latest(queue: asyncio.Queue, item) -> None:
-        """Put without blocking, dropping the oldest queued item if necessary."""
-        if queue.full():
-            try:
-                queue.get_nowait()
-            except asyncio.QueueEmpty:
-                pass
-
-        try:
-            queue.put_nowait(item)
-        except asyncio.QueueFull:
-            # Another producer can win between get_nowait() and put_nowait().
-            pass
-
-    def _enqueue_ros_datagram(
-        self,
-        stream_name: str,
-        state: _StreamState,
-        item: tuple[int, bytes],
-    ) -> None:
-        if self._closed or self.streams.get(stream_name) is not state:
-            return
-        self._put_latest(state.input_queue, item)
-
-    def on_th_pkt_recv(
-        self,
-        msg: MpegTsDatagram,
-        stream_name: str,
-        state: _StreamState,
-    ) -> None:
-        """ROS callback: copy data and return; all processing happens elsewhere."""
-        item = (msg.seq, bytes(msg.data))
-        self.loop.call_soon_threadsafe(
-            self._enqueue_ros_datagram,
-            stream_name,
-            state,
-            item,
-        )
-
-    def _send_udp_packet(self, payload: bytes, state: _StreamState) -> None:
-        """Send pre-serialized video bytes on the established UDP socket."""
-        udp_socket = getattr(self.srv, 'udp', None)
-        live_udp_clients = getattr(self.srv, 'udp_clients', set())
-
-        expired = {client for client in state.udp_clients if client not in live_udp_clients}
-        state.udp_clients.difference_update(expired)
-
-        if udp_socket is None:
-            return
-
-        for client in tuple(state.udp_clients):
-            try:
-                udp_socket.sendto(payload, client)
-            except (ConnectionError, OSError, RuntimeError) as exc:
-                print(f'removing failed udp client {client}: {exc}')
-                state.udp_clients.discard(client)
-
-    async def _ws_writer_loop(
-        self,
-        stream_name: str,
-        state: _StreamState,
-        websocket,
-        writer: _WebSocketWriter,
-    ) -> None:
-        try:
-            while self.streams.get(stream_name) is state:
-                payload = await writer.queue.get()
-
-                live_websockets = getattr(self.srv, 'ws_clients', None)
-                if live_websockets is not None and websocket not in live_websockets:
-                    break
-
-                async with writer.send_lock:
-                    await asyncio.wait_for(
-                        websocket.send_bytes(payload),
-                        timeout=self.send_timeout_sec,
-                    )
-        except asyncio.CancelledError:
-            raise
-        except (asyncio.TimeoutError, ConnectionError, OSError, RuntimeError) as exc:
-            print(f'removing slow/failed websocket from stream {stream_name}: {exc}')
-        except BaseException as exc:
-            print(f'error sending MPEG-TS stream {stream_name}: {exc}')
-        finally:
-            current = state.ws_clients.get(websocket)
-            if current is writer:
-                del state.ws_clients[websocket]
-            self._maybe_stop_stream(stream_name, state)
-
-    def _add_ws_client(self, stream_name: str, state: _StreamState, websocket) -> None:
-        if websocket in state.ws_clients:
-            return
-
-        send_lock = self._ws_send_locks.setdefault(websocket, asyncio.Lock())
-        writer = _WebSocketWriter(
-            queue=asyncio.Queue(maxsize=self.ws_queue_size),
-            send_lock=send_lock,
-        )
-        state.ws_clients[websocket] = writer
-        writer.task = self.srv.schedule_task(
-            self._ws_writer_loop(stream_name, state, websocket, writer)
-        )
-
-    def _fan_out_packet(self, payload: bytes, state: _StreamState) -> None:
-        # UDP sendto() is non-blocking, so a second UDP source socket would not
-        # remove meaningful work from the event loop. Reusing the discovered
-        # socket also avoids changing source-port/NAT behaviour for clients.
-        self._send_udp_packet(payload, state)
-
-        # WebSocket writes remain on the asyncio loop, but every client has an
-        # independent bounded queue and writer task. A slow peer can therefore
-        # drop its own stale video packets without delaying any other peer.
-        for writer in tuple(state.ws_clients.values()):
-            self._put_latest(writer.queue, payload)
-
-    async def _run_stream(self, stream_name: str, state: _StreamState) -> None:
-        print(f'{stream_name} started')
-
-        try:
-            while self.streams.get(stream_name) is state:
-                ros_seq, data = await state.input_queue.get()
-
-                if state.last_ros_seq != -1 and ros_seq > state.last_ros_seq + 1:
-                    skipped = ros_seq - state.last_ros_seq - 1
-                    print(f'WARNING: skipped {skipped} datagrams for stream {stream_name}')
-                state.last_ros_seq = ros_seq
-
-                if len(data) % 188 != 0:
-                    print(
-                        f'WARNING: received {len(data)} bytes for stream {stream_name}, '
-                        'which is not a multiple of 188'
-                    )
-                    continue
-
-                packet_count = len(data) // 188
-                first_wire_seq = self._reserve_wire_sequences(packet_count)
-
-                try:
-                    encode = functools.partial(
-                        self._encode_datagram,
-                        stream_name,
-                        ros_seq,
-                        data,
-                        first_wire_seq,
-                    )
-                    packets = await self.loop.run_in_executor(self._executor, encode)
-                except ValueError as exc:
-                    print(f'WARNING: {exc}')
-                    continue
-
-                for packet_index, payload in enumerate(packets, start=1):
-                    if self.streams.get(stream_name) is not state:
-                        break
-
-                    self._fan_out_packet(payload, state)
-
-                    if (
-                        self.event_loop_yield_packets > 0
-                        and packet_index % self.event_loop_yield_packets == 0
-                    ):
-                        await asyncio.sleep(0)
-
-                self._maybe_stop_stream(stream_name, state)
-        except asyncio.CancelledError:
-            raise
-        finally:
-            if self.streams.get(stream_name) is state:
-                self._remove_stream(stream_name, state)
-            print(f'{stream_name} exiting')
-
-    def _remove_stream(self, stream_name: str, state: _StreamState) -> None:
-        if self.streams.get(stream_name) is state:
-            del self.streams[stream_name]
-
-        if state.subscription is not None:
-            try:
-                ros_handle.destroy_subscription(state.subscription)
-            except BaseException as exc:
-                print(f'error destroying subscription for {stream_name}: {exc}')
-            state.subscription = None
-
-        current_task = asyncio.current_task()
-
-        if state.task is not None and state.task is not current_task:
-            state.task.cancel()
-
-        for writer in tuple(state.ws_clients.values()):
-            if writer.task is not None and writer.task is not current_task:
-                writer.task.cancel()
-        state.ws_clients.clear()
-        state.udp_clients.clear()
-
-    def _maybe_stop_stream(self, stream_name: str, state: _StreamState) -> None:
-        if state.ws_clients or state.udp_clients:
-            return
-        if self.streams.get(stream_name) is state:
-            print(f'no more clients for stream {stream_name}, unsubscribing from ros topic')
-            self._remove_stream(stream_name, state)
+    @utils.handle_exceptions
+    async def get_transport_handler(self, request):
+        return web.json_response({
+            'success': True,
+            'message': 'MPEG-TS runs in an isolated ROS 2 process',
+            'mode': 'dedicated_process_udp',
+            'pid': self._pipeline.pid,
+            'udp_source_port': self._pipeline.udp_port,
+            'websocket_video_supported': False,
+            'alive': self._pipeline.is_alive,
+        })
 
     def subscribe_to_stream(self, stream_name: str, proto: str, sock) -> bool:
-        state = self.streams.get(stream_name)
-
-        if state is None:
-            state = _StreamState(
-                input_queue=asyncio.Queue(maxsize=self.input_queue_size),
+        if proto != 'udp':
+            raise RuntimeError(
+                'isolated MPEG-TS transport is UDP-only; websocket video would '
+                'put frame delivery back on the main asyncio loop'
             )
-            self.streams[stream_name] = state
-
-        if proto == 'ws':
-            self._add_ws_client(stream_name, state, sock)
-        elif proto == 'udp':
-            state.udp_clients.add(sock)
-        else:
-            raise ValueError(f'unsupported video transport {proto!r}')
-
-        if state.subscription is not None:
-            return True
-
-        try:
-            state.subscription = ros_handle.create_subscription(
-                MpegTsDatagram,
-                stream_name,
-                functools.partial(
-                    self.on_th_pkt_recv,
-                    stream_name=stream_name,
-                    state=state,
-                ),
-                1024,
-                best_effort=True,
-            )
-            state.task = self.srv.schedule_task(self._run_stream(stream_name, state))
-        except BaseException:
-            self._remove_stream(stream_name, state)
-            raise
-
+        self._pipeline.submit('add_udp', stream_name, sock)
         return True
 
     async def handle_ws_msg(self, msg, proto, sock):
@@ -376,35 +450,27 @@ class MpegTsVideoHandler:
         stream_name = msg['stream_name']
         operation = msg.get('operation', 'connect')
 
+        if proto != 'udp':
+            await self.srv.log(
+                'MPEG-TS websocket transport is disabled because the video data '
+                'plane is isolated from the main asyncio loop',
+                sev=1,
+            )
+            return
+
         if operation == 'disconnect':
-            state = self.streams.get(stream_name)
-            if state is not None:
-                writer = state.ws_clients.pop(sock, None)
-                if writer is not None and writer.task is not None:
-                    writer.task.cancel()
-                state.udp_clients.discard(sock)
-                self._maybe_stop_stream(stream_name, state)
-            await self.srv.log(f'disconnected client from stream {stream_name}')
+            self._pipeline.submit('remove_udp', stream_name, sock)
+            await self.srv.log(f'disconnected UDP client from stream {stream_name}')
             return
 
         self.subscribe_to_stream(stream_name, proto, sock)
-        await self.srv.log(f'new client {proto} {sock} for stream {stream_name}')
+        await self.srv.log(
+            f'new MPEG-TS UDP client {sock} for stream {stream_name}; '
+            f'worker pid={self._pipeline.pid}'
+        )
 
     async def _on_cleanup(self, app) -> None:
+        if self._closed:
+            return
         self._closed = True
-        tasks: list[asyncio.Task] = []
-
-        for stream_name, state in tuple(self.streams.items()):
-            if state.task is not None:
-                tasks.append(state.task)
-            tasks.extend(
-                writer.task
-                for writer in state.ws_clients.values()
-                if writer.task is not None
-            )
-            self._remove_stream(stream_name, state)
-
-        if tasks:
-            await asyncio.gather(*tasks, return_exceptions=True)
-
-        self._executor.shutdown(wait=False, cancel_futures=True)
+        await asyncio.to_thread(self._pipeline.close)

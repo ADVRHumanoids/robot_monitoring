@@ -128,8 +128,10 @@ class _MpegTsProcessRuntime:
         self._expected_parent_pid = expected_parent_pid
         self._last_heartbeat = time.monotonic()
         self._stop_requested = False
+        self._shutdown_reason: str | None = None
         self._node = None
         self._executor = None
+        self._control_timer = None
         self._udp_socket: socket.socket | None = None
         self._streams: dict[str, _WorkerStream] = {}
         self._wire_seq = 0
@@ -140,7 +142,7 @@ class _MpegTsProcessRuntime:
         _arm_linux_parent_death_signal(self._expected_parent_pid)
 
         import rclpy
-        from rclpy.executors import SingleThreadedExecutor
+        from rclpy.executors import ExternalShutdownException, SingleThreadedExecutor
         from rclpy.node import Node
 
         try:
@@ -151,6 +153,10 @@ class _MpegTsProcessRuntime:
             self._node = Node('xbot2_gui_mpegts')
             self._executor = SingleThreadedExecutor(context=self._node.context)
             self._executor.add_node(self._node)
+            self._control_timer = self._node.create_timer(
+                float(self._config['control_timer_period_sec']),
+                self._on_control_timer,
+            )
 
             self._udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             send_buffer = int(self._config['udp_send_buffer_bytes'])
@@ -179,17 +185,12 @@ class _MpegTsProcessRuntime:
                 f'{self._config["ts_packets_per_datagram"]} TS packets/datagram'
             )
 
-            spin_timeout_sec = float(self._config['spin_timeout_sec'])
-            while not self._stop_requested:
-                self._drain_commands()
-                if self._stop_requested:
-                    break
-                if not self._parent_is_healthy():
-                    print('MPEG-TS worker lost its parent heartbeat; exiting')
-                    break
-                self._executor.spin_once(timeout_sec=spin_timeout_sec)
-
-            self._drain_commands()
+            try:
+                self._executor.spin()
+            except ExternalShutdownException:
+                # The control timer shuts down this process-local ROS context to
+                # wake the blocking executor when commanded or orphaned.
+                pass
         except BaseException as exc:
             try:
                 ready_connection.send({
@@ -203,6 +204,13 @@ class _MpegTsProcessRuntime:
             traceback.print_exc()
         finally:
             self._destroy_all_streams()
+
+            if self._control_timer is not None and self._node is not None:
+                try:
+                    self._node.destroy_timer(self._control_timer)
+                except BaseException:
+                    traceback.print_exc()
+                self._control_timer = None
 
             if self._executor is not None:
                 try:
@@ -232,6 +240,34 @@ class _MpegTsProcessRuntime:
                 traceback.print_exc()
 
             print(f'MPEG-TS process {os.getpid()} stopped')
+
+    def _on_control_timer(self) -> None:
+        """Drain process commands and watchdog the parent from the ROS executor."""
+        self._drain_commands()
+
+        if self._stop_requested:
+            self._request_ros_shutdown('shutdown command received')
+            return
+
+        if not self._parent_is_healthy():
+            self._request_ros_shutdown('parent heartbeat lost')
+
+    def _request_ros_shutdown(self, reason: str) -> None:
+        if self._shutdown_reason is not None:
+            return
+
+        self._shutdown_reason = reason
+        self._stop_requested = True
+        print(f'MPEG-TS worker shutting down: {reason}')
+
+        if self._node is None:
+            return
+
+        try:
+            self._node.context.try_shutdown()
+        except RuntimeError:
+            # The context may already have been shut down by another path.
+            pass
 
     def _parent_is_healthy(self) -> bool:
         if os.name == 'posix' and os.getppid() != self._expected_parent_pid:
@@ -540,7 +576,9 @@ class MpegTsVideoHandler:
                 config.get('udp_send_buffer_bytes', 4 * 1024 * 1024)
             ),
             'qos_depth': int(config.get('qos_depth', 8)),
-            'spin_timeout_sec': float(config.get('spin_timeout_sec', 0.005)),
+            'control_timer_period_sec': float(
+                config.get('control_timer_period_sec', 0.01)
+            ),
             'command_queue_size': int(config.get('command_queue_size', 256)),
             'ts_packets_per_datagram': int(
                 config.get(
@@ -557,6 +595,8 @@ class MpegTsVideoHandler:
         }
         if process_config['qos_depth'] < 1:
             raise ValueError('qos_depth must be positive')
+        if process_config['control_timer_period_sec'] <= 0:
+            raise ValueError('control_timer_period_sec must be positive')
         if process_config['command_queue_size'] < 1:
             raise ValueError('command_queue_size must be positive')
         if not 1 <= process_config['ts_packets_per_datagram'] <= MAX_TS_PACKETS_PER_DATAGRAM:
@@ -573,11 +613,19 @@ class MpegTsVideoHandler:
             raise ValueError(
                 'heartbeat_timeout_sec must be greater than heartbeat_interval_sec'
             )
+        if (
+            process_config['control_timer_period_sec']
+            >= process_config['heartbeat_timeout_sec']
+        ):
+            raise ValueError(
+                'control_timer_period_sec must be less than heartbeat_timeout_sec'
+            )
 
         self._pipeline = _MpegTsPipelineProcess(process_config)
         self._pipeline.start(float(config.get('startup_timeout_sec', 10.0)))
         self._ts_packets_per_datagram = process_config['ts_packets_per_datagram']
         self._heartbeat_timeout_sec = process_config['heartbeat_timeout_sec']
+        self._control_timer_period_sec = process_config['control_timer_period_sec']
 
         app = getattr(self.srv, 'app', None)
         if app is not None:
@@ -606,6 +654,7 @@ class MpegTsVideoHandler:
             'pid': self._pipeline.pid,
             'udp_source_port': self._pipeline.udp_port,
             'ts_packets_per_datagram': self._ts_packets_per_datagram,
+            'control_timer_period_sec': self._control_timer_period_sec,
             'heartbeat_timeout_sec': self._heartbeat_timeout_sec,
             'websocket_video_supported': False,
             'alive': self._pipeline.is_alive,

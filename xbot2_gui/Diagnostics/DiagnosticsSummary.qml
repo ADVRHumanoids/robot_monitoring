@@ -12,71 +12,29 @@ Control {
 
     id: root
 
-    property alias model: repeater.model
+    property var model
 
-    contentItem: ColumnLayout {
+    contentItem: GridLayout {
 
-        spacing: 12
+        columns: 2
+        rows: 1
 
-        RowLayout {
+        columnSpacing: 12
 
+        IssueListView {
+            Layout.fillHeight: true
             Layout.fillWidth: true
-
-            Label {
-                text: 'Active issues'
-                font.capitalization: Font.AllUppercase
-                font.bold: true
-                color: palette.accent
-                font.pixelSize: CommonProperties.font.h3
-                Layout.fillWidth: true
-            }
-
-            ToolButton {
-                id: warnBtn
-                text: 'Warning'
-                checkable: true
-                checked: true
-            }
-
-            ToolButton {
-                id: staleBtn
-                text: 'Stale'
-                checkable: true
-                checked: true
-            }
-
+            model: root.model
+            title: 'Errors'
+            level: 2
         }
 
-        ScrollView {
-            id: scroll
-            Layout.fillWidth: true
+        IssueListView {
             Layout.fillHeight: true
-            contentWidth: availableWidth
-
-            GridLayout {
-                width: scroll.contentWidth
-                columns: Math.ceil(width / 400)
-                rows: Math.ceil(repeater.count / columns)
-                uniformCellHeights: true
-                uniformCellWidths: true
-                columnSpacing: 16
-                rowSpacing: 16
-                Label {
-                    Layout.fillHeight: true
-                    Layout.fillWidth: true
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    text: 'There are no active issues'
-                    color: palette.disabled.text
-                    font.pixelSize: CommonProperties.font.h3
-                    visible: repeater.count === 0
-                }
-
-                Repeater {
-                    id: repeater
-                    delegate: summaryDelegate
-                }
-            }
+            Layout.fillWidth: true
+            model: root.model
+            title: 'Warnings'
+            level: 1
         }
     }
 

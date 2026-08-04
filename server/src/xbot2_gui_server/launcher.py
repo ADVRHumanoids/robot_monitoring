@@ -90,6 +90,8 @@ class Launcher:
         self.proc_stdout_prev_time = 0
         self.proc_stdout_max_kbps = 1000
         self.proc_stdout_enabled = True
+        self.proc_stdout_watch_retry_delay = float(
+            config.get('watch_retry_delay', 1.0))
 
 
     async def stop_tasks(self):
@@ -385,18 +387,54 @@ class Launcher:
         return printer
 
 
+    async def watch_process_output(self, process):
+        num_lines = 100
+        curr_retry_delay = self.proc_stdout_watch_retry_delay
+        while True:
+            try:
+                await exe.watch(process=process,
+                                cfg=self.cfg,
+                                printer_coro_factory=self.create_proc_printer,
+                                num_lines=num_lines)
+                await self.srv.log(
+                    f'process output watch for {process} ended; restarting',
+                    sev=1)
+            except asyncio.CancelledError:
+                raise
+            except Exception as e:
+                message = (
+                    f'process output watch for {process} failed: '
+                    f'{e.__class__.__name__} {e}; restarting'
+                )
+                await self.srv.log(
+                    message, sev=2)
+
+            # After the initial history replay, retry from the live end of the
+            # output file to avoid flooding clients with duplicate old lines.
+            num_lines = 0
+            await asyncio.sleep(curr_retry_delay)
+            
+            # exponential backoff for retry delay, up to 30 seconds
+            curr_retry_delay = min(curr_retry_delay * 2, 30.0)
+
+
     async def watch_all_processes(self):
-        await exe.watch(process=None, 
-                        cfg=self.cfg, 
-                        printer_coro_factory=self.create_proc_printer,
-                        num_lines=100)
+        tasks = [asyncio.create_task(self.watch_process_output(process))
+                 for process in self.get_process_names()]
+
+        try:
+            await asyncio.gather(*tasks)
+        finally:
+            for task in tasks:
+                task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
 
 
     async def status(self):
 
         status = await exe.status(process=None, cfg=self.cfg, print_to_stdout=False)
 
-        # translate to proc -> (pid, dead, status)
+        # translate to proc -> detailed concert_launcher status
         proc_status = {}
         for s, sdict in status.items():
             proc_status.update(**sdict)
@@ -405,25 +443,35 @@ class Launcher:
 
         # translate to readable names
         for p in self.get_process_names():
-            
-            # parse status into a string
-            if p in proc_status.keys():
-                if proc_status[p]['run_pending']:
-                    status = 'Waiting'
-                elif proc_status[p]['kill_pending']:
-                    status = 'Killing'
-                elif proc_status[p]['dead']:
-                    status = 'Stopped'
-                    if proc_status[p]['exitstatus'] != 0:
-                        status = 'Killed'
-                else:
-                    status = 'Running'
-            else:
-                status = 'Stopped'
-
-            ret[p] = status
+            ret[p] = self.status_from_concert_entry(proc_status.get(p))
 
         return ret
+
+
+    @staticmethod
+    def status_from_concert_entry(entry):
+
+        if entry is None:
+            return 'Stopped'
+
+        state = entry.get('state')
+        if state == 'STARTING' or entry.get('run_pending'):
+            return 'Waiting'
+        if state == 'STOPPING' or entry.get('kill_pending'):
+            return 'Killing'
+        if state == 'RUNNING':
+            return 'Running'
+        if state == 'STOPPED':
+            return 'Stopped'
+        if state == 'UNAVAILABLE':
+            return 'unknown'
+        if state in ('DEAD', 'CONFLICT'):
+            return 'Killed'
+
+        if entry.get('dead'):
+            exitstatus = entry.get('exitstatus')
+            return 'Stopped' if exitstatus in (0, '0', None, '-') else 'Killed'
+        return 'Running'
     
 
     def parse_start_options(self, process, options: dict):

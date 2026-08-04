@@ -83,4 +83,4 @@ class DiagnosticsHandler:
 
             while self.pending:
                 msg = self.pending.popleft()
-                await self.srv.udp_send_to_all(diagnostic_array_to_dict(msg))
+                await self.srv.ws_send_to_all(diagnostic_array_to_dict(msg))

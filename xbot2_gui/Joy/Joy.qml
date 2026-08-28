@@ -126,10 +126,14 @@ Item {
 
         Connections {
             target: client
-            function onMpegTsDatagramReceived(msg) {
-                if(msg.streamName === setupCard.videoStream) {
-                    video.setMpegTsDatagram(msg)
+            function onObjectReceived(msg) {
+                if(msg.type !== 'video_rtsp_url') {
+                    return
                 }
+                if(msg.stream_name !== setupCard.videoStream) {
+                    return
+                }
+                video.source = msg.url
             }
         }
 

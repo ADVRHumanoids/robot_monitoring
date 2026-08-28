@@ -59,7 +59,7 @@ Control {
                     radius: height / 2.
                     color: Qt.darker(statusLabel.color)
                 }
-                color: Logic.levelToColor(root.level)
+                color: enabled ? Logic.levelToColor(root.level) : 'grey'
                 text: Logic.levelToText(root.level)
                 font.bold: true
                 padding: 6

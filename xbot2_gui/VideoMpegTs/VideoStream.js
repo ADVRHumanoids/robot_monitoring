@@ -1,10 +1,15 @@
 function setStream(stream_name, video) {
     var msg = {
-        'type': 'video_request',
+        'type': 'video_rtsp_request',
         'stream_name': stream_name,
         'operation': stream_name === '' ? 'disconnect' : 'connect'
     }
-    client.sendTextMessageUdp(JSON.stringify(msg))
+    client.sendTextMessage(JSON.stringify(msg))
+    if(stream_name === '') {
+       video.source = ''
+    }
+
+    video.restart()
 }
 
 function refreshNames(video = undefined, cb = undefined) {

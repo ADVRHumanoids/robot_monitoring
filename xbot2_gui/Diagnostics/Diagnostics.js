@@ -171,6 +171,11 @@ function expandAllVisible() {
     treeView.expandRecursively()
 }
 
+function collapseAllVisible() {
+    treeView.expandedPathSet.clear()
+    treeView.collapseRecursively()
+}
+
 function setMinimumLevelFilter(level) {
     filterModel.minimumLevel = filterModel.minimumLevel === level ? -1 : level
     Qt.callLater(expandAllVisible)

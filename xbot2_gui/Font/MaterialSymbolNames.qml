@@ -44,6 +44,7 @@ Item {
     property string refresh: '\ue5d5'
     property string visibility: '\ue8f4'
     property string collapseAll: '\ue944'
+    property string expandAll: '\ue946'
     property string apps: '\ue5c3'
     property string more: '\ue5d3'
     property string splitHorz: '\uf674'

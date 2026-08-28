@@ -3,6 +3,8 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import "Diagnostics.js" as Logic
+import Common
+import Font
 
 ColumnLayout {
 
@@ -43,42 +45,72 @@ ColumnLayout {
             textRole: 'path'
         }
 
-        ButtonGroup {
-            buttons: [allButton, warningButton, errorButton]
-        }
 
         Item {
             Layout.preferredWidth: 6
         }
 
+        SmallToolButton {
+            id: collapseButton
+            text: MaterialSymbolNames.collapseAll
+            font.family: 'Material Symbols Outlined'
+            font.variableAxes: {'opsz': 48}
+            font.pixelSize: 16
+            onClicked: Logic.collapseAllVisible()
+        }
+        SmallToolButton {
+            id: expandButton
+            text: MaterialSymbolNames.expandAll
+            font.family: 'Material Symbols Outlined'
+            font.variableAxes: {'opsz': 48}
+            font.pixelSize: 16
+            onClicked: Logic.expandAllVisible()
+        }
         ToolButton {
-            id: allButton
-            text: 'Expand all'
-            // checkable: true
-            // checked: filterModel.minimumLevel <= 0
+            id: infoButton
+            text: 'Info'
+            property bool filterIncludesLevel: true
+            checkable: true
+            checked: filterIncludesLevel
             onClicked: {
-                filterModel.minimumLevel = 0
-                Logic.expandAllVisible()
+                filterModel.enableLevel(0, !filterIncludesLevel)
             }
         }
         ToolButton {
             id: warningButton
             text: 'Warnings'
-            // checkable: true
-            // checked: filterModel.minimumLevel === 1
-            onClicked: Logic.setMinimumLevelFilter(1)
+            property bool filterIncludesLevel: true
+            checkable: true
+            checked: filterIncludesLevel
+            onClicked: {
+                filterModel.enableLevel(1, !filterIncludesLevel)
+            }
         }
         ToolButton {
             id: errorButton
             text: 'Errors'
-            // checkable: true
-            // checked: filterModel.minimumLevel === 2
-            onClicked: Logic.setMinimumLevelFilter(2)
+            property bool filterIncludesLevel: true
+            checkable: true
+            checked: filterIncludesLevel
+            onClicked: {
+                filterModel.enableLevel(2, !filterIncludesLevel)
+            }
+        }
+        ToolButton {
+            id: staleButton
+            text: 'Stale'
+            property bool filterIncludesLevel: true
+            checkable: true
+            checked: filterIncludesLevel
+            onClicked: {
+                filterModel.enableLevel(3, !filterIncludesLevel)
+            }
         }
 
     }
 
     Control {
+
 
         Layout.fillWidth: true
         Layout.fillHeight: true
@@ -107,6 +139,15 @@ ColumnLayout {
                 sourceModel: TreeModel {
                     id: treeModel
                 }
+
+                onAllowedLevelsChanged: {
+                    infoButton.filterIncludesLevel = allowedLevels.includes(0)
+                    warningButton.filterIncludesLevel = allowedLevels.includes(1)
+                    errorButton.filterIncludesLevel = allowedLevels.includes(2)
+                    staleButton.filterIncludesLevel = allowedLevels.includes(3)
+                }
+
+
             }
 
             columnWidthProvider: function(column) {
@@ -135,7 +176,6 @@ ColumnLayout {
                         }
                     ]
                     sourceComponent: columnComponents[model.column]
-
                 }
             }
 

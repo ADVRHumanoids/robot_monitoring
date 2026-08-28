@@ -194,7 +194,7 @@ ApplicationWindow {
             page: "/qt/qml/Joy/Joy.qml"
             iconText: MaterialSymbolNames.joystick
             iconFont: syms.font.family
-            active: client.robotConnected || mainWindow.dbg
+            active: true
         }
 
         PageItem {

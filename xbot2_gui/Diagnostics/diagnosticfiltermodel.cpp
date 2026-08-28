@@ -30,6 +30,35 @@ void DiagnosticFilterModel::setFilterText(const QString &filterText)
     emit filterTextChanged();
 }
 
+QVariantList DiagnosticFilterModel::allowedLevels() const
+{
+    return m_allowedLevels;
+}
+
+void DiagnosticFilterModel::setAllowedLevels(const QVariantList &allowedLevels)
+{
+    QVariantList normalizedLevels;
+    for (const auto &value : allowedLevels) {
+        bool isLevel = false;
+        const int level = value.toInt(&isLevel);
+        if (isLevel && !normalizedLevels.contains(level))
+            normalizedLevels.append(level);
+    }
+
+    if (m_allowedLevels == normalizedLevels)
+        return;
+
+    beginFilterChange();
+    m_allowedLevels = normalizedLevels;
+    const bool minimumLevelWasChanged = m_minimumLevel != -1;
+    m_minimumLevel = -1;
+    endFilterChange(Direction::Rows);
+    invalidate();
+    emit allowedLevelsChanged();
+    if (minimumLevelWasChanged)
+        emit minimumLevelChanged();
+}
+
 int DiagnosticFilterModel::minimumLevel() const
 {
     return m_minimumLevel;
@@ -37,13 +66,42 @@ int DiagnosticFilterModel::minimumLevel() const
 
 void DiagnosticFilterModel::setMinimumLevel(int minimumLevel)
 {
-    if (m_minimumLevel == minimumLevel)
+    QVariantList allowedLevels;
+    for (int level = qMax(0, minimumLevel); level <= 3; ++level)
+        allowedLevels.append(level);
+
+    if (m_minimumLevel == minimumLevel && m_allowedLevels == allowedLevels)
         return;
 
     beginFilterChange();
     m_minimumLevel = minimumLevel;
+    const bool allowedLevelsWereChanged = m_allowedLevels != allowedLevels;
+    m_allowedLevels = allowedLevels;
     endFilterChange(Direction::Rows);
+    invalidate();
     emit minimumLevelChanged();
+    if (allowedLevelsWereChanged)
+        emit allowedLevelsChanged();
+}
+
+bool DiagnosticFilterModel::isLevelEnabled(int level) const
+{
+    return m_allowedLevels.contains(level);
+}
+
+void DiagnosticFilterModel::enableLevel(int level, bool enabled)
+{
+    const bool isEnabled = isLevelEnabled(level);
+    if (isEnabled == enabled)
+        return;
+
+    auto allowedLevels = m_allowedLevels;
+    if (enabled)
+        allowedLevels.append(level);
+    else
+        allowedLevels.removeAll(level);
+
+    setAllowedLevels(allowedLevels);
 }
 
 QModelIndex DiagnosticFilterModel::indexForPath(const QString &path, int column) const
@@ -83,7 +141,9 @@ QStringList DiagnosticFilterModel::expandablePaths() const
 
 bool DiagnosticFilterModel::filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const
 {
-    if (m_filterText.isEmpty() && m_minimumLevel < 0)
+    if (m_filterText.isEmpty() && m_allowedLevels.isEmpty())
+        return false;
+    if (m_filterText.isEmpty() && m_allowedLevels == QVariantList {0, 1, 2, 3})
         return true;
     if (!sourceModel())
         return false;
@@ -114,11 +174,8 @@ bool DiagnosticFilterModel::textMatches(const QModelIndex &sourceIndex) const
 
 bool DiagnosticFilterModel::levelMatches(const QModelIndex &sourceIndex) const
 {
-    if (m_minimumLevel < 0)
-        return true;
-
     const auto level = sourceModel()->data(sourceIndex, TreeModel::LevelRole);
-    return level.isValid() && level.toInt() >= m_minimumLevel;
+    return level.isValid() && m_allowedLevels.contains(level.toInt());
 }
 
 bool DiagnosticFilterModel::hasAcceptedDescendant(const QModelIndex &sourceIndex) const

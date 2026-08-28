@@ -1,19 +1,13 @@
 import QtQuick
+import QtQuick.Controls
 import QtMultimedia
 import Network
 
 Item {
 
-    property bool autoPlay: true
+    property alias source: player.source
 
-    function setMpegTsDatagram(msg) {
-        const skipped = msg.seq - _lastSeq - 1
-        if(_lastSeq !== -1 && skipped !== 0) {
-            console.log(`WARN: skipped ${skipped} MPEG-TS datagrams`)
-        }
-        _lastSeq = msg.seq
-        sock.sendBinaryMessage(msg.data)
-    }
+    property bool autoPlay: true
 
     readonly property string errorString: player.errorString
 
@@ -21,34 +15,27 @@ Item {
 
     signal streamError(string message)
 
-    //
-    id: root
-    implicitHeight: videoOutput.implicitHeight
-    implicitWidth: videoOutput.implicitWidth
-
-    property string _mediaPlayerAddress: "127.0.0.1"
-    property int _mediaPlayerPort: 12345
-    property int _lastSeq: -1
-
-    function _restart() {
+    function restart() {
         retryTimer.stop()
         player.stop()
 
         // Reassigning the source makes QMediaPlayer reopen FFmpeg's UDP input.
         // Merely calling play() after a network timeout can leave the old
         // demuxer in its terminal error state.
+        const _source = player.source
         player.source = ""
-        player.source = `udp://${_mediaPlayerAddress}:${_mediaPlayerPort}?reuse=1&fifo_size=512&buffer_size=65536&timeout=3000000`
-        if (root.autoPlay)
-            player.play()
+        player.source = _source
+    }
+
+    onSourceChanged: {
+        if(source === '') player.stop()
+        if(autoPlay) player.play()
     }
 
     //
-    UdpSocket {
-        id: sock
-        hostname: _mediaPlayerAddress
-        port: _mediaPlayerPort
-    }
+    id: root
+    implicitHeight: videoOutput.implicitHeight
+    implicitWidth: videoOutput.implicitWidth
 
     //
     MediaPlayer {
@@ -90,17 +77,32 @@ Item {
     }
 
     //
+    Column {
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        Label {
+            text: `Source: ${player.source}`
+        }
+        Label {
+            id: statusLabel
+        }
+    }
+
+    //
     Timer {
         id: retryTimer
         interval: 1000
         repeat: false
-        onTriggered: root._restart()
+        onTriggered: root.restart()
     }
 
     //
     Component.onCompleted: {
         if (autoPlay)
-            _restart()
+            restart()
     }
+
+    onStreamReady: statusLabel.text = 'Stream ready'
+    onStreamError: statusLabel.text = 'Stream error: ' + message
 
 }

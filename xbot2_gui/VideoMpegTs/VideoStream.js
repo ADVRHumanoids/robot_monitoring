@@ -12,23 +12,46 @@ function setStream(stream_name, video) {
     video.restart()
 }
 
-function refreshNames(video = undefined, cb = undefined) {
-    client.doRequest('GET', '/video/get_names', {},
-                     function(msg) {
+function _parseHostPort(value, defaultPort) {
+    value = value.trim();
 
-                         if(!msg.success) {
-                             console.log('could not fetch stream list')
-                             return;
-                         }
+    const i = value.lastIndexOf(":");
 
-                         if(cb === undefined) {
-                             video.availableStreamIds = msg.topics
-                         }
-                         else {
-                             cb(msg.topics)
-                         }
+    if (i === -1) {
+        return {
+            host: value,
+            port: defaultPort
+        };
+    }
 
+    const host = value.slice(0, i).trim();
+    const portText = value.slice(i + 1).trim();
 
-                     }
-                     )
+    return {
+        host: host,
+        port: portText === "" ? defaultPort : Number(portText)
+    };
+}
+
+function refreshNames(videoSources, cb) {
+
+    for(const src of videoSources) {
+
+        // try to split the source into host and port
+        const { host, port } = _parseHostPort(src, 9997);
+
+        // use mediamtx control api to get list of streams
+        client.doRequest('GET', '/v3/paths/list', {},
+                         function(msg) {
+                            let streams = []
+                            for(const item of msg.items) {
+                                console.log(`found stream ${src}/${item.name}`)
+                                streams.push(`rtsp://${host}:8554/${item.name}`)
+                            }
+                            cb(streams)
+                         },
+                         false, host, port
+        )
+    }
+
 }

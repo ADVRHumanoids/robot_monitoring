@@ -14,7 +14,8 @@ Card1 {
                       'No active task'
     property alias currentTask: taskCombo.currentText
     property bool ikRunning: false
-    property string videoStream: videoEnabledSwitch.checked ? videoStreamCombo.currentText : ''
+    property alias videoStream: videoStreamCombo.currentText
+    property alias videoEnabled: videoEnabledSwitch.checked
 
     // private
     id: root
@@ -108,14 +109,44 @@ Card1 {
         }
 
         Button {
-
+            id: refreshVideoStreamsBtn
             text: 'Refresh'
             onClicked: {
-                VideoStream.refreshNames(undefined,
+                let videoSources = videoSourcesInput.values()
+                videoStreamCombo.model = []
+                VideoStream.refreshNames(videoSources,
                                          (topics) => {
-                                             videoStreamCombo.model = topics
+                                             videoStreamCombo.model = videoStreamCombo.model.concat(topics)
                                              videoStreamCombo.currentTextChanged()
                                          })
+            }
+        }
+
+        Label {
+            text: 'Video sources'
+        }
+
+        TokenInput {
+            id: videoSourcesInput
+
+            Layout.fillWidth: true
+            Layout.columnSpan: 2
+
+            placeholderText: "Add source..."
+
+            onTokenAdded: text => console.log("Added:", text)
+            onTokenRemoved: text => console.log("Removed:", text)
+
+            Component.onCompleted: {
+                let savedSourcesFound = false
+                for(const source of settings.videoSources) {
+                    savedSourcesFound = true
+                    addToken(source)
+                }
+                if(!savedSourcesFound) {
+                    addToken('localhost')
+                }
+                refreshVideoStreamsBtn.clicked()
             }
         }
     }
@@ -124,6 +155,7 @@ Card1 {
         id: settings
         category: 'JoyCartesianCard'
         property string currentTask
+        property list<string> videoSources
     }
 
 //    Timer {
@@ -135,16 +167,13 @@ Card1 {
 
     Component.onCompleted: {
         Logic.updateTaskNames(taskCombo)
-        VideoStream.refreshNames(undefined,
-                                 (topics) => {
-                                     videoStreamCombo.model = topics
-                                 })
     }
 
     Component.onDestruction: {
         if(currentTask.length > 0) {
             settings.currentTask = currentTask
         }
+        settings.videoSources = videoSourcesInput.values()
         settings.sync()
     }
 }

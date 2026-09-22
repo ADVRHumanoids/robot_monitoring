@@ -33,7 +33,7 @@ Control {
 
                 required property int index
 
-                Layout.preferredWidth: 1
+                Layout.preferredWidth: row.width / root.columns
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.alignment: Qt.AlignTop

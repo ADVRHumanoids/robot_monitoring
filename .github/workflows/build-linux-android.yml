@@ -11,6 +11,8 @@ on:
 jobs:
 
   build:
+    permissions:
+      contents: write
 
     runs-on: ubuntu-latest
 
@@ -36,5 +38,6 @@ jobs:
         KEYSTORE_PWD: ${{ secrets.KEYSTORE_PWD }}
       run: bash travis/build_client.bash
     - name: Deploy client
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: bash travis/deploy_client.bash
-

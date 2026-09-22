@@ -92,7 +92,11 @@ Item
 
 
     // method for performing an http request
-    function doRequest(verb, url, body, callback, quiet = false) {
+    function doRequest(verb, url, body, callback, quiet = false, host_override = "", port_override = -1) {
+
+        let hostname = host_override === "" ? root.hostname : host_override
+        let port = port_override === -1 ? root.port : port_override
+
         Client.httpRequest(verb,
                            "http://" + hostname + ":" + port + url,
                            body,

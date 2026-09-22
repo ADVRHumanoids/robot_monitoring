@@ -207,6 +207,7 @@ int main(int argc, char *argv[])
     qputenv("QT_QUICK_CONTROLS_MATERIAL_THEME", "Dark");
     qputenv("QT_QUICK_CONTROLS_MATERIAL_VARIANT", "Dense");
     qputenv("QT3D_RENDERER", "opengl");
+    qputenv("QT_FFMPEG_RTSP_TRANSPORT", "udp");
 
 #ifndef __EMSCRIPTEN__
     // initialize internal browser

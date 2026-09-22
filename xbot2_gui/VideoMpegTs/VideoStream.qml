@@ -42,6 +42,9 @@ Item {
         id: player
         videoOutput: videoOutput
 
+        playbackRate: 2.0  // avoid latency due to pts synchronization
+        activeAudioTrack: -1  // disable audio track to avoid latency due to audio resampling
+
         // Qt 6.10's low-latency intent tells the FFmpeg backend that keeping a
         // large, smooth playback reservoir is less important than showing the
         // newest live frame. A small probe still contains several MPEG-TS PAT,
@@ -73,7 +76,7 @@ Item {
         id: videoOutput
         anchors.fill: parent
         fillMode: VideoOutput.PreserveAspectFit
-        endOfStreamPolicy: VideoOutput.KeepLastFrame
+        endOfStreamPolicy: VideoOutput.ClearOutput
     }
 
     //

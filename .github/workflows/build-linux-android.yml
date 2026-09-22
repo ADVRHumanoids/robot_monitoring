@@ -36,3 +36,4 @@ jobs:
       run: source env/bin/activate; bash travis/build_and_deploy_server.bash
     - name: Deploy client
       run: bash travis/deploy_client.bash
+

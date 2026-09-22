@@ -35,11 +35,17 @@ Item {
             margins: CommonProperties.geom.spacing
         }
 
-        onVideoStreamChanged: {
-            VideoStream.setStream(videoStream, video)
-        }
-
         backgroundColor: Qt.rgba(0, 0, 0, 0.5)
+
+        onVideoStreamChanged: video.source = videoEnabled ? videoStream : ''
+
+        onVideoEnabledChanged: {
+            if(videoEnabled) {
+                video.source = videoStream
+            } else {
+                video.source = ''
+            }
+        }
     }
 
     Pane {
@@ -124,18 +130,20 @@ Item {
 
         anchors.fill: parent
 
-        Connections {
-            target: client
-            function onObjectReceived(msg) {
-                if(msg.type !== 'video_rtsp_url') {
-                    return
-                }
-                if(msg.stream_name !== setupCard.videoStream) {
-                    return
-                }
-                video.source = msg.url
-            }
-        }
+        source: setupCard.videoStream
+
+        // Connections {
+        //     target: client
+        //     function onObjectReceived(msg) {
+        //         if(msg.type !== 'video_rtsp_url') {
+        //             return
+        //         }
+        //         if(msg.stream_name !== setupCard.videoStream) {
+        //             return
+        //         }
+        //         video.source = msg.url
+        //     }
+        // }
 
     }
 

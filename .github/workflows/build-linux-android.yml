@@ -35,8 +35,6 @@ jobs:
       env:
         KEYSTORE_PWD: ${{ secrets.KEYSTORE_PWD }}
       run: bash travis/build_client.bash
-    - name: Build server
-      run: source env/bin/activate; bash travis/build_and_deploy_server.bash
     - name: Deploy client
       run: bash travis/deploy_client.bash
 

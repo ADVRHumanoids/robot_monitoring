@@ -169,6 +169,7 @@ ApplicationWindow {
             iconText: MaterialSymbolNames.ecg
             iconFont: syms.font.family
             active: true
+            show: true
         }
 
         PageItem {
@@ -176,7 +177,7 @@ ApplicationWindow {
             page: "/qt/qml/TestThings/Playground2.qml"
             iconText: MaterialSymbolNames.playground
             iconFont: syms.font.family
-            active: true
+            active: false
             show: false
         }
 

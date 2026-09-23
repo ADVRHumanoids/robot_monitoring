@@ -6,6 +6,7 @@ sudo apt update && sudo apt install -y \
     curl \
     desktop-file-utils \
     file \
+    libpulse0 \
     libegl1 \
     libgl1 \
     libglx0 \

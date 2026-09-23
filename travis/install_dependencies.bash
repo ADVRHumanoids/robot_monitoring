@@ -6,6 +6,10 @@ sudo apt update && sudo apt install -y \
     curl \
     desktop-file-utils \
     file \
+    libegl1 \
+    libgl1 \
+    libglx0 \
+    libopengl0 \
     libxcb-cursor0 \
     patchelf \
     python3-pip \

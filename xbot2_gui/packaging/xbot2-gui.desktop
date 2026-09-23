@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=XBot2 GUI
+Comment=Monitor and control XBot2-based robots
+Exec=xbot2_gui
+Icon=xbot2-gui
+Terminal=false
+Categories=Science;Engineering;

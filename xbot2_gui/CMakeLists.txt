@@ -170,6 +170,15 @@ if(NOT ANDROID AND NOT EMSCRIPTEN)
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     )
 
+    # AppImage entry point and desktop integration metadata. Keeping these in
+    # the install tree also makes the unpacked AppDir directly runnable.
+    install(PROGRAMS packaging/AppRun DESTINATION .)
+    install(FILES packaging/xbot2-gui.desktop DESTINATION .)
+    install(FILES Font/icons/alberobotics.png
+        DESTINATION .
+        RENAME xbot2-gui.png
+    )
+
     # Generate the deployment script for the target MyApp.
     qt_generate_deploy_qml_app_script(
         TARGET xbot2_gui
@@ -190,4 +199,3 @@ if(NOT ANDROID AND NOT EMSCRIPTEN)
     install(SCRIPT ${CMAKE_CURRENT_BINARY_DIR}/cmake/HackDeployMissingFiles.cmake)
 
 endif()
-

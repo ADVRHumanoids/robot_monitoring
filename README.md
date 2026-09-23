@@ -77,13 +77,30 @@ Refer to the Docker configuration within the `kyon_config` repository for detail
 The xbot2 GUI client must be installed separately on your host system, regardless of which method you use for the server components:
 
 1. Visit the [robot_monitoring GitHub releases page](https://github.com/ADVRHumanoids/robot_monitoring/releases)
-2. Download the appropriate package for your system (e.g., "Linux App" which is around 250MB)
-3. Extract the downloaded package to a convenient location
-4. Install the required dependency for the GUI client:
+2. Download `xbot2-gui-<version>-x86_64.AppImage` and its `.sha256` file.
+3. Install the host-side XCB cursor library used by the Qt display plugin:
    ```bash
-   # Required by robot_monitoring GUI elements
    sudo apt-get install libxcb-cursor0
    ```
+4. Verify and run it:
+   ```bash
+   sha256sum --check xbot2-gui-<version>-x86_64.AppImage.sha256
+   chmod +x xbot2-gui-<version>-x86_64.AppImage
+   ./xbot2-gui-<version>-x86_64.AppImage
+   ```
+
+The AppImage targets Ubuntu 24.04 and newer. It bundles Qt, QML, WebEngine,
+FFmpeg, and ICU, while using the host graphics, display, font, and audio
+stack. On systems where FUSE mounting is unavailable (for example, inside a
+restricted container), run it without mounting:
+
+```bash
+./xbot2-gui-<version>-x86_64.AppImage --appimage-extract-and-run
+```
+
+Older AppImage runtimes may require Ubuntu's `libfuse2t64` package. The
+runtime shipped with current XBot2 GUI releases is statically linked, but it
+still requires access to the kernel FUSE device for normal mounted execution.
 
 ### Manual Installation (Alternative for Server Components)
 
@@ -257,14 +274,10 @@ This step starts the backend service for the user interface.
 
 This step runs the user-facing graphical interface.
 
-1.  **Open a *New* Terminal:** .
-2.  **Navigate to the Executable:** Change directory to where the `xbot2_gui` executable is located. .
+1.  **Open a new terminal.**
+2.  **Run the downloaded AppImage:**
     ```bash
-    cd ~/xbot2_gui_client_x86_64/bin
-    ```
-3.  **Run the GUI Client:** Execute the client application.
-    ```bash
-    ./xbot2_gui
+    ./xbot2-gui-<version>-x86_64.AppImage
     ```
 
 **What happens during this step?**

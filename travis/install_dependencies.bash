@@ -1,6 +1,19 @@
 set -e
 
-sudo apt update && sudo apt install python3-pip python3-setuptools cmake patchelf python3-venv zipalign apksigner
+sudo apt update && sudo apt install -y \
+    apksigner \
+    cmake \
+    curl \
+    desktop-file-utils \
+    file \
+    libxcb-cursor0 \
+    patchelf \
+    python3-pip \
+    python3-setuptools \
+    python3-venv \
+    xauth \
+    xvfb \
+    zipalign
 
 python3 -m venv env
 source env/bin/activate

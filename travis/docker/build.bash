@@ -24,7 +24,8 @@ if [ -z "$BUILD_SKIP_LINUX" ]; then
     export PATH="$HOME/Qt/Tools/CMake/bin:$PATH"
     mkdir build && cd build
     /home/user/Qt/$QT_VER/gcc_64/bin/qt-cmake -DCMAKE_INSTALL_PREFIX=/home/user/build_output/xbot2_gui_client_x86_64 -DCMAKE_BUILD_TYPE=Release ../robot_monitoring
-    make install -j $(nproc)
+    cmake --build . --parallel "$(nproc)"
+    cmake --install . --strip
 else
     echo "Skipping Linux App build..."
 fi

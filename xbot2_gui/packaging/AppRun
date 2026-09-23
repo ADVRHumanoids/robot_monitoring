@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eu
+
+APPDIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+export APPDIR
+
+exec "$APPDIR/bin/xbot2_gui" "$@"

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(xbot2_gui)
+project(xbot2_gui VERSION ${robot_monitoring_VERSION})
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_CXX_STANDARD 23)
@@ -71,8 +71,19 @@ qt_add_qml_module(xbot2_gui
 target_compile_definitions(xbot2_gui
     PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
 
-if(WIN32)
+if(MSVC)
+    target_compile_options(xbot2_gui PRIVATE /bigobj)
+elseif(MINGW)
     target_compile_options(xbot2_gui PRIVATE "-Wa,-mbig-obj")
+endif()
+
+if(WIN32)
+    configure_file(
+        packaging/windows/xbot2-gui.rc.in
+        ${CMAKE_CURRENT_BINARY_DIR}/xbot2-gui.rc
+        @ONLY
+    )
+    target_sources(xbot2_gui PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/xbot2-gui.rc)
 endif()
 
 target_link_libraries(xbot2_gui
@@ -107,6 +118,13 @@ if(NOT EMSCRIPTEN)
         Qt6::WebView
     )
 
+endif()
+
+if(NOT EMSCRIPTEN AND NOT ANDROID)
+    target_link_libraries(xbot2_gui
+        PUBLIC
+        Qt6::WebEngineQuick
+    )
 endif()
 
 
@@ -170,14 +188,16 @@ if(NOT ANDROID AND NOT EMSCRIPTEN)
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     )
 
-    # AppImage entry point and desktop integration metadata. Keeping these in
-    # the install tree also makes the unpacked AppDir directly runnable.
-    install(PROGRAMS packaging/AppRun DESTINATION .)
-    install(FILES packaging/xbot2-gui.desktop DESTINATION .)
-    install(FILES Font/icons/alberobotics.png
-        DESTINATION .
-        RENAME xbot2-gui.png
-    )
+    if(UNIX AND NOT APPLE)
+        # AppImage entry point and desktop integration metadata. Keeping these
+        # in the install tree also makes the unpacked AppDir directly runnable.
+        install(PROGRAMS packaging/AppRun DESTINATION .)
+        install(FILES packaging/xbot2-gui.desktop DESTINATION .)
+        install(FILES Font/icons/alberobotics.png
+            DESTINATION .
+            RENAME xbot2-gui.png
+        )
+    endif()
 
     # Generate the deployment script for the target MyApp.
     qt_generate_deploy_qml_app_script(
@@ -189,13 +209,16 @@ if(NOT ANDROID AND NOT EMSCRIPTEN)
     # Call the deployment script on "cmake --install".
     install(SCRIPT ${deploy_script})
 
-    # Hack! Add missing files
-    configure_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/HackDeployMissingFiles.cmake.in
-        ${CMAKE_CURRENT_BINARY_DIR}/cmake/HackDeployMissingFiles.cmake
-        @ONLY
-    )
+    if(UNIX AND NOT APPLE)
+        # Linux deployment needs files not currently discovered by Qt's
+        # generated deployment script.
+        configure_file(
+            ${CMAKE_CURRENT_SOURCE_DIR}/cmake/HackDeployMissingFiles.cmake.in
+            ${CMAKE_CURRENT_BINARY_DIR}/cmake/HackDeployMissingFiles.cmake
+            @ONLY
+        )
 
-    install(SCRIPT ${CMAKE_CURRENT_BINARY_DIR}/cmake/HackDeployMissingFiles.cmake)
+        install(SCRIPT ${CMAKE_CURRENT_BINARY_DIR}/cmake/HackDeployMissingFiles.cmake)
+    endif()
 
 endif()

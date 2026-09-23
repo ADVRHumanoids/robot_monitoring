@@ -1,4 +1,4 @@
-name: Build Linux and Android
+name: Build Clients
 
 on:
   push:
@@ -8,12 +8,12 @@ on:
   pull_request:
     branches: [ "2.0-master" ]
 
+permissions:
+  contents: read
+
 jobs:
 
-  build:
-    permissions:
-      contents: write
-
+  linux_android:
     runs-on: ubuntu-24.04
 
     steps:
@@ -37,7 +37,88 @@ jobs:
       env:
         KEYSTORE_PWD: ${{ secrets.KEYSTORE_PWD }}
       run: bash travis/build_client.bash
-    - name: Deploy client
+    - name: Upload Linux and Android artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-android-clients
+        if-no-files-found: error
+        retention-days: 7
+        path: |
+          build_output/xbot2_gui_client_android_arm64_v8a_signed.apk
+          build_output/xbot2-gui-*-x86_64.AppImage
+          build_output/xbot2-gui-*-x86_64.AppImage.sha256
+
+  windows:
+    runs-on: windows-2022
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Initialize MSVC 2022
+      uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756
+      with:
+        arch: x64
+
+    - name: Install Qt 6.11.1
+      uses: jurplel/install-qt-action@a9c63c7c123f3069cff414e7e482d95dfa9d8125
+      with:
+        version: '6.11.1'
+        host: windows
+        target: desktop
+        arch: win64_msvc2022_64
+        cache: true
+        setup-python: true
+        modules: >-
+          qtgraphs
+          qtmultimedia
+          qtpositioning
+          qtprotobuf
+          qtquick3d
+          qtshadertools
+          qtspeech
+          qtwebchannel
+          qtwebengine
+          qtwebsockets
+          qtwebview
+
+    - name: Build, package, and test Windows installer
+      shell: pwsh
+      run: ci/windows/Build-Windows.ps1
+
+    - name: Upload Windows artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-client
+        if-no-files-found: error
+        retention-days: 7
+        path: |
+          build_output/xbot2-gui-*-windows-x86_64-setup.exe
+          build_output/xbot2-gui-*-windows-x86_64-setup.exe.sha256
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [linux_android, windows]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Download release artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: build_output
+        merge-multiple: true
+
+    - name: Validate checksums
+      working-directory: build_output
+      run: sha256sum --check --strict *.sha256
+
+    - name: Create GitHub release
       env:
         GH_TOKEN: ${{ github.token }}
+        TRAVIS_TAG: ${{ github.ref_name }}
       run: bash travis/deploy_client.bash

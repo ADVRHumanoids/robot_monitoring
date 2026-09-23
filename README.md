@@ -78,9 +78,10 @@ The xbot2 GUI client must be installed separately on your host system, regardles
 
 1. Visit the [robot_monitoring GitHub releases page](https://github.com/ADVRHumanoids/robot_monitoring/releases)
 2. Download `xbot2-gui-<version>-x86_64.AppImage` and its `.sha256` file.
-3. Install the host-side XCB cursor library used by the Qt display plugin:
+3. Install the host-side display and OpenGL loaders used by Qt. These remain
+   outside the AppImage so Qt uses the graphics drivers installed on the host:
    ```bash
-   sudo apt-get install libxcb-cursor0
+   sudo apt-get install libegl1 libgl1 libglx0 libopengl0 libxcb-cursor0
    ```
 4. Verify and run it:
    ```bash
@@ -101,6 +102,15 @@ restricted container), run it without mounting:
 Older AppImage runtimes may require Ubuntu's `libfuse2t64` package. The
 runtime shipped with current XBot2 GUI releases is statically linked, but it
 still requires access to the kernel FUSE device for normal mounted execution.
+
+### Windows GUI Client
+
+Windows 10 and 11 x86-64 users can download
+`xbot2-gui-<version>-windows-x86_64-setup.exe` and its `.sha256` file from the
+same GitHub release. The installer is currently unsigned, so Microsoft
+Defender SmartScreen may require selecting **More info** and **Run anyway**.
+It installs for the current user without administrator privileges, adds a
+Start Menu shortcut, and can be removed from Windows **Installed apps**.
 
 ### Manual Installation (Alternative for Server Components)
 

@@ -1,6 +1,8 @@
 # eigen
 add_library(InternalEigen INTERFACE IMPORTED)
 
+find_package(Threads REQUIRED)
+
 target_include_directories(InternalEigen PUBLIC INTERFACE
     external/eigen/)
 
@@ -24,7 +26,7 @@ target_include_directories(InternalUrdfParser PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/external/boost/include
 )
 
-target_compile_options(InternalUrdfParser PUBLIC -pthread)
+target_link_libraries(InternalUrdfParser PUBLIC Threads::Threads)
 
 
 # rbdl
@@ -50,7 +52,7 @@ target_include_directories(InternalRbdl PUBLIC
 
 )
 
-target_compile_options(InternalRbdl PUBLIC -pthread)
+target_link_libraries(InternalRbdl PUBLIC Threads::Threads)
 
 target_link_libraries(InternalRbdl
     PUBLIC
@@ -79,5 +81,4 @@ qt_add_qml_module(xbot2_gui_robotmodel
 target_link_libraries(xbot2_gui_robotmodel PUBLIC InternalRbdl)
 
 target_link_libraries(xbot2_gui PRIVATE xbot2_gui_robotmodelplugin)
-
 

@@ -41,6 +41,23 @@ ln -sfn xbot2-gui.png "$APPDIR/.DirIcon"
 grep -Fxq 'Exec=xbot2_gui' "$APPDIR/xbot2-gui.desktop"
 grep -Fxq 'Icon=xbot2-gui' "$APPDIR/xbot2-gui.desktop"
 
+# Qt's xcb platform plugin loads these libraries at runtime, so Qt's CMake
+# deployment scan does not reliably include them. Bundle the small XCB helper
+# libraries instead of depending on the host's desktop package selection.
+mkdir -p "$APPDIR/lib"
+for soname in \
+    libxcb-cursor.so.0 \
+    libxcb-image.so.0 \
+    libxcb-render-util.so.0 \
+    libxcb-util.so.1; do
+    library_path="$(ldconfig -p | sed -n "s|.*${soname} .* => ||p" | head -n 1)"
+    if [[ -z "$library_path" || ! -f "$library_path" ]]; then
+        echo "Unable to locate required AppImage library: $soname" >&2
+        exit 1
+    fi
+    cp -L "$library_path" "$APPDIR/lib/$soname"
+done
+
 if command -v desktop-file-validate >/dev/null 2>&1; then
     desktop-file-validate "$APPDIR/xbot2-gui.desktop"
 fi

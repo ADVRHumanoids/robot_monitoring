@@ -70,11 +70,12 @@ jobs:
         arch: win64_msvc2022_64
         cache: true
         setup-python: true
+        aqtsource: git+https://github.com/miurahr/aqtinstall.git@076e1659807d0b362a3ed684d54c2e9c775eb9c7
         modules: >-
           qtgraphs
           qtmultimedia
           qtpositioning
-          qtprotobuf
+          qtgrpc
           qtquick3d
           qtshadertools
           qtspeech

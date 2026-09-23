@@ -15,6 +15,13 @@ test -x "$APPIMAGE_PATH"
 test -f "$APPDIR/xbot2-gui.desktop"
 test -f "$APPDIR/xbot2-gui.png"
 test -L "$APPDIR/.DirIcon"
+for soname in \
+    libxcb-cursor.so.0 \
+    libxcb-image.so.0 \
+    libxcb-render-util.so.0 \
+    libxcb-util.so.1; do
+    test -f "$APPDIR/lib/$soname"
+done
 
 desktop-file-validate "$APPDIR/xbot2-gui.desktop"
 (
@@ -29,7 +36,7 @@ check_dependencies() {
     local ldd_output
 
     while IFS= read -r -d '' binary; do
-        if file "$binary" | grep -q 'ELF .* executable'; then
+        if file "$binary" | grep -Eq 'ELF .*(executable|shared object)'; then
             ldd_output="$(ldd "$binary" 2>&1 || true)"
             if grep -q 'not found' <<<"$ldd_output"; then
                 printf '%s\n' "$ldd_output" >&2
@@ -63,7 +70,7 @@ xvfb-run -a "$APPIMAGE_PATH" --version
 xvfb-run -a "$APPIMAGE_PATH" --appimage-extract-and-run --version
 
 set +e
-timeout 15s xvfb-run -a "$APPIMAGE_PATH" >"$LOG_FILE" 2>&1
+timeout 15s env QT_DEBUG_PLUGINS=1 xvfb-run -a "$APPIMAGE_PATH" >"$LOG_FILE" 2>&1
 STARTUP_STATUS=$?
 set -e
 

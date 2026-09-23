@@ -32,6 +32,7 @@ foreach ($Tool in 'cl', 'ninja', 'qt-cmake', 'windeployqt', 'makensis', 'dumpbin
 
 & qt-cmake -S $RepoRoot -B $BuildDir -G Ninja `
     -DCMAKE_BUILD_TYPE=Release `
+    -DXBOT2_GUI_WITH_WEBENGINE=ON `
     "-DCMAKE_INSTALL_PREFIX=$StageDir"
 if ($LASTEXITCODE -ne 0) { throw 'CMake configuration failed' }
 

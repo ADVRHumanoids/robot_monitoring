@@ -33,7 +33,13 @@ if(NOT EMSCRIPTEN)
 
 endif()
 
-if(NOT EMSCRIPTEN AND NOT ANDROID)
+if(WIN32)
+    option(XBOT2_GUI_WITH_WEBENGINE "Build with Qt WebEngine support" ON)
+else()
+    option(XBOT2_GUI_WITH_WEBENGINE "Build with Qt WebEngine support" ON)
+endif()
+
+if(XBOT2_GUI_WITH_WEBENGINE AND NOT EMSCRIPTEN AND NOT ANDROID)
 
     find_package(Qt6 COMPONENTS
         WebEngineQuick
@@ -120,7 +126,7 @@ if(NOT EMSCRIPTEN)
 
 endif()
 
-if(NOT EMSCRIPTEN AND NOT ANDROID)
+if(XBOT2_GUI_WITH_WEBENGINE AND NOT EMSCRIPTEN AND NOT ANDROID)
     target_link_libraries(xbot2_gui
         PUBLIC
         Qt6::WebEngineQuick

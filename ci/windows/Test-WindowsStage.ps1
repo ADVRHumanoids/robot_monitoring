@@ -13,6 +13,7 @@ $Executable = Join-Path $StageDir 'bin\xbot2_gui.exe'
 $RequiredPaths = @(
     $Executable,
     (Join-Path $StageDir 'bin\Qt6Core.dll'),
+    (Join-Path $StageDir 'bin\Qt6WebView.dll'),
     (Join-Path $StageDir 'bin\platforms\qwindows.dll')
 )
 
@@ -33,6 +34,13 @@ $QtQuickModule = Get-ChildItem $StageDir -Recurse -Directory -Filter QtQuick |
     Select-Object -First 1
 if (-not $QtQuickModule) {
     throw 'Missing deployed QtQuick QML module metadata'
+}
+
+$QtWebViewModule = Get-ChildItem $StageDir -Recurse -Directory -Filter QtWebView |
+    Where-Object { Test-Path (Join-Path $_.FullName 'qmldir') } |
+    Select-Object -First 1
+if (-not $QtWebViewModule) {
+    throw 'Missing deployed QtWebView QML module metadata'
 }
 
 $VersionOutput = (& $Executable --version 2>&1 | Out-String).Trim()

@@ -61,6 +61,19 @@ jobs:
       with:
         arch: x64
 
+    - name: Install Protobuf build tools
+      shell: pwsh
+      run: |
+        $vcpkg = Join-Path $env:VCPKG_INSTALLATION_ROOT 'vcpkg.exe'
+        & $vcpkg install protobuf:x64-windows
+        if ($LASTEXITCODE -ne 0) {
+          throw "Failed to install Protobuf with vcpkg"
+        }
+
+        $protobufPrefix = Join-Path $env:VCPKG_INSTALLATION_ROOT 'installed\x64-windows'
+        "CMAKE_PREFIX_PATH=$protobufPrefix;$env:CMAKE_PREFIX_PATH" |
+          Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
     - name: Install Qt 6.11.2
       uses: jurplel/install-qt-action@a9c63c7c123f3069cff414e7e482d95dfa9d8125
       with:
@@ -87,17 +100,20 @@ jobs:
     - name: Verify Qt Protobuf tools
       shell: pwsh
       run: |
-        $generator = Get-ChildItem `
-          -Path $env:QT_ROOT_DIR `
-          -Filter qtprotobufgen.exe `
-          -File `
-          -Recurse | Select-Object -First 1
+        $generator = Get-ChildItem -Path $env:QT_ROOT_DIR `
+          -Filter qtprotobufgen.exe -File -Recurse | Select-Object -First 1
+        $protoc = Get-ChildItem -Path $env:VCPKG_INSTALLATION_ROOT `
+          -Filter protoc.exe -File -Recurse | Select-Object -First 1
 
         if (-not $generator) {
           throw "Qt installation is missing qtprotobufgen.exe"
         }
+        if (-not $protoc) {
+          throw "The Protobuf installation is missing protoc.exe"
+        }
 
         Write-Host "Using $($generator.FullName)"
+        Write-Host "Using $($protoc.FullName)"
 
     - name: Build, package, and test Windows installer
       shell: pwsh

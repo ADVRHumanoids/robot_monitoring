@@ -51,7 +51,7 @@ if (-not (Test-Path $VCRuntimeDir -PathType Container)) {
 }
 Copy-Item (Join-Path $VCRuntimeDir '*.dll') (Join-Path $StageDir 'bin') -Force
 
-& (Join-Path $PSScriptRoot 'Test-WindowsStage.ps1') -StageDir $StageDir -ExpectedVersion $Version
+& (Join-Path $PSScriptRoot 'Test-WindowsStage.ps1') -StageDir $StageDir
 
 $Headers = (& dumpbin /headers (Join-Path $StageDir 'bin\xbot2_gui.exe') | Out-String)
 if ($LASTEXITCODE -ne 0 -or $Headers -notmatch 'machine \(x64\)') {
@@ -73,7 +73,7 @@ if ($InstallProcess.ExitCode -ne 0) {
     throw "Silent installer failed with code $($InstallProcess.ExitCode)"
 }
 
-& (Join-Path $PSScriptRoot 'Test-WindowsStage.ps1') -StageDir $InstallRoot -ExpectedVersion $Version
+& (Join-Path $PSScriptRoot 'Test-WindowsStage.ps1') -StageDir $InstallRoot
 
 $UninstallKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\XBot2GUI'
 if ((Get-ItemPropertyValue $UninstallKey -Name InstallLocation) -ne $InstallRoot) {

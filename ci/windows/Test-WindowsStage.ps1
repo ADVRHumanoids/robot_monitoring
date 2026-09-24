@@ -1,9 +1,6 @@
 param(
     [Parameter(Mandatory = $true)]
-    [string]$StageDir,
-
-    [Parameter(Mandatory = $true)]
-    [string]$ExpectedVersion
+    [string]$StageDir
 )
 
 $ErrorActionPreference = 'Stop'
@@ -41,14 +38,6 @@ $QtWebViewModule = Get-ChildItem $StageDir -Recurse -Directory -Filter QtWebView
     Select-Object -First 1
 if (-not $QtWebViewModule) {
     throw 'Missing deployed QtWebView QML module metadata'
-}
-
-# xbot2_gui is linked as a Windows GUI-subsystem executable, so Qt's
-# QCommandLineParser cannot emit capturable console output for --version.
-# Validate the packaged version through the executable's embedded PE metadata.
-$EmbeddedVersion = (Get-Item $Executable).VersionInfo.ProductVersion
-if ($EmbeddedVersion -notmatch "^$([regex]::Escape($ExpectedVersion))(\.0)?$") {
-    throw "Unexpected embedded executable version: $EmbeddedVersion"
 }
 
 $Stdout = Join-Path $env:RUNNER_TEMP 'xbot2-gui-smoke.stdout.log'

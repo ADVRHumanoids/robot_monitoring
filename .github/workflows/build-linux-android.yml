@@ -220,25 +220,40 @@ jobs:
           xbot2-gui-rolling-windows-x86_64-setup.exe \
           xbot2-gui-rolling-android-arm64-v8a.apk \
           > xbot2-gui-rolling.sha256
+        sha256sum --check --strict xbot2-gui-rolling.sha256
 
     - name: Publish rolling release
       env:
         GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
       run: |
         set -euo pipefail
 
-        if gh release view rolling >/dev/null 2>&1; then
+        assets=(
+          build_output/xbot2-gui-rolling-x86_64.AppImage
+          build_output/xbot2-gui-rolling-windows-x86_64-setup.exe
+          build_output/xbot2-gui-rolling-android-arm64-v8a.apk
+          build_output/xbot2-gui-rolling.sha256
+        )
+
+        for asset in "${assets[@]}"; do
+          test -s "$asset"
+        done
+
+        if gh release view rolling --repo "$GH_REPO" >/dev/null 2>&1; then
           gh api --method PATCH \
             "repos/$GITHUB_REPOSITORY/git/refs/tags/rolling" \
             -f sha="$GITHUB_SHA" \
             -F force=true
-          gh release upload rolling build_output/* --clobber
+          gh release upload rolling "${assets[@]}" --clobber --repo "$GH_REPO"
           gh release edit rolling \
+            --repo "$GH_REPO" \
             --title 'Rolling build' \
             --notes "Latest successful 2.0-master build: $GITHUB_SHA" \
             --prerelease
         else
-          gh release create rolling build_output/* \
+          gh release create rolling "${assets[@]}" \
+            --repo "$GH_REPO" \
             --target "$GITHUB_SHA" \
             --title 'Rolling build' \
             --notes "Latest successful 2.0-master build: $GITHUB_SHA" \

@@ -14,7 +14,7 @@ $RequiredPaths = @(
     $Executable,
     (Join-Path $StageDir 'bin\Qt6Core.dll'),
     (Join-Path $StageDir 'bin\Qt6WebView.dll'),
-    (Join-Path $StageDir 'bin\platforms\qwindows.dll')
+    (Join-Path $StageDir 'plugins\platforms\qwindows.dll')
 )
 
 foreach ($Path in $RequiredPaths) {

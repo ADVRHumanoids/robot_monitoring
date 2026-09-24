@@ -12,6 +12,11 @@ sudo apt update && sudo apt install -y \
     libglx0 \
     libopengl0 \
     libxcb-cursor0 \
+    libxcb-icccm4 \
+    libxcb-keysyms1 \
+    libxcb-shape0 \
+    libxcb-xkb1 \
+    libxkbcommon-x11-0 \
     patchelf \
     python3-pip \
     python3-setuptools \

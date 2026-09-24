@@ -17,8 +17,13 @@ test -f "$APPDIR/xbot2-gui.png"
 test -L "$APPDIR/.DirIcon"
 for soname in \
     libxcb-cursor.so.0 \
+    libxcb-icccm.so.4 \
     libxcb-image.so.0 \
+    libxcb-keysyms.so.1 \
     libxcb-render-util.so.0 \
+    libxcb-shape.so.0 \
+    libxcb-xkb.so.1 \
+    libxkbcommon-x11.so.0 \
     libxcb-util.so.1; do
     test -f "$APPDIR/lib/$soname"
 done

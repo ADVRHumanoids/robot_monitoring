@@ -64,14 +64,39 @@ jobs:
     - name: Install Protobuf build tools
       shell: pwsh
       run: |
-        $vcpkg = Join-Path $env:VCPKG_INSTALLATION_ROOT 'vcpkg.exe'
-        & $vcpkg install protobuf:x64-windows
-        if ($LASTEXITCODE -ne 0) {
-          throw "Failed to install Protobuf with vcpkg"
+        $version = '33.4'
+        $expectedHash = '0b31be019b9fe45a388e93bf1f16d70afdf9ce5caf958ea47892fbc868b5a1b3'
+        $archive = Join-Path $env:RUNNER_TEMP "protoc-$version-win64.zip"
+        $protobufPrefix = Join-Path $env:RUNNER_TEMP "protobuf-$version"
+        Invoke-WebRequest `
+          -Uri "https://github.com/protocolbuffers/protobuf/releases/download/v$version/protoc-$version-win64.zip" `
+          -OutFile $archive
+
+        $actualHash = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+        if ($actualHash -ne $expectedHash) {
+          throw "Unexpected protoc archive checksum: $actualHash"
         }
 
-        $protobufPrefix = Join-Path $env:VCPKG_INSTALLATION_ROOT 'installed\x64-windows'
+        Expand-Archive -Path $archive -DestinationPath $protobufPrefix
+
+        # Qt's FindWrapProtoc module first looks for a protobuf CMake package
+        # providing protobuf::protoc. The official binary archive has the tool
+        # but no package config, so provide the minimal imported target here.
+        $protobufCMakeDir = Join-Path $protobufPrefix 'lib\cmake\protobuf'
+        New-Item $protobufCMakeDir -ItemType Directory -Force | Out-Null
+        @'
+        if(NOT TARGET protobuf::protoc)
+            add_executable(protobuf::protoc IMPORTED)
+            get_filename_component(_protobuf_prefix "${CMAKE_CURRENT_LIST_DIR}/../../.." ABSOLUTE)
+            set_target_properties(protobuf::protoc PROPERTIES
+                IMPORTED_LOCATION "${_protobuf_prefix}/bin/protoc.exe")
+        endif()
+        set(protobuf_FOUND TRUE)
+        '@ | Set-Content (Join-Path $protobufCMakeDir 'protobuf-config.cmake') -Encoding utf8
+
         "CMAKE_PREFIX_PATH=$protobufPrefix;$env:CMAKE_PREFIX_PATH" |
+          Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        "PROTOBUF_ROOT=$protobufPrefix" |
           Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
     - name: Install Qt 6.11.2
@@ -102,18 +127,17 @@ jobs:
       run: |
         $generator = Get-ChildItem -Path $env:QT_ROOT_DIR `
           -Filter qtprotobufgen.exe -File -Recurse | Select-Object -First 1
-        $protoc = Get-ChildItem -Path $env:VCPKG_INSTALLATION_ROOT `
-          -Filter protoc.exe -File -Recurse | Select-Object -First 1
+        $protoc = Join-Path $env:PROTOBUF_ROOT 'bin\protoc.exe'
 
         if (-not $generator) {
           throw "Qt installation is missing qtprotobufgen.exe"
         }
-        if (-not $protoc) {
+        if (-not (Test-Path $protoc -PathType Leaf)) {
           throw "The Protobuf installation is missing protoc.exe"
         }
 
         Write-Host "Using $($generator.FullName)"
-        Write-Host "Using $($protoc.FullName)"
+        Write-Host "Using $protoc"
 
     - name: Build, package, and test Windows installer
       shell: pwsh

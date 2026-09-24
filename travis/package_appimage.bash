@@ -47,8 +47,13 @@ grep -Fxq 'Icon=xbot2-gui' "$APPDIR/xbot2-gui.desktop"
 mkdir -p "$APPDIR/lib"
 for soname in \
     libxcb-cursor.so.0 \
+    libxcb-icccm.so.4 \
     libxcb-image.so.0 \
+    libxcb-keysyms.so.1 \
     libxcb-render-util.so.0 \
+    libxcb-shape.so.0 \
+    libxcb-xkb.so.1 \
+    libxkbcommon-x11.so.0 \
     libxcb-util.so.1; do
     library_path="$(ldconfig -p | sed -n "s|.*${soname} .* => ||p" | head -n 1)"
     if [[ -z "$library_path" || ! -f "$library_path" ]]; then

@@ -3,5 +3,8 @@ set -eu
 
 APPDIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 export APPDIR
+export LD_LIBRARY_PATH="$APPDIR/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+export QT_PLUGIN_PATH="$APPDIR/plugins${QT_PLUGIN_PATH:+:$QT_PLUGIN_PATH}"
+export QML2_IMPORT_PATH="$APPDIR/qml${QML2_IMPORT_PATH:+:$QML2_IMPORT_PATH}"
 
 exec "$APPDIR/bin/xbot2_gui" "$@"

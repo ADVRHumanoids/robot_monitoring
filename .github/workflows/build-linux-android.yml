@@ -203,9 +203,9 @@ jobs:
       run: |
         set -euo pipefail
 
-        appimage="$(find . -maxdepth 1 -type f -name 'xbot2-gui-*-x86_64.AppImage' -print -quit)"
-        installer="$(find . -maxdepth 1 -type f -name 'xbot2-gui-*-windows-x86_64-setup.exe' -print -quit)"
-        apk='./xbot2_gui_client_android_arm64_v8a_signed.apk'
+        appimage="$(find . -type f -name 'xbot2-gui-*-x86_64.AppImage' -print -quit)"
+        installer="$(find . -type f -name 'xbot2-gui-*-windows-x86_64-setup.exe' -print -quit)"
+        apk="$(find . -type f -name 'xbot2_gui_client_android_arm64_v8a_signed.apk' -print -quit)"
 
         test -n "$appimage" && test -f "$appimage"
         test -n "$installer" && test -f "$installer"

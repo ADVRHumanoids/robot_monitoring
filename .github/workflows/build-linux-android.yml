@@ -61,10 +61,10 @@ jobs:
       with:
         arch: x64
 
-    - name: Install Qt 6.11.1
+    - name: Install Qt 6.11.2
       uses: jurplel/install-qt-action@a9c63c7c123f3069cff414e7e482d95dfa9d8125
       with:
-        version: '6.11.1'
+        version: '6.11.2'
         host: windows
         target: desktop
         arch: win64_msvc2022_64
@@ -83,6 +83,21 @@ jobs:
           qtwebengine
           qtwebsockets
           qtwebview
+
+    - name: Verify Qt Protobuf tools
+      shell: pwsh
+      run: |
+        $generator = Get-ChildItem `
+          -Path $env:QT_ROOT_DIR `
+          -Filter qtprotobufgen.exe `
+          -File `
+          -Recurse | Select-Object -First 1
+
+        if (-not $generator) {
+          throw "Qt installation is missing qtprotobufgen.exe"
+        }
+
+        Write-Host "Using $($generator.FullName)"
 
     - name: Build, package, and test Windows installer
       shell: pwsh

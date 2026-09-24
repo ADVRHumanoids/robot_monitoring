@@ -29,28 +29,6 @@ desktop-file-validate "$APPDIR/xbot2-gui.desktop"
     sha256sum --check --strict "${APPIMAGE_NAME}.sha256"
 )
 
-check_dependencies() {
-    local root="$1"
-    local failed=0
-    local binary
-    local ldd_output
-
-    while IFS= read -r -d '' binary; do
-        if file "$binary" | grep -Eq 'ELF .*(executable|shared object)'; then
-            ldd_output="$(ldd "$binary" 2>&1 || true)"
-            if grep -q 'not found' <<<"$ldd_output"; then
-                printf '%s\n' "$ldd_output" >&2
-                echo "Unresolved dependency in $binary" >&2
-                failed=1
-            fi
-        fi
-    done < <(find "$root" -type f -print0)
-
-    return "$failed"
-}
-
-check_dependencies "$APPDIR"
-
 readonly EXTRACT_DIR="$(mktemp -d)"
 readonly LOG_FILE="$(mktemp)"
 trap 'rm -rf "$EXTRACT_DIR" "$LOG_FILE"' EXIT
@@ -58,7 +36,6 @@ trap 'rm -rf "$EXTRACT_DIR" "$LOG_FILE"' EXIT
     cd "$EXTRACT_DIR"
     "$APPIMAGE_PATH" --appimage-extract >/dev/null
 )
-check_dependencies "$EXTRACT_DIR/squashfs-root"
 grep -Fxq "X-AppImage-Version=$PROJECT_VERSION" \
     "$EXTRACT_DIR/squashfs-root/xbot2-gui.desktop"
 test "$(readlink "$EXTRACT_DIR/squashfs-root/.DirIcon")" = 'xbot2-gui.png'

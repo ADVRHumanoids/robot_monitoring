@@ -178,3 +178,67 @@ jobs:
         GH_TOKEN: ${{ github.token }}
         TRAVIS_TAG: ${{ github.ref_name }}
       run: bash travis/deploy_client.bash
+
+  rolling_release:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/2.0-master'
+    needs: [linux_android, windows]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    concurrency:
+      group: rolling-release
+      cancel-in-progress: false
+
+    steps:
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: build_output
+        merge-multiple: true
+
+    - name: Prepare rolling asset names
+      working-directory: build_output
+      run: |
+        set -euo pipefail
+
+        appimage="$(find . -maxdepth 1 -type f -name 'xbot2-gui-*-x86_64.AppImage' -print -quit)"
+        installer="$(find . -maxdepth 1 -type f -name 'xbot2-gui-*-windows-x86_64-setup.exe' -print -quit)"
+        apk='./xbot2_gui_client_android_arm64_v8a_signed.apk'
+
+        test -n "$appimage" && test -f "$appimage"
+        test -n "$installer" && test -f "$installer"
+        test -f "$apk"
+
+        mv "$appimage" xbot2-gui-rolling-x86_64.AppImage
+        mv "$installer" xbot2-gui-rolling-windows-x86_64-setup.exe
+        mv "$apk" xbot2-gui-rolling-android-arm64-v8a.apk
+        rm -f -- *.sha256
+        sha256sum \
+          xbot2-gui-rolling-x86_64.AppImage \
+          xbot2-gui-rolling-windows-x86_64-setup.exe \
+          xbot2-gui-rolling-android-arm64-v8a.apk \
+          > xbot2-gui-rolling.sha256
+
+    - name: Publish rolling release
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        set -euo pipefail
+
+        if gh release view rolling >/dev/null 2>&1; then
+          gh api --method PATCH \
+            "repos/$GITHUB_REPOSITORY/git/refs/tags/rolling" \
+            -f sha="$GITHUB_SHA" \
+            -F force=true
+          gh release upload rolling build_output/* --clobber
+          gh release edit rolling \
+            --title 'Rolling build' \
+            --notes "Latest successful 2.0-master build: $GITHUB_SHA" \
+            --prerelease
+        else
+          gh release create rolling build_output/* \
+            --target "$GITHUB_SHA" \
+            --title 'Rolling build' \
+            --notes "Latest successful 2.0-master build: $GITHUB_SHA" \
+            --prerelease
+        fi

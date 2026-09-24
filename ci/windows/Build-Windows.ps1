@@ -42,6 +42,15 @@ if ($LASTEXITCODE -ne 0) { throw 'Windows build failed' }
 & cmake --install $BuildDir --config Release
 if ($LASTEXITCODE -ne 0) { throw 'Windows deployment failed' }
 
+# Qt's generated deployment script does not pass --compiler-runtime to
+# windeployqt. Bundle the MSVC redistributable DLLs app-locally so the
+# installer also works on machines without a system-wide VC runtime.
+$VCRuntimeDir = Join-Path $env:VCToolsRedistDir 'x64\Microsoft.VC143.CRT'
+if (-not (Test-Path $VCRuntimeDir -PathType Container)) {
+    throw "Unable to locate the MSVC runtime directory: $VCRuntimeDir"
+}
+Copy-Item (Join-Path $VCRuntimeDir '*.dll') (Join-Path $StageDir 'bin') -Force
+
 & (Join-Path $PSScriptRoot 'Test-WindowsStage.ps1') -StageDir $StageDir -ExpectedVersion $Version
 
 $Headers = (& dumpbin /headers (Join-Path $StageDir 'bin\xbot2_gui.exe') | Out-String)

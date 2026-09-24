@@ -43,11 +43,9 @@ if (-not $QtWebViewModule) {
     throw 'Missing deployed QtWebView QML module metadata'
 }
 
-$VersionOutput = (& $Executable --version 2>&1 | Out-String).Trim()
-if ($LASTEXITCODE -ne 0 -or $VersionOutput -notmatch [regex]::Escape($ExpectedVersion)) {
-    throw "Unexpected xbot2_gui --version output: $VersionOutput"
-}
-
+# xbot2_gui is linked as a Windows GUI-subsystem executable, so Qt's
+# QCommandLineParser cannot emit capturable console output for --version.
+# Validate the packaged version through the executable's embedded PE metadata.
 $EmbeddedVersion = (Get-Item $Executable).VersionInfo.ProductVersion
 if ($EmbeddedVersion -notmatch "^$([regex]::Escape($ExpectedVersion))(\.0)?$") {
     throw "Unexpected embedded executable version: $EmbeddedVersion"

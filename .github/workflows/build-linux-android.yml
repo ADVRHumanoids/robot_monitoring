@@ -144,14 +144,16 @@ jobs:
       run: ci/windows/Build-Windows.ps1
 
     - name: Upload Windows artifacts
+      if: always()
       uses: actions/upload-artifact@v4
       with:
         name: windows-client
-        if-no-files-found: error
+        if-no-files-found: warn
         retention-days: 7
         path: |
           build_output/xbot2-gui-*-windows-x86_64-setup.exe
           build_output/xbot2-gui-*-windows-x86_64-setup.exe.sha256
+          ${{ runner.temp }}/xbot2-gui-diagnostics-*/**
 
   release:
     if: startsWith(github.ref, 'refs/tags/v')

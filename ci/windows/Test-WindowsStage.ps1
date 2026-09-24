@@ -62,6 +62,7 @@ function Write-ApplicationDiagnostics {
 
 $RequiredPaths = @(
     $Executable,
+    (Join-Path $StageDir 'bin\xbot2_gui_msgs.dll'),
     (Join-Path $StageDir 'bin\Qt6Core.dll'),
     (Join-Path $StageDir 'bin\Qt6WebView.dll'),
     (Join-Path $StageDir 'plugins\platforms\qwindows.dll')

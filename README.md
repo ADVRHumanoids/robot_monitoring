@@ -1,4 +1,4 @@
-# xbot2 System Launch Guide (Using Kyon Simulation Example)
+# xbot2 System Launch Guide (Using Kyon Simulation Example) 
 
 This document provides detailed instructions for launching the xbot2 system, focusing on the Kyon robot simulation example. It covers the core server/simulation components and the graphical user interface (GUI). The launch process relies heavily on ROS Noetic and the `concert_launcher` tool for managing processes.
 

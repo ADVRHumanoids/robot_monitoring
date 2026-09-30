@@ -1,4 +1,4 @@
-FROM hhcmhub/qt6dev:611@sha256:6555b9795852161c7ba43783a6065834c05a32141eda5adfa73646b358478005
+FROM hhcmhub/qt6dev:611
 
 # Linux release artifacts target Ubuntu 24.04 and newer. Fail immediately if
 # the external Qt build image changes its distribution baseline.

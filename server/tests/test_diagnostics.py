@@ -50,7 +50,7 @@ def test_diagnostic_array_to_dict_preserves_ros_message_fields():
 
 
 def test_handler_forwards_received_messages():
-    """A received ROS sample is sent through the frontend UDP transport."""
+    """A received ROS sample is sent through the frontend WebSocket transport."""
     class FakeRosHandle:
 
         def create_subscription(self, msg_class, topic, callback, queue_size):
@@ -65,7 +65,7 @@ def test_handler_forwards_received_messages():
         def schedule_task(self, coroutine):
             return asyncio.create_task(coroutine)
 
-        async def udp_send_to_all(self, message):
+        async def ws_send_to_all(self, message):
             self.messages.append(message)
 
     async def scenario():
